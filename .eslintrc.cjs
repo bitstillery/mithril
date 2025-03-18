@@ -22,7 +22,6 @@ module.exports = {
             plugins: [
                 'import',
                 'sort-class-members',
-                '@stylistic/js',
                 '@typescript-eslint',
             ],
             extends: [
@@ -33,7 +32,6 @@ module.exports = {
                 'array-bracket-spacing': [2, 'never'],
                 'comma-dangle': [2, 'always-multiline'],
                 'eol-last': [2, 'always'],
-                eqeqeq: [2, 'always'],
                 'import/extensions': [2, 'never', {
                     js: 'ignorePackages',
                     ts: 'never',
@@ -89,20 +87,16 @@ module.exports = {
                     },
                     {
                         selector: ['classMethod', 'function'],
-                        format: ['snake_case'],
+                        format: ['camelCase'],
                         leadingUnderscore: 'allow',
                     },
                     {
                         selector: ['variable'],
-                        format: ['snake_case', 'UPPER_CASE', 'PascalCase'],
+                        format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
                         leadingUnderscore: 'allow',
                     },
                 ],
-                'use-isnan': 2,
-                '@stylistic/js/max-len': ['error', {
-                    code: 250,
-                    comments: 250, // Set your desired maximum line length here
-                }]
+                'use-isnan': 2
             },
             settings: {},
         },

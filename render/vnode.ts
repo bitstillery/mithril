@@ -1,5 +1,4 @@
-
- const Vnode = function(tag, key, attrs, children, text, dom) {
+const Vnode = function(tag, key, attrs, children, text, dom) {
     return {
         tag: tag,
         key: key,
