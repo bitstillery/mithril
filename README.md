@@ -1,6 +1,6 @@
 # @bitstillery/mithril
 
-A modern, enhanced version of Mithril.js with improved developer experience and modern tooling.
+Supercharged Mithril.js
 
 ## Features
 

@@ -1,6 +1,6 @@
 {
   "name": "@bitstillery/mithril",
-  "version": "2.2.14",
+  "version": "2.3.0",
   "author": "Bitstillery",
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",
@@ -12,7 +12,7 @@
     "eslint-plugin-sort-class-members": "^1.21.0",
     "typescript": "5.3"
   },
-  "description": "Simplified continuation of Mithril.js",
+  "description": "Supercharged Mithril.js",
   "license": "MIT",
   "scripts": {
     "lint": "eslint ./",
