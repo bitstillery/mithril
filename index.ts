@@ -1,6 +1,6 @@
 import _mountRedraw from './api/mount-redraw'
 import hyperscript from './render/hyperscript'
-import request from './request/request'
+import _request from './request/request'
 import {domFor} from './render/domFor'
 import _route from './api/router'
 import _render from './render/render'
@@ -18,6 +18,7 @@ hyperscript.fragment = fragment
 
 const render = _render(window)
 const mountRedraw = _mountRedraw(render, requestAnimationFrame, console)
+const request = _request(window, mountRedraw.redraw)
 const route = _route(window, mountRedraw)
 
 const m = function m() { 

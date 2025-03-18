@@ -1,6 +1,6 @@
 # @bitstillery/mithril
 
-Supercharged Mithril.js
+[Mithril.js](https://mithril.js.org/) with TypeScript and a few extra features.
 
 ## Features
 

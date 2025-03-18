@@ -12,7 +12,7 @@
     "eslint-plugin-sort-class-members": "^1.21.0",
     "typescript": "5.3"
   },
-  "description": "Supercharged Mithril.js",
+  "description": "Mithril.js with TypeScript and a few extra features",
   "license": "MIT",
   "files": [
     "index.ts",
