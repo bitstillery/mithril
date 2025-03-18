@@ -41,5 +41,7 @@
   "type": "module",
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "source": "index.ts",
+  "main": "index.ts"
 }
