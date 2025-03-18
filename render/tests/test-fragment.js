@@ -1,5 +1,3 @@
-"use strict"
-
 import { describe, test, expect } from "bun:test";
 import fragment from "../../render/fragment";
 import m from "../../render/hyperscript";

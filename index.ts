@@ -1,9 +1,9 @@
-import hyperscript from './hyperscript'
+import _mountRedraw from './api/mount-redraw'
+import hyperscript from './render/hyperscript'
 import request from './request/request'
-import mountRedraw from './api/mount-redraw'
 import {domFor} from './render/domFor'
-import route from './api/router'
-import render from './render/render'
+import _route from './api/router'
+import _render from './render/render'
 import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
 import parsePathname from './pathname/parse'
@@ -13,7 +13,16 @@ import censor from './util/censor'
 import trust from './render/trust'
 import fragment from './render/fragment'
 
-const m = function m() { return hyperscript.apply(this, arguments) }
+hyperscript.trust = trust
+hyperscript.fragment = fragment
+
+const render = _render(window)
+const mountRedraw = _mountRedraw(render, requestAnimationFrame, console)
+const route = _route(window, mountRedraw)
+
+const m = function m() { 
+    return hyperscript.apply(this, arguments) 
+}
 m.m = hyperscript
 m.trust = trust
 m.fragment = fragment

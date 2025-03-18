@@ -1,5 +1,3 @@
-"use strict"
-
 // Low-priority TODO: remove the dependency on the renderer here.
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import browserMock from "../../test-utils/browserMock";

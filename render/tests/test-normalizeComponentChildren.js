@@ -1,14 +1,12 @@
-"use strict"
-
 import { describe, test, expect } from "bun:test";
 import m from "../../render/hyperscript";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 
 describe("component children", () => {
 	const $window = domMock();
 	const root = $window.document.createElement("div");
-	const render = vdom($window);
+	const render = renderFn($window)
 
 	describe("component children", () => {
 		const component = {

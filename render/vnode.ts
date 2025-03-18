@@ -1,6 +1,5 @@
-'use strict'
 
-export default function Vnode(tag, key, attrs, children, text, dom) {
+ const Vnode = function(tag, key, attrs, children, text, dom) {
     return {
         tag: tag,
         key: key,
@@ -53,3 +52,5 @@ Vnode.normalizeChildren = function(input) {
 
     return children
 }
+
+export default Vnode

@@ -1,9 +1,7 @@
-"use strict"
-
-var buildQueryString = require("../querystring/build")
+import buildQueryString from '../querystring/build'
 
 // Returns `path` from `template` + `params`
-module.exports = function(template, params) {
+export default function(template, params) {
 	if ((/:([^\/\.-]+)(\.{3})?:/).test(template)) {
 		throw new SyntaxError("Template parameter names must be separated by either a '/', '-', or '.'.")
 	}

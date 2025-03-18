@@ -2,7 +2,7 @@
 
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 import trust from "../../render/trust";
 
@@ -12,7 +12,7 @@ describe("attributes", () => {
 	beforeEach(() => {
 		$window = domMock();
 		root = $window.document.body;
-		render = vdom($window);
+		render = renderFn($window)
 	});
 
 	describe("basics", () => {
@@ -247,7 +247,6 @@ describe("attributes", () => {
 		test("isn't set when equivalent to the previous value and focused", () => {
 			const $window = domMock({spy: mock});
 			const root = $window.document.body;
-			const render = vdom($window);
 
 			const a = m("input");
 			const b = m("input", {value: "1"});
@@ -283,7 +282,6 @@ describe("attributes", () => {
 		test("the input.type setter is never used", () => {
 			const $window = domMock({spy: mock});
 			const root = $window.document.body;
-			const render = vdom($window);
 
 			const a = m("input", {type: "radio"});
 			const b = m("input", {type: "text"});
@@ -321,7 +319,6 @@ describe("attributes", () => {
 		test("isn't set when equivalent to the previous value and focused", () => {
 			const $window = domMock({spy: mock});
 			const root = $window.document.body;
-			const render = vdom($window);
 
 			const a = m("textarea");
 			const b = m("textarea", {value: "1"});
@@ -455,7 +452,6 @@ describe("attributes", () => {
 		test("isn't set when equivalent to the previous value", () => {
 			const $window = domMock({spy: mock});
 			const root = $window.document.body;
-			const render = vdom($window);
 
 			const a = m("option");
 			const b = m("option", {value: "1"});
@@ -572,7 +568,6 @@ describe("attributes", () => {
 		test("updates with the same value do not re-set the attribute if the select has focus", () => {
 			const $window = domMock({spy: mock});
 			const root = $window.document.body;
-			const render = vdom($window);
 
 			const a = makeSelect();
 			const b = makeSelect("1");

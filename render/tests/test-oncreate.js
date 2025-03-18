@@ -1,8 +1,6 @@
-"use strict"
-
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 import fragment from "../../render/fragment";
 
@@ -12,7 +10,7 @@ describe("oncreate", () => {
 	beforeEach(() => {
 		$window = domMock();
 		root = $window.document.createElement("div");
-		render = vdom($window);
+		render = renderFn($window)
 	});
 
 	test("calls oncreate when creating element", () => {

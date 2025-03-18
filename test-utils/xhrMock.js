@@ -1,10 +1,8 @@
-"use strict"
+import callAsync from '../test-utils/callAsync'
+import parseURL from '../test-utils/parseURL'
+import parseQueryString from '../querystring/parse'
 
-var callAsync = require("../test-utils/callAsync")
-var parseURL = require("../test-utils/parseURL")
-var parseQueryString = require("../querystring/parse")
-
-module.exports = function() {
+export default function() {
 	var routes = {}
 	// var callback = "callback"
 	var serverErrorHandler = function(url) {

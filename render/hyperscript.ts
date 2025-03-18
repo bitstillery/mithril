@@ -69,7 +69,7 @@ function execSelector(state, vnode) {
     return vnode
 }
 
-function hyperscript(selector) {
+export default function hyperscript(selector) {
     // Cache typeof checks to avoid repeated property access
     const selectorType = typeof selector
     const isString = selectorType === 'string'
@@ -92,5 +92,3 @@ function hyperscript(selector) {
     vnode.tag = selector
     return vnode
 }
-
-module.exports = hyperscript

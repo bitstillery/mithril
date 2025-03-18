@@ -1,5 +1,3 @@
-"use strict"
-
 import { describe, test, expect } from "bun:test";
 import Vnode from "../../render/vnode";
 

@@ -1,8 +1,6 @@
-"use strict"
-
 import { describe, test, expect, beforeEach } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 import fragment from "../../render/fragment";
 
@@ -11,7 +9,7 @@ describe("updateFragment", () => {
 	beforeEach(() => {
 		$window = domMock();
 		root = $window.document.createElement("div");
-		render = vdom($window);
+		render = renderFn($window)
 	});
 
 	test("updates fragment", () => {

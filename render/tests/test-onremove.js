@@ -1,9 +1,7 @@
-"use strict"
-
 import { describe, test, expect, beforeEach, mock } from "bun:test";
 import components from "../../test-utils/components";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 import fragment from "../../render/fragment";
 import callAsync from "../../test-utils/callAsync";
@@ -13,7 +11,7 @@ describe("onremove", () => {
 	beforeEach(() => {
 		$window = domMock();
 		root = $window.document.createElement("div");
-		render = vdom($window);
+		render = renderFn($window)
 	});
 
 	test("does not call onremove when creating", () => {

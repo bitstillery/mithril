@@ -1,8 +1,6 @@
-"use strict"
-
 import { describe, test, expect, beforeEach, mock } from "bun:test"
 import domMock from "../../test-utils/domMock"
-import vdom from "../../render/render"
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript"
 
 describe("render", function() {
@@ -10,11 +8,11 @@ describe("render", function() {
 	beforeEach(function() {
 		$window = domMock()
 		root = $window.document.createElement("div")
-		render = vdom($window)
+		render = renderFn($window)
 	})
 
 	test("initializes without DOM", function() {
-		vdom()
+		renderFn()
 	})
 
 	test("renders plain text", function() {

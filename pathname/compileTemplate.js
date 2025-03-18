@@ -1,13 +1,11 @@
-"use strict"
-
-var parsePathname = require("./parse")
+import parsePathname from './parse'
 
 // Compiles a template into a function that takes a resolved path (without query
 // strings) and returns an object containing the template parameters with their
 // parsed values. This expects the input of the compiled template to be the
 // output of `parsePathname`. Note that it does *not* remove query parameters
 // specified in the template.
-module.exports = function(template) {
+export default function(template) {
 	var templateData = parsePathname(template)
 	var templateKeys = Object.keys(templateData.params)
 	var keys = []

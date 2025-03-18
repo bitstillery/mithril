@@ -1,15 +1,13 @@
-"use strict"
-
 import { describe, test, expect, beforeEach } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 
 describe("createText", () => {
 	let $window, root, render;
 	beforeEach(() => {
 		$window = domMock();
 		root = $window.document.createElement("div");
-		render = vdom($window);
+		render = renderFn($window)
 	});
 
 	test("creates string", () => {

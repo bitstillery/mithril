@@ -29,7 +29,7 @@ import Vnode from '../render/vnode'
 //     if (attrs == null) attrs = {}
 //     return Vnode("", attrs.key, attrs, children)
 // }
-module.exports = function() {
+export default function() {
     var attrs = arguments[this], start = this + 1, children
 
     if (attrs == null) {

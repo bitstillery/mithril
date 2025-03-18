@@ -2,9 +2,8 @@
   "name": "@bitstillery/mithril",
   "version": "2.2.14",
   "author": "Bitstillery",
-  "description": "Modernized Fork of Mithril",
+  "description": "Simplified continuation of Mithril.js",
   "license": "MIT",
-  "private": true,
   "scripts": {
     "test": "bun test ./{api,render,test-utils,util}/tests/*.js"
   }

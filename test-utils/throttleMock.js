@@ -1,6 +1,4 @@
-"use strict"
-
-module.exports = function() {
+export default function() {
 	var queue = []
 	return {
 		schedule: function(fn) {

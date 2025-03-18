@@ -1,15 +1,13 @@
-"use strict"
-
 import { describe, test, expect, beforeEach, afterEach, mock } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 
 describe("form inputs", () => {
 	let $window, root, render;
 	beforeEach(() => {
 		$window = domMock();
-		render = vdom($window);
+		render = renderFn($window)
 		root = $window.document.createElement("div");
 		$window.document.body.appendChild(root);
 	});
@@ -133,7 +131,7 @@ describe("form inputs", () => {
 
 		test("retains file input value attribute if DOM value is the same as vdom value and is non-empty", () => {
 			const $window = domMock();
-			const render = vdom($window);
+
 			const root = $window.document.createElement("div");
 			$window.document.body.appendChild(root);
 			const input = m("input", {type: "file", value: "", onclick: function() {}});

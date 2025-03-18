@@ -1,9 +1,7 @@
-"use strict"
-
-var parseQueryString = require("../querystring/parse")
+import parseQueryString from '../querystring/parse'
 
 // Returns `{path, params}` from `url`
-module.exports = function(url) {
+export default function(url) {
 	var queryIndex = url.indexOf("?")
 	var hashIndex = url.indexOf("#")
 	var queryEnd = hashIndex < 0 ? url.length : hashIndex

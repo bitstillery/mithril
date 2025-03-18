@@ -1,8 +1,6 @@
-"use strict"
+import m from '../render/hyperscript'
 
-var m = require("../render/hyperscript")
-
-module.exports = [
+export default [
 	{
 		kind: "POJO",
 		create: function(methods) {

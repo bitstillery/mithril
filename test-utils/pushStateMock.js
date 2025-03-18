@@ -1,7 +1,6 @@
-"use strict"
 
-var parseURL = require("../test-utils/parseURL")
-var callAsync = require("../test-utils/callAsync")
+import parseURL from '../test-utils/parseURL'
+import callAsync from '../test-utils/callAsync'
 
 function debouncedAsync(f) {
 	var ref
@@ -14,7 +13,7 @@ function debouncedAsync(f) {
 	}
 }
 
-module.exports = function(options) {
+export default function(options) {
 	if (options == null) options = {}
 
 	var $window = options.window || {}

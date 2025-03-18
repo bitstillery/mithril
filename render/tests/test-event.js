@@ -1,8 +1,6 @@
-"use strict"
-
 import { describe, test, expect, beforeEach, mock, afterEach } from "bun:test";
 import domMock from "../../test-utils/domMock";
-import vdom from "../../render/render";
+import renderFn from "../../render/render";
 import m from "../../render/hyperscript";
 
 const originalSetTimeout = setTimeout;
@@ -24,7 +22,7 @@ describe("event", function() {
 		$window = domMock()
 		root = $window.document.body
 		redraw = mock()
-		reallyRender = vdom($window)
+		reallyRender = renderFn($window)
 		render = function(dom, vnode) {
 			return reallyRender(dom, vnode, redraw)
 		}
@@ -296,7 +294,7 @@ describe("event", function() {
 			eventObject = e;
 			// Manually call redraw to simulate the behavior
 			redraw();
-			return mock.fn()();
+			return mock();
 		});
 
 		var div = m("div", {id: "a", onclick: spy})
@@ -312,8 +310,8 @@ describe("event", function() {
 		expect(thisContext).toBe(div.dom)
 		expect(eventObject.type).toBe("click")
 		expect(eventObject.target).toBe(div.dom)
-		// We manually called redraw in the mock, so we expect 1 call
-		expect(redraw.mock.calls.length).toBe(1)
+		// We manually called redraw in the mock, and the event system also calls it
+		expect(redraw.mock.calls.length).toBe(2)
 		expect(div.dom).toBe(updated.dom)
 		expect(div.dom.attributes["id"].value).toBe("b")
 	})
@@ -326,7 +324,7 @@ describe("event", function() {
 			eventObject = e;
 			// Manually call redraw to simulate the behavior
 			redraw();
-			return mock.fn()();
+			return mock();
 		});
 
 		var listener = {handleEvent: spy}
@@ -343,8 +341,8 @@ describe("event", function() {
 		expect(thisContext).toBe(listener)
 		expect(eventObject.type).toBe("click")
 		expect(eventObject.target).toBe(div.dom)
-		// We manually called redraw in the mock, so we expect 1 call
-		expect(redraw.mock.calls.length).toBe(1)
+		// We manually called redraw in the mock, and the event system also calls it
+		expect(redraw.mock.calls.length).toBe(2)
 		expect(div.dom).toBe(updated.dom)
 		expect(div.dom.attributes["id"].value).toBe("b")
 	})
@@ -357,7 +355,7 @@ describe("event", function() {
 			eventObject = e;
 			// Manually call redraw to simulate the behavior
 			redraw();
-			return mock.fn()();
+			return mock();
 		});
 
 		var div = m("div", {ontransitionend: spy})
@@ -371,8 +369,8 @@ describe("event", function() {
 		expect(thisContext).toBe(div.dom)
 		expect(eventObject.type).toBe("transitionend")
 		expect(eventObject.target).toBe(div.dom)
-		// We manually called redraw in the mock, so we expect 1 call
-		expect(redraw.mock.calls.length).toBe(1)
+		// We manually called redraw in the mock, and the event system also calls it
+		expect(redraw.mock.calls.length).toBe(2)
 	})
 
 	test("handles transitionend EventListener object", function() {
@@ -383,7 +381,7 @@ describe("event", function() {
 			eventObject = e;
 			// Manually call redraw to simulate the behavior
 			redraw();
-			return mock.fn()();
+			return mock();
 		});
 
 		var listener = {handleEvent: spy}
@@ -398,8 +396,8 @@ describe("event", function() {
 		expect(thisContext).toBe(listener)
 		expect(eventObject.type).toBe("transitionend")
 		expect(eventObject.target).toBe(div.dom)
-		// We manually called redraw in the mock, so we expect 1 call
-		expect(redraw.mock.calls.length).toBe(1)
+		// We manually called redraw in the mock, and the event system also calls it
+		expect(redraw.mock.calls.length).toBe(2)
 	})
 
 	test("handles changed spy", function() {
