@@ -14,6 +14,26 @@
   },
   "description": "Supercharged Mithril.js",
   "license": "MIT",
+  "files": [
+    "index.ts",
+    "api/mount-redraw.ts",
+    "api/router.ts",
+    "pathname/build.ts",
+    "pathname/compileTemplate.ts",
+    "pathname/parse.ts",
+    "querystring/build.ts",
+    "querystring/parse.ts",
+    "render/domFor.ts",
+    "render/fragment.ts",
+    "render/hyperscript.ts",
+    "render/hyperscriptVnode.ts",
+    "render/render.ts",
+    "render/trust.ts",
+    "render/vnode.ts",
+    "request/request.ts",
+    "util/censor.ts",
+    "util/hasOwn.ts"
+  ],
   "scripts": {
     "lint": "eslint ./",
     "test": "bun test ./{api,render,test-utils,util}/tests/*.ts"
