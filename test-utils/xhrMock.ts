@@ -10,10 +10,12 @@ export default function() {
         return {status: 500, responseText: 'server error, most likely the URL was not defined ' + url}
     }
 
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     function FormData() {}
     var $window = {
         FormData: FormData,
         URLSearchParams: URLSearchParams,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
         XMLHttpRequest: function XMLHttpRequest() {
             var args = {}
             var headers = {}
@@ -26,7 +28,7 @@ export default function() {
 				 Source: https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/setRequestHeader
 				 */
                 if (headers[header]) {
-                    headers[header] += ', ' + value;
+                    headers[header] += ', ' + value
                 } else {
                     headers[header] = value
                 }
@@ -91,7 +93,7 @@ export default function() {
                             return
                         }
 
-                        self.status = 0;
+                        self.status = 0
                         if (typeof self.ontimeout === 'function') self.ontimeout({target: self, type:'timeout'})
                     }, self.timeout)
                 }

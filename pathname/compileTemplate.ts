@@ -14,7 +14,7 @@ export default function(template) {
         // `:lang-:locale` in routes. This is all merged into one pass so I
         // don't also accidentally escape `-` and make it harder to detect it to
         // ban it from template parameters.
-        /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
+        /:([^/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|[\]{}]/g,
         function(m, key, extra) {
             if (key == null) return '\\' + m
             keys.push({k: key, r: extra === '...'})
@@ -33,8 +33,8 @@ export default function(template) {
         if (!keys.length) return regexp.test(data.path)
         var values = regexp.exec(data.path)
         if (values == null) return false
-        for (var i = 0; i < keys.length; i++) {
-            data.params[keys[i].k] = keys[i].r ? values[i + 1] : decodeURIComponent(values[i + 1])
+        for (var j = 0; j < keys.length; j++) {
+            data.params[keys[j].k] = keys[j].r ? values[j + 1] : decodeURIComponent(values[j + 1])
         }
         return true
     }

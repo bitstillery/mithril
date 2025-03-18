@@ -3,15 +3,16 @@ import hasOwn from '../util/hasOwn'
 
 import hyperscriptVnode from './hyperscriptVnode'
 
-var SELECTOR_PARSER = /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
+var SELECTOR_PARSER = /(?:(^|#|\.)([^#.[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
 var SELECTOR_CACHE = Object.create(null)
 
-function is_empty(object) {
+function isEmpty(object) {
     return Object.keys(object).length === 0
 }
 
 function compileSelector(selector) {
     var match, tag = 'div', classes = [], attrs = {}
+    // eslint-disable-next-line no-cond-assign
     while (match = SELECTOR_PARSER.exec(selector)) {
         var type = match[1], value = match[2]
         if (type === '' && value !== '') tag = value
@@ -25,7 +26,9 @@ function compileSelector(selector) {
         }
     }
     if (classes.length > 0) attrs.className = classes.join(' ')
-    if (is_empty(attrs)) attrs = null
+    if (isEmpty(attrs)) {
+        attrs = null
+    }
     return SELECTOR_CACHE[selector] = {tag: tag, attrs: attrs}
 }
 

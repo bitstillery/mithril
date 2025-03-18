@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import {describe, test, expect, beforeEach, mock} from 'bun:test'
 
 import domMock from '../../test-utils/domMock'
-import renderFn from '../../render/render';
+import renderFn from '../../render/render'
 import m from '../../render/hyperscript'
 
 describe('render', function() {
@@ -45,7 +46,7 @@ describe('render', function() {
     test('overwrites existing content', function() {
         const vnodes = []
 
-        root.appendChild($window.document.createElement('div'));
+        root.appendChild($window.document.createElement('div'))
 
         render(root, vnodes)
 

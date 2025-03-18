@@ -30,7 +30,7 @@ export default function parseURL(url, root) {
             var slashIndex = root.pathname.lastIndexOf('/')
             var path = slashIndex > -1 ? root.pathname.slice(0, slashIndex + 1) : './'
             var normalized = url.slice(0, pathnameEnd).replace(/^\.$/, root.pathname.slice(slashIndex + 1)).replace(/^\.\//, '')
-            var dotdot = /\/[^\/]+?\/\.{2}/g
+            var dotdot = /\/[^/]+?\/\.{2}/g
             var pathname = path + normalized
             pathname = path + normalized
             while (dotdot.test(pathname)) pathname = pathname.replace(dotdot, '')

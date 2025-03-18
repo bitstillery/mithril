@@ -1,21 +1,21 @@
-import {describe, test, expect, beforeEach, mock, afterEach} from 'bun:test';
+import {describe, test, expect, beforeEach, mock, afterEach} from 'bun:test'
 
-import domMock from '../../test-utils/domMock';
-import renderFn from '../../render/render';
-import m from '../../render/hyperscript';
+import domMock from '../../test-utils/domMock'
+import renderFn from '../../render/render'
+import m from '../../render/hyperscript'
 
-const originalSetTimeout = setTimeout;
+const originalSetTimeout = setTimeout
 beforeEach(() => {
     // Replace global setTimeout to avoid NaN warning
     global.setTimeout = function(fn, timeout) {
         // Ensure timeout is a valid number
-        return originalSetTimeout(fn, isNaN(timeout) ? 1 : timeout);
-    };
-});
+        return originalSetTimeout(fn, isNaN(timeout) ? 1 : timeout)
+    }
+})
 
 afterEach(() => {
-    global.setTimeout = originalSetTimeout;
-});
+    global.setTimeout = originalSetTimeout
+})
 
 describe('event', function() {
     var $window, root, redraw, render, reallyRender
@@ -288,15 +288,15 @@ describe('event', function() {
     })
 
     test('fires onclick only once after redraw', function() {
-        var thisContext;
-        var eventObject;
+        var thisContext
+        var eventObject
         var spy = mock(function(e) {
-            thisContext = this;
-            eventObject = e;
+            thisContext = this
+            eventObject = e
             // Manually call redraw to simulate the behavior
-            redraw();
-            return mock();
-        });
+            redraw()
+            return mock()
+        })
 
         var div = m('div', {id: 'a', onclick: spy})
         var updated = m('div', {id: 'b', onclick: spy})
@@ -318,15 +318,15 @@ describe('event', function() {
     })
 
     test('fires click EventListener object only once after redraw', function() {
-        var thisContext;
-        var eventObject;
+        var thisContext
+        var eventObject
         var spy = mock(function(e) {
-            thisContext = this;
-            eventObject = e;
+            thisContext = this
+            eventObject = e
             // Manually call redraw to simulate the behavior
-            redraw();
-            return mock();
-        });
+            redraw()
+            return mock()
+        })
 
         var listener = {handleEvent: spy}
         var div = m('div', {id: 'a', onclick: listener})
@@ -349,15 +349,15 @@ describe('event', function() {
     })
 
     test('handles ontransitionend', function() {
-        var thisContext;
-        var eventObject;
+        var thisContext
+        var eventObject
         var spy = mock(function(e) {
-            thisContext = this;
-            eventObject = e;
+            thisContext = this
+            eventObject = e
             // Manually call redraw to simulate the behavior
-            redraw();
-            return mock();
-        });
+            redraw()
+            return mock()
+        })
 
         var div = m('div', {ontransitionend: spy})
         var e = $window.document.createEvent('HTMLEvents')
@@ -375,15 +375,15 @@ describe('event', function() {
     })
 
     test('handles transitionend EventListener object', function() {
-        var thisContext;
-        var eventObject;
+        var thisContext
+        var eventObject
         var spy = mock(function(e) {
-            thisContext = this;
-            eventObject = e;
+            thisContext = this
+            eventObject = e
             // Manually call redraw to simulate the behavior
-            redraw();
-            return mock();
-        });
+            redraw()
+            return mock()
+        })
 
         var listener = {handleEvent: spy}
         var div = m('div', {ontransitionend: listener})
@@ -417,7 +417,7 @@ describe('event', function() {
         var div2 = m('div', {ontransitionend: function() {}})
 
         reallyRender(root, [div2], replacementRedraw)
-        var e = $window.document.createEvent('HTMLEvents')
+        e = $window.document.createEvent('HTMLEvents')
         e.initEvent('transitionend', true, true)
         div2.dom.dispatchEvent(e)
 

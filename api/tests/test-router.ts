@@ -1,12 +1,11 @@
-// Low-priority TODO: remove the dependency on the renderer here.
-import {describe, test, expect, beforeEach, mock} from 'bun:test';
+import {describe, test, expect, beforeEach, mock} from 'bun:test'
 
-import browserMock from '../../test-utils/browserMock';
-import throttleMocker from '../../test-utils/throttleMock';
-import m from '../../render/hyperscript';
-import coreRenderer from '../../render/render';
-import apiMountRedraw from '../../api/mount-redraw';
-import apiRouter from '../../api/router';
+import browserMock from '../../test-utils/browserMock'
+import throttleMocker from '../../test-utils/throttleMock'
+import m from '../../render/hyperscript'
+import coreRenderer from '../../render/render'
+import apiMountRedraw from '../../api/mount-redraw'
+import apiRouter from '../../api/router'
 
 describe('route', function() {
     // Note: the `n` parameter used in calls to this are generally found by
@@ -57,6 +56,7 @@ describe('route', function() {
                                 id = undefined
                                 trace.message = 'called ' +
 									(Date.now() - start) + 'ms after test end'
+                                // eslint-disable-next-line no-console
                                 console.error(trace.stack)
                                 expect('in test').toBe('not in test')
                             }
@@ -66,6 +66,7 @@ describe('route', function() {
                 }
 
                 // In case it doesn't get reset
+                // eslint-disable-next-line no-console
                 let realError = console.error
 
                 beforeEach(function() {
@@ -80,6 +81,7 @@ describe('route', function() {
                     mountRedraw = apiMountRedraw(coreRenderer($window), throttleMock.schedule, console)
                     route = apiRouter($window, mountRedraw)
                     route.prefix = prefix
+                    // eslint-disable-next-line no-console
                     console.error = function() {
                         realError.call(this, new Error('Unexpected `console.error` call'))
                         realError.apply(this, arguments)
@@ -337,6 +339,7 @@ describe('route', function() {
                 test('routed mount points only redraw asynchronously (closure component)', function() {
                     let view = mock()
 
+                    // eslint-disable-next-line @typescript-eslint/naming-convention
                     function Cmp() {return {view: lock(view)}}
 
                     $window.location.href = prefix + '/'
@@ -1141,6 +1144,7 @@ describe('route', function() {
                     let renderCount = 0
                     let spy = mock()
                     let error = new Error('error')
+                    // eslint-disable-next-line no-console
                     let errorSpy = console.error = mock()
 
                     let resolver = {
@@ -1888,8 +1892,8 @@ describe('route', function() {
                         },
                     })
 
-                    expect(route.param('id')).toBe(undefined);
-                    expect(route.param()).toBeUndefined();
+                    expect(route.param('id')).toBe(undefined)
+                    expect(route.param()).toBeUndefined()
 
                     return waitCycles(1).then(function() {
                         expect(route.param('id')).toBe('1')

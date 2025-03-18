@@ -1,8 +1,8 @@
 'use strict'
 
-import {describe, test, expect} from 'bun:test';
+import {describe, test, expect} from 'bun:test'
 
-import parsePathname from '../../pathname/parse';
+import parsePathname from '../../pathname/parse'
 
 describe('parsePathname', () => {
     test('parses empty string', () => {

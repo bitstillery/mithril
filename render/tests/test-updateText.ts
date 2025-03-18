@@ -1,103 +1,103 @@
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import domMock from '../../test-utils/domMock'
-import renderFn from '../../render/render';
+import renderFn from '../../render/render'
 
 describe('updateText', () => {
-    let $window, root, render;
+    let $window, root, render
     beforeEach(() => {
-        $window = domMock();
-        root = $window.document.createElement('div');
+        $window = domMock()
+        root = $window.document.createElement('div')
         render = renderFn($window)
-    });
+    })
 
     test('updates to string', () => {
-        const vnode = 'a';
-        const updated = 'b';
+        const vnode = 'a'
+        const updated = 'b'
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('b');
-    });
+        expect(root.firstChild.nodeValue).toBe('b')
+    })
 
     test('updates to falsy string', () => {
-        const vnode = 'a';
-        const updated = '';
+        const vnode = 'a'
+        const updated = ''
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('');
-    });
+        expect(root.firstChild.nodeValue).toBe('')
+    })
 
     test('updates from falsy string', () => {
-        const vnode = '';
-        const updated = 'b';
+        const vnode = ''
+        const updated = 'b'
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('b');
-    });
+        expect(root.firstChild.nodeValue).toBe('b')
+    })
 
     test('updates to number', () => {
-        const vnode = 'a';
-        const updated = 1;
+        const vnode = 'a'
+        const updated = 1
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('1');
-    });
+        expect(root.firstChild.nodeValue).toBe('1')
+    })
 
     test('updates to falsy number', () => {
-        const vnode = 'a';
-        const updated = 0;
+        const vnode = 'a'
+        const updated = 0
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('0');
-    });
+        expect(root.firstChild.nodeValue).toBe('0')
+    })
 
     test('updates from falsy number', () => {
-        const vnode = 0;
-        const updated = 'b';
+        const vnode = 0
+        const updated = 'b'
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('b');
-    });
+        expect(root.firstChild.nodeValue).toBe('b')
+    })
 
     test('updates to boolean', () => {
-        const vnode = 'a';
-        const updated = true;
+        const vnode = 'a'
+        const updated = true
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.childNodes.length).toBe(0);
-    });
+        expect(root.childNodes.length).toBe(0)
+    })
 
     test('updates to falsy boolean', () => {
-        const vnode = 'a';
-        const updated = false;
+        const vnode = 'a'
+        const updated = false
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.childNodes.length).toBe(0);
-    });
+        expect(root.childNodes.length).toBe(0)
+    })
 
     test('updates from falsy boolean', () => {
-        const vnode = false;
-        const updated = 'b';
+        const vnode = false
+        const updated = 'b'
 
-        render(root, vnode);
-        render(root, updated);
+        render(root, vnode)
+        render(root, updated)
 
-        expect(root.firstChild.nodeValue).toBe('b');
-    });
-});
+        expect(root.firstChild.nodeValue).toBe('b')
+    })
+})

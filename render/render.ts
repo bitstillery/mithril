@@ -118,6 +118,7 @@ export default function() {
         // Capture nodes to remove, so we don't confuse them.
         var fragment = getDocument(parent).createDocumentFragment()
         var child
+        // eslint-disable-next-line no-cond-assign
         while (child = temp.firstChild) {
             fragment.appendChild(child)
         }
@@ -383,7 +384,15 @@ export default function() {
                 else if (oldStart > oldEnd) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns)
                 else {
                     // inspired by ivi https://github.com/ivijs/ivi/ by Boris Kaul
-                    var originalNextSibling = nextSibling, vnodesLength = end - start + 1, oldIndices = new Array(vnodesLength), li = 0, i = 0, pos = 2147483647, matched = 0, map, lisIndices
+                    var originalNextSibling = nextSibling
+                    var vnodesLength = end - start + 1
+                    var oldIndices = new Array(vnodesLength) 
+                    var li = 0
+                    var i = 0
+                    var pos = 2147483647
+                    var matched = 0
+                    var lisIndices
+                    
                     for (i = 0; i < vnodesLength; i++) oldIndices[i] = -1
                     for (i = end; i >= start; i--) {
                         if (map == null) map = getKeyMap(old, oldStart, oldEnd + 1)
@@ -552,10 +561,10 @@ export default function() {
     const lisTemp:any[] = []
     function makeLisIndices(a:any[]) {
         var result = [0]
-        var u = 0, v = 0, i = 0
+        var u = 0, v = 0
         var il = lisTemp.length = a.length
-        for (var i = 0; i < il; i++) lisTemp[i] = a[i]
-        for (var i = 0; i < il; ++i) {
+        for (let i = 0; i < il; i++) lisTemp[i] = a[i]
+        for (let i = 0; i < il; ++i) {
             if (a[i] === -1) continue
             var j = result[result.length - 1]
             if (a[j] < a[i]) {
@@ -734,6 +743,7 @@ export default function() {
                 if (vnode.tag === 'option' && old !== null && vnode.dom.value === '' + value) return
                 // setting input[type=file][value] to different value is an error if it's non-empty
                 // Not ideal, but it at least works around the most common source of uncaught exceptions for now.
+                // eslint-disable-next-line no-console
                 if (vnode.tag === 'input' && vnode.attrs.type === 'file' && '' + value !== '') { console.error('`value` is read-only on file inputs!'); return }
                 /* eslint-enable no-implicit-coercion */
             }
@@ -788,17 +798,19 @@ export default function() {
         var val
         if (old != null) {
             if (old === attrs) {
+                // eslint-disable-next-line no-console
                 console.warn('Don\'t reuse attrs object, use new object for every redraw, this will throw in next major')
             }
             for (var key in old) {
+                // eslint-disable-next-line no-cond-assign
                 if (((val = old[key]) != null) && (attrs == null || attrs[key] == null)) {
                     removeAttr(vnode, key, val, ns)
                 }
             }
         }
         if (attrs != null) {
-            for (var key in attrs) {
-                setAttr(vnode, key, old && old[key], attrs[key], ns)
+            for (var _key in attrs) {
+                setAttr(vnode, _key, old && old[_key], attrs[_key], ns)
             }
         }
     }
@@ -924,6 +936,7 @@ export default function() {
     //    that below.
     // 6. In function-based event handlers, `return false` prevents the default
     //    action and stops event propagation. We replicate that below.
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     function EventDict() {
         // Save this, so the current redraw is correctly tracked.
         this._ = currentRedraw
@@ -969,11 +982,11 @@ export default function() {
     function shouldNotUpdate(vnode, old) {
         do {
             if (vnode.attrs != null && typeof vnode.attrs.onbeforeupdate === 'function') {
-                var force = callHook.call(vnode.attrs.onbeforeupdate, vnode, old)
+                let force = callHook.call(vnode.attrs.onbeforeupdate, vnode, old)
                 if (force !== undefined && !force) break
             }
             if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeupdate === 'function') {
-                var force = callHook.call(vnode.state.onbeforeupdate, vnode, old)
+                let force = callHook.call(vnode.state.onbeforeupdate, vnode, old)
                 if (force !== undefined && !force) break
             }
             return false

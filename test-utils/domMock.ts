@@ -68,11 +68,13 @@ export default function(options) {
                     if (typeof handler === 'function') try {
                         handler.call(this, e)
                     } catch (err) {
+                        // eslint-disable-next-line no-console
                         console.error(err)
                     }
                     else try {
                         handler.handleEvent(e)
                     } catch (err) {
+                        // eslint-disable-next-line no-console
                         console.error(err)
                     }
                     if (stopped) return
@@ -83,6 +85,7 @@ export default function(options) {
         // this would require getters/setters for each of them though and we haven't gotten around to
         // adding them since it would be at a high perf cost or would entail some heavy refactoring of
         // the mocks (prototypes instead of closures).
+        // eslint-disable-next-line no-console
         if (e.eventPhase > 1 && typeof this['on' + e.type] === 'function' && !isModernEvent(e.type)) try {this['on' + e.type](e)} catch (err) {console.error(err)}
     }
     function appendChild(child) {
@@ -212,7 +215,7 @@ export default function(options) {
     }
     function parseMarkup(value, root, voidElements, xmlns) {
         var depth = 0, stack = [root]
-        value.replace(/<([a-z0-9\-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9\-]+?)>|([^<]+)/g, function(match, startTag, attrs, selfClosed, endTag, text) {
+        value.replace(/<([a-z0-9-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9-]+?)>|([^<]+)/g, function(match, startTag, attrs, selfClosed, endTag, text) {
             if (startTag) {
                 var element = xmlns == null ? $window.document.createElement(startTag) : $window.document.createElementNS(xmlns, startTag)
                 attrs.replace(/\s+?([^=]+?)=(?:"([^"]*?)"|'([^']*?)'|([^\s>]*))/g, function(match, key, doubleQuoted, singleQuoted, unquoted) {
@@ -234,6 +237,7 @@ export default function(options) {
             }
         })
     }
+    // eslint-disable-next-line @typescript-eslint/naming-convention
     function DOMParser() {}
     DOMParser.prototype.parseFromString = function(src, mime) {
         if (mime !== 'image/svg+xml') throw new Error('The DOMParser mock only supports the "image/svg+xml" MIME type')
@@ -275,8 +279,8 @@ export default function(options) {
                                     var colonIndex = rule.indexOf(':')
                                     if (colonIndex > -1) {
                                         var rawKey = rule.slice(0, colonIndex).trim()
-                                        var key = camelCase(rawKey)
-                                        var value = rule.slice(colonIndex + 1).trim()
+                                        key = camelCase(rawKey)
+                                        value = rule.slice(colonIndex + 1).trim()
                                         if (key !== 'cssText') {
                                             style[key] = style[rawKey] = value
                                             buf.push(rawKey + ': ' + value + ';')
@@ -347,7 +351,7 @@ export default function(options) {
                         while (this.firstChild) removeChild.call(this, this.firstChild)
                         var match = value.match(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg">(.*)<\/svg>$/), root, ns
                         if (match) {
-                            var value = match[1]
+                            value = match[1]
                             root = $window.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
                             ns = 'http://www.w3.org/2000/svg'
                             appendChild.call(this, root)
@@ -406,7 +410,7 @@ export default function(options) {
                                 if (events[type].handlers[i] === handler && events[type].options[i].capture === options.capture) {
                                     events[type].handlers.splice(i, 1)
                                     events[type].options.splice(i, 1)
-                                    break;
+                                    break
                                 }
                             }
                         }
@@ -447,7 +451,7 @@ export default function(options) {
                                 return
                             }
                             e.eventPhase = 3
-                            for (var i = 0; i < parents.length; i++) {
+                            for (let i = 0; i < parents.length; i++) {
                                 dispatchEvent.call(parents[i], e)
                                 if (stopped) {
                                     return
@@ -534,8 +538,8 @@ export default function(options) {
                             v = Number(v)
                             if (!isNaN(v) && !isFinite(v)) throw new TypeError('infinite value')
                             switch (this.getAttribute('type')) {
-                            case 'date': valueSetter(isNaN(v) ? '' : new Date(v).toUTCString()); break;
-                            case 'number': valueSetter(String(value)); break;
+                            case 'date': valueSetter(isNaN(v) ? '' : new Date(v).toUTCString()); break
+                            case 'number': valueSetter(String(value)); break
                             default: throw new Error('invalid state')
                             }
                         },
@@ -566,8 +570,8 @@ export default function(options) {
 
                 if (element.nodeName === 'TEXTAREA') {
                     var wasNeverSet = true
-                    var value = ''
-                    var valueSetter = spy(function(v) {
+                    value = ''
+                    valueSetter = spy(function(v) {
                         wasNeverSet = false
                         /* eslint-disable no-implicit-coercion*/
                         value = v === null ? '' : '' + v
@@ -631,7 +635,7 @@ export default function(options) {
                         },
                         enumerable: true,
                     })
-                    var valueSetter = spy(function(value) {
+                    valueSetter = spy(function(value) {
                         if (value === null) {
                             selectedIndex = -1
                         } else {
@@ -663,7 +667,7 @@ export default function(options) {
                     })
                 }
                 if (element.nodeName === 'OPTION') {
-                    var valueSetter = spy(function(value) {
+                    valueSetter = spy(function(value) {
                         /* eslint-disable no-implicit-coercion*/
                         this.setAttribute('value', '' + value)
                         /* eslint-enable no-implicit-coercion*/

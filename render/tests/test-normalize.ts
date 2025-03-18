@@ -1,6 +1,6 @@
-import {describe, test, expect} from 'bun:test';
+import {describe, test, expect} from 'bun:test'
 
-import Vnode from '../../render/vnode';
+import Vnode from '../../render/vnode'
 
 describe('normalize', () => {
     test('normalizes array into fragment', () => {

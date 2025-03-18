@@ -26,7 +26,7 @@ export default function(string) {
             var level = levels[j], nextLevel = levels[j + 1]
             var isNumber = nextLevel == '' || !isNaN(parseInt(nextLevel, 10))
             if (level === '') {
-                var key = levels.slice(0, j).join()
+                key = levels.slice(0, j).join()
                 if (counters[key] == null) {
                     counters[key] = Array.isArray(cursor) ? cursor.length : 0
                 }

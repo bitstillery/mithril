@@ -1,8 +1,8 @@
 'use strict'
 
-import {describe, test, expect, mock} from 'bun:test';
+import {describe, test, expect, mock} from 'bun:test'
 
-import throttleMocker from '../../test-utils/throttleMock';
+import throttleMocker from '../../test-utils/throttleMock'
 
 describe('throttleMock', () => {
     test('schedules one callback', () => {

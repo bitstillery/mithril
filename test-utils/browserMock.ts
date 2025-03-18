@@ -8,8 +8,8 @@ export default function(env) {
 
     var dom = domMock()
     var xhr = xhrMock()
-    for (var key in dom) if (!$window[key]) $window[key] = dom[key]
-    for (var key in xhr) if (!$window[key]) $window[key] = xhr[key]
+    for (let key in dom) if (!$window[key]) $window[key] = dom[key]
+    for (let key in xhr) if (!$window[key]) $window[key] = xhr[key]
     pushStateMock(env)
 
     return $window

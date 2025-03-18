@@ -15,8 +15,8 @@ export default function(object) {
             }
         }
         else if (Object.prototype.toString.call(value) === '[object Object]') {
-            for (var i in value) {
-                destructure(key + '[' + i + ']', value[i])
+            for (var j in value) {
+                destructure(key + '[' + j + ']', value[j])
             }
         }
         else args.push(encodeURIComponent(key) + (value != null && value !== '' ? '=' + encodeURIComponent(value) : ''))

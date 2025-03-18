@@ -4,12 +4,13 @@
   "author": "Bitstillery",
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",
-    "@typescript-eslint/eslint-plugin": "^8.26.1",
-    "@typescript-eslint/parser": "^8.26.1",
+    "@typescript-eslint/eslint-plugin": "6.21",
+    "@typescript-eslint/parser": "6.21",
     "eslint": "8.57.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.4",
-    "eslint-plugin-sort-class-members": "^1.21.0"
+    "eslint-plugin-sort-class-members": "^1.21.0",
+    "typescript": "5.3"
   },
   "description": "Simplified continuation of Mithril.js",
   "license": "MIT",

@@ -1,7 +1,7 @@
 import {describe, test, beforeEach, expect} from 'bun:test'
 
 import domMock from '../../test-utils/domMock'
-import renderFn from '../../render/render';
+import renderFn from '../../render/render'
 import m from '../../render/hyperscript'
 import trust from '../../render/trust'
 

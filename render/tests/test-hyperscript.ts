@@ -1,14 +1,14 @@
-import {describe, test, expect, mock} from 'bun:test';
+import {describe, test, expect, mock} from 'bun:test'
 
-import m from '../../render/hyperscript';
+import m from '../../render/hyperscript'
 
 describe('hyperscript', () => {
     describe('selector', () => {
         test('throws on null selector', () => {
-            expect(() => m(null)).toThrow();
+            expect(() => m(null)).toThrow()
         })
         test('throws on non-string selector w/o a view property', () => {
-            expect(() => m({})).toThrow();
+            expect(() => m({})).toThrow()
         })
         test('handles tag in selector', () => {
             const vnode = m('a')
@@ -644,6 +644,7 @@ describe('hyperscript', () => {
             expect(vnode.children[0]).toBe('b')
         })
         test('works with constructibles', () => {
+            // eslint-disable-next-line @typescript-eslint/naming-convention
             function Component() {}
             Component.prototype.view = function() {}
 

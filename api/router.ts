@@ -77,6 +77,7 @@ export default function($window, mountRedraw) {
         Object.assign(data.params, $window.history.state)
 
         function reject(e) {
+            // eslint-disable-next-line no-console
             console.error(e)
             setPath(fallbackRoute, null, {replace: true})
         }
@@ -159,7 +160,7 @@ export default function($window, mountRedraw) {
 
         compiled = Object.keys(routes).map(function(route) {
             if (route[0] !== '/') throw new SyntaxError('Routes must start with a \'/\'.')
-            if ((/:([^\/\.-]+)(\.{3})?:/).test(route)) {
+            if ((/:([^/.-]+)(\.{3})?:/).test(route)) {
                 throw new SyntaxError('Route parameter names must be separated with either \'/\', \'.\', or \'-\'.')
             }
             return {
@@ -217,6 +218,7 @@ export default function($window, mountRedraw) {
             // The attribute is coerced so users don't get surprised over
             // `disabled: 0` resulting in a button that's somehow routable
             // despite being visibly disabled.
+            // eslint-disable-next-line no-cond-assign
             if (child.attrs.disabled = Boolean(child.attrs.disabled)) {
                 child.attrs.href = null
                 child.attrs['aria-disabled'] = 'true'

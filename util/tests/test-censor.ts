@@ -1,8 +1,8 @@
 'use strict'
 
-import {describe, test, expect} from 'bun:test';
+import {describe, test, expect} from 'bun:test'
 
-import censor from '../../util/censor';
+import censor from '../../util/censor'
 
 describe('censor', () => {
     describe('magic missing, no extras', () => {

@@ -1,6 +1,6 @@
-import {describe, test, expect} from 'bun:test';
+import {describe, test, expect} from 'bun:test'
 
-import trust from '../../render/trust';
+import trust from '../../render/trust'
 
 describe('trust', () => {
     test('works with html', () => {

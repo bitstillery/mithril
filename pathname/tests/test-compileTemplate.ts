@@ -1,9 +1,7 @@
-'use strict'
+import {describe, test, expect} from 'bun:test'
 
-import {describe, test, expect} from 'bun:test';
-
-import parsePathname from '../../pathname/parse';
-import compileTemplate from '../../pathname/compileTemplate';
+import parsePathname from '../../pathname/parse'
+import compileTemplate from '../../pathname/compileTemplate'
 
 describe('compileTemplate', () => {
     test('checks empty string', () => {
@@ -158,7 +156,7 @@ describe('compileTemplate', () => {
         var data = parsePathname('/route/1')
         expect(compileTemplate('/route/:id/sep/:name')(data)).toBe(false)
         expect(data.params).toEqual({})
-        var data = parsePathname('/route/1/sep')
+        data = parsePathname('/route/1/sep')
         expect(compileTemplate('/route/:id/sep/:name')(data)).toBe(false)
         expect(data.params).toEqual({})
     })
