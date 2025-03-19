@@ -16,10 +16,10 @@ import fragment from './render/fragment'
 hyperscript.trust = trust
 hyperscript.fragment = fragment
 
-const render = _render(window)
-const mountRedraw = _mountRedraw(render, requestAnimationFrame, console)
-const request = _request(window, mountRedraw.redraw)
-const route = _route(window, mountRedraw)
+const render = _render(globalThis)
+const mountRedraw = _mountRedraw(render, globalThis.requestAnimationFrame, console)
+const request = _request(globalThis, mountRedraw.redraw)
+const route = _route(globalThis, mountRedraw)
 
 const m = function m() { 
     return hyperscript.apply(this, arguments) 
