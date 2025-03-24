@@ -1,6 +1,6 @@
 import {bench, run, group} from 'mitata'
 
-import domMock from '../test-utils/domMock'
+import { JSDOM } from 'jsdom'
 import renderFn from '../render/render'
 import m from '../render/hyperscript'
 import fragment from '../render/fragment'
@@ -31,7 +31,8 @@ class RenderBenchmark {
    * Create a mock DOM environment for testing
    */
     private setupDOM() {
-        this.$window = domMock({})
+        const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+        this.$window = dom.window
         this.root = this.$window.document.createElement('div')
         this.render = renderFn(this.$window)
     }

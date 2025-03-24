@@ -4,12 +4,14 @@
   "author": "Bitstillery",
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.2.0",
+    "@types/jsdom": "^21.1.7",
     "@typescript-eslint/eslint-plugin": "6.21",
     "@typescript-eslint/parser": "6.21",
     "eslint": "8.57.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.4",
     "eslint-plugin-sort-class-members": "^1.21.0",
+    "jsdom": "^26.0.0",
     "typescript": "5.3"
   },
   "description": "Mithril.js with TypeScript and a few extra features",
@@ -38,11 +40,12 @@
     "lint": "eslint ./",
     "test": "bun test ./{api,render,test-utils,util}/tests/*.ts",
     "benchmark": "bun benchmark/run.ts",
-    "benchmark:simple": "bun benchmark/index.ts --simple",
-    "benchmark:vnode": "bun benchmark/index.ts --vnode",
-    "benchmark:algorithms": "bun benchmark/index.ts --algorithms",
-    "benchmark:all": "bun benchmark/index.ts --all",
-    "benchmark:help": "bun benchmark/index.ts --help"
+    "benchmark:direct": "bun benchmark/run.ts direct",
+    "benchmark:render": "bun benchmark/run.ts render",
+    "benchmark:keyed": "bun benchmark/run.ts keyed",
+    "benchmark:optimize": "bun benchmark/run.ts optimize",
+    "benchmark:all": "bun benchmark/run.ts all",
+    "benchmark:help": "bun benchmark/run.ts help"
   },
   "type": "module",
   "publishConfig": {

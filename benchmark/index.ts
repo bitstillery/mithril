@@ -3,13 +3,15 @@
  * Unified Mithril Benchmarking Tool
  * 
  * This script provides a consistent interface to run all Mithril benchmarks.
- * It focuses on pure JavaScript performance tests that don't require a DOM.
+ * It includes both JavaScript operations and DOM rendering benchmarks.
  */
 
 import {bench, run, group} from 'mitata'
-
 import m from '../render/hyperscript'
 import fragment from '../render/fragment'
+import {RenderBenchmark} from './render-performance'
+import { JSDOM } from 'jsdom'
+import renderFn from '../render/render'
 
 /**
  * Simple benchmark for basic operations
@@ -60,7 +62,7 @@ async function runSimpleBenchmark() {
         colors: true,
         min_max: true,
         median: true,
-        percentiles: true,
+        percentiles: true
     })
 }
 
@@ -82,8 +84,8 @@ async function runVnodeOperationBenchmarks() {
                 m('p', {className: 'content'}, 'Content'),
                 m('div', {className: 'footer'}, [
                     m('span', 'Footer'),
-                    m('a', {href: '#'}, 'Link'),
-                ]),
+                    m('a', {href: '#'}, 'Link')
+                ])
             ])
         })
         
@@ -91,7 +93,7 @@ async function runVnodeOperationBenchmarks() {
             return fragment({key: 'test-fragment'}, 
                 m('div', 'Item 1'),
                 m('div', 'Item 2'),
-                m('div', 'Item 3'),
+                m('div', 'Item 3')
             )
         })
         
@@ -110,7 +112,7 @@ async function runVnodeOperationBenchmarks() {
         colors: true,
         min_max: true,
         median: true,
-        percentiles: true,
+        percentiles: true
     })
 }
 
@@ -157,7 +159,7 @@ async function runAlgorithmBenchmarks() {
         bench('Map transformation (100 items)', () => {
             return smallArray.map(item => ({
                 ...item,
-                transformed: item.value * 2,
+                transformed: item.value * 2
             }))
         })
         
@@ -172,7 +174,121 @@ async function runAlgorithmBenchmarks() {
         colors: true,
         min_max: true,
         median: true,
-        percentiles: true,
+        percentiles: true
+    })
+}
+
+/**
+ * Benchmark DOM operations
+ */
+async function runDOMBenchmarks() {
+    console.log('\nRunning DOM Benchmarks:')
+    console.log('=====================')
+    
+    const benchmark = new RenderBenchmark({iterations: 30})
+    
+    // Simple list operations
+    const smallList = RenderBenchmark.generateList(10)
+    const mediumList = RenderBenchmark.generateList(50)
+    
+    // Create shuffled and reversed lists for updates
+    const smallListShuffled = RenderBenchmark.shuffleList(smallList)
+    const mediumListShuffled = RenderBenchmark.shuffleList(mediumList)
+    const smallListReversed = RenderBenchmark.reverseList(smallList)
+    
+    benchmark
+        .startGroup('List Creation')
+        .add('Create 10 elements', [], smallList)
+        .add('Create 50 elements', [], mediumList)
+        
+        .startGroup('List Removal')
+        .add('Remove 10 elements', smallList, [])
+        .add('Remove 50 elements', mediumList, [])
+        
+        .startGroup('List Operations')
+        .add('Reverse 10 elements', smallList, smallListReversed)
+        .add('Shuffle 10 elements', smallList, smallListShuffled)
+        .add('Shuffle 50 elements', mediumList, mediumListShuffled)
+        
+        .startGroup('Identical Render')
+        .add('Re-render identical 10 elements', smallList, smallList)
+        .add('Re-render identical 50 elements', mediumList, mediumList)
+    
+    return benchmark.run()
+}
+
+/**
+ * Directly benchmark render function operations with JSDOM
+ */
+async function runDirectRenderBenchmarks() {
+    console.log('\nRunning Direct Render Benchmarks:')
+    console.log('==============================')
+    
+    // Setup JSDOM
+    const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>')
+    const window = dom.window
+    const document = window.document
+    const render = renderFn(window)
+    
+    // Create a root element
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    
+    group('Direct DOM Operations', () => {
+        // Create test data
+        const simpleVnode = m('div', {id: 'test'}, 'Hello World')
+        const complexVnode = m('div', {id: 'parent'}, [
+            m('h1', 'Title'),
+            m('p', 'Paragraph 1'),
+            m('p', 'Paragraph 2'),
+            m('ul', [
+                m('li', 'Item 1'),
+                m('li', 'Item 2'),
+                m('li', 'Item 3')
+            ])
+        ])
+        
+        const list10 = Array.from({length: 10}, (_, i) => 
+            m('div', {key: `item-${i}`}, `Item ${i}`)
+        )
+        
+        const list10Shuffled = [...list10].reverse()
+        
+        bench('Render simple node', () => {
+            render(root, simpleVnode)
+            return root
+        })
+        
+        bench('Render complex node', () => {
+            render(root, complexVnode)
+            return root
+        })
+        
+        bench('Render list of 10 nodes', () => {
+            render(root, list10)
+            return root
+        })
+        
+        bench('Update list order', () => {
+            render(root, list10)
+            render(root, list10Shuffled)
+            return root
+        })
+        
+        bench('Create then remove', () => {
+            render(root, list10)
+            render(root, [])
+            return root
+        })
+    })
+    
+    return run({
+        avg: true,
+        json: false,
+        colors: true,
+        min_max: true,
+        median: true,
+        percentiles: true
     })
 }
 
@@ -188,6 +304,8 @@ function printHelp() {
     console.log('  --simple        Run simple JS operation benchmarks')
     console.log('  --vnode         Run vnode creation benchmarks')
     console.log('  --algorithms    Run algorithm benchmarks')
+    console.log('  --dom           Run DOM rendering benchmarks')
+    console.log('  --direct-render Run direct render function benchmarks')
     console.log('  --all           Run all benchmarks (default)')
     console.log('  --help, -h      Show this help message')
 }
@@ -215,6 +333,10 @@ async function main() {
             await runVnodeOperationBenchmarks()
         } else if (args.includes('--algorithms')) {
             await runAlgorithmBenchmarks()
+        } else if (args.includes('--dom')) {
+            await runDOMBenchmarks()
+        } else if (args.includes('--direct-render')) {
+            await runDirectRenderBenchmarks()
         } else {
             // Default: run all benchmarks
             console.log('Running all benchmarks...')
@@ -227,6 +349,12 @@ async function main() {
             
             const algoResults = await runAlgorithmBenchmarks()
             console.log('\nAlgorithm benchmark complete. Results:', algoResults.length, 'benchmarks run')
+            
+            const domResults = await runDOMBenchmarks()
+            console.log('\nDOM benchmark complete. Results:', typeof domResults, 'benchmarks run')
+            
+            const directResults = await runDirectRenderBenchmarks()
+            console.log('\nDirect render benchmark complete. Results:', directResults.length, 'benchmarks run')
         }
     } catch (error) {
         console.error('Error running benchmarks:', error)
@@ -243,4 +371,6 @@ export {
     runSimpleBenchmark,
     runVnodeOperationBenchmarks,
     runAlgorithmBenchmarks,
+    runDOMBenchmarks,
+    runDirectRenderBenchmarks,
 } 
