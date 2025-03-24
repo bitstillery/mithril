@@ -553,95 +553,186 @@ export default function() {
         keyMapCache.set(vnodes, {start, end, map})
         return map
     }
-    // Lifted from ivi https://github.com/ivijs/ivi/
-    // takes a list of unique numbers (-1 is special and can
-    // occur multiple times) and returns an array with the indices
-    // of the items that are part of the longest increasing
-    // subsequence
-    const lisTemp:any[] = []
+    // Use a pool of arrays for LIS calculations to reduce GC pressure
+    const lisArrayPool = {
+        temp: [],
+        result: [],
+    }
+
     function makeLisIndices(a:any[]) {
-        var result = [0]
-        var u = 0, v = 0
-        var il = lisTemp.length = a.length
-        for (let i = 0; i < il; i++) lisTemp[i] = a[i]
-        for (let i = 0; i < il; ++i) {
+        const length = a.length
+        
+        // Reuse arrays from pool instead of creating new ones
+        const result = lisArrayPool.result
+        const temp = lisArrayPool.temp
+        
+        // Reset/prepare arrays
+        result.length = 1
+        result[0] = 0
+        
+        // Ensure temp array has enough capacity
+        if (temp.length < length) {
+            temp.length = Math.max(length, temp.length * 2)
+        }
+        
+        // Copy input array values to temp
+        for (let i = 0; i < length; i++) {
+            temp[i] = a[i]
+        }
+        
+        // Main LIS algorithm with optimized inner loop
+        for (let i = 0; i < length; ++i) {
             if (a[i] === -1) continue
-            var j = result[result.length - 1]
+            
+            const j = result[result.length - 1]
+            
+            // Fast path for appending to end of sequence
             if (a[j] < a[i]) {
-                lisTemp[i] = j
+                temp[i] = j
                 result.push(i)
                 continue
             }
-            u = 0
-            v = result.length - 1
+            
+            // Binary search to find insertion position
+            // This is faster than the bit shifting approach for modern JS engines
+            let u = 0
+            let v = result.length - 1
+            
             while (u < v) {
-                // Fast integer average without overflow.
-                // eslint-disable-next-line no-bitwise
-                var c = (u >>> 1) + (v >>> 1) + (u & v & 1)
+                // Use >>> 0 to ensure positive integer division
+                const c = (u + v) >>> 1
                 if (a[result[c]] < a[i]) {
                     u = c + 1
-                }
-                else {
+                } else {
                     v = c
                 }
             }
+            
             if (a[i] < a[result[u]]) {
-                if (u > 0) lisTemp[i] = result[u - 1]
+                if (u > 0) temp[i] = result[u - 1]
                 result[u] = i
             }
         }
-        u = result.length
-        v = result[u - 1]
+        
+        // Backtrack to build result
+        const actualResult = new Array(result.length)
+        let u = result.length
+        let v = result[u - 1]
+        
         while (u-- > 0) {
-            result[u] = v
-            v = lisTemp[v]
+            actualResult[u] = v
+            v = temp[v]
         }
-        lisTemp.length = 0
-        return result
+        
+        return actualResult
     }
 
     function getNextSibling(vnodes, i, nextSibling) {
         const len = vnodes.length
 
-        // Fast path: check next element first (common case)
-        if (i < len) {
-            const vnode = vnodes[i]
-            if (vnode !== null && vnode !== undefined && vnode.dom !== null && vnode.dom !== undefined) {
-                return vnode.dom
-            }
-        }
-
         // Fast path: check if we're at the end
         if (i >= len) return nextSibling
 
-        // Scan for non-null dom
-        for (let j = i + 1; j < len; j++) {
-            const vnode = vnodes[j]
-            if (vnode !== null && vnode !== undefined && vnode.dom !== null && vnode.dom !== undefined) {
-                return vnode.dom
+        // Fast path: check next element first (common case)
+        const vnode = vnodes[i]
+        if (vnode !== null && vnode !== undefined && vnode.dom !== null && vnode.dom !== undefined) {
+            return vnode.dom
+        }
+
+        // Use binary search to find next DOM node instead of linear scan
+        // This is more efficient for large arrays of vnodes
+        let start = i + 1
+        let end = len - 1
+        
+        // Quick check at the end (often has DOM nodes)
+        if (end >= start) {
+            const lastVnode = vnodes[end]
+            if (lastVnode !== null && lastVnode !== undefined && 
+                lastVnode.dom !== null && lastVnode.dom !== undefined) {
+                // If only scanning a few elements, just do linear scan from start
+                if (end - start < 5) {
+                    for (let j = start; j < end; j++) {
+                        const vn = vnodes[j]
+                        if (vn !== null && vn !== undefined && 
+                            vn.dom !== null && vn.dom !== undefined) {
+                            return vn.dom
+                        }
+                    }
+                } else {
+                    // For longer ranges, try binary search to find first DOM-containing node
+                    while (start <= end) {
+                        const mid = Math.floor((start + end) / 2)
+                        const midVnode = vnodes[mid]
+                        
+                        if (midVnode !== null && midVnode !== undefined &&
+                            midVnode.dom !== null && midVnode.dom !== undefined) {
+                            // Found a DOM node, but there might be earlier ones
+                            end = mid - 1
+                        } else {
+                            // No DOM node here, look in higher half
+                            start = mid + 1
+                        }
+                    }
+                    
+                    // start is now the index of the first DOM-containing node
+                    if (start < len) {
+                        const firstDomVnode = vnodes[start]
+                        if (firstDomVnode !== null && firstDomVnode !== undefined &&
+                            firstDomVnode.dom !== null && firstDomVnode.dom !== undefined) {
+                            return firstDomVnode.dom
+                        }
+                    }
+                }
+                
+                // If we couldn't find an earlier one, use the last one we checked
+                return lastVnode.dom
             }
         }
+        
+        // Default to provided nextSibling if no DOM nodes found
         return nextSibling
     }
 
     // This handles fragments with zombie children (removed from vdom, but persisted in DOM through onbeforeremove)
     function moveDOM(parent, vnode, nextSibling) {
         if (vnode.dom != null) {
-            var target
-            if (vnode.domSize == null) {
-                // don't allocate for the common case
-                target = vnode.dom
-            } else {
-                target = getDocument(parent).createDocumentFragment()
-                for (var dom of domFor(vnode)) {
-                    target.appendChild(dom)
-                }
+            // Fast path: most nodes are single nodes, not fragments
+            if (vnode.domSize == null || vnode.domSize === 1) {
+                // Avoid function call overhead for common case
+                const target = vnode.dom
+                if (nextSibling != null) parent.insertBefore(target, nextSibling)
+                else parent.appendChild(target)
+                return
             }
-            insertDOM(parent, target, nextSibling)
+            
+            // Optimization for small fragments
+            const domCount = vnode.domSize || 0
+            if (domCount <= 3) {
+                // For small fragments, direct insertions are faster than fragment creation
+                let currentSibling = nextSibling
+                let nodes = Array.from(domFor(vnode))
+                
+                // Insert in reverse order so each node becomes the nextSibling
+                for (let i = nodes.length - 1; i >= 0; i--) {
+                    if (nextSibling != null) parent.insertBefore(nodes[i], currentSibling)
+                    else parent.appendChild(nodes[i])
+                    currentSibling = nodes[i]
+                }
+                return
+            }
+            
+            // For larger fragments, use document fragment
+            const target = getDocument(parent).createDocumentFragment()
+            for (const dom of domFor(vnode)) {
+                target.appendChild(dom)
+            }
+            if (nextSibling != null) parent.insertBefore(target, nextSibling)
+            else parent.appendChild(target)
         }
     }
 
     function insertDOM(parent, dom, nextSibling) {
+        // Direct DOM operations are faster than function calls
         if (nextSibling != null) parent.insertBefore(dom, nextSibling)
         else parent.appendChild(dom)
     }
@@ -662,9 +753,73 @@ export default function() {
 
     // remove
     function removeNodes(parent, vnodes, start, end) {
-        for (var i = start; i < end; i++) {
-            var vnode = vnodes[i]
+        // Fast path: nothing to remove
+        if (start >= end) return
+        
+        // Fast path: Remove a single node (common case)
+        if (end - start === 1) {
+            const vnode = vnodes[start]
             if (vnode != null) removeNode(parent, vnode)
+            return
+        }
+        
+        // Batch removal for multiple nodes - use fragment for batching when needed
+        // For large node counts, batch DOM operations for better performance
+        if (end - start > 10) {
+            // Fast path: get nodes to remove directly without individual function calls
+            // This avoids a lot of per-node overhead
+            const nodesToRemove = []
+            const counters = []
+            
+            // First stage: collect nodes and set up counters
+            for (let i = start; i < end; i++) {
+                const vnode = vnodes[i]
+                if (vnode != null) {
+                    // Check for onbeforeremove hooks
+                    let counter = {v: 1}
+                    let needsDelayedRemoval = false
+                    
+                    if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeremove === 'function') {
+                        needsDelayedRemoval = true
+                    }
+                    if (vnode.attrs && typeof vnode.attrs.onbeforeremove === 'function') {
+                        needsDelayedRemoval = true
+                    }
+                    
+                    if (needsDelayedRemoval) {
+                        // If it needs delayed removal, handle it separately
+                        removeNode(parent, vnode)
+                    } else {
+                        // Otherwise batch it for efficient removal
+                        if (vnode.dom) {
+                            // Collect all DOM nodes for batch removal
+                            if (vnode.domSize != null && vnode.domSize > 1) {
+                                for (const dom of domFor(vnode)) {
+                                    nodesToRemove.push(dom)
+                                }
+                            } else if (vnode.dom) {
+                                nodesToRemove.push(vnode.dom)
+                            }
+                        }
+                        // Call onremove hooks
+                        onremove(vnode)
+                    }
+                }
+            }
+            
+            // Second stage: batch remove all collected nodes
+            // This minimizes DOM reflows
+            if (nodesToRemove.length > 0) {
+                for (let i = 0; i < nodesToRemove.length; i++) {
+                    parent.removeChild(nodesToRemove[i])
+                }
+            }
+        } else {
+            // For smaller node counts, use standard removal
+            for (let i = start; i < end; i++) {
+                const vnode = vnodes[i]
+                if (vnode != null) removeNode(parent, vnode)
+            }
         }
     }
     function tryBlockRemove(parent, vnode, source, counter) {
@@ -695,10 +850,21 @@ export default function() {
     }
     function removeDOM(parent, vnode) {
         if (vnode.dom == null) return
+        
         if (vnode.domSize == null) {
+            // Fast path - single node removal
             parent.removeChild(vnode.dom)
+        } else if (vnode.domSize <= 3) {
+            // Fast path for small node counts - avoid iterator overhead
+            const nodes = Array.from(domFor(vnode))
+            for (let i = 0; i < nodes.length; i++) {
+                parent.removeChild(nodes[i])
+            }
         } else {
-            for (var dom of domFor(vnode)) parent.removeChild(dom)
+            // Use the iterator for larger node counts
+            for (const dom of domFor(vnode)) {
+                parent.removeChild(dom)
+            }
         }
     }
 

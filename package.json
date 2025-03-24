@@ -36,12 +36,21 @@
   ],
   "scripts": {
     "lint": "eslint ./",
-    "test": "bun test ./{api,render,test-utils,util}/tests/*.ts"
+    "test": "bun test ./{api,render,test-utils,util}/tests/*.ts",
+    "benchmark": "bun benchmark/run.ts",
+    "benchmark:simple": "bun benchmark/index.ts --simple",
+    "benchmark:vnode": "bun benchmark/index.ts --vnode",
+    "benchmark:algorithms": "bun benchmark/index.ts --algorithms",
+    "benchmark:all": "bun benchmark/index.ts --all",
+    "benchmark:help": "bun benchmark/index.ts --help"
   },
   "type": "module",
   "publishConfig": {
     "access": "public"
   },
   "source": "index.ts",
-  "main": "index.ts"
+  "main": "index.ts",
+  "dependencies": {
+    "mitata": "^1.0.34"
+  }
 }
