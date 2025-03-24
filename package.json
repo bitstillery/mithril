@@ -40,10 +40,7 @@
     "lint": "eslint ./",
     "test": "bun test ./{api,render,test-utils,util}/tests/*.ts",
     "benchmark": "bun benchmark/run.ts",
-    "benchmark:direct": "bun benchmark/run.ts direct",
-    "benchmark:render": "bun benchmark/run.ts render",
-    "benchmark:keyed": "bun benchmark/run.ts keyed",
-    "benchmark:optimize": "bun benchmark/run.ts optimize",
+    "benchmark:direct": "bun benchmark/direct-render-benchmark.ts",
     "benchmark:all": "bun benchmark/run.ts all",
     "benchmark:help": "bun benchmark/run.ts help"
   },

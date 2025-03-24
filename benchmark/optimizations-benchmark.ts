@@ -67,7 +67,7 @@ class OptimizationsBenchmark extends RenderBenchmark {
 /**
  * Run benchmarks focused on getNextSibling optimization
  */
-async function benchmarkGetNextSibling() {
+export async function benchmarkGetNextSibling() {
     console.log('\nTesting getNextSibling optimization:')
     console.log('----------------------------------')
   
@@ -99,7 +99,7 @@ async function benchmarkGetNextSibling() {
 /**
  * Run benchmarks focused on moveDOM optimization for fragments
  */
-async function benchmarkMoveDOM() {
+export async function benchmarkMoveDOM() {
     console.log('\nTesting moveDOM optimization:')
     console.log('--------------------------')
   
@@ -129,7 +129,7 @@ async function benchmarkMoveDOM() {
 /**
  * Run benchmarks focused on batch removal optimization
  */
-async function benchmarkRemoveNodes() {
+export async function benchmarkRemoveNodes() {
     console.log('\nTesting removeNodes optimization:')
     console.log('------------------------------')
   
@@ -163,7 +163,7 @@ async function benchmarkRemoveNodes() {
 /**
  * Run benchmarks focused on LIS algorithm optimization
  */
-async function benchmarkLISOptimization() {
+export async function benchmarkLISOptimization() {
     console.log('\nTesting LIS algorithm optimization:')
     console.log('--------------------------------')
   
@@ -248,8 +248,9 @@ async function main() {
 }
 
 // Run the benchmarks
-if (import.meta.url === Bun.main) {
+if (import.meta.main) {
     main()
 }
 
-export {OptimizationsBenchmark} 
+// Export for use in other modules
+export { OptimizationsBenchmark } 
