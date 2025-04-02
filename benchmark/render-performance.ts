@@ -5,6 +5,7 @@
 
 import {bench, run, group} from 'mitata'
 import {JSDOM} from 'jsdom'
+
 import renderFn from '../render/render'
 import m from '../render/hyperscript'
 import fragment from '../render/fragment'

@@ -1,23 +1,21 @@
-import Vnode from '../render/vnode'
-import {delayedRemoval, domFor} from '../render/domFor'
-
-const keyMapCache = new WeakMap()
+import Vnode from './vnode'
+import {delayedRemoval, domFor} from './domFor'
 
 export default function() {
-    const NAME_SPACE = {
+    var nameSpace = {
         svg: 'http://www.w3.org/2000/svg',
         math: 'http://www.w3.org/1998/Math/MathML',
     }
 
-    let currentRedraw
-    let currentRender
+    var currentRedraw
+    var currentRender
 
     function getDocument(dom) {
         return dom.ownerDocument
     }
 
     function getNameSpace(vnode) {
-        return vnode.attrs && vnode.attrs.xmlns || NAME_SPACE[vnode.tag]
+        return vnode.attrs && vnode.attrs.xmlns || nameSpace[vnode.tag]
     }
 
     // sanity check to discourage people from doing `vnode.state = ...`
@@ -40,7 +38,7 @@ export default function() {
 
     // IE11 (at least) throws an UnspecifiedError when accessing document.activeElement when
     // inside an iframe. Catch and swallow this error, and heavy-handidly return null.
-    function activeAlement(dom) {
+    function activeElement(dom) {
         try {
             return getDocument(dom).activeElement
         } catch (e) {
@@ -49,33 +47,9 @@ export default function() {
     }
     // create
     function createNodes(parent, vnodes, start, end, hooks, nextSibling, ns) {
-        if (end - start === 1) {
-            // Optimize single node case
-            const vnode = vnodes[start]
-            if (vnode !== null && vnode !== undefined) {
-                createNode(parent, vnode, hooks, ns, nextSibling)
-            }
-            return
-        }
-
-        // For multiple nodes, consider using a document fragment
-        // if there are more than a certain threshold of nodes
-        if (end - start > 3) {
-            const fragment = getDocument(parent).createDocumentFragment()
-            for (let i = start; i < end; i++) {
-                const vnode = vnodes[i]
-                if (vnode !== null && vnode !== undefined) {
-                    createNode(fragment, vnode, hooks, ns, null)
-                }
-            }
-            insertDOM(parent, fragment, nextSibling)
-            return
-        }
-
-        // Original implementation for small number of nodes
-        for (let i = start; i < end; i++) {
-            const vnode = vnodes[i]
-            if (vnode !== null && vnode !== undefined) {
+        for (var i = start; i < end; i++) {
+            var vnode = vnodes[i]
+            if (vnode != null) {
                 createNode(parent, vnode, hooks, ns, nextSibling)
             }
         }
@@ -118,7 +92,6 @@ export default function() {
         // Capture nodes to remove, so we don't confuse them.
         var fragment = getDocument(parent).createDocumentFragment()
         var child
-        // eslint-disable-next-line no-cond-assign
         while (child = temp.firstChild) {
             fragment.appendChild(child)
         }
@@ -291,15 +264,15 @@ export default function() {
     // variable rather than fetching it using `getNextSibling()`.
 
     function updateNodes(parent, old, vnodes, hooks, nextSibling, ns) {
-        if (old === vnodes || (old === null && vnodes === null)) return
-        else if (old === null || old === undefined || old.length === 0) createNodes(parent, vnodes, 0, vnodes.length, hooks, nextSibling, ns)
-        else if (vnodes === null || vnodes === undefined || vnodes.length === 0) removeNodes(parent, old, 0, old.length)
+        if (old === vnodes || old == null && vnodes == null) return
+        else if (old == null || old.length === 0) createNodes(parent, vnodes, 0, vnodes.length, hooks, nextSibling, ns)
+        else if (vnodes == null || vnodes.length === 0) removeNodes(parent, old, 0, old.length)
         else {
-            const isOldKeyed = old[0] !== null && old[0] !== undefined && old[0].key !== null
-            const isKeyed = vnodes[0] !== null && vnodes[0] !== undefined && vnodes[0].key !== null
-            let start = 0, oldStart = 0
-            if (!isOldKeyed) while (oldStart < old.length && (old[oldStart] === null || old[oldStart] === undefined)) oldStart++
-            if (!isKeyed) while (start < vnodes.length && (vnodes[start] === null || vnodes[start] === undefined)) start++
+            var isOldKeyed = old[0] != null && old[0].key != null
+            var isKeyed = vnodes[0] != null && vnodes[0].key != null
+            var start = 0, oldStart = 0
+            if (!isOldKeyed) while (oldStart < old.length && old[oldStart] == null) oldStart++
+            if (!isKeyed) while (start < vnodes.length && vnodes[start] == null) start++
             if (isOldKeyed !== isKeyed) {
                 removeNodes(parent, old, oldStart, old.length)
                 createNodes(parent, vnodes, start, vnodes.length, hooks, nextSibling, ns)
@@ -313,9 +286,9 @@ export default function() {
                 for (; start < commonLength; start++) {
                     o = old[start]
                     v = vnodes[start]
-                    if (o === v || o === null && v === null) continue
-                    else if (o === null) createNode(parent, v, hooks, ns, getNextSibling(old, start + 1, nextSibling))
-                    else if (v === null) removeNode(parent, o)
+                    if (o === v || o == null && v == null) continue
+                    else if (o == null) createNode(parent, v, hooks, ns, getNextSibling(old, start + 1, nextSibling))
+                    else if (v == null) removeNode(parent, o)
                     else updateNode(parent, o, v, hooks, getNextSibling(old, start + 1, nextSibling), ns)
                 }
                 if (old.length > commonLength) removeNodes(parent, old, start, old.length)
@@ -328,27 +301,15 @@ export default function() {
                 while (oldEnd >= oldStart && end >= start) {
                     oe = old[oldEnd]
                     ve = vnodes[end]
-                    // Skip null nodes and handle edge cases
-                    if (oe === null || oe === undefined || ve === null || ve === undefined) {
-                        if (oe === null || oe === undefined) oldEnd--
-                        if (ve === null || ve === undefined) end--
-                        continue
-                    }
                     if (oe.key !== ve.key) break
                     if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
-                    if (ve.dom !== null && ve.dom !== undefined) nextSibling = ve.dom
+                    if (ve.dom != null) nextSibling = ve.dom
                     oldEnd--, end--
                 }
                 // top-down
                 while (oldEnd >= oldStart && end >= start) {
                     o = old[oldStart]
                     v = vnodes[start]
-                    // Skip null nodes and handle edge cases
-                    if (o === null || o === undefined || v === null || v === undefined) {
-                        if (o === null || o === undefined) oldStart++
-                        if (v === null || v === undefined) start++
-                        continue
-                    }
                     if (o.key !== v.key) break
                     oldStart++, start++
                     if (o !== v) updateNode(parent, o, v, hooks, getNextSibling(old, oldStart, nextSibling), ns)
@@ -356,14 +317,13 @@ export default function() {
                 // swaps and list reversals
                 while (oldEnd >= oldStart && end >= start) {
                     if (start === end) break
-                    if (o === null || o === undefined || ve === null || ve === undefined) break
-                    if (o.key !== ve.key || oe === null || oe === undefined || oe.key !== v.key) break
+                    if (o.key !== ve.key || oe.key !== v.key) break
                     topSibling = getNextSibling(old, oldStart, nextSibling)
                     moveDOM(parent, oe, topSibling)
                     if (oe !== v) updateNode(parent, oe, v, hooks, topSibling, ns)
                     if (++start <= --end) moveDOM(parent, o, nextSibling)
                     if (o !== ve) updateNode(parent, o, ve, hooks, nextSibling, ns)
-                    if (ve.dom !== null && ve.dom !== undefined) nextSibling = ve.dom
+                    if (ve.dom != null) nextSibling = ve.dom
                     oldStart++; oldEnd--
                     oe = old[oldEnd]
                     ve = vnodes[end]
@@ -372,10 +332,9 @@ export default function() {
                 }
                 // bottom up once again
                 while (oldEnd >= oldStart && end >= start) {
-                    if (oe === null || oe === undefined || ve === null || ve === undefined) break
                     if (oe.key !== ve.key) break
                     if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
-                    if (ve.dom !== null && ve.dom !== undefined) nextSibling = ve.dom
+                    if (ve.dom != null) nextSibling = ve.dom
                     oldEnd--, end--
                     oe = old[oldEnd]
                     ve = vnodes[end]
@@ -384,15 +343,7 @@ export default function() {
                 else if (oldStart > oldEnd) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns)
                 else {
                     // inspired by ivi https://github.com/ivijs/ivi/ by Boris Kaul
-                    var originalNextSibling = nextSibling
-                    var vnodesLength = end - start + 1
-                    var oldIndices = new Array(vnodesLength) 
-                    var li = 0
-                    var i = 0
-                    var pos = 2147483647
-                    var matched = 0
-                    var lisIndices
-                    
+                    var originalNextSibling = nextSibling, vnodesLength = end - start + 1, oldIndices = new Array(vnodesLength), li = 0, i = 0, pos = 2147483647, matched = 0, map, lisIndices
                     for (i = 0; i < vnodesLength; i++) oldIndices[i] = -1
                     for (i = end; i >= start; i--) {
                         if (map == null) map = getKeyMap(old, oldStart, oldEnd + 1)
@@ -404,7 +355,7 @@ export default function() {
                             oe = old[oldIndex]
                             old[oldIndex] = null
                             if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
-                            if (ve.dom !== null && ve.dom !== undefined) nextSibling = ve.dom
+                            if (ve.dom != null) nextSibling = ve.dom
                             matched++
                         }
                     }
@@ -424,13 +375,13 @@ export default function() {
                                     if (lisIndices[li] === i - start) li--
                                     else moveDOM(parent, v, nextSibling)
                                 }
-                                if (v.dom !== null && v.dom !== undefined) nextSibling = vnodes[i].dom
+                                if (v.dom != null) nextSibling = vnodes[i].dom
                             }
                         } else {
                             for (i = end; i >= start; i--) {
                                 v = vnodes[i]
                                 if (oldIndices[i - start] === -1) createNode(parent, v, hooks, ns, nextSibling)
-                                if (v.dom !== null && v.dom !== undefined) nextSibling = vnodes[i].dom
+                                if (v.dom != null) nextSibling = vnodes[i].dom
                             }
                         }
                     }
@@ -439,12 +390,6 @@ export default function() {
         }
     }
     function updateNode(parent, old, vnode, hooks, nextSibling, ns) {
-        if (!old || !vnode) {
-            if (old) removeNode(parent, old)
-            if (vnode) createNode(parent, vnode, hooks, ns, nextSibling)
-            return
-        }
-
         var oldTag = old.tag, tag = vnode.tag
         if (oldTag === tag && old.is === vnode.is) {
             vnode.state = old.state
@@ -530,209 +475,86 @@ export default function() {
         }
     }
     function getKeyMap(vnodes, start, end) {
-        // Check cache first
-        if (keyMapCache.has(vnodes)) {
-            const cache = keyMapCache.get(vnodes)
-            if (cache.start === start && cache.end === end) {
-                return cache.map
+        var map = Object.create(null)
+        for (; start < end; start++) {
+            var vnode = vnodes[start]
+            if (vnode != null) {
+                var key = vnode.key
+                if (key != null) map[key] = start
             }
         }
-
-        const map = Object.create(null)
-        for (let i = start; i < end; i++) {
-            const vnode = vnodes[i]
-            if (vnode !== null && vnode !== undefined) {
-                const key = vnode.key
-                if (key !== null && key !== undefined) {
-                    map[key] = i
-                }
-            }
-        }
-
-        // Cache the result (limit cache size in production)
-        keyMapCache.set(vnodes, {start, end, map})
         return map
     }
-    // Use a pool of arrays for LIS calculations to reduce GC pressure
-    const lisArrayPool = {
-        temp: [],
-        result: [],
-    }
-
-    function makeLisIndices(a:any[]) {
-        const length = a.length
-        
-        // Reuse arrays from pool instead of creating new ones
-        const result = lisArrayPool.result
-        const temp = lisArrayPool.temp
-        
-        // Reset/prepare arrays
-        result.length = 1
-        result[0] = 0
-        
-        // Ensure temp array has enough capacity
-        if (temp.length < length) {
-            temp.length = Math.max(length, temp.length * 2)
-        }
-        
-        // Copy input array values to temp
-        for (let i = 0; i < length; i++) {
-            temp[i] = a[i]
-        }
-        
-        // Main LIS algorithm with optimized inner loop
-        for (let i = 0; i < length; ++i) {
+    // Lifted from ivi https://github.com/ivijs/ivi/
+    // takes a list of unique numbers (-1 is special and can
+    // occur multiple times) and returns an array with the indices
+    // of the items that are part of the longest increasing
+    // subsequence
+    var lisTemp = []
+    function makeLisIndices(a) {
+        var result = [0]
+        var u = 0, v = 0, i = 0
+        var il = lisTemp.length = a.length
+        for (var i = 0; i < il; i++) lisTemp[i] = a[i]
+        for (var i = 0; i < il; ++i) {
             if (a[i] === -1) continue
-            
-            const j = result[result.length - 1]
-            
-            // Fast path for appending to end of sequence
+            var j = result[result.length - 1]
             if (a[j] < a[i]) {
-                temp[i] = j
+                lisTemp[i] = j
                 result.push(i)
                 continue
             }
-            
-            // Binary search to find insertion position
-            // This is faster than the bit shifting approach for modern JS engines
-            let u = 0
-            let v = result.length - 1
-            
+            u = 0
+            v = result.length - 1
             while (u < v) {
-                // Use >>> 0 to ensure positive integer division
-                const c = (u + v) >>> 1
+                // Fast integer average without overflow.
+                // eslint-disable-next-line no-bitwise
+                var c = (u >>> 1) + (v >>> 1) + (u & v & 1)
                 if (a[result[c]] < a[i]) {
                     u = c + 1
-                } else {
+                }
+                else {
                     v = c
                 }
             }
-            
             if (a[i] < a[result[u]]) {
-                if (u > 0) temp[i] = result[u - 1]
+                if (u > 0) lisTemp[i] = result[u - 1]
                 result[u] = i
             }
         }
-        
-        // Backtrack to build result
-        const actualResult = new Array(result.length)
-        let u = result.length
-        let v = result[u - 1]
-        
+        u = result.length
+        v = result[u - 1]
         while (u-- > 0) {
-            actualResult[u] = v
-            v = temp[v]
+            result[u] = v
+            v = lisTemp[v]
         }
-        
-        return actualResult
+        lisTemp.length = 0
+        return result
     }
 
     function getNextSibling(vnodes, i, nextSibling) {
-        const len = vnodes.length
-
-        // Fast path: check if we're at the end
-        if (i >= len) return nextSibling
-
-        // Fast path: check next element first (common case)
-        const vnode = vnodes[i]
-        if (vnode !== null && vnode !== undefined && vnode.dom !== null && vnode.dom !== undefined) {
-            return vnode.dom
+        for (; i < vnodes.length; i++) {
+            if (vnodes[i] != null && vnodes[i].dom != null) return vnodes[i].dom
         }
-
-        // Use binary search to find next DOM node instead of linear scan
-        // This is more efficient for large arrays of vnodes
-        let start = i + 1
-        let end = len - 1
-        
-        // Quick check at the end (often has DOM nodes)
-        if (end >= start) {
-            const lastVnode = vnodes[end]
-            if (lastVnode !== null && lastVnode !== undefined && 
-                lastVnode.dom !== null && lastVnode.dom !== undefined) {
-                // If only scanning a few elements, just do linear scan from start
-                if (end - start < 5) {
-                    for (let j = start; j < end; j++) {
-                        const vn = vnodes[j]
-                        if (vn !== null && vn !== undefined && 
-                            vn.dom !== null && vn.dom !== undefined) {
-                            return vn.dom
-                        }
-                    }
-                } else {
-                    // For longer ranges, try binary search to find first DOM-containing node
-                    while (start <= end) {
-                        const mid = Math.floor((start + end) / 2)
-                        const midVnode = vnodes[mid]
-                        
-                        if (midVnode !== null && midVnode !== undefined &&
-                            midVnode.dom !== null && midVnode.dom !== undefined) {
-                            // Found a DOM node, but there might be earlier ones
-                            end = mid - 1
-                        } else {
-                            // No DOM node here, look in higher half
-                            start = mid + 1
-                        }
-                    }
-                    
-                    // start is now the index of the first DOM-containing node
-                    if (start < len) {
-                        const firstDomVnode = vnodes[start]
-                        if (firstDomVnode !== null && firstDomVnode !== undefined &&
-                            firstDomVnode.dom !== null && firstDomVnode.dom !== undefined) {
-                            return firstDomVnode.dom
-                        }
-                    }
-                }
-                
-                // If we couldn't find an earlier one, use the last one we checked
-                return lastVnode.dom
-            }
-        }
-        
-        // Default to provided nextSibling if no DOM nodes found
         return nextSibling
     }
 
     // This handles fragments with zombie children (removed from vdom, but persisted in DOM through onbeforeremove)
     function moveDOM(parent, vnode, nextSibling) {
         if (vnode.dom != null) {
-            // Fast path: most nodes are single nodes, not fragments
-            if (vnode.domSize == null || vnode.domSize === 1) {
-                // Avoid function call overhead for common case
-                const target = vnode.dom
-                if (nextSibling != null) parent.insertBefore(target, nextSibling)
-                else parent.appendChild(target)
-                return
+            var target
+            if (vnode.domSize == null) {
+                // don't allocate for the common case
+                target = vnode.dom
+            } else {
+                target = getDocument(parent).createDocumentFragment()
+                for (var dom of domFor(vnode)) target.appendChild(dom)
             }
-            
-            // Optimization for small fragments
-            const domCount = vnode.domSize || 0
-            if (domCount <= 3) {
-                // For small fragments, direct insertions are faster than fragment creation
-                let currentSibling = nextSibling
-                let nodes = Array.from(domFor(vnode))
-                
-                // Insert in reverse order so each node becomes the nextSibling
-                for (let i = nodes.length - 1; i >= 0; i--) {
-                    if (nextSibling != null) parent.insertBefore(nodes[i], currentSibling)
-                    else parent.appendChild(nodes[i])
-                    currentSibling = nodes[i]
-                }
-                return
-            }
-            
-            // For larger fragments, use document fragment
-            const target = getDocument(parent).createDocumentFragment()
-            for (const dom of domFor(vnode)) {
-                target.appendChild(dom)
-            }
-            if (nextSibling != null) parent.insertBefore(target, nextSibling)
-            else parent.appendChild(target)
+            insertDOM(parent, target, nextSibling)
         }
     }
 
     function insertDOM(parent, dom, nextSibling) {
-        // Direct DOM operations are faster than function calls
         if (nextSibling != null) parent.insertBefore(dom, nextSibling)
         else parent.appendChild(dom)
     }
@@ -753,73 +575,9 @@ export default function() {
 
     // remove
     function removeNodes(parent, vnodes, start, end) {
-        // Fast path: nothing to remove
-        if (start >= end) return
-        
-        // Fast path: Remove a single node (common case)
-        if (end - start === 1) {
-            const vnode = vnodes[start]
+        for (var i = start; i < end; i++) {
+            var vnode = vnodes[i]
             if (vnode != null) removeNode(parent, vnode)
-            return
-        }
-        
-        // Batch removal for multiple nodes - use fragment for batching when needed
-        // For large node counts, batch DOM operations for better performance
-        if (end - start > 10) {
-            // Fast path: get nodes to remove directly without individual function calls
-            // This avoids a lot of per-node overhead
-            const nodesToRemove = []
-            const counters = []
-            
-            // First stage: collect nodes and set up counters
-            for (let i = start; i < end; i++) {
-                const vnode = vnodes[i]
-                if (vnode != null) {
-                    // Check for onbeforeremove hooks
-                    let counter = {v: 1}
-                    let needsDelayedRemoval = false
-                    
-                    if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeremove === 'function') {
-                        needsDelayedRemoval = true
-                    }
-                    if (vnode.attrs && typeof vnode.attrs.onbeforeremove === 'function') {
-                        needsDelayedRemoval = true
-                    }
-                    
-                    if (needsDelayedRemoval) {
-                        // If it needs delayed removal, handle it separately
-                        removeNode(parent, vnode)
-                    } else {
-                        // Otherwise batch it for efficient removal
-                        if (vnode.dom) {
-                            // Collect all DOM nodes for batch removal
-                            if (vnode.domSize != null && vnode.domSize > 1) {
-                                for (const dom of domFor(vnode)) {
-                                    nodesToRemove.push(dom)
-                                }
-                            } else if (vnode.dom) {
-                                nodesToRemove.push(vnode.dom)
-                            }
-                        }
-                        // Call onremove hooks
-                        onremove(vnode)
-                    }
-                }
-            }
-            
-            // Second stage: batch remove all collected nodes
-            // This minimizes DOM reflows
-            if (nodesToRemove.length > 0) {
-                for (let i = 0; i < nodesToRemove.length; i++) {
-                    parent.removeChild(nodesToRemove[i])
-                }
-            }
-        } else {
-            // For smaller node counts, use standard removal
-            for (let i = start; i < end; i++) {
-                const vnode = vnodes[i]
-                if (vnode != null) removeNode(parent, vnode)
-            }
         }
     }
     function tryBlockRemove(parent, vnode, source, counter) {
@@ -850,21 +608,10 @@ export default function() {
     }
     function removeDOM(parent, vnode) {
         if (vnode.dom == null) return
-        
         if (vnode.domSize == null) {
-            // Fast path - single node removal
             parent.removeChild(vnode.dom)
-        } else if (vnode.domSize <= 3) {
-            // Fast path for small node counts - avoid iterator overhead
-            const nodes = Array.from(domFor(vnode))
-            for (let i = 0; i < nodes.length; i++) {
-                parent.removeChild(nodes[i])
-            }
         } else {
-            // Use the iterator for larger node counts
-            for (const dom of domFor(vnode)) {
-                parent.removeChild(dom)
-            }
+            for (var dom of domFor(vnode)) parent.removeChild(dom)
         }
     }
 
@@ -909,7 +656,6 @@ export default function() {
                 if (vnode.tag === 'option' && old !== null && vnode.dom.value === '' + value) return
                 // setting input[type=file][value] to different value is an error if it's non-empty
                 // Not ideal, but it at least works around the most common source of uncaught exceptions for now.
-                // eslint-disable-next-line no-console
                 if (vnode.tag === 'input' && vnode.attrs.type === 'file' && '' + value !== '') { console.error('`value` is read-only on file inputs!'); return }
                 /* eslint-enable no-implicit-coercion */
             }
@@ -932,10 +678,10 @@ export default function() {
             hasPropertyKey(vnode, key, ns)
             && key !== 'className'
             && key !== 'title' // creates "null" as title
-            && !(
-                key === 'value' &&
-                (vnode.tag === 'option'	|| vnode.tag === 'select' && vnode.dom.selectedIndex === -1 && vnode.dom === activeAlement(vnode.dom))
-            )
+            && !(key === 'value' && (
+                vnode.tag === 'option'
+                || vnode.tag === 'select' && vnode.dom.selectedIndex === -1 && vnode.dom === activeElement(vnode.dom)
+            ))
             && !(vnode.tag === 'input' && key === 'type')
         ) {
             vnode.dom[key] = null
@@ -964,24 +710,22 @@ export default function() {
         var val
         if (old != null) {
             if (old === attrs) {
-                // eslint-disable-next-line no-console
                 console.warn('Don\'t reuse attrs object, use new object for every redraw, this will throw in next major')
             }
             for (var key in old) {
-                // eslint-disable-next-line no-cond-assign
                 if (((val = old[key]) != null) && (attrs == null || attrs[key] == null)) {
                     removeAttr(vnode, key, val, ns)
                 }
             }
         }
         if (attrs != null) {
-            for (var _key in attrs) {
-                setAttr(vnode, _key, old && old[_key], attrs[_key], ns)
+            for (var key in attrs) {
+                setAttr(vnode, key, old && old[key], attrs[key], ns)
             }
         }
     }
     function isFormAttribute(vnode, attr) {
-        return attr === 'value' || attr === 'checked' || attr === 'selectedIndex' || attr === 'selected' && vnode.dom === activeAlement(vnode.dom) || vnode.tag === 'option' && vnode.dom.parentNode === activeAlement(vnode.dom)
+        return attr === 'value' || attr === 'checked' || attr === 'selectedIndex' || attr === 'selected' && (vnode.dom === activeElement(vnode.dom) || vnode.tag === 'option' && vnode.dom.parentNode === activeElement(vnode.dom))
     }
     function isLifecycleMethod(attr) {
         return attr === 'oninit' || attr === 'oncreate' || attr === 'onupdate' || attr === 'onremove' || attr === 'onbeforeremove' || attr === 'onbeforeupdate'
@@ -989,7 +733,7 @@ export default function() {
     function hasPropertyKey(vnode, key, ns) {
         // Filter out namespaced keys
         return ns === undefined && (
-        // If it's a custom element, just keep it.
+            // If it's a custom element, just keep it.
             vnode.tag.indexOf('-') > -1 || vnode.is ||
             // If it's a normal element, let's try to avoid a few browser bugs.
             key !== 'href' && key !== 'list' && key !== 'form' && key !== 'width' && key !== 'height'// && key !== "type"
@@ -999,93 +743,42 @@ export default function() {
 
     // style
     function updateStyle(element, old, style) {
-        // Skip if identical references
-        if (old === style) return
-
-        // Clear style completely if new style is null
-        if (style === null || style === undefined) {
-            element.style.cssText = ''
-            return
-        }
-
-        // Handle string style
-        if (typeof style !== 'object') {
-            element.style.cssText = style
-            return
-        }
-
-        // Handle case where old style doesn't exist or is a string
-        if (old === null || old === undefined || typeof old !== 'object') {
-            // Fast path: Set all styles at once when possible
-            if (Object.keys(style).every((key) => !key.includes('-'))) {
-                let cssText = ''
-                for (const key in style) {
-                    const value = style[key]
-                    if (value !== null && value !== undefined) {
-                        cssText += `${key}: ${value}; `
-                    }
-                }
-                element.style.cssText = cssText
-                return
-            }
-
-            // Handle styles with custom properties
-            element.style.cssText = ''
-            for (const key in style) {
-                const value = style[key]
-                if (value !== null && value !== undefined) {
-                    if (key.includes('-')) {
-                        element.style.setProperty(key, String(value))
-                    } else {
-                        element.style[key] = String(value)
-                    }
+        if (old === style) {
+            // Styles are equivalent, do nothing.
+        } else if (style == null) {
+            // New style is missing, just clear it.
+            element.style = ''
+        } else if (typeof style !== 'object') {
+            // New style is a string, let engine deal with patching.
+            element.style = style
+        } else if (old == null || typeof old !== 'object') {
+            // `old` is missing or a string, `style` is an object.
+            element.style = ''
+            // Add new style properties
+            for (var key in style) {
+                var value = style[key]
+                if (value != null) {
+                    if (key.includes('-')) element.style.setProperty(key, String(value))
+                    else element.style[key] = String(value)
                 }
             }
-            return
-        }
-
-        // Both old & new are objects - use efficient diffing
-        // Fast path: check if objects are shallow equal (common case)
-        let different = false
-        for (const key in old) {
-            if (!(key in style) || old[key] !== style[key]) {
-                different = true
-                break
-            }
-        }
-
-        if (!different) {
-            for (const key in style) {
-                if (!(key in old)) {
-                    different = true
-                    break
+        } else {
+            // Both old & new are (different) objects.
+            // Remove style properties that no longer exist
+            // Style properties may have two cases(dash-case and camelCase),
+            // so removal should be done first to prevent accidental removal for newly setting values.
+            for (var key in old) {
+                if (old[key] != null && style[key] == null) {
+                    if (key.includes('-')) element.style.removeProperty(key)
+                    else element.style[key] = ''
                 }
             }
-        }
-
-        if (!different) return
-
-        // Objects differ - calculate changes efficiently
-        // 1. Remove old properties not in new style
-        for (const key in old) {
-            if (!(key in style) || style[key] === null || style[key] === undefined) {
-                if (key.includes('-')) {
-                    element.style.removeProperty(key)
-                } else {
-                    element.style[key] = ''
-                }
-            }
-        }
-
-        // 2. Add/update new properties
-        for (const key in style) {
-            const value = style[key]
-            const oldValue = key in old ? old[key] : null
-            if (value !== null && value !== undefined && value !== oldValue) {
-                if (key.includes('-')) {
-                    element.style.setProperty(key, String(value))
-                } else {
-                    element.style[key] = String(value)
+            // Update style properties that have changed
+            for (var key in style) {
+                var value = style[key]
+                if (value != null && (value = String(value)) !== String(old[key])) {
+                    if (key.includes('-')) element.style.setProperty(key, value)
+                    else element.style[key] = value
                 }
             }
         }
@@ -1102,7 +795,6 @@ export default function() {
     //    that below.
     // 6. In function-based event handlers, `return false` prevents the default
     //    action and stops event propagation. We replicate that below.
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     function EventDict() {
         // Save this, so the current redraw is correctly tracked.
         this._ = currentRedraw
@@ -1120,6 +812,7 @@ export default function() {
         }
     }
 
+    // event
     function updateEvent(vnode, key, value) {
         if (vnode.events != null) {
             vnode.events._ = currentRedraw
@@ -1138,6 +831,7 @@ export default function() {
         }
     }
 
+    // lifecycle
     function initLifecycle(source, vnode, hooks) {
         if (typeof source.oninit === 'function') callHook.call(source.oninit, vnode)
         if (typeof source.oncreate === 'function') hooks.push(callHook.bind(source.oncreate, vnode))
@@ -1148,11 +842,11 @@ export default function() {
     function shouldNotUpdate(vnode, old) {
         do {
             if (vnode.attrs != null && typeof vnode.attrs.onbeforeupdate === 'function') {
-                let force = callHook.call(vnode.attrs.onbeforeupdate, vnode, old)
+                var force = callHook.call(vnode.attrs.onbeforeupdate, vnode, old)
                 if (force !== undefined && !force) break
             }
             if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeupdate === 'function') {
-                let force = callHook.call(vnode.state.onbeforeupdate, vnode, old)
+                var force = callHook.call(vnode.state.onbeforeupdate, vnode, old)
                 if (force !== undefined && !force) break
             }
             return false
@@ -1177,49 +871,27 @@ export default function() {
 
     return function(dom, vnodes, redraw) {
         if (!dom) throw new TypeError('DOM element being rendered to does not exist.')
-
         if (currentDOM != null && dom.contains(currentDOM)) {
             throw new TypeError('Node is currently being rendered to and thus is locked.')
         }
-
-        const prevRedraw = currentRedraw
-        const prevDOM = currentDOM
-        const hooks: (() => void)[] = []
-
-        // Pre-calculate these values
-        const active = activeAlement(dom)
-        const namespace = dom.namespaceURI
-        const isSvg = namespace === 'http://www.w3.org/2000/svg'
-        const nsToPass = isSvg ? namespace : undefined
+        var prevRedraw = currentRedraw
+        var prevDOM = currentDOM
+        var hooks = []
+        var active = activeElement(dom)
+        var namespace = dom.namespaceURI
 
         currentDOM = dom
         currentRedraw = typeof redraw === 'function' ? redraw : undefined
         currentRender = {}
-
         try {
-            // First time rendering
-            if (dom.vnodes == null) {
-                dom.textContent = ''
-            }
-
-            // Performance: Avoid extra normalization if already an array
-            const vnodesToNormalize = Array.isArray(vnodes) ? vnodes : [vnodes]
-            const normalizedVnodes = Vnode.normalizeChildren(vnodesToNormalize)
-
-            // Call updateNodes with pre-calculated namespace
-            updateNodes(dom, dom.vnodes, normalizedVnodes, hooks, null, nsToPass)
-            dom.vnodes = normalizedVnodes
-
-            // Fast-path: skip focus if nothing to focus
-            if (active != null && active !== activeAlement(dom) && typeof active.focus === 'function') {
-                active.focus()
-            }
-
-            // Execute hooks in batch for better performance
-            const hooksLength = hooks.length
-            for (let i = 0; i < hooksLength; i++) {
-                hooks[i]()
-            }
+            // First time rendering into a node clears it out
+            if (dom.vnodes == null) dom.textContent = ''
+            vnodes = Vnode.normalizeChildren(Array.isArray(vnodes) ? vnodes : [vnodes])
+            updateNodes(dom, dom.vnodes, vnodes, hooks, null, namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace)
+            dom.vnodes = vnodes
+            // `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
+            if (active != null && activeElement(dom) !== active && typeof active.focus === 'function') active.focus()
+            for (var i = 0; i < hooks.length; i++) hooks[i]()
         } finally {
             currentRedraw = prevRedraw
             currentDOM = prevDOM

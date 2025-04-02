@@ -5,13 +5,13 @@
  * A consolidated entry point for running various Mithril benchmarks.
  */
 
-import { runDirectRenderBenchmark } from './direct-render-benchmark'
-import { RenderBenchmark } from './render-performance'
+import {runDirectRenderBenchmark} from './direct-render-benchmark'
+import {RenderBenchmark} from './render-performance'
 import { 
     benchmarkGetNextSibling, 
     benchmarkMoveDOM, 
     benchmarkRemoveNodes, 
-    benchmarkLISOptimization 
+    benchmarkLISOptimization, 
 } from './optimizations-benchmark'
 
 // Parse command line arguments
@@ -44,7 +44,7 @@ async function runRenderBenchmarks() {
     console.log('\nMithril Render Performance Benchmarks')
     console.log('===================================')
     
-    const benchmark = new RenderBenchmark({ iterations: 50 })
+    const benchmark = new RenderBenchmark({iterations: 50})
     
     // Simple list operations
     const smallList = RenderBenchmark.generateList(10)
