@@ -17,7 +17,7 @@
   "description": "Mithril.js with TypeScript and a few extra features",
   "license": "MIT",
   "files": [
-    "index.ts",
+    "mithril.ts",
     "api/mount-redraw.ts",
     "api/router.ts",
     "pathname/build.ts",
@@ -48,9 +48,10 @@
   "publishConfig": {
     "access": "public"
   },
-  "source": "index.ts",
-  "main": "index.ts",
+  "source": "mithril.ts",
+  "main": "mithril.ts",
   "dependencies": {
+    "@types/web": "^0.0.216",
     "mitata": "^1.0.34"
   }
 }
