@@ -1,70 +1,101 @@
-# Mithril.js
+# @bitstillery/mithril
 
-[![npm Version](https://img.shields.io/npm/v/mithril.svg)](https://www.npmjs.com/package/mithril) &nbsp;
-[![License](https://img.shields.io/npm/l/mithril.svg)](https://github.com/MithrilJS/mithril.js/blob/main/LICENSE) &nbsp;
-[![npm Downloads](https://img.shields.io/npm/dm/mithril.svg)](https://www.npmjs.com/package/mithril) &nbsp;
-[![Build Status](https://img.shields.io/github/actions/workflow/status/MithrilJS/mithril.js/.github%2Fworkflows%2Ftest.yml?branch=main&event=push)](https://github.com/MithrilJS/mithril.js/actions) &nbsp;
-[![Donate at OpenCollective](https://img.shields.io/opencollective/all/mithriljs.svg?colorB=brightgreen)](https://opencollective.com/mithriljs) &nbsp;
-[![Zulip, join chat](https://img.shields.io/badge/zulip-join_chat-brightgreen.svg)](https://mithril.zulipchat.com/)
+A modern TypeScript fork of [Mithril.js](https://github.com/MithrilJS/mithril.js) - a lightweight, fast client-side JavaScript framework for building Single Page Applications.
 
-- [What is Mithril.js?](#what-is-mithriljs)
-- [Installation](#installation)
-- [Documentation](#documentation)
-- [Getting Help](#getting-help)
-- [Contributing](#contributing)
+## What is Mithril?
 
-## What is Mithril.js?
+Mithril is a modern client-side JavaScript framework for building Single Page Applications. It's small, fast and provides routing utilities out of the box.
 
-A modern client-side JavaScript framework for building Single Page Applications. It's small (<!-- size -->8.93 KB<!-- /size --> gzipped), fast and provides routing and XHR utilities out of the box.
-
-Mithril.js is used by companies like Vimeo and Nike, and open source platforms like Lichess 👍.
-
-Mithril.js supports Firefox ESR, and the last two versions of Firefox, Edge, Safari, and Chrome. No polyfills required. 👌
+This fork (`@bitstillery/mithril`) has been modernized with:
+- **TypeScript** - Full TypeScript support with type definitions included
+- **Bun** - Uses Bun runtime for development, testing, and bundling
+- **Modern tooling** - ESLint, oxlint, and modern development workflows
+- **No build step required** - Import TypeScript source files directly
 
 ## Installation
 
-### CDN
-
-```html
-<!-- Development: whichever you prefer -->
-<script src="https://unpkg.com/mithril/mithril.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mithril/mithril.js"></script>
-
-<!-- Production: whichever you prefer -->
-<script src="https://unpkg.com/mithril/mithril.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mithril/mithril.min.js"></script>
-```
-
-### npm
+### npm / bun
 
 ```bash
-npm install mithril --save
+npm install @bitstillery/mithril
+# or
+bun add @bitstillery/mithril
 ```
 
-The ["Getting started" guide](https://mithril.js.org/#getting-started) is a good place to start learning how to use Mithril.js.
+### Using with Bun (Recommended)
 
-TypeScript type definitions are available from DefinitelyTyped. They can be installed with:
+Since this package uses TypeScript source files directly, you can import it without any build step when using Bun:
+
+```typescript
+import m from '@bitstillery/mithril'
+
+// Use Mithril directly
+m.mount(document.body, {
+  view: () => m('div', 'Hello, world!')
+})
+```
+
+### Using with other bundlers
+
+For use with other bundlers (webpack, vite, etc.), you may need to configure TypeScript support or use a build step.
+
+## Development
+
+This project uses [Bun](https://bun.sh) for development and testing.
+
+### Prerequisites
+
+- [Bun](https://bun.sh) (latest version)
+
+### Setup
 
 ```bash
-$ npm install @types/mithril --save-dev
+# Install dependencies
+bun install
+
+# Run tests
+bun test
+
+# Run linting
+bun run lint
+
+# Run performance tests
+bun run perf
 ```
+
+### Project Structure
+
+- `index.ts` - Main entry point
+- `api/` - Core API modules (mount, redraw, router)
+- `render/` - Rendering engine
+- `pathname/` - Pathname utilities
+- `querystring/` - Query string utilities
+- `util/` - Utility functions
+- `test-utils/` - Testing utilities
+
+## Differences from Original Mithril.js
+
+This fork maintains API compatibility with the original Mithril.js but includes:
+
+- **TypeScript**: Full TypeScript rewrite with type definitions
+- **Modern tooling**: Bun, ESLint, oxlint
+- **Removed modules**: `request` and `stream` modules have been removed
+- **No build artifacts**: Uses TypeScript source directly
 
 ## Documentation
 
-Documentation lives on [mithril.js.org](https://mithril.js.org).
+For usage documentation, see the [original Mithril.js documentation](https://mithril.js.org).
 
-You may be interested in the [API Docs](https://mithril.js.org/api.html), a [Simple Application](https://mithril.js.org/simple-application.html), or perhaps some [Examples](https://mithril.js.org/examples.html).
+The API is compatible with Mithril.js v2.x, so existing Mithril.js documentation and examples apply.
 
-## Getting Help
+## License
 
-Mithril.js has an active & welcoming community on [Zulip](https://mithril.zulipchat.com/), or feel free to ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/mithril.js) using the `mithril.js` tag.
+MIT License - see [LICENSE](LICENSE) file for details.
 
-## Contributing
+## Credits
 
-There's a [Contributing FAQ](https://mithril.js.org/contributing.html) on the Mithril.js site that hopefully helps, but if not definitely hop into the [Zulip stream](https://mithril.zulipchat.com/) and ask away!
+This is a fork of [Mithril.js](https://github.com/MithrilJS/mithril.js) by Leo Horie and contributors.
 
 ---
 
-Thanks for reading!
-
-🎁
+Thanks for using Mithril! 🎁
