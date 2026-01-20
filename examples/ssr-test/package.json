@@ -1,0 +1,15 @@
+{
+  "name": "mithril-ssr-test",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run server.ts",
+    "start": "bun run server.ts"
+  },
+  "dependencies": {
+    "@bitstillery/mithril": "../../"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

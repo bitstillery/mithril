@@ -19,6 +19,11 @@
       "types": "./index.d.ts",
       "import": "./browser.ts",
       "default": "./browser.ts"
+    },
+    "./server": {
+      "types": "./index.d.ts",
+      "import": "./server.ts",
+      "default": "./server.ts"
     }
   },
   "scripts": {
