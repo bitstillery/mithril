@@ -172,7 +172,7 @@ describe('pushStateMock', () => {
 			try {
 				$window.location.protocol = 'https://'
 			}
-			catch(e) {
+			catch(_e) {
 				return done()
 			}
 			throw new Error('Expected an error')

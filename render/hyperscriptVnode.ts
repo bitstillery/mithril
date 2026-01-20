@@ -1,7 +1,5 @@
 import Vnode from './vnode'
 
-import type {Children} from '../index'
-
 // Note: the processing of variadic parameters is perf-sensitive.
 //
 // In native ES6, it might be preferable to define hyperscript and fragment

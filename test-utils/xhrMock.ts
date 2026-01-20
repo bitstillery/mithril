@@ -67,7 +67,7 @@ export default function xhrMock() {
 						// Match spec
 						if (self.responseType === 'json') {
 							try { self.response = JSON.parse(data.responseText) }
-							catch(e) { /* ignore */ }
+							catch(_e) { /* ignore */ }
 						} else {
 							self.response = data.responseText
 						}

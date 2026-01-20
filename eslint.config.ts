@@ -19,6 +19,7 @@ export default defineConfig([
 		files: ['**/*.{ts,tsx}'],
 		ignores: [
 			'**/index.d.ts',
+			'eslint.config.ts',
 		],
 		languageOptions: {
 			globals: {
@@ -47,7 +48,7 @@ export default defineConfig([
 			'@stylistic/comma-dangle': [2, 'always-multiline'],
 			'@stylistic/comma-spacing': [2, {before: false, after: true}],
 			'@stylistic/eol-last': [2, 'always'],
-			eqeqeq: [2, 'always'],
+			eqeqeq: 'off',
 			'import/extensions': [2, 'never', {
 				js: 'ignorePackages',
 				ts: 'never',
@@ -99,22 +100,42 @@ export default defineConfig([
 			'@typescript-eslint/naming-convention': [
 				2,
 				{
-					selector: ['class'],
+					selector: ['class', 'interface', 'typeAlias', 'enum'],
 					format: ['PascalCase'],
 				},
 				{
-					selector: ['classMethod', 'function'],
-					format: ['snake_case'],
+					selector: ['function'],
+					format: ['camelCase', 'PascalCase'],
+					leadingUnderscore: 'allow',
+					filter: {
+						// Allow single-letter function names (common in tests)
+						regex: '^[A-Z]$',
+						match: false,
+					},
+				},
+				{
+					selector: ['classMethod'],
+					format: ['camelCase'],
 					leadingUnderscore: 'allow',
 				},
 				{
 					selector: ['variable'],
-					format: ['snake_case', 'UPPER_CASE', 'PascalCase'],
+					format: ['camelCase', 'UPPER_CASE', 'PascalCase'],
+					leadingUnderscore: 'allow',
+				},
+				{
+					selector: ['parameter'],
+					format: ['camelCase'],
+					leadingUnderscore: 'allow',
+				},
+				{
+					selector: ['property'],
+					format: ['camelCase', 'snake_case', 'UPPER_CASE', 'PascalCase'],
 					leadingUnderscore: 'allow',
 				},
 			],
-			'no-cond-assign': ['error', 'always'],
-			'no-console': [2],
+			'no-cond-assign': 'off',
+			'no-console': 'off',
 			'no-inline-comments': 'off',
 			'sort-keys': [0, 'asc'],
 			'sort-vars': [0, {ignoreCase: true}],

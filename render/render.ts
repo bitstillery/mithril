@@ -45,7 +45,7 @@ export default function renderFactory() {
 	function activeElement(dom: Node): Element | null {
 		try {
 			return getDocument(dom).activeElement
-		} catch(e) {
+		} catch(_e) {
 			return null
 		}
 	}

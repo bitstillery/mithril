@@ -57,7 +57,7 @@ describe('render', () => {
 		let threw = false
 		try {
 			render(null, [])
-		} catch(e) {
+		} catch(_e) {
 			threw = true
 		}
 		expect(threw).toBe(true)
@@ -74,7 +74,7 @@ describe('render', () => {
 		function init() {
 			setTimeout(function() {
 				let threwInner = false
-				try {run()} catch(e) {threwInner = true}
+				try {run()} catch(_e) {threwInner = true}
 
 				expect(threwInner).toBe(false)
 				done()
@@ -82,7 +82,7 @@ describe('render', () => {
 		}
 
 		let threwOuter = false
-		try {run()} catch(e) {threwOuter = true}
+		try {run()} catch(_e) {threwOuter = true}
 
 		expect(threwOuter).toBe(true)
 	})
@@ -95,13 +95,13 @@ describe('render', () => {
 		A.prototype.onbeforeupdate = onbeforeupdate
 		let throwCount = 0
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
 		expect(onbeforeupdate.callCount).toBe(0)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
@@ -116,13 +116,13 @@ describe('render', () => {
 		A.prototype.onbeforeupdate = onbeforeupdate
 		let throwCount = 0
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
 		expect(onbeforeupdate.callCount).toBe(0)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
@@ -137,13 +137,13 @@ describe('render', () => {
 		A.prototype.onbeforeupdate = onbeforeupdate
 		let throwCount = 0
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(0)
 		expect(onbeforeupdate.callCount).toBe(0)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(0)
@@ -160,13 +160,13 @@ describe('render', () => {
 			}
 		}
 		let throwCount = 0
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
 		expect(onbeforeupdate.callCount).toBe(0)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
@@ -183,13 +183,13 @@ describe('render', () => {
 			}
 		}
 		let throwCount = 0
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
 		expect(onbeforeupdate.callCount).toBe(0)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 		expect(oninit.callCount).toBe(1)
@@ -200,11 +200,11 @@ describe('render', () => {
 			throw new Error('error')
 		}
 		let throwCount = 0
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 
-		try {render(root, m(A))} catch(e) {throwCount++}
+		try {render(root, m(A))} catch(_e) {throwCount++}
 
 		expect(throwCount).toBe(1)
 	})
@@ -334,30 +334,30 @@ describe('render', () => {
 		const thrown: string[] = []
 		function A() {
 			let updated = false
-			try {render(root, m(A))} catch(e) {thrown.push('construct')}
+			try {render(root, m(A))} catch(_e) {thrown.push('construct')}
 			return {
 				oninit: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('oninit')}
+					try {render(root, m(A))} catch(_e) {thrown.push('oninit')}
 				},
 				oncreate: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('oncreate')}
+					try {render(root, m(A))} catch(_e) {thrown.push('oncreate')}
 				},
 				onbeforeupdate: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('onbeforeupdate')}
+					try {render(root, m(A))} catch(_e) {thrown.push('onbeforeupdate')}
 				},
 				onupdate: function() {
 					if (updated) return
 					updated = true
-					try {render(root, m(A))} catch(e) {thrown.push('onupdate')}
+					try {render(root, m(A))} catch(_e) {thrown.push('onupdate')}
 				},
 				onbeforeremove: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('onbeforeremove')}
+					try {render(root, m(A))} catch(_e) {thrown.push('onbeforeremove')}
 				},
 				onremove: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('onremove')}
+					try {render(root, m(A))} catch(_e) {thrown.push('onremove')}
 				},
 				view: function() {
-					try {render(root, m(A))} catch(e) {thrown.push('view')}
+					try {render(root, m(A))} catch(_e) {thrown.push('view')}
 				},
 			}
 		}

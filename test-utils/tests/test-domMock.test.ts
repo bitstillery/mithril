@@ -83,7 +83,7 @@ describe('domMock', () => {
 				let threw = false
 				try {
 					$document.createTextNode(Symbol('nono'))
-				} catch(e) {
+				} catch(_e) {
 					threw = true
 				}
 				expect(threw).toBe(true)
@@ -93,7 +93,7 @@ describe('domMock', () => {
 				try {
 					let node = $document.createTextNode('a')
 					node.nodeValue = Symbol('nono')
-				} catch(e) {
+				} catch(_e) {
 					threw = true
 				}
 				expect(threw).toBe(true)
@@ -174,20 +174,20 @@ describe('domMock', () => {
 		test('throws if appended to self', (done) => {
 			let div = $document.createElement('div')
 			try {div.appendChild(div)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if appended to child', (done) => {
 			let parent = $document.createElement('div')
 			let child = $document.createElement('a')
 			parent.appendChild(child)
 			try {child.appendChild(parent)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if child is not element', (done) => {
 			let parent = $document.createElement('div')
 			let child = 1
 			try {parent.appendChild(child)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 	})
 
@@ -206,7 +206,7 @@ describe('domMock', () => {
 			let parent = $document.createElement('div')
 			let child = $document.createElement('a')
 			try {parent.removeChild(child)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 	})
 
@@ -318,7 +318,7 @@ describe('domMock', () => {
 			let a = $document.createElement('a')
 			div.appendChild(a)
 			try {div.isnertBefore(div, a)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if appended to child', (done) => {
 			let parent = $document.createElement('div')
@@ -327,33 +327,33 @@ describe('domMock', () => {
 			parent.appendChild(a)
 			a.appendChild(b)
 			try {a.insertBefore(parent, b)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if child is not element', (done) => {
 			let parent = $document.createElement('div')
 			let a = $document.createElement('a')
 			parent.appendChild(a)
 			try {parent.insertBefore(1, a)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if inserted before itself', (done) => {
 			let parent = $document.createElement('div')
 			let a = $document.createElement('a')
 			try {parent.insertBefore(a, a)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if second arg is undefined', (done) => {
 			let parent = $document.createElement('div')
 			let a = $document.createElement('a')
 			try {parent.insertBefore(a)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 		test('throws if reference is not child', (done) => {
 			let parent = $document.createElement('div')
 			let a = $document.createElement('a')
 			let b = $document.createElement('b')
 			try {parent.insertBefore(a, b)}
-			catch(e) {done()}
+			catch(_e) {done()}
 		})
 	})
 
@@ -1558,7 +1558,7 @@ describe('domMock', () => {
 					let threw = false
 					try {
 						select.value = Symbol('x')
-					} catch(e) {
+					} catch(_e) {
 						threw = true
 					}
 					expect(threw).toBe(true)
@@ -1780,7 +1780,7 @@ describe('domMock', () => {
 			try {
 				el.className = 'a'
 			}
-			catch(e) {
+			catch(_e) {
 				done()
 			}
 		})

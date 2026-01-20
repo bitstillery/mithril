@@ -216,7 +216,7 @@ export default function domMock(options?: DomMockOptions) {
 		// remove comments, preserving comments in strings.
 		declList = declList.replace(
 			/("(?:\\.|[^"\n])*"|'(?:\\.|[^'\n])*')|\/\*[\s\S]*?\*\//g,
-			function(m, str) {
+			function(_m, str) {
 				return str || ''
 			},
 		)
@@ -232,10 +232,10 @@ export default function domMock(options?: DomMockOptions) {
 	}
 	function parseMarkup(value: string, root: any, voidElements: string[], xmlns: string | null) {
 		let depth = 0, stack = [root]
-		value.replace(/<([a-z0-9\-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9\-]+?)>|([^<]+)/g, function(match, startTag, attrs, selfClosed, endTag, text) {
+		value.replace(/<([a-z0-9\-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9\-]+?)>|([^<]+)/g, function(_match, startTag, attrs, selfClosed, endTag, text) {
 			if (startTag) {
 				const element = xmlns == null ? $window.document.createElement(startTag) : $window.document.createElementNS(xmlns, startTag)
-				attrs.replace(/\s+?([^=]+?)=(?:"([^"]*?)"|'([^']*?)'|([^\s>]*))/g, function(match, key, doubleQuoted, singleQuoted, unquoted) {
+				attrs.replace(/\s+?([^=]+?)=(?:"([^"]*?)"|'([^']*?)'|([^\s>]*))/g, function(_match, key, doubleQuoted, singleQuoted, unquoted) {
 					const keyParts = key.split(':')
 					const name = keyParts.pop()!
 					const ns = keyParts[0]
