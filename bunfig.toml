@@ -1,0 +1,8 @@
+[build]
+target = "browser"
+minify = false
+sourcemap = "none"
+
+[install]
+# Use Bun's fast install
+production = false
