@@ -1,6 +1,5 @@
 import hyperscript from './hyperscript'
 import mountRedraw from './api/mount-redraw'
-import requestFactory from './request/request'
 import routerFactory from './api/router'
 import renderFactory from './render/render'
 import parseQueryString from './querystring/parse'
@@ -17,11 +16,6 @@ const mountRedrawInstance = mountRedraw(
 	renderFactory(),
 	typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame.bind(window) : setTimeout,
 	console,
-)
-
-const request = requestFactory(
-	typeof window !== 'undefined' ? window : null,
-	mountRedrawInstance.redraw,
 )
 
 const router = routerFactory(
@@ -41,7 +35,6 @@ m.mount = mountRedrawInstance.mount
 m.route = router
 m.render = renderFactory()
 m.redraw = mountRedrawInstance.redraw
-m.request = request.request
 m.parseQueryString = parseQueryString
 m.buildQueryString = buildQueryString
 m.parsePathname = parsePathname

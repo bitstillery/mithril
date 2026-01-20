@@ -8,31 +8,20 @@
   "main": "./index.ts",
   "module": "./index.ts",
   "types": "./index.d.ts",
-  "unpkg": "mithril.min.js",
-  "jsdelivr": "mithril.min.js",
   "repository": "github:bitstillery/mithril",
   "exports": {
     ".": {
       "types": "./index.d.ts",
       "import": "./index.ts",
-      "require": "./index.js",
       "default": "./index.ts"
     },
     "./browser": {
       "types": "./index.d.ts",
       "import": "./browser.ts",
       "default": "./browser.ts"
-    },
-    "./mithril.js": "./mithril.js",
-    "./mithril.min.js": "./mithril.min.js"
+    }
   },
   "scripts": {
-    "watch": "bun run watch:js",
-    "watch:js": "bun build browser.ts --outdir . --target browser --watch",
-    "build": "bun run build:browser && bun run build:min && bun run build:stream-min",
-    "build:browser": "bun build browser.ts --outdir . --target browser",
-    "build:min": "bun build browser.ts --outdir . --target browser --minify",
-    "build:stream-min": "bun run scripts/minify-stream.ts",
     "cleanup:lint": "rm -rf .eslintcache",
     "lint": "bun run lint:ts",
     "lint:ts": "bun run lint:ts:style && bun run lint:ts:syntax",

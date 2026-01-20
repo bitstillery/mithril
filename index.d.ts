@@ -46,30 +46,6 @@ export interface Hyperscript {
 	Fragment: string
 }
 
-export interface RequestOptions<T = any> {
-	url: string
-	method?: string
-	body?: any
-	params?: Record<string, any>
-	headers?: Record<string, string>
-	user?: string
-	password?: string
-	withCredentials?: boolean
-	timeout?: number
-	responseType?: string
-	async?: boolean
-	serialize?: (data: any) => string
-	deserialize?: (data: string) => any
-	extract?: (xhr: XMLHttpRequest, options: RequestOptions<T>) => any
-	type?: new (data: any) => T
-	config?: (xhr: XMLHttpRequest, options: RequestOptions<T>) => void
-	oninit?: (xhr: XMLHttpRequest) => void
-	onprogress?: (e: ProgressEvent) => void
-	onerror?: (e: Error) => void
-	onabort?: () => void
-	ontimeout?: () => void
-}
-
 export interface RouteResolver<Attrs = Record<string, any>, State = any> {
 	onmatch?: (args: Attrs, requestedPath: string, route: string) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | void
 	render?: (vnode: Vnode<Attrs, State>) => Vnode
@@ -108,7 +84,6 @@ export interface MithrilStatic {
 	route: Route
 	render: Render
 	redraw: Redraw
-	request: <T = any>(options: RequestOptions<T>) => Promise<T>
 	parseQueryString: (queryString: string) => Record<string, any>
 	buildQueryString: (values: Record<string, any>) => string
 	parsePathname: (pathname: string) => { path: string, params: Record<string, any> }
