@@ -34,13 +34,23 @@
     "build:min": "bun build browser.ts --outdir . --target browser --minify",
     "build:stream-min": "bun run scripts/minify-stream.ts",
     "cleanup:lint": "rm -rf .eslintcache",
-    "lint": "eslint . --cache",
+    "lint": "bun run lint:ts",
+    "lint:ts": "bun run lint:ts:style && bun run lint:ts:syntax",
+    "lint:ts:style": "eslint . -c eslint.config.ts",
+    "lint:ts:syntax": "oxlint -c .oxlintrc.json",
     "perf": "bun run performance/test-perf.ts",
     "test": "bun test"
   },
   "devDependencies": {
+    "@stylistic/eslint-plugin": "^5.6.1",
+    "@types/benchmark": "^2.1.4",
+    "@typescript-eslint/eslint-plugin": "^8.51.0",
+    "@typescript-eslint/parser": "^8.48.0",
     "benchmark": "^2.1.4",
-    "eslint": "^8.9.0",
-    "@types/benchmark": "^2.1.4"
+    "eslint": "^9.39.2",
+    "eslint-plugin-import": "^2.31.0",
+    "globals": "^17.0.0",
+    "jiti": "^2.6.1",
+    "oxlint": "^1.30.0"
   }
 }

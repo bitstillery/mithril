@@ -15,8 +15,8 @@ export default function throttleMock(): ThrottleMock {
 			queue = []
 			tasks.forEach(function(fn) {fn()})
 		},
-		queueLength: function(){
+		queueLength: function() {
 			return queue.length
-		}
+		},
 	}
 }

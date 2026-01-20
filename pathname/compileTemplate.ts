@@ -1,7 +1,7 @@
-import parsePathname from "./parse.js"
+import parsePathname from './parse'
 
 interface CompiledTemplate {
-	(data: {path: string, params: Record<string, any>}): boolean
+	(data: {path: string; params: Record<string, any>}): boolean
 }
 
 // Compiles a template into a function that takes a resolved path (without query
@@ -12,22 +12,22 @@ interface CompiledTemplate {
 export default function compileTemplate(template: string): CompiledTemplate {
 	const templateData = parsePathname(template)
 	const templateKeys = Object.keys(templateData.params)
-	const keys: Array<{k: string, r: boolean}> = []
-	const regexp = new RegExp("^" + templateData.path.replace(
+	const keys: Array<{k: string; r: boolean}> = []
+	const regexp = new RegExp('^' + templateData.path.replace(
 		// I escape literal text so people can use things like `:file.:ext` or
 		// `:lang-:locale` in routes. This is all merged into one pass so I
 		// don't also accidentally escape `-` and make it harder to detect it to
 		// ban it from template parameters.
 		/:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
 		function(m, key, extra) {
-			if (key == null) return "\\" + m
-			keys.push({k: key, r: extra === "..."})
-			if (extra === "...") return "(.*)"
-			if (extra === ".") return "([^/]+)\\."
-			return "([^/]+)" + (extra || "")
-		}
-	) + "\\/?$")
-	return function(data: {path: string, params: Record<string, any>}): boolean {
+			if (key == null) return '\\' + m
+			keys.push({k: key, r: extra === '...'})
+			if (extra === '...') return '(.*)'
+			if (extra === '.') return '([^/]+)\\.'
+			return '([^/]+)' + (extra || '')
+		},
+	) + '\\/?$')
+	return function(data: {path: string; params: Record<string, any>}): boolean {
 		// First, check the params. Usually, there isn't any, and it's just
 		// checking a static set.
 		for (let i = 0; i < templateKeys.length; i++) {

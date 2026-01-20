@@ -1,13 +1,13 @@
-import Vnode from "../render/vnode.js"
-import hyperscript from "../render/hyperscript.js"
-import type { ComponentType, Vnode as VnodeType } from "../index.js"
+import Vnode from '../render/vnode'
+import hyperscript from '../render/hyperscript'
+import decodeURIComponentSafe from '../util/decodeURIComponentSafe'
+import buildPathname from '../pathname/build'
+import parsePathname from '../pathname/parse'
+import compileTemplate from '../pathname/compileTemplate'
+import censor from '../util/censor'
 
-import decodeURIComponentSafe from "../util/decodeURIComponentSafe.js"
-import buildPathname from "../pathname/build.js"
-import parsePathname from "../pathname/parse.js"
-import compileTemplate from "../pathname/compileTemplate.js"
-import censor from "../util/censor.js"
-import type { RouteResolver } from "../index.js"
+import type {ComponentType, Vnode as VnodeType} from '../index'
+import type {RouteResolver} from '../index'
 
 interface MountRedraw {
 	mount: (root: Element, component: ComponentType | null) => void
@@ -29,11 +29,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	let hasBeenResolved = false
 
 	let dom: Element | undefined
-	let compiled: Array<{route: string, component: any, check: (data: {path: string, params: Record<string, any>}) => boolean}> | undefined
+	let compiled: Array<{route: string; component: any; check: (data: {path: string; params: Record<string, any>}) => boolean}> | undefined
 	let fallbackRoute: string | undefined
 
 	let currentResolver: RouteResolver | null = null
-	let component: ComponentType | string = "div"
+	let component: ComponentType | string = 'div'
 	let attrs: Record<string, any> = {}
 	let currentPath: string | undefined
 	let lastUpdate: ((comp: any) => void) | null = null
@@ -41,7 +41,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	const RouterRoot: ComponentType = {
 		onremove: function() {
 			ready = hasBeenResolved = false
-			$window.removeEventListener("popstate", fireAsync, false)
+			$window.removeEventListener('popstate', fireAsync, false)
 		},
 		view: function() {
 			// The route has already been resolved.
@@ -62,11 +62,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		// Consider the pathname holistically. The prefix might even be invalid,
 		// but that's not our problem.
 		let prefix = $window.location.hash
-		if (route.prefix[0] !== "#") {
+		if (route.prefix[0] !== '#') {
 			prefix = $window.location.search + prefix
-			if (route.prefix[0] !== "?") {
+			if (route.prefix[0] !== '?') {
 				prefix = $window.location.pathname + prefix
-				if (prefix[0] !== "/") prefix = "/" + prefix
+				if (prefix[0] !== '/') prefix = '/' + prefix
 			}
 		}
 		const path = decodeURIComponentSafe(prefix).slice(route.prefix.length)
@@ -90,7 +90,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					const update = lastUpdate = function(comp: any) {
 						if (update !== lastUpdate) return
 						if (comp === SKIP) return loop(i + 1)
-						component = comp != null && (typeof comp.view === "function" || typeof comp === "function")? comp : "div"
+						component = comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
 						attrs = data.params
 						currentPath = path
 						lastUpdate = null
@@ -103,12 +103,12 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					}
 					// There's no understating how much I *wish* I could
 					// use `async`/`await` here...
-					if (payload.view || typeof payload === "function") {
+					if (payload.view || typeof payload === 'function') {
 						payload = {}
 						update(localComp)
 					}
 					else if (payload.onmatch) {
-						p.then(function () {
+						p.then(function() {
 							return payload.onmatch!(data.params, path, matchedRoute)
 						}).then(update, path === fallbackRoute ? null : reject)
 					}
@@ -118,7 +118,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			}
 
 			if (path === fallbackRoute) {
-				throw new Error("Could not resolve default route " + fallbackRoute + ".")
+				throw new Error('Could not resolve default route ' + fallbackRoute + '.')
 			}
 			route.set(fallbackRoute!, null, {replace: true})
 		}
@@ -135,12 +135,12 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	}
 
 	function route(root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) {
-		if (!root) throw new TypeError("DOM element being rendered to does not exist.")
+		if (!root) throw new TypeError('DOM element being rendered to does not exist.')
 
 		compiled = Object.keys(routes).map(function(routePath) {
-			if (routePath[0] !== "/") throw new SyntaxError("Routes must start with a '/'.")
+			if (routePath[0] !== '/') throw new SyntaxError('Routes must start with a \'/\'.')
 			if ((/:([^\/\.-]+)(\.{3})?:/).test(routePath)) {
-				throw new SyntaxError("Route parameter names must be separated with either '/', '.', or '-'.")
+				throw new SyntaxError('Route parameter names must be separated with either \'/\', \'.\', or \'-\'.')
 			}
 			return {
 				route: routePath,
@@ -152,13 +152,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		if (defaultRoute != null) {
 			const defaultData = parsePathname(defaultRoute)
 
-			if (!compiled.some(function (i) { return i.check(defaultData) })) {
-				throw new ReferenceError("Default route doesn't match any known routes.")
+			if (!compiled.some(function(i) { return i.check(defaultData) })) {
+				throw new ReferenceError('Default route doesn\'t match any known routes.')
 			}
 		}
 		dom = root
 
-		$window.addEventListener("popstate", fireAsync, false)
+		$window.addEventListener('popstate', fireAsync, false)
 
 		ready = true
 
@@ -185,7 +185,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		}
 	}
 	route.get = function() {return currentPath}
-	route.prefix = "#!"
+	route.prefix = '#!'
 	route.Link = {
 		view: function(vnode: VnodeType) {
 			// Omit the used parameters from the rendered element - they are
@@ -194,9 +194,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// We don't strip the other parameters because for convenience we
 			// let them be specified in the selector as well.
 			const child = hyperscript(
-				vnode.attrs?.selector || "a",
-				censor(vnode.attrs || {}, ["options", "params", "selector", "onclick"]),
-				vnode.children
+				vnode.attrs?.selector || 'a',
+				censor(vnode.attrs || {}, ['options', 'params', 'selector', 'onclick']),
+				vnode.children,
 			)
 			let options: RouteOptions | undefined
 			let onclick: any
@@ -210,22 +210,22 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// despite being visibly disabled.
 			if (child.attrs!.disabled = Boolean(child.attrs!.disabled)) {
 				child.attrs!.href = null
-				child.attrs!["aria-disabled"] = "true"
+				child.attrs!['aria-disabled'] = 'true'
 				// If you *really* do want add `onclick` on a disabled link, use
 				// an `oncreate` hook to add it.
 			} else {
 				options = vnode.attrs?.options
 				onclick = vnode.attrs?.onclick
 				// Easier to build it now to keep it isomorphic.
-				href = buildPathname(child.attrs!.href || "", vnode.attrs?.params || {})
+				href = buildPathname(child.attrs!.href || '', vnode.attrs?.params || {})
 				child.attrs!.href = route.prefix + href
 				child.attrs!.onclick = function(e: any) {
 					let result: any
-					if (typeof onclick === "function") {
+					if (typeof onclick === 'function') {
 						result = onclick.call(e.currentTarget, e)
-					} else if (onclick == null || typeof onclick !== "object") {
+					} else if (onclick == null || typeof onclick !== 'object') {
 						// do nothing
-					} else if (typeof onclick.handleEvent === "function") {
+					} else if (typeof onclick.handleEvent === 'function') {
 						onclick.handleEvent(e)
 					}
 
@@ -244,7 +244,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 						// Ignore everything but left clicks
 						(e.button === 0 || e.which === 0 || e.which === 1) &&
 						// Let the browser handle `target=_blank`, etc.
-						(!e.currentTarget.target || e.currentTarget.target === "_self") &&
+						(!e.currentTarget.target || e.currentTarget.target === '_self') &&
 						// No modifier keys
 						!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey
 					) {

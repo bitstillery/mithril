@@ -21,7 +21,7 @@
 // }
 // ```
 
-import hasOwn from "./hasOwn.js"
+import hasOwn from './hasOwn'
 
 const magic = /^(?:key|oninit|oncreate|onbeforeupdate|onupdate|onbeforeremove|onremove)$/
 

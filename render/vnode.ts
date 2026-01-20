@@ -1,13 +1,13 @@
-import type { Vnode, Children } from "../index.js"
+import type {Vnode, Children} from '../index'
 
 function Vnode(tag: any, key: string | number | null | undefined, attrs: Record<string, any> | null | undefined, children: Children | null | undefined, text: string | number | null | undefined, dom: Node | null | undefined): Vnode {
 	return {tag: tag, key: key, attrs: attrs, children: children, text: text, dom: dom, is: undefined, domSize: undefined, state: undefined, events: undefined, instance: undefined}
 }
 Vnode.normalize = function(node: any): Vnode | null {
-	if (Array.isArray(node)) return Vnode("[", undefined, undefined, Vnode.normalizeChildren(node), undefined, undefined)
-	if (node == null || typeof node === "boolean") return null
-	if (typeof node === "object") return node
-	return Vnode("#", undefined, undefined, String(node), undefined, undefined)
+	if (Array.isArray(node)) return Vnode('[', undefined, undefined, Vnode.normalizeChildren(node), undefined, undefined)
+	if (node == null || typeof node === 'boolean') return null
+	if (typeof node === 'object') return node
+	return Vnode('#', undefined, undefined, String(node), undefined, undefined)
 }
 Vnode.normalizeChildren = function(input: any[]): (Vnode | null)[] {
 	// Preallocate the array length (initially holey) and fill every index immediately in order.
@@ -24,8 +24,8 @@ Vnode.normalizeChildren = function(input: any[]): (Vnode | null)[] {
 	}
 	if (numKeyed !== 0 && numKeyed !== input.length) {
 		throw new TypeError(children.includes(null)
-			? "In fragments, vnodes must either all have keys or none have keys. You may wish to consider using an explicit keyed empty fragment, m.fragment({key: ...}), instead of a hole."
-			: "In fragments, vnodes must either all have keys or none have keys."
+			? 'In fragments, vnodes must either all have keys or none have keys. You may wish to consider using an explicit keyed empty fragment, m.fragment({key: ...}), instead of a hole.'
+			: 'In fragments, vnodes must either all have keys or none have keys.',
 		)
 	}
 	return children

@@ -1,5 +1,6 @@
-import m from "../render/hyperscript.js"
-import type { Component } from "../index.js"
+import m from '../render/hyperscript'
+
+import type {Component} from '../index'
 
 interface ComponentFactory {
 	kind: string
@@ -8,30 +9,30 @@ interface ComponentFactory {
 
 const components: ComponentFactory[] = [
 	{
-		kind: "POJO",
+		kind: 'POJO',
 		create: function(methods?: Record<string, any>) {
-			const res: Component = {view: function() {return m("div")}}
-			Object.keys(methods || {}).forEach(function(method){res[method as keyof Component] = methods![method] as any})
+			const res: Component = {view: function() {return m('div')}}
+			Object.keys(methods || {}).forEach(function(method) {res[method as keyof Component] = methods![method] as any})
 			return res
-		}
+		},
 	}, {
-		kind: "constructible",
+		kind: 'constructible',
 		create: function(methods?: Record<string, any>) {
-			function Res(){}
-			Res.prototype.view = function() {return m("div")}
-			Object.keys(methods || {}).forEach(function(method){(Res.prototype as any)[method] = methods![method]})
+			function Res() {}
+			Res.prototype.view = function() {return m('div')}
+			Object.keys(methods || {}).forEach(function(method) {(Res.prototype as any)[method] = methods![method]})
 			return Res as any
-		}
+		},
 	}, {
-		kind: "closure",
+		kind: 'closure',
 		create: function(methods?: Record<string, any>) {
 			return function() {
-				const res: Component = {view: function() {return m("div")}}
-				Object.keys(methods || {}).forEach(function(method){res[method as keyof Component] = methods![method] as any})
+				const res: Component = {view: function() {return m('div')}}
+				Object.keys(methods || {}).forEach(function(method) {res[method as keyof Component] = methods![method] as any})
 				return res
 			}
-		}
-	}
+		},
+	},
 ]
 
 export default components

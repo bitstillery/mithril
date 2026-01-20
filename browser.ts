@@ -1,7 +1,7 @@
-import m from "./index.js"
+import m from './index'
 
-if (typeof module !== "undefined") {
-	(module as any)["exports"] = m
+if (typeof module !== 'undefined') {
+	(module as any)['exports'] = m
 } else {
 	(window as any).m = m
 }

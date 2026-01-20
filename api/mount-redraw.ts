@@ -1,5 +1,6 @@
-import Vnode from "../render/vnode.js"
-import type { ComponentType } from "../index.js"
+import Vnode from '../render/vnode'
+
+import type {ComponentType} from '../index'
 
 interface Render {
 	(root: Element, vnodes: any, redraw?: () => void): void
@@ -26,7 +27,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 	function sync() {
 		for (offset = 0; offset < subscriptions.length; offset += 2) {
 			try { render(subscriptions[offset] as Element, Vnode(subscriptions[offset + 1] as ComponentType), redraw) }
-			catch (e) { console.error(e) }
+			catch(e) { console.error(e) }
 		}
 		offset = -1
 	}
@@ -44,8 +45,8 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 	redraw.sync = sync
 
 	function mount(root: Element, component: ComponentType | null) {
-		if (component != null && (component as any).view == null && typeof component !== "function") {
-			throw new TypeError("m.mount expects a component, not a vnode.")
+		if (component != null && (component as any).view == null && typeof component !== 'function') {
+			throw new TypeError('m.mount expects a component, not a vnode.')
 		}
 
 		const index = subscriptions.indexOf(root)

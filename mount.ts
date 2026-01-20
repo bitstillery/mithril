@@ -1,3 +1,3 @@
-import mountRedraw from "./api/mount-redraw.js"
+import mountRedraw from './api/mount-redraw'
 
 export default mountRedraw.mount

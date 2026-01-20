@@ -1,18 +1,18 @@
 // Helper to provide ospec-like spy functionality for Bun test
-import { mock } from "bun:test"
+import {mock} from 'bun:test'
 
-export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: number, this: any, args: any[]} {
+export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: number; this: any; args: any[]} {
 	const spyFn = mock(fn || (() => {}) as T)
 	const wrappedSpy = function(this: any, ...args: any[]) {
 		return spyFn.apply(this, args)
-	} as T & {callCount: number, this: any, args: any[]}
+	} as T & {callCount: number; this: any; args: any[]}
 	
 	Object.defineProperty(wrappedSpy, 'callCount', {
 		get() {
 			return spyFn.mock.calls.length
 		},
 		enumerable: true,
-		configurable: true
+		configurable: true,
 	})
 	
 	Object.defineProperty(wrappedSpy, 'this', {
@@ -26,7 +26,7 @@ export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: 
 			return lastContext
 		},
 		enumerable: true,
-		configurable: true
+		configurable: true,
 	})
 	
 	Object.defineProperty(wrappedSpy, 'args', {
@@ -34,7 +34,7 @@ export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: 
 			return spyFn.mock.calls.length > 0 ? spyFn.mock.calls[spyFn.mock.calls.length - 1] : []
 		},
 		enumerable: true,
-		configurable: true
+		configurable: true,
 	})
 	
 	// Copy mock property for compatibility
@@ -43,7 +43,7 @@ export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: 
 			return spyFn.mock
 		},
 		enumerable: false,
-		configurable: true
+		configurable: true,
 	})
 	
 	return wrappedSpy

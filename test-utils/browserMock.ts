@@ -1,6 +1,6 @@
-import pushStateMock from "./pushStateMock.js"
-import domMock from "./domMock.js"
-import xhrMock from "./xhrMock.js"
+import pushStateMock from './pushStateMock'
+import domMock from './domMock'
+import xhrMock from './xhrMock'
 
 interface BrowserMockOptions {
 	window?: any

@@ -1,8 +1,9 @@
-import { describe, test, expect } from "bun:test"
-import callAsync from "../../test-utils/callAsync.js"
+import {describe, test, expect} from 'bun:test'
 
-describe("callAsync", () => {
-	test("works", (done) => {
+import callAsync from '../../test-utils/callAsync'
+
+describe('callAsync', () => {
+	test('works', (done) => {
 		let count = 0
 		callAsync(function() {
 			expect(count).toBe(1)
@@ -10,14 +11,14 @@ describe("callAsync", () => {
 		})
 		count++
 	})
-	test("gets called before setTimeout", (done) => {
+	test('gets called before setTimeout', (done) => {
 		let timeout: ReturnType<typeof setTimeout>
 		callAsync(function() {
 			clearTimeout(timeout)
 			done()
 		})
 		timeout = setTimeout(function() {
-			throw new Error("callAsync was called too slow")
+			throw new Error('callAsync was called too slow')
 		}, 5)
 	})
 })

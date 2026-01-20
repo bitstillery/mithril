@@ -1,6 +1,7 @@
-import buildPathname from "../pathname/build.js"
-import hasOwn from "../util/hasOwn.js"
-import type { RequestOptions } from "../index.js"
+import buildPathname from '../pathname/build'
+import hasOwn from '../util/hasOwn'
+
+import type {RequestOptions} from '../index'
 
 interface RequestFunction {
 	<T = any>(url: string, args?: RequestOptions<T>): Promise<T>
@@ -15,10 +16,10 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 	function makeRequest<T = any>(url: string, args: RequestOptions<T>): Promise<T> {
 		return new Promise(function(resolve, reject) {
 			url = buildPathname(url, args.params || {})
-			const method = args.method != null ? args.method.toUpperCase() : "GET"
+			const method = args.method != null ? args.method.toUpperCase() : 'GET'
 			const body = args.body
 			const assumeJSON = (args.serialize == null || args.serialize === JSON.stringify) && !(body instanceof $window.FormData || body instanceof $window.URLSearchParams)
-			const responseType = args.responseType || (typeof args.extract === "function" ? "" : "json")
+			const responseType = args.responseType || (typeof args.extract === 'function' ? '' : 'json')
 
 			let xhr = new $window.XMLHttpRequest()
 			let aborted = false
@@ -32,13 +33,13 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 				abort.call(this)
 			}
 
-			xhr.open(method, url, args.async !== false, typeof args.user === "string" ? args.user : undefined, typeof args.password === "string" ? args.password : undefined)
+			xhr.open(method, url, args.async !== false, typeof args.user === 'string' ? args.user : undefined, typeof args.password === 'string' ? args.password : undefined)
 
-			if (assumeJSON && body != null && !hasHeader(args, "content-type")) {
-				xhr.setRequestHeader("Content-Type", "application/json; charset=utf-8")
+			if (assumeJSON && body != null && !hasHeader(args, 'content-type')) {
+				xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8')
 			}
-			if (typeof args.deserialize !== "function" && !hasHeader(args, "accept")) {
-				xhr.setRequestHeader("Accept", "application/json, text/*")
+			if (typeof args.deserialize !== 'function' && !hasHeader(args, 'accept')) {
+				xhr.setRequestHeader('Accept', 'application/json, text/*')
 			}
 			if (args.withCredentials) xhr.withCredentials = args.withCredentials
 			if (args.timeout) xhr.timeout = args.timeout
@@ -65,15 +66,15 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 						let response: any = ev.target.response
 						let message: string
 
-						if (responseType === "json") {
+						if (responseType === 'json') {
 							// For IE and Edge, which don't implement
 							// `responseType: "json"`.
-							if (!ev.target.responseType && typeof args.extract !== "function") {
+							if (!ev.target.responseType && typeof args.extract !== 'function') {
 								// Handle no-content which will not parse.
 								try { response = JSON.parse(ev.target.responseText) }
-								catch (e) { response = null }
+								catch(e) { response = null }
 							}
-						} else if (!responseType || responseType === "text") {
+						} else if (!responseType || responseType === 'text') {
 							// Only use this default if it's text. If a parsed
 							// document is needed on old IE and friends (all
 							// unsupported), the user should use a custom
@@ -82,15 +83,15 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 							if (response == null) response = ev.target.responseText
 						}
 
-						if (typeof args.extract === "function") {
+						if (typeof args.extract === 'function') {
 							response = args.extract(ev.target, args)
 							// success stays true
-						} else if (typeof args.deserialize === "function") {
+						} else if (typeof args.deserialize === 'function') {
 							response = args.deserialize(response)
 						}
 
 						if (success) {
-							if (typeof args.type === "function") {
+							if (typeof args.type === 'function') {
 								if (Array.isArray(response)) {
 									for (let i = 0; i < response.length; i++) {
 										response[i] = new args.type!(response[i])
@@ -103,7 +104,7 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 						else {
 							const completeErrorResponse = function() {
 								try { message = ev.target.responseText }
-								catch (e) { message = response }
+								catch(e) { message = response }
 								const error: any = new Error(message)
 								error.code = ev.target.status
 								error.response = response
@@ -122,20 +123,20 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 							} else completeErrorResponse()
 						}
 					}
-					catch (e) {
+					catch(e) {
 						reject(e)
 					}
 				}
 			}
 
-			xhr.ontimeout = function (ev: any) {
+			xhr.ontimeout = function(ev: any) {
 				isTimeout = true
-				const error: any = new Error("Request timed out")
+				const error: any = new Error('Request timed out')
 				error.code = ev.target.status
 				reject(error)
 			}
 
-			if (typeof args.config === "function") {
+			if (typeof args.config === 'function') {
 				xhr = args.config(xhr, args, url) || xhr
 
 				// Propagate the `abort` to any replacement XHR as well.
@@ -149,7 +150,7 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 			}
 
 			if (body == null) xhr.send()
-			else if (typeof args.serialize === "function") xhr.send(args.serialize(body))
+			else if (typeof args.serialize === 'function') xhr.send(args.serialize(body))
 			else if (body instanceof $window.FormData || body instanceof $window.URLSearchParams) xhr.send(body)
 			else xhr.send(JSON.stringify(body))
 		})
@@ -171,13 +172,13 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 
 	return {
 		request: function<T = any>(url: string | RequestOptions<T> & {url: string}, args?: RequestOptions<T>): Promise<T> {
-			if (typeof url !== "string") { args = url; url = url.url }
+			if (typeof url !== 'string') { args = url; url = url.url }
 			else if (args == null) args = {}
 			const promise = makeRequest<T>(url, args!)
 			if (args!.background === true) return promise
 			let count = 0
 			function complete() {
-				if (--count === 0 && typeof oncompletion === "function") oncompletion()
+				if (--count === 0 && typeof oncompletion === 'function') oncompletion()
 			}
 
 			return wrap(promise)
@@ -203,6 +204,6 @@ export default function requestFactory($window: any, oncompletion?: () => void):
 				}
 				return promise
 			}
-		}
+		},
 	}
 }

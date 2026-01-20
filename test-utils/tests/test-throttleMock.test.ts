@@ -1,9 +1,10 @@
-import { describe, test, expect } from "bun:test"
-import throttleMock from "../../test-utils/throttleMock.js"
-import { spy } from "../test-helpers.js"
+import {describe, test, expect} from 'bun:test'
 
-describe("throttleMock", () => {
-	test("schedules one callback", () => {
+import throttleMock from '../../test-utils/throttleMock'
+import {spy} from '../test-helpers'
+
+describe('throttleMock', () => {
+	test('schedules one callback', () => {
 		const throttleMockInstance = throttleMock()
 		const spyFn = spy()
 
@@ -15,7 +16,7 @@ describe("throttleMock", () => {
 		expect(throttleMockInstance.queueLength()).toBe(0)
 		expect(spyFn.callCount).toBe(1)
 	})
-	test("schedules two callbacks", () => {
+	test('schedules two callbacks', () => {
 		const throttleMockInstance = throttleMock()
 		const spy1 = spy()
 		const spy2 = spy()

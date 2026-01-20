@@ -1,5 +1,6 @@
-import delayedRemoval from "./delayedRemoval.js"
-import type { Vnode } from "../index.js"
+import delayedRemoval from './delayedRemoval'
+
+import type {Vnode} from '../index'
 
 function* domFor(vnode: Vnode): Generator<Node, void, unknown> {
 	// To avoid unintended mangling of the internal bundler,

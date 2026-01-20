@@ -1,5 +1,5 @@
-import parseURL from "./parseURL.js"
-import callAsync from "./callAsync.js"
+import parseURL from './parseURL'
+import callAsync from './callAsync'
 
 interface HistoryEntry {
 	url: string
@@ -18,7 +18,7 @@ function debouncedAsync(f: () => void) {
 	let ref: ReturnType<typeof setTimeout> | null = null
 	return function() {
 		if (ref != null) return
-		ref = callAsync(function(){
+		ref = callAsync(function() {
 			ref = null
 			f()
 		} as any)
@@ -29,18 +29,18 @@ export default function pushStateMock(options?: PushStateMockOptions) {
 	if (options == null) options = {}
 
 	const $window: any = options.window || {}
-	let protocol = options.protocol || "http:"
-	let hostname = options.hostname || "localhost"
-	let port = ""
-	let pathname = "/"
-	let search = ""
-	let hash = ""
+	let protocol = options.protocol || 'http:'
+	let hostname = options.hostname || 'localhost'
+	let port = ''
+	let pathname = '/'
+	let search = ''
+	let hash = ''
 
 	let past: HistoryEntry[] = [{url: getURL(), isNew: true, state: null, title: null}], future: HistoryEntry[] = []
 
 	function getURL(): string {
-		if (protocol === "file:") return protocol + "//" + pathname + search + hash
-		return protocol + "//" + hostname + prefix(":", port) + pathname + search + hash
+		if (protocol === 'file:') return protocol + '//' + pathname + search + hash
+		return protocol + '//' + hostname + prefix(':', port) + pathname + search + hash
 	}
 	function setURL(value: string): boolean {
 		const data = parseURL(value, {protocol: protocol, hostname: hostname, port: port, pathname: pathname})
@@ -75,18 +75,18 @@ export default function pushStateMock(options?: PushStateMockOptions) {
 	}
 
 	function prefix(prefix: string, value: string): string {
-		if (value === "") return ""
-		return (value.charAt(0) !== prefix ? prefix : "") + value
+		if (value === '') return ''
+		return (value.charAt(0) !== prefix ? prefix : '') + value
 	}
 	function _hashchange() {
-		if (typeof $window.onhashchange === "function") $window.onhashchange({type: "hashchange"})
+		if (typeof $window.onhashchange === 'function') $window.onhashchange({type: 'hashchange'})
 	}
 	const hashchange = debouncedAsync(_hashchange)
 	function popstate() {
-		if (typeof $window.onpopstate === "function") $window.onpopstate({type: "popstate", state: $window.history.state})
+		if (typeof $window.onpopstate === 'function') $window.onpopstate({type: 'popstate', state: $window.history.state})
 	}
 	function unload() {
-		if (typeof $window.onunload === "function") $window.onunload({type: "unload"})
+		if (typeof $window.onunload === 'function') $window.onunload({type: 'unload'})
 	}
 
 	$window.location = {
@@ -109,19 +109,19 @@ export default function pushStateMock(options?: PushStateMockOptions) {
 			return hash
 		},
 		get origin() {
-			if (protocol === "file:") return "null"
-			return protocol + "//" + hostname + prefix(":", port)
+			if (protocol === 'file:') return 'null'
+			return protocol + '//' + hostname + prefix(':', port)
 		},
 		get host() {
-			if (protocol === "file:") return ""
-			return hostname + prefix(":", port)
+			if (protocol === 'file:') return ''
+			return hostname + prefix(':', port)
 		},
 		get href() {
 			return getURL()
 		},
 
 		set protocol(value: string) {
-			throw new Error("Protocol is read-only")
+			throw new Error('Protocol is read-only')
 		},
 		set hostname(value: string) {
 			unload()
@@ -130,38 +130,38 @@ export default function pushStateMock(options?: PushStateMockOptions) {
 			hostname = value
 		},
 		set port(value: string) {
-			if (protocol === "file:") throw new Error("Port is read-only under `file://` protocol")
+			if (protocol === 'file:') throw new Error('Port is read-only under `file://` protocol')
 			unload()
 			past.push({url: getURL(), isNew: true, state: null, title: null})
 			future = []
 			port = value
 		},
 		set pathname(value: string) {
-			if (protocol === "file:") throw new Error("Pathname is read-only under `file://` protocol")
+			if (protocol === 'file:') throw new Error('Pathname is read-only under `file://` protocol')
 			unload()
 			past.push({url: getURL(), isNew: true, state: null, title: null})
 			future = []
-			pathname = prefix("/", value)
+			pathname = prefix('/', value)
 		},
 		set search(value: string) {
 			unload()
 			past.push({url: getURL(), isNew: true, state: null, title: null})
 			future = []
-			search = prefix("?", value)
+			search = prefix('?', value)
 		},
 		set hash(value: string) {
 			const oldHash = hash
 			past.push({url: getURL(), isNew: false, state: null, title: null})
 			future = []
-			hash = prefix("#", value)
+			hash = prefix('#', value)
 			if (oldHash != hash) hashchange()
 		},
 
 		set origin(value: string) {
-			//origin is writable but ignored
+			// origin is writable but ignored
 		},
 		set host(value: string) {
-			//host is writable but ignored in Chrome
+			// host is writable but ignored in Chrome
 		},
 		set href(value: string) {
 			const url = getURL()
@@ -213,12 +213,12 @@ export default function pushStateMock(options?: PushStateMockOptions) {
 	$window.onhashchange = null
 	$window.onunload = null
 
-	$window.addEventListener = function (name: string, handler: any) {
-		$window["on" + name] = handler
+	$window.addEventListener = function(name: string, handler: any) {
+		$window['on' + name] = handler
 	}
 
-	$window.removeEventListener = function (name: string, handler: any) {
-		$window["on" + name] = handler
+	$window.removeEventListener = function(name: string, handler: any) {
+		$window['on' + name] = handler
 	}
 
 	return $window
