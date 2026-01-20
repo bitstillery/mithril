@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext"],
+    "lib": ["ESNext", "DOM"],
     "moduleResolution": "bundler",
     "jsx": "react",
     "jsxFactory": "m",
@@ -12,8 +12,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
+    "noEmit": true,
     "types": ["bun-types"]
   },
   "include": ["**/*.ts", "**/*.tsx", "jsx.d.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "public", "**/*.js"]
 }

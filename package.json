@@ -33,13 +33,15 @@
     "lint:ts:style": "eslint . -c eslint.config.ts",
     "lint:ts:syntax": "oxlint -c .oxlintrc.json",
     "perf": "bun run performance/test-perf.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "tsgo": "tsgo --noEmit"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.6.1",
     "@types/benchmark": "^2.1.4",
     "@typescript-eslint/eslint-plugin": "^8.51.0",
     "@typescript-eslint/parser": "^8.48.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260120.1",
     "benchmark": "^2.1.4",
     "eslint": "^9.39.2",
     "eslint-plugin-import": "^2.31.0",

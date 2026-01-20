@@ -29,14 +29,7 @@ export const Document = {
 				</head>
 				<body>
 					<div id="app">{m.trust(attrs.appHtml)}</div>
-					<script type="module">{m.trust(`
-						// Client-side hydration
-						import m from '@bitstillery/mithril'
-						import {App} from './components/App.js'
-
-						// Mount the same App component to hydrate
-						m.mount(document.getElementById('app'), App)
-					`)}</script>
+					<script type="module" src="/app.js"></script>
 				</body>
 			</html>
 		)

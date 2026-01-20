@@ -1,7 +1,8 @@
 import m from '@bitstillery/mithril/server'
+import {readFile} from 'fs/promises'
+import {join} from 'path'
 
 import {App} from './components/App'
-import {Document} from './index'
 
 const server = Bun.serve({
 	port: 3000,
@@ -9,33 +10,35 @@ const server = Bun.serve({
 		const url = new URL(req.url)
 		const pathname = url.pathname
 
-		// Handle static assets (if any)
-		if (pathname.startsWith('/static/')) {
-			// Serve static files
-			return new Response('Not found', {status: 404})
+		// Handle static assets
+		if (pathname === '/app.js' || pathname === '/index.html') {
+			const file = Bun.file(`public${pathname}`)
+			if (await file.exists()) {
+				return new Response(file, {
+					headers: {
+						'Content-Type': pathname.endsWith('.js') ? 'application/javascript' : 'text/html',
+					},
+				})
+			}
 		}
 
 		try {
 			// Render App component with current pathname
 			const appHtml = await (m as any).renderToString(m(App, {initialPath: pathname}))
 
-			// Render full HTML document
-			const html = await (m as any).renderToString(
-				m(Document, {
-					title: 'Mithril SSR Test',
-					appHtml,
-				})
-			)
+			// Read the static HTML template
+			const templatePath = join(import.meta.dir, 'public', 'index.html')
+			let html = await readFile(templatePath, 'utf-8')
+
+			// Replace the empty app div with server-rendered HTML
+			html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
 
 			// Return full HTML document
-			return new Response(
-				`<!DOCTYPE html>${html}`,
-				{
-					headers: {
-						'Content-Type': 'text/html; charset=utf-8',
-					},
+			return new Response(html, {
+				headers: {
+					'Content-Type': 'text/html; charset=utf-8',
 				},
-			)
+			})
 		} catch (error) {
 			console.error('SSR Error:', error)
 			return new Response('Internal Server Error', {status: 500})

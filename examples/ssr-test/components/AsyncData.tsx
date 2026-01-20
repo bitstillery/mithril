@@ -32,15 +32,13 @@ export const AsyncData = {
 			return <div>Loading...</div>
 		}
 
-		return (
-			<div>
-				<h2>Async Data Component</h2>
-				<p>{state.data || 'No data'}</p>
-				<p>
-					<strong>Note: </strong>
-					This component fetches data on the server using waitFor.
-				</p>
-			</div>
-		)
+		return <div>
+            <h2>Async Data Component</h2>
+            <p>{state.data || 'No data'}</p>
+            <p>
+                <strong>Note: </strong>
+                This component fetches data on the server using waitFor.
+            </p>
+        </div>
 	},
 }
