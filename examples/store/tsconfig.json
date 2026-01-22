@@ -2,7 +2,10 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
+    "lib": [
+      "ESNext",
+      "DOM"
+    ],
     "moduleResolution": "bundler",
     "jsx": "react",
     "jsxFactory": "m",
@@ -13,8 +16,18 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "types": ["bun-types"]
+    "types": [
+      "bun-types"
+    ]
   },
-  "include": ["**/*.ts", "**/*.tsx", "jsx.d.ts"],
-  "exclude": ["node_modules", "public", "**/*.js"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "jsx.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "public",
+    "**/*.js"
+  ]
 }
