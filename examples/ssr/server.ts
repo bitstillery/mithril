@@ -26,7 +26,7 @@ const server = Bun.serve({
 
 		try {
 			// Render App component with current pathname
-			const appHtml = await (m as any).renderToString(m(App, {initialPath: pathname}))
+			const appHtml = await m.renderToString(m(App as ComponentType, {initialPath: pathname}))
 
 			// Read the static HTML template
 			const templatePath = join(import.meta.dir, 'public', 'index.html')

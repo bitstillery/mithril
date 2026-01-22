@@ -16,7 +16,7 @@ export class App extends MithrilTsxComponent<AppAttrs> {
 		}
 	}
 
-	view(vnode: Vnode<AppAttrs>): any {
+	view(vnode: Vnode<AppAttrs>) {
 		const attrs = vnode.attrs || {}
 
 		// Determine current route

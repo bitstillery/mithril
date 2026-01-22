@@ -5,9 +5,11 @@ interface DocumentAttrs {
 	appHtml: string
 }
 
-export const Document = {
-	view: (vnode: any) => {
-		const attrs = vnode.attrs as DocumentAttrs
+import type {Vnode, Component} from '../../index'
+
+export const Document: Component<DocumentAttrs> = {
+	view: (vnode: Vnode<DocumentAttrs>) => {
+		const attrs = vnode.attrs || {}
 		const title = attrs.title || 'Mithril SSR Test'
 
 		return (

@@ -16,7 +16,7 @@ const result = await build({
 	target: 'browser',
 	jsx: {
 		factory: 'm',
-		fragmentFactory: 'm.fragment',
+		fragment: 'm.fragment',
 		runtime: 'classic',
 	},
 	minify: false,

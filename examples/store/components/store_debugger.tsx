@@ -2,9 +2,15 @@ import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$s} from '../store'
 
+interface Todo {
+	id: number
+	text: string
+	completed: boolean
+}
+
 // Store debugger component - shows current store state and updates in real-time
 export class StoreDebugger extends MithrilTsxComponent {
-	view(vnode: Vnode): any {
+	view(vnode: Vnode) {
 		// Access all store properties to track changes (fine-grained reactivity)
 		// This component will automatically re-render when any accessed signal changes
 		const count = $s.count
@@ -22,7 +28,7 @@ export class StoreDebugger extends MithrilTsxComponent {
 				name: userName,
 				email: userEmail,
 			},
-			todos: todos.map((todo: any) => ({
+			todos: todos.map((todo: Todo) => ({
 				id: todo.id,
 				text: todo.text,
 				completed: todo.completed,

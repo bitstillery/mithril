@@ -9,8 +9,8 @@ import buildPathname from './pathname/build'
 import VnodeFactory, {MithrilTsxComponent} from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
-import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal.ts'
-import {store} from './store.ts'
+import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
+import {store} from './store'
 
 import type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
@@ -79,7 +79,7 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 
 // Export signals API
 export {signal, computed, effect, Signal, ComputedSignal, store}
-export type {Store} from './store.ts'
+export type {Store} from './store'
 
 // Export component and vnode types
 export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'

@@ -1,11 +1,16 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
 
-export class AsyncData extends MithrilTsxComponent {
+interface AsyncDataAttrs {
+	waitFor?: (p: Promise<any>) => void
+}
+
+export class AsyncData extends MithrilTsxComponent<AsyncDataAttrs> {
 	data?: string
 	loading = false
 
-	async oninit(vnode: Vnode, waitFor?: (p: Promise<any>) => void) {
+	async oninit(vnode: Vnode<AsyncDataAttrs>) {
+		const waitFor = vnode.attrs?.waitFor
 		this.loading = true
 
 		// Simulate async data fetching
@@ -24,7 +29,7 @@ export class AsyncData extends MithrilTsxComponent {
 		this.loading = false
 	}
 
-	view(vnode: Vnode): any {
+	view(vnode: Vnode<AsyncDataAttrs>) {
 		if (this.loading) {
 			return <div>Loading...</div>
 		}

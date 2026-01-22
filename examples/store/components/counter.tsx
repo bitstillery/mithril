@@ -4,7 +4,7 @@ import {$s} from '../store'
 
 // Simple counter component demonstrating signal usage
 export class Counter extends MithrilTsxComponent {
-	view(vnode: Vnode): any {
+	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">
 				<h2>Counter</h2>

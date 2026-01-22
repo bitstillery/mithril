@@ -1,4 +1,4 @@
-import { signal, computed, Signal, ComputedSignal, setCurrentComponent, getCurrentComponent } from './signal.ts'
+import { signal, computed, Signal, ComputedSignal, setCurrentComponent, getCurrentComponent } from './signal'
 import type { ComponentType } from './render/vnode'
 
 // Type guard to check if value is a Signal

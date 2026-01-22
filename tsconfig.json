@@ -27,6 +27,7 @@
     "node_modules",
     "dist",
     "*.min.js",
-    "mithril.js"
+    "mithril.js",
+    "examples"
   ]
 }
