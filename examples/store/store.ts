@@ -1,4 +1,4 @@
-import { store } from '../../index'
+import {store} from '../../index'
 
 // Example store setup
 export const $s = store({
@@ -8,8 +8,8 @@ export const $s = store({
 		email: 'john@example.com',
 	},
 	todos: [
-		{ id: 1, text: 'Learn Mithril Signals', completed: false },
-		{ id: 2, text: 'Build example app', completed: false },
+		{id: 1, text: 'Learn Mithril Signals', completed: false},
+		{id: 2, text: 'Build example app', completed: false},
 	] as any[],
 	// Computed property (function - no prefix needed)
 	totalTodos: () => $s.todos.length,

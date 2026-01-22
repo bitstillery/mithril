@@ -1,4 +1,5 @@
-import {describe, test, expect, beforeEach} from 'bun:test'
+import {describe, test, expect} from 'bun:test'
+
 import {store} from '../../store'
 import {Signal} from '../../signal'
 

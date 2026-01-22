@@ -88,13 +88,12 @@ export class Signal<T> {
 
 	set value(newValue: T) {
 		if (this._value !== newValue) {
-			const oldValue = this._value
 			this._value = newValue
 			// Notify all subscribers
 			this._subscribers.forEach(fn => {
 				try {
 					fn()
-				} catch (e) {
+				} catch(e) {
 					console.error('Error in signal subscriber:', e)
 				}
 			})
@@ -185,7 +184,7 @@ export class ComputedSignal<T> extends Signal<T> {
 			;(this as any)._subscribers.forEach((fn: () => void) => {
 				try {
 					fn()
-				} catch (e) {
+				} catch(e) {
 					console.error('Error in computed signal subscriber:', e)
 				}
 			})
@@ -226,7 +225,7 @@ export function effect(fn: () => void): () => void {
 		if (cleanup) {
 			try {
 				cleanup()
-			} catch (e) {
+			} catch(e) {
 				console.error('Error in effect cleanup:', e)
 			}
 			cleanup = null
@@ -240,7 +239,7 @@ export function effect(fn: () => void): () => void {
 			if (typeof result === 'function') {
 				cleanup = result
 			}
-		} catch (e) {
+		} catch(e) {
 			console.error('Error in effect:', e)
 		} finally {
 			currentEffect = previousEffect
@@ -256,7 +255,7 @@ export function effect(fn: () => void): () => void {
 		if (cleanup) {
 			try {
 				cleanup()
-			} catch (e) {
+			} catch(e) {
 				console.error('Error in effect cleanup:', e)
 			}
 		}

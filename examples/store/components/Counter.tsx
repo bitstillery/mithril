@@ -1,4 +1,3 @@
-import m from '../../../index'
 import {$s} from '../store'
 
 // Simple counter component demonstrating signal usage

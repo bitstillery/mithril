@@ -1,5 +1,4 @@
-import m from '../../../index'
-import { $s } from '../store'
+import {$s} from '../store'
 
 // User profile component demonstrating nested signals
 export const UserProfile = {

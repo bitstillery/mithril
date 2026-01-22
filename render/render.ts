@@ -1,8 +1,9 @@
+import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies} from '../signal'
+
 import Vnode from './vnode'
 import delayedRemoval from './delayedRemoval'
 import domFor from './domFor'
 import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
-import { setCurrentComponent, clearCurrentComponent, clearComponentDependencies } from '../signal'
 
 import type {Vnode as VnodeType, Children} from '../index'
 

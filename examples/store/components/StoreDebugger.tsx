@@ -1,5 +1,4 @@
-import m from '../../../index'
-import { $s } from '../store'
+import {$s} from '../store'
 
 // Store debugger component - shows current store state and updates in real-time
 export const StoreDebugger = {
@@ -44,7 +43,7 @@ export const StoreDebugger = {
 				
 				<div style="background: white; padding: 15px; border-radius: 4px; overflow-x: auto; max-height: 400px; overflow-y: auto; border: 1px solid #ddd;">
 					<pre style="margin: 0; font-size: 11px; line-height: 1.6; white-space: pre-wrap; word-wrap: break-word;">
-{JSON.stringify(storeState, null, 2)}
+						{JSON.stringify(storeState, null, 2)}
 					</pre>
 				</div>
 

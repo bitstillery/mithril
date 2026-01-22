@@ -1,5 +1,3 @@
-import m from '../../../index'
-
 interface AsyncDataState {
 	data?: string
 	loading: boolean
@@ -33,12 +31,12 @@ export const AsyncData = {
 		}
 
 		return <div>
-            <h2>Async Data Component</h2>
-            <p>{state.data || 'No data'}</p>
-            <p>
-                <strong>Note: </strong>
-                This component fetches data on the server using waitFor.
-            </p>
-        </div>
+			<h2>Async Data Component</h2>
+			<p>{state.data || 'No data'}</p>
+			<p>
+				<strong>Note: </strong>
+				This component fetches data on the server using waitFor.
+			</p>
+		</div>
 	},
 }

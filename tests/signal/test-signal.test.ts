@@ -1,5 +1,6 @@
-import {describe, test, expect, beforeEach} from 'bun:test'
-import {signal, computed, effect, Signal, ComputedSignal} from '../../signal'
+import {describe, test, expect} from 'bun:test'
+
+import {signal, computed, effect} from '../../signal'
 
 describe('Signal', () => {
 	test('creates a signal with initial value', () => {

@@ -9,8 +9,8 @@ import buildPathname from './pathname/build'
 import Vnode from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
-import { signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents } from './signal'
-import { store } from './store'
+import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
+import {store} from './store'
 
 import type {MithrilStatic, Hyperscript} from './index.d.ts'
 
@@ -57,8 +57,8 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 })
 
 // Export signals API
-export { signal, computed, effect, Signal, ComputedSignal, store }
-export type { Signal, ComputedSignal } from './signal'
-export type { Store } from './store'
+export {signal, computed, effect, Signal, ComputedSignal, store}
+export type {Signal, ComputedSignal} from './signal'
+export type {Store} from './store'
 
 export default m

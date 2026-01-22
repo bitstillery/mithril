@@ -1,7 +1,6 @@
 /// <reference path="../jsx.d.ts" />
 
 import m from '../../../index'
-
 import {routes} from '../routes'
 
 interface AppAttrs {
@@ -9,7 +8,7 @@ interface AppAttrs {
 }
 
 export const App = {
-	oninit: (vnode: any) => {
+	oninit: (_vnode: any) => {
 		// Listen for popstate events (back/forward button)
 		if (typeof window !== 'undefined') {
 			window.addEventListener('popstate', () => {

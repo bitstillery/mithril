@@ -1,17 +1,18 @@
 import Vnode from './vnode'
+
 import type {Vnode as VnodeType, Children} from '../index'
 
 // Void elements that don't have closing tags
 const VOID_ELEMENTS = new Set([
 	'area', 'base', 'br', 'col', 'embed', 'hr', 'img',
-	'input', 'link', 'meta', 'param', 'source', 'track', 'wbr'
+	'input', 'link', 'meta', 'param', 'source', 'track', 'wbr',
 ])
 
 export interface RenderToStringOptions {
 	escapeAttribute?: (value: any) => string
 	escapeText?: (value: any) => string
-	strict?: boolean  // Close all empty tags
-	xml?: boolean     // XML mode (implies strict)
+	strict?: boolean // Close all empty tags
+	xml?: boolean // XML mode (implies strict)
 }
 
 // Default escape functions
@@ -64,7 +65,7 @@ class PromiseTracker {
 // Serialize attributes to HTML string
 function serializeAttributes(
 	attrs: Record<string, any> | null | undefined,
-	options: Required<RenderToStringOptions>
+	options: Required<RenderToStringOptions>,
 ): string {
 	if (!attrs) return ''
 	
@@ -118,7 +119,7 @@ function serializeAttributes(
 // Serialize text node
 function serializeText(
 	text: string | number,
-	options: Required<RenderToStringOptions>
+	options: Required<RenderToStringOptions>,
 ): string {
 	return options.escapeText(text)
 }
@@ -127,7 +128,7 @@ function serializeText(
 function serializeComponentSync(
 	vnode: VnodeType,
 	options: Required<RenderToStringOptions>,
-	promiseTracker: PromiseTracker
+	promiseTracker: PromiseTracker,
 ): string {
 	const component = vnode.tag as any
 	
@@ -160,7 +161,7 @@ function serializeComponentSync(
 		try {
 			// Call oninit but don't wait for it or track promises
 			state.oninit(vnode)
-		} catch (e) {
+		} catch(_e) {
 			// Ignore errors
 		}
 	}
@@ -185,7 +186,7 @@ function serializeComponentSync(
 function serializeNodeSync(
 	vnode: VnodeType | null,
 	options: Required<RenderToStringOptions>,
-	promiseTracker: PromiseTracker
+	promiseTracker: PromiseTracker,
 ): string {
 	if (vnode == null) return ''
 	
@@ -257,7 +258,7 @@ async function serializeNode(
 	vnode: VnodeType | null,
 	options: Required<RenderToStringOptions>,
 	promiseTracker: PromiseTracker,
-	isServer: boolean
+	isServer: boolean,
 ): Promise<string> {
 	if (vnode == null) return ''
 	
@@ -278,7 +279,7 @@ async function serializeNode(
 		const children = vnode.children as (VnodeType | null)[]
 		if (!children) return ''
 		const results = await Promise.all(
-			children.map(child => serializeNode(child, options, promiseTracker, isServer))
+			children.map(child => serializeNode(child, options, promiseTracker, isServer)),
 		)
 		return results.join('')
 	}
@@ -308,7 +309,7 @@ async function serializeNode(
 	if (children != null) {
 		if (Array.isArray(children)) {
 			const results = await Promise.all(
-				children.map(child => serializeNode(child as VnodeType | null, options, promiseTracker, isServer))
+				children.map(child => serializeNode(child as VnodeType | null, options, promiseTracker, isServer)),
 			)
 			html += results.join('')
 		} else if (typeof children === 'string' || typeof children === 'number') {
@@ -331,7 +332,7 @@ async function serializeComponent(
 	vnode: VnodeType,
 	options: Required<RenderToStringOptions>,
 	promiseTracker: PromiseTracker,
-	isServer: boolean
+	isServer: boolean,
 ): Promise<string> {
 	const component = vnode.tag as any
 	
@@ -371,7 +372,7 @@ async function serializeComponent(
 				// The promise might already be tracked via waitFor, but we still need to await it
 				await result
 			}
-		} catch (e) {
+		} catch(_e) {
 			// Ignore errors in oninit for now
 		}
 	}
@@ -403,7 +404,7 @@ export function renderToStringFactory() {
 	// Async version (waits for promises)
 	async function renderToString(
 		vnodes: Children | VnodeType | null,
-		options?: RenderToStringOptions
+		options?: RenderToStringOptions,
 	): Promise<string> {
 		const opts: Required<RenderToStringOptions> = {
 			...defaultOptions,
@@ -414,7 +415,7 @@ export function renderToStringFactory() {
 		
 		// Normalize vnodes
 		const normalized = Vnode.normalizeChildren(
-			Array.isArray(vnodes) ? vnodes : [vnodes]
+			Array.isArray(vnodes) ? vnodes : [vnodes],
 		)
 		
 		const promiseTracker = new PromiseTracker()
@@ -451,7 +452,7 @@ export function renderToStringFactory() {
 	// Sync version (no promise waiting)
 	function renderToStringSync(
 		vnodes: Children | VnodeType | null,
-		options?: RenderToStringOptions
+		options?: RenderToStringOptions,
 	): string {
 		const opts: Required<RenderToStringOptions> = {
 			...defaultOptions,
@@ -461,7 +462,7 @@ export function renderToStringFactory() {
 		}
 		
 		const normalized = Vnode.normalizeChildren(
-			Array.isArray(vnodes) ? vnodes : [vnodes]
+			Array.isArray(vnodes) ? vnodes : [vnodes],
 		)
 		
 		const promiseTracker = new PromiseTracker()

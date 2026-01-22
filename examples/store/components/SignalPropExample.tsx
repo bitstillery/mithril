@@ -1,5 +1,4 @@
-import m from '../../../index'
-import { $s } from '../store'
+import {$s} from '../store'
 
 // Example component that receives a signal as a prop
 const DisplayValue = {

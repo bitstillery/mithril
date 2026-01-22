@@ -1,5 +1,4 @@
-import m from '../../../index'
-import { $s } from '../store'
+import {$s} from '../store'
 
 // Todo list component demonstrating computed properties
 export const TodoList = {
@@ -12,7 +11,7 @@ export const TodoList = {
 				<p>Incomplete: {$s._incompleteTodos}</p>
 				<ul>
 					{$s.todos.map((todo: any) => (
-						<li key={todo.id} style={{ textDecoration: todo.completed ? 'line-through' : 'none' }}>
+						<li key={todo.id} style={{textDecoration: todo.completed ? 'line-through' : 'none'}}>
 							<input
 								type="checkbox"
 								checked={todo.completed}
@@ -27,7 +26,7 @@ export const TodoList = {
 				<button
 					onclick={() => {
 						const newId = Math.max(...$s.todos.map((t: any) => t.id), 0) + 1
-						$s.todos = [...$s.todos, { id: newId, text: `Todo ${newId}`, completed: false }]
+						$s.todos = [...$s.todos, {id: newId, text: `Todo ${newId}`, completed: false}]
 					}}
 				>
 					Add Todo

@@ -42,7 +42,7 @@ const server = Bun.serve({
 					'Content-Type': 'text/html; charset=utf-8',
 				},
 			})
-		} catch (error) {
+		} catch(error) {
 			console.error('SSR Error:', error)
 			return new Response('Internal Server Error', {status: 500})
 		}

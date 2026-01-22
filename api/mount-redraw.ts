@@ -1,5 +1,5 @@
 import Vnode from '../render/vnode'
-import { getSignalComponents, type Signal } from '../signal'
+import {getSignalComponents, type Signal} from '../signal'
 
 import type {ComponentType} from '../index'
 

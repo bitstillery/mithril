@@ -11,7 +11,7 @@ import censor from './util/censor'
 import type {MithrilStatic, Hyperscript} from './index.d.ts'
 
 // Create server-side renderer
-const { renderToString, renderToStringSync } = renderToStringFactory()
+const {renderToString, renderToStringSync} = renderToStringFactory()
 
 // Create server-side router
 const routerServer = routerServerFactory(renderToString)

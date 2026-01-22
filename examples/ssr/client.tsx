@@ -1,6 +1,7 @@
 /// <reference path="./jsx.d.ts" />
 
 import m from '../../index'
+
 import {App} from './components/App'
 
 // Client-side hydration

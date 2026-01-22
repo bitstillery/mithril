@@ -1,6 +1,7 @@
-import {build} from 'bun'
 import {mkdir} from 'fs/promises'
 import {join} from 'path'
+
+import {build} from 'bun'
 
 const publicDir = join(import.meta.dir, 'public')
 

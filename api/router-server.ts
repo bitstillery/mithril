@@ -4,16 +4,10 @@ import decodeURIComponentSafe from '../util/decodeURIComponentSafe'
 import parsePathname from '../pathname/parse'
 import compileTemplate from '../pathname/compileTemplate'
 
-import type {ComponentType, Vnode as VnodeType, RouteResolver} from '../index'
+import type {RouteResolver} from '../index'
 
 interface RenderToString {
 	(vnodes: any): Promise<string>
-}
-
-interface RouteMatch {
-	route: string
-	component: any
-	params: Record<string, any>
 }
 
 export default function routerServerFactory(renderToString: RenderToString) {
@@ -45,7 +39,7 @@ export default function routerServerFactory(renderToString: RenderToString) {
 	async function resolveRoute(
 		pathname: string,
 		routes: Record<string, any>,
-		prefix: string = ''
+		prefix: string = '',
 	): Promise<string> {
 		const path = decodeURIComponentSafe(pathname).slice(prefix.length)
 		const data = parsePathname(path)
