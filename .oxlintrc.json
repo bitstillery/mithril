@@ -14,6 +14,8 @@
     "**/.build-*",
     "**/*.js",
     "**/mithril.js",
-    "**/mithril.min.js"
+    "**/mithril.min.js",
+    "store.ts",
+    "index.d.ts"
   ]
 }
