@@ -17,6 +17,7 @@ Architecture Decision Records are documents that capture important architectural
 |-----|-------|--------|------|
 | [0001](./0001-ssr-hydration.md) | SSR Hydration Support | Accepted | 2025-01-XX |
 | [0002](./0002-signals-implementation.md) | Custom Signals Implementation | Proposed | 2025-01-XX |
+| [0003](./0003-typescript-typing-consolidation.md) | TypeScript Typing Consolidation | Proposed | 2025-01-XX |
 
 ## Status Definitions
 

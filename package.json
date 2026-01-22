@@ -7,7 +7,6 @@
   "type": "module",
   "main": "./index.ts",
   "module": "./index.ts",
-  "types": "./index.d.ts",
   "repository": "github:bitstillery/mithril",
   "files": [
     "*.ts",
@@ -22,17 +21,14 @@
   ],
   "exports": {
     ".": {
-      "types": "./index.d.ts",
       "import": "./index.ts",
       "default": "./index.ts"
     },
     "./browser": {
-      "types": "./index.d.ts",
       "import": "./browser.ts",
       "default": "./browser.ts"
     },
     "./server": {
-      "types": "./index.d.ts",
       "import": "./server.ts",
       "default": "./server.ts"
     }
@@ -43,6 +39,7 @@
     "lint:ts": "bun run lint:ts:style && bun run lint:ts:syntax",
     "lint:ts:style": "eslint . -c eslint.config.ts",
     "lint:ts:syntax": "oxlint -c .oxlintrc.json",
+    "lint:ts:types": "tsgo --noEmit",
     "perf": "bun run performance/test-perf.ts",
     "test": "bun test",
     "tsgo": "tsgo --noEmit"

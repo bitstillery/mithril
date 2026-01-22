@@ -1,6 +1,6 @@
 import m from '../render/hyperscript'
 
-import type {Component} from '../index'
+import type {Component} from '../render/vnode'
 
 interface ComponentFactory {
 	kind: string

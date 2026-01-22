@@ -4,7 +4,7 @@ import decodeURIComponentSafe from '../util/decodeURIComponentSafe'
 import parsePathname from '../pathname/parse'
 import compileTemplate from '../pathname/compileTemplate'
 
-import type {RouteResolver} from '../index'
+import type {RouteResolver} from './router'
 
 interface RenderToString {
 	(vnodes: any): Promise<string>
@@ -65,7 +65,7 @@ export default function routerServerFactory(renderToString: RenderToString) {
 					
 					// If resolver has render, use it
 					if (resolver.render) {
-						const vnode = Vnode(payload, data.params.key, data.params)
+						const vnode = Vnode(payload, data.params.key, data.params, null, null, null)
 						return await renderToString(resolver.render(vnode))
 					}
 				}

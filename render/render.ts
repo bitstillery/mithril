@@ -5,7 +5,7 @@ import delayedRemoval from './delayedRemoval'
 import domFor from './domFor'
 import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
 
-import type {Vnode as VnodeType, Children} from '../index'
+import type {Vnode as VnodeType, Children} from './vnode'
 
 export default function renderFactory() {
 	const nameSpace: Record<string, string> = {
@@ -33,10 +33,10 @@ export default function renderFactory() {
 	// arguments without requiring a full array allocation to do so. It also
 	// takes advantage of the fact the current `vnode` is the first argument in
 	// all lifecycle methods.
-	function callHook(this: any, vnode: any) {
+	function callHook(this: any, vnode: any, ...args: any[]) {
 		const original = vnode.state
 		try {
-			return this.apply(original, arguments)
+			return this.apply(original, [vnode, ...args])
 		} finally {
 			checkState(vnode, original)
 		}
@@ -89,7 +89,7 @@ export default function renderFactory() {
 		let temp = getDocument(parent as Element).createElement(possibleParents[match[1]] || 'div')
 		if (ns === 'http://www.w3.org/2000/svg') {
 			temp.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg">' + vnode.children + '</svg>'
-			temp = temp.firstChild as Element
+			temp = temp.firstChild as HTMLElement
 		} else {
 			temp.innerHTML = vnode.children
 		}
@@ -828,11 +828,11 @@ export default function renderFactory() {
 		try {
 			// First time rendering into a node clears it out
 			if ((dom as any).vnodes == null) dom.textContent = ''
-			vnodes = Vnode.normalizeChildren(Array.isArray(vnodes) ? vnodes : [vnodes])
-			updateNodes(dom, (dom as any).vnodes, vnodes, hooks, null, namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace)
-			;(dom as any).vnodes = vnodes
+			const normalized = (Vnode as any).normalizeChildren(Array.isArray(vnodes) ? vnodes : [vnodes])
+			updateNodes(dom, (dom as any).vnodes, normalized, hooks, null, (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined)
+			;(dom as any).vnodes = normalized
 			// `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
-			if (active != null && activeElement(dom) !== active && typeof active.focus === 'function') active.focus()
+			if (active != null && activeElement(dom) !== active && typeof (active as any).focus === 'function') (active as any).focus()
 			for (let i = 0; i < hooks.length; i++) hooks[i]()
 		} finally {
 			currentRedraw = prevRedraw

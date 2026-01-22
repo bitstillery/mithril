@@ -1,5 +1,5 @@
 import { signal, computed, Signal, ComputedSignal, setCurrentComponent, getCurrentComponent } from './signal'
-import type { ComponentType } from './index'
+import type { ComponentType } from './render/vnode'
 
 // Type guard to check if value is a Signal
 function isSignal<T>(value: any): value is Signal<T> {
@@ -16,7 +16,7 @@ function isStore(value: any): boolean {
  */
 function toSignal<T>(value: T): Signal<T> | ComputedSignal<T> {
 	if (isSignal(value)) {
-		return value
+		return value as Signal<T> | ComputedSignal<T>
 	}
 	if (typeof value === 'function') {
 		// Function properties become computed signals
@@ -310,16 +310,25 @@ export function store<T extends Record<string, any>>(initial: T): Store<T> {
 /**
  * Store type - reactive object with signal-based properties
  * 
- * Note: This file is excluded from ESLint due to complex mapped type syntax that
- * ESLint's TypeScript parser cannot handle. The syntax is valid TypeScript and
- * verified by passing tests.
+ * Supports:
+ * - Regular access: `store.prop` returns unwrapped value
+ * - Signal access: `store.$prop` returns Signal instance (handled at runtime)
+ * - Functions become computed signals
+ * - Nested objects become Store instances
+ * 
+ * Note: The $ prefix access is handled via Proxy at runtime.
+ * TypeScript's type system cannot fully express the $ prefix pattern,
+ * but the implementation correctly handles it.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export interface Store<T extends Record<string, any>> {
+export type Store<T extends Record<string, any>> = {
 	[K in keyof T]: T[K] extends (...args: any[]) => infer R
 		? R  // Function properties return computed value
 		: T[K] extends Record<string, any>
 		? Store<T[K]>  // Nested objects become stores
 		: T[K]  // Primitive values
+} & {
+	// Index signature for $ prefix access (runtime only, not fully typed)
+	[key: string]: any
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

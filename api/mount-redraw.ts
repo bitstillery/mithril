@@ -1,10 +1,20 @@
 import Vnode from '../render/vnode'
 import {getSignalComponents, type Signal} from '../signal'
 
-import type {ComponentType} from '../index'
+import type {ComponentType, Children, Vnode as VnodeType} from '../render/vnode'
 
-interface Render {
-	(root: Element, vnodes: any, redraw?: () => void): void
+export interface Render {
+	(root: Element, vnodes: Children | VnodeType | null, redraw?: () => void): void
+}
+
+export interface Redraw {
+	(component?: ComponentType): void
+	sync(): void
+	signal?: (signal: Signal<any>) => void
+}
+
+export interface Mount {
+	(root: Element, component: ComponentType | null): void
 }
 
 interface Schedule {
@@ -16,8 +26,8 @@ interface Console {
 }
 
 interface MountRedraw {
-	mount: (root: Element, component: ComponentType | null) => void
-	redraw: ((component?: ComponentType) => void) & {sync: () => void}
+	mount: Mount
+	redraw: Redraw
 }
 
 export default function mountRedrawFactory(render: Render, schedule: Schedule, console: Console): MountRedraw {
@@ -28,7 +38,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
 	function sync() {
 		for (offset = 0; offset < subscriptions.length; offset += 2) {
-			try { render(subscriptions[offset] as Element, Vnode(subscriptions[offset + 1] as ComponentType), redraw) }
+			try { render(subscriptions[offset] as Element, Vnode(subscriptions[offset + 1] as ComponentType, null, null, null, null, null), redraw) }
 			catch(e) { console.error(e) }
 		}
 		offset = -1
@@ -46,7 +56,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 		const element = componentToElement.get(component)
 		if (element) {
 			try {
-				render(element, Vnode(component), redraw)
+				render(element, Vnode(component, null, null, null, null, null), redraw)
 			} catch(e) {
 				console.error(e)
 			}
@@ -56,7 +66,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 			if (index >= 0 && index % 2 === 1) {
 				const rootElement = subscriptions[index - 1] as Element
 				try {
-					render(rootElement, Vnode(component), redraw)
+					render(rootElement, Vnode(component, null, null, null, null, null), redraw)
 				} catch(e) {
 					console.error(e)
 				}
@@ -112,7 +122,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 		if (component != null) {
 			subscriptions.push(root, component)
 			componentToElement.set(component, root)
-			render(root, Vnode(component), redraw)
+			render(root, Vnode(component, null, null, null, null, null), redraw)
 		}
 	}
 

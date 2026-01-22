@@ -6,8 +6,24 @@ import parsePathname from '../pathname/parse'
 import compileTemplate from '../pathname/compileTemplate'
 import censor from '../util/censor'
 
-import type {ComponentType, Vnode as VnodeType} from '../index'
-import type {RouteResolver} from '../index'
+import type {ComponentType, Vnode as VnodeType} from '../render/vnode'
+
+export interface RouteResolver<Attrs = Record<string, any>, State = any> {
+	onmatch?: (args: Attrs, requestedPath: string, route: string) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | void
+	render?: (vnode: VnodeType<Attrs, State>) => VnodeType
+}
+
+export interface Route {
+	(path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
+	(path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
+	set: (path: string, params?: Record<string, any>, data?: any) => void
+	get: () => string | undefined
+	prefix: string
+	link: (vnode: VnodeType) => string
+	param: (key?: string) => any
+	params: Record<string, any>
+	Link: ComponentType
+}
 
 interface MountRedraw {
 	mount: (root: Element, component: ComponentType | null) => void
@@ -48,7 +64,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// Therefore, the following early return is not needed.
 			// if (!hasBeenResolved) return
 
-			const vnode = Vnode(component, attrs.key, attrs)
+			const vnode = Vnode(component, attrs.key, attrs, null, null, null)
 			if (currentResolver) return currentResolver.render!(vnode as any)
 			// Wrap in a fragment to preserve existing key semantics
 			return [vnode]
@@ -112,7 +128,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							return payload.onmatch!(data.params, path, matchedRoute)
 						}).then(update, path === fallbackRoute ? null : reject)
 					}
-					else update(/* "div" */)
+					else update('div')
 					return
 				}
 			}
@@ -186,6 +202,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	}
 	route.get = function() {return currentPath}
 	route.prefix = '#!'
+	route.link = function(vnode: VnodeType) {
+		return route.Link.view(vnode)
+	}
 	route.Link = {
 		view: function(vnode: VnodeType) {
 			// Omit the used parameters from the rendered element - they are
@@ -262,5 +281,5 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	}
 	route.params = attrs
 
-	return route
+	return route as unknown as Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void)
 }

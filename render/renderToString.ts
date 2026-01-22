@@ -1,6 +1,6 @@
 import Vnode from './vnode'
 
-import type {Vnode as VnodeType, Children} from '../index'
+import type {Vnode as VnodeType, Children} from './vnode'
 
 // Void elements that don't have closing tags
 const VOID_ELEMENTS = new Set([
@@ -241,7 +241,7 @@ function serializeNodeSync(
 		} else if (typeof children === 'string' || typeof children === 'number') {
 			html += serializeText(children, options)
 		} else if (children != null) {
-			html += serializeNodeSync(children as VnodeType, options, promiseTracker)
+			html += serializeNodeSync(children as unknown as VnodeType, options, promiseTracker)
 		}
 	}
 	
@@ -315,7 +315,7 @@ async function serializeNode(
 		} else if (typeof children === 'string' || typeof children === 'number') {
 			html += serializeText(children, options)
 		} else if (children != null) {
-			html += await serializeNode(children as VnodeType, options, promiseTracker, isServer)
+			html += await serializeNode(children as unknown as VnodeType, options, promiseTracker, isServer)
 		}
 	}
 	

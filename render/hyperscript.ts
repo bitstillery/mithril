@@ -5,7 +5,17 @@ import hyperscriptVnode from './hyperscriptVnode'
 import emptyAttrs from './emptyAttrs'
 import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
 
-import type {ComponentType, Children} from '../index'
+import type {ComponentType, Children, Vnode as VnodeType} from './vnode'
+
+export interface Hyperscript {
+	(selector: string, ...children: Children[]): VnodeType
+	(selector: string, attrs: Record<string, any>, ...children: Children[]): VnodeType
+	<Attrs, State>(component: ComponentType<Attrs, State>, ...children: Children[]): VnodeType<Attrs, State>
+	<Attrs, State>(component: ComponentType<Attrs, State>, attrs: Attrs, ...children: Children[]): VnodeType<Attrs, State>
+	trust(html: string): VnodeType
+	fragment(attrs: Record<string, any> | null, ...children: Children[]): VnodeType
+	Fragment: string
+}
 
 const selectorParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
 const selectorCache: Record<string, {tag: string; attrs: Record<string, any>; is?: string}> = Object.create(null)
@@ -113,5 +123,6 @@ hyperscript.fragment = function(attrs: Record<string, any> | null, ...children: 
 	const fragment = require('./fragment')
 	return fragment(attrs, ...children)
 }
+hyperscript.Fragment = '['
 
 export default hyperscript

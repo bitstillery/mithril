@@ -17,5 +17,5 @@ export default function hyperscriptVnode(attrs: any, children: any[]): any {
 		attrs = undefined
 	}
 
-	return Vnode('', attrs && attrs.key, attrs, children)
+	return Vnode('', attrs && attrs.key, attrs, children, null, null)
 }

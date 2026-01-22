@@ -38,7 +38,7 @@ export default function domMock(options?: DomMockOptions) {
 	const hasOwn = ({}.hasOwnProperty)
 
 	function registerSpies(element: any, spies: Record<string, any>) {
-		if (options.spy) {
+		if (options?.spy) {
 			const i = spymap.indexOf(element)
 			if (i === -1) {
 				spymap.push(element, spies)
@@ -235,7 +235,7 @@ export default function domMock(options?: DomMockOptions) {
 		value.replace(/<([a-z0-9\-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9\-]+?)>|([^<]+)/g, function(_match, startTag, attrs, selfClosed, endTag, text) {
 			if (startTag) {
 				const element = xmlns == null ? $window.document.createElement(startTag) : $window.document.createElementNS(xmlns, startTag)
-				attrs.replace(/\s+?([^=]+?)=(?:"([^"]*?)"|'([^']*?)'|([^\s>]*))/g, function(_match, key, doubleQuoted, singleQuoted, unquoted) {
+				attrs.replace(/\s+?([^=]+?)=(?:"([^"]*?)"|'([^']*?)'|([^\s>]*))/g, function(_match: string, key: string, doubleQuoted: string, singleQuoted: string, unquoted: string) {
 					const keyParts = key.split(':')
 					const name = keyParts.pop()!
 					const ns = keyParts[0]

@@ -1,6 +1,6 @@
 import delayedRemoval from './delayedRemoval'
 
-import type {Vnode} from '../index'
+import type {Vnode} from './vnode'
 
 function* domFor(vnode: Vnode): Generator<Node, void, unknown> {
 	// To avoid unintended mangling of the internal bundler,
@@ -8,11 +8,11 @@ function* domFor(vnode: Vnode): Generator<Node, void, unknown> {
 	let dom = vnode.dom
 	let domSize = vnode.domSize
 	const generation = delayedRemoval.get(dom!)
-	if (dom != null) do {
-		const nextSibling = dom.nextSibling
+	do {
+		const nextSibling = dom!.nextSibling
 
-		if (delayedRemoval.get(dom) === generation) {
-			yield dom
+		if (delayedRemoval.get(dom!) === generation) {
+			yield dom!
 			domSize!--
 		}
 

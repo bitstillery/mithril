@@ -1,4 +1,4 @@
-import type {Vnode} from '../../index'
+import type {Vnode} from '../../render/vnode'
 
 declare global {
 	namespace JSX {

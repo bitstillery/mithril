@@ -1,20 +1,41 @@
-import hyperscript from './hyperscript'
-import mountRedraw from './api/mount-redraw'
+import hyperscript from './render/hyperscript'
+import mountRedrawFactory from './api/mount-redraw'
 import routerFactory from './api/router'
 import renderFactory from './render/render'
 import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
 import parsePathname from './pathname/parse'
 import buildPathname from './pathname/build'
-import Vnode from './render/vnode'
+import VnodeFactory from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
 import {store} from './store'
 
-import type {MithrilStatic, Hyperscript} from './index.d.ts'
+import type {Vnode, Children, Component, ComponentFactory, ComponentType, MithrilTsxComponent} from './render/vnode'
+import type {Hyperscript} from './render/hyperscript'
+import type {Route, RouteResolver} from './api/router'
+import type {Render, Redraw, Mount} from './api/mount-redraw'
 
-const mountRedrawInstance = mountRedraw(
+export interface MithrilStatic {
+	m: Hyperscript
+	trust: (html: string) => Vnode
+	fragment: (attrs: Record<string, any> | null, ...children: Children[]) => Vnode
+	Fragment: string
+	mount: Mount
+	route: Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void)
+	render: Render
+	redraw: Redraw
+	parseQueryString: (queryString: string) => Record<string, any>
+	buildQueryString: (values: Record<string, any>) => string
+	parsePathname: (pathname: string) => { path: string, params: Record<string, any> }
+	buildPathname: (template: string, params: Record<string, any>) => string
+	vnode: typeof VnodeFactory
+	censor: (attrs: Record<string, any>, extras?: string[]) => Record<string, any>
+	domFor: (vnode: Vnode) => Generator<Node, void, unknown>
+}
+
+const mountRedrawInstance = mountRedrawFactory(
 	renderFactory(),
 	typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame.bind(window) : setTimeout,
 	console,
@@ -27,9 +48,9 @@ const router = routerFactory(
 
 const m: MithrilStatic & Hyperscript = function m(this: any) {
 	return hyperscript.apply(this, arguments as any)
-} as any
+} as unknown as MithrilStatic & Hyperscript
 
-m.m = hyperscript
+m.m = hyperscript as Hyperscript
 m.trust = hyperscript.trust
 m.fragment = hyperscript.fragment
 m.Fragment = '['
@@ -41,7 +62,7 @@ m.parseQueryString = parseQueryString
 m.buildQueryString = buildQueryString
 m.parsePathname = parsePathname
 m.buildPathname = buildPathname
-m.vnode = Vnode
+m.vnode = VnodeFactory
 m.censor = censor
 m.domFor = domFor
 
@@ -58,7 +79,12 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 
 // Export signals API
 export {signal, computed, effect, Signal, ComputedSignal, store}
-export type {Signal, ComputedSignal} from './signal'
 export type {Store} from './store'
+
+// Export component and vnode types
+export type {Vnode, Children, Component, ComponentFactory, ComponentType, MithrilTsxComponent} from './render/vnode'
+export type {Hyperscript} from './render/hyperscript'
+export type {Route, RouteResolver} from './api/router'
+export type {Render, Redraw, Mount} from './api/mount-redraw'
 
 export default m
