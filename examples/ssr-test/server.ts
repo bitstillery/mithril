@@ -5,7 +5,6 @@ import m from '../../server'
 
 import {App} from './components/App'	
 
-
 const server = Bun.serve({
 	port: 3000,
 	async fetch(req) {
