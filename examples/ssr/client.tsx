@@ -2,8 +2,10 @@
 
 import m from '../../index'
 
-import {App} from './components/app'
+import {routes} from './routes'
 
-// Client-side hydration
-// Mount the App component - it will read the pathname from window.location
-m.mount(document.getElementById('app')!, App)
+// Set prefix to empty string for pathname-based routing (not hash-based)
+m.route.prefix = ''
+
+// Client-side routing with isomorphic router
+m.route(document.getElementById('app')!, '/', routes)

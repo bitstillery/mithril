@@ -1,6 +1,6 @@
 import hyperscript from './render/hyperscript'
 import {renderToStringFactory} from './render/renderToString'
-import routerServerFactory from './api/router-server'
+import routerFactory from './api/router'
 import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
 import parsePathname from './pathname/parse'
@@ -14,8 +14,30 @@ import type {Redraw} from './api/mount-redraw'
 // Create server-side renderer
 const {renderToString, renderToStringSync} = renderToStringFactory()
 
-// Create server-side router
-const routerServer = routerServerFactory(renderToString)
+// Create isomorphic router instance (null window for server, mock mountRedraw)
+const router = routerFactory(null, {
+	mount: () => {
+		throw new Error('m.mount is not available on server. Use m.route.resolve instead.')
+	},
+	redraw: () => {
+		throw new Error('m.redraw is not available on server.')
+	},
+})
+
+// Set prefix to empty string for pathname-based routing (not hash-based)
+router.prefix = ''
+
+// Expose resolve method and Link component for server-side routing
+const routerServer = {
+	resolve: router.resolve.bind(router),
+	Link: router.Link,
+	prefix: router.prefix,
+	get: router.get.bind(router),
+	set: router.set.bind(router),
+	param: router.param.bind(router),
+	params: router.params,
+	link: router.link.bind(router),
+}
 
 // Server-side Mithril instance
 const mServer: MithrilStatic & Hyperscript & {

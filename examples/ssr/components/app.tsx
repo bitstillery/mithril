@@ -70,7 +70,8 @@ export class App extends MithrilTsxComponent<AppAttrs> {
 				</a>
 			</nav>
 			<main>
-				<CurrentComponent />
+				{/* Use key to ensure component is recreated on route change */}
+				<CurrentComponent key={currentPath} />
 			</main>
 		</div>		
 	}

@@ -3,7 +3,7 @@ import {join} from 'path'
 
 import m from '../../server'
 
-import {App} from './components/app'	
+import {routes} from './routes'
 
 const server = Bun.serve({
 	port: 3000,
@@ -25,8 +25,8 @@ const server = Bun.serve({
 		}
 
 		try {
-			// Render App component with current pathname
-			const appHtml = await m.renderToString(m(App as ComponentType, {initialPath: pathname}))
+			// Use isomorphic router to resolve route and render
+			const appHtml = await m.route.resolve(pathname, routes, m.renderToString)
 
 			// Read the static HTML template
 			const templatePath = join(import.meta.dir, 'public', 'index.html')

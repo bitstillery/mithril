@@ -1,4 +1,5 @@
 import Vnode from './vnode'
+import {setCurrentComponent, clearCurrentComponent} from '../signal'
 
 import type {Vnode as VnodeType, Children} from '../index'
 
@@ -360,27 +361,37 @@ async function serializeComponent(
 	
 	vnode.state = state
 	
-	// Call oninit with waitFor if on server
-	if (isServer && typeof state.oninit === 'function') {
-		const waitFor = (promise: Promise<any>) => {
-			promiseTracker.waitFor(promise)
-		}
-		try {
-			const result = state.oninit(vnode, waitFor)
-			// If oninit returns a promise, wait for it (but don't add to tracker twice)
-			if (result && typeof result.then === 'function') {
-				// The promise might already be tracked via waitFor, but we still need to await it
-				await result
-			}
-		} catch(_e) {
-			// Ignore errors in oninit for now
-		}
-	}
+	// Set current component for signal tracking (needed for store access during SSR)
+	// This ensures store properties can track component dependencies correctly
+	setCurrentComponent(state)
 	
-	// Call view (bind this to state)
-	const instance = Vnode.normalize(view.call(state, vnode))
-	if (instance === vnode) {
-		throw Error('A view cannot return the vnode it received as argument')
+	let instance: any
+	try {
+		// Call oninit with waitFor if on server
+		if (isServer && typeof state.oninit === 'function') {
+			const waitFor = (promise: Promise<any>) => {
+				promiseTracker.waitFor(promise)
+			}
+			try {
+				const result = state.oninit(vnode, waitFor)
+				// If oninit returns a promise, wait for it (but don't add to tracker twice)
+				if (result && typeof result.then === 'function') {
+					// The promise might already be tracked via waitFor, but we still need to await it
+					await result
+				}
+			} catch(_e) {
+				// Ignore errors in oninit for now
+			}
+		}
+	
+		// Call view (bind this to state)
+		instance = Vnode.normalize(view.call(state, vnode))
+		if (instance === vnode) {
+			throw Error('A view cannot return the vnode it received as argument')
+		}
+	} finally {
+		// Clear current component after rendering
+		clearCurrentComponent()
 	}
 	
 	vnode.instance = instance

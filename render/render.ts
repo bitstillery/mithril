@@ -871,12 +871,20 @@ export default function renderFactory() {
 	}
 
 	// lifecycle
-	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>, _isHydrating: boolean = false) {
+	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>, isHydrating: boolean = false) {
 		// TODO: Skip oninit during hydration once state serialization is implemented
 		// For now, we still call oninit during hydration to initialize component state
 		// When state serialization is added (ADR-0001 Phase 2-4), we can skip oninit here
-		// _isHydrating parameter reserved for future use
-		if (typeof source.oninit === 'function') callHook.call(source.oninit, vnode)
+		if (typeof source.oninit === 'function') {
+			const result = callHook.call(source.oninit, vnode)
+			// Auto-redraw when async oninit completes (client-side only, skip during hydration)
+			// During hydration, data is already in DOM from SSR, so no redraw needed
+			if (result != null && typeof result.then === 'function' && currentRedraw != null && !isHydrating) {
+				Promise.resolve(result).then(function() {
+					if (currentRedraw != null) (0, currentRedraw)()
+				})
+			}
+		}
 		if (typeof source.oncreate === 'function') hooks.push(callHook.bind(source.oncreate, vnode))
 	}
 	function updateLifecycle(source: any, vnode: any, hooks: Array<() => void>) {

@@ -23,6 +23,12 @@ export interface Route {
 	param: (key?: string) => any
 	params: Record<string, any>
 	Link: ComponentType
+	resolve: (
+		pathname: string,
+		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
+		renderToString: (vnodes: any) => Promise<string>,
+		prefix?: string
+	) => Promise<string>
 }
 
 interface MountRedraw {
@@ -64,7 +70,10 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// Therefore, the following early return is not needed.
 			// if (!hasBeenResolved) return
 
-			const vnode = Vnode(component, attrs.key, attrs, null, null, null)
+			// Use currentPath as key to ensure component recreation on route change
+			// Pass currentPath in attrs so RouteResolver.render can use it for routePath
+			const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath, key: currentPath || attrs.key}
+			const vnode = Vnode(component, currentPath || attrs.key, routeAttrs, null, null, null)
 			if (currentResolver) return currentResolver.render!(vnode as any)
 			// Wrap in a fragment to preserve existing key semantics
 			return [vnode]
@@ -106,11 +115,17 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					const update = lastUpdate = function(comp: any) {
 						if (update !== lastUpdate) return
 						if (comp === SKIP) return loop(i + 1)
-						component = comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
+						// If comp is a RouteResolver with render, set currentResolver instead of component
+						if (comp && typeof comp === 'object' && comp.render && !comp.view && typeof comp !== 'function') {
+							currentResolver = comp
+							component = 'div' // Placeholder, won't be used since currentResolver.render will be called
+						} else {
+							currentResolver = null
+							component = comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
+						}
 						attrs = data.params
 						currentPath = path
 						lastUpdate = null
-						currentResolver = payload.render ? payload : null
 						if (hasBeenResolved) mountRedraw.redraw()
 						else {
 							hasBeenResolved = true
@@ -127,6 +142,10 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 						p.then(function() {
 							return payload.onmatch!(data.params, path, matchedRoute)
 						}).then(update, path === fallbackRoute ? null : reject)
+					}
+					else if (payload.render) {
+						// RouteResolver with render method - update with resolver itself
+						update(payload)
 					}
 					else update('div')
 					return
@@ -237,7 +256,12 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 				onclick = vnode.attrs?.onclick
 				// Easier to build it now to keep it isomorphic.
 				href = buildPathname(child.attrs!.href || '', vnode.attrs?.params || {})
-				child.attrs!.href = route.prefix + href
+				// Make Link isomorphic - use empty prefix on server for pathname routing
+				// On server ($window is null): always use empty prefix for clean URLs
+				// On client: use route.prefix (which may be '#!' for hash routing or '' for pathname routing)
+				// This ensures SSR generates clean pathname URLs while client can use hash routing if configured
+				const linkPrefix = ($window == null) ? '' : route.prefix
+				child.attrs!.href = linkPrefix + href
 				child.attrs!.onclick = function(e: any) {
 					let result: any
 					if (typeof onclick === 'function') {
@@ -267,7 +291,12 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 						// No modifier keys
 						!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey
 					) {
-						e.preventDefault()
+						// Safely call preventDefault - event might be wrapped by Mithril
+						if (typeof e.preventDefault === 'function') {
+							e.preventDefault()
+						} else if (e.originalEvent && typeof e.originalEvent.preventDefault === 'function') {
+							e.originalEvent.preventDefault()
+						}
 						(e as any).redraw = false
 						route.set(href, null, options)
 					}
@@ -280,6 +309,86 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		return attrs && key != null ? attrs[key] : attrs
 	}
 	route.params = attrs
+
+	// Server-side route resolution (isomorphic)
+	route.resolve = async function(
+		pathname: string,
+		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
+		renderToString: (vnodes: any) => Promise<string>,
+		prefix: string = '',
+	): Promise<string> {
+		// Save current prefix and set to provided prefix for SSR
+		// This ensures Link components use the correct prefix during server-side rendering
+		const savedPrefix = route.prefix
+		route.prefix = prefix
+		try {
+			// Compile routes (same logic as in route() function)
+			const compiled = Object.keys(routes).map(function(routePath) {
+			if (routePath[0] !== '/') throw new SyntaxError('Routes must start with a \'/\'.')
+			if ((/:([^\/\.-]+)(\.{3})?:/).test(routePath)) {
+				throw new SyntaxError('Route parameter names must be separated with either \'/\', \'.\', or \'-\'.')
+			}
+			// Handle both formats: direct component/resolver or {component: ...}
+			const routeValue = routes[routePath]
+			const component = (routeValue && typeof routeValue === 'object' && 'component' in routeValue)
+				? (routeValue as {component: ComponentType | RouteResolver}).component
+				: routeValue as ComponentType | RouteResolver
+			return {
+				route: routePath,
+				component: component,
+				check: compileTemplate(routePath),
+			}
+		})
+
+		// Parse pathname
+		const path = decodeURIComponentSafe(pathname).slice(prefix.length)
+		const data = parsePathname(path)
+
+		// Find matching route
+		for (const {route: matchedRoute, component, check} of compiled) {
+			if (check(data)) {
+				let payload = component
+
+				// Handle RouteResolver
+				if (payload && typeof payload === 'object' && ('onmatch' in payload || 'render' in payload)) {
+					const resolver = payload as RouteResolver
+					if (resolver.onmatch) {
+						const result = resolver.onmatch(data.params, pathname, matchedRoute)
+						if (result instanceof Promise) {
+							payload = await result
+						} else if (result !== undefined) {
+							payload = result
+						}
+					}
+
+					// If resolver has render, use it
+					if (resolver.render) {
+						// Pass matchedRoute path in attrs so Layout component can use it for SSR
+						const routeAttrs = {...data.params, routePath: matchedRoute}
+						const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
+						return await renderToString(resolver.render(vnode))
+					}
+				}
+
+				// Render component
+				if (payload != null && (typeof payload.view === 'function' || typeof payload === 'function')) {
+					const vnode = hyperscript(payload, data.params)
+					return await renderToString(vnode)
+				}
+
+				// Fallback to div
+				const vnode = hyperscript('div', data.params)
+				return await renderToString(vnode)
+			}
+		}
+
+		// No route found
+		throw new Error(`No route found for ${pathname}`)
+		} finally {
+			// Restore original prefix
+			route.prefix = savedPrefix
+		}
+	}
 
 	return route as unknown as Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void)
 }
