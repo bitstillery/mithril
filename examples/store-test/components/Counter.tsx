@@ -1,5 +1,5 @@
 import m from '../../../index'
-import { $s } from '../store'
+import {$s} from '../store'
 
 // Simple counter component demonstrating signal usage
 export const Counter = {
