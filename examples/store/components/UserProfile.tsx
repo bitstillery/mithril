@@ -1,8 +1,10 @@
+import {MithrilTsxComponent, Vnode} from '../../../index'
+import m from '../../../index'
 import {$s} from '../store'
 
 // User profile component demonstrating nested signals
-export const UserProfile = {
-	view() {
+export class UserProfile extends MithrilTsxComponent {
+	view(vnode: Vnode): any {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">
 				<h2>User Profile</h2>
@@ -34,5 +36,5 @@ export const UserProfile = {
 				<p>Email: {$s.user.email}</p>
 			</div>
 		)
-	},
+	}
 }

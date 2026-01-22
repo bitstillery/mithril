@@ -1,5 +1,4 @@
-/// <reference path="../jsx.d.ts" />
-
+import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {routes} from '../routes'
 
@@ -7,18 +6,18 @@ interface AppAttrs {
 	initialPath?: string
 }
 
-export const App = {
-	oninit: (_vnode: any) => {
+export class App extends MithrilTsxComponent<AppAttrs> {
+	oninit(vnode: Vnode<AppAttrs>) {
 		// Listen for popstate events (back/forward button)
 		if (typeof window !== 'undefined') {
 			window.addEventListener('popstate', () => {
 				m.redraw()
 			})
 		}
-	},
+	}
 
-	view: (vnode: any) => {
-		const attrs = (vnode.attrs || {}) as AppAttrs
+	view(vnode: Vnode<AppAttrs>): any {
+		const attrs = vnode.attrs || {}
 
 		// Determine current route
 		let currentPath = '/'
@@ -74,5 +73,5 @@ export const App = {
 				<CurrentComponent />
 			</main>
 		</div>		
-	},
+	}
 }

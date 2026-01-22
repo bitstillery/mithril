@@ -1,8 +1,10 @@
+import {MithrilTsxComponent, Vnode} from '../../../index'
+import m from '../../../index'
 import {$s} from '../store'
 
 // Todo list component demonstrating computed properties
-export const TodoList = {
-	view() {
+export class TodoList extends MithrilTsxComponent {
+	view(vnode: Vnode): any {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">
 				<h2>Todo List</h2>
@@ -33,5 +35,5 @@ export const TodoList = {
 				</button>
 			</div>
 		)
-	},
+	}
 }

@@ -1,11 +1,12 @@
-interface AsyncDataState {
-	data?: string
-	loading: boolean
-}
+import {MithrilTsxComponent, Vnode} from '../../../index'
+import m from '../../../index'
 
-export const AsyncData = {
-	oninit: async(vnode: any, waitFor?: (p: Promise<any>) => void) => {
-		vnode.state.loading = true
+export class AsyncData extends MithrilTsxComponent {
+	data?: string
+	loading = false
+
+	async oninit(vnode: Vnode, waitFor?: (p: Promise<any>) => void) {
+		this.loading = true
 
 		// Simulate async data fetching
 		const dataPromise = new Promise<string>((resolve) => {
@@ -19,24 +20,22 @@ export const AsyncData = {
 			waitFor(dataPromise)
 		}
 
-		vnode.state.data = await dataPromise
-		vnode.state.loading = false
-	},
+		this.data = await dataPromise
+		this.loading = false
+	}
 
-	view: (vnode: any) => {
-		const state = vnode.state as AsyncDataState
-
-		if (state.loading) {
+	view(vnode: Vnode): any {
+		if (this.loading) {
 			return <div>Loading...</div>
 		}
 
 		return <div>
 			<h2>Async Data Component</h2>
-			<p>{state.data || 'No data'}</p>
+			<p>{this.data || 'No data'}</p>
 			<p>
 				<strong>Note: </strong>
 				This component fetches data on the server using waitFor.
 			</p>
 		</div>
-	},
+	}
 }

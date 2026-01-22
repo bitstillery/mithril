@@ -6,13 +6,13 @@ import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
 import parsePathname from './pathname/parse'
 import buildPathname from './pathname/build'
-import VnodeFactory from './render/vnode'
+import VnodeFactory, {MithrilTsxComponent} from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
 import {store} from './store'
 
-import type {Vnode, Children, Component, ComponentFactory, ComponentType, MithrilTsxComponent} from './render/vnode'
+import type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
 import type {Route, RouteResolver} from './api/router'
 import type {Render, Redraw, Mount} from './api/mount-redraw'
@@ -82,7 +82,9 @@ export {signal, computed, effect, Signal, ComputedSignal, store}
 export type {Store} from './store'
 
 // Export component and vnode types
-export type {Vnode, Children, Component, ComponentFactory, ComponentType, MithrilTsxComponent} from './render/vnode'
+export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
+// Export MithrilTsxComponent as a value (class) so it can be extended at runtime
+export {MithrilTsxComponent}
 export type {Hyperscript} from './render/hyperscript'
 export type {Route, RouteResolver} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'

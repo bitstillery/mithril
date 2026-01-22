@@ -1,8 +1,10 @@
+import {MithrilTsxComponent, Vnode} from '../../../index'
+import m from '../../../index'
 import {$s} from '../store'
 
 // Store debugger component - shows current store state and updates in real-time
-export const StoreDebugger = {
-	view() {
+export class StoreDebugger extends MithrilTsxComponent {
+	view(vnode: Vnode): any {
 		// Access all store properties to track changes (fine-grained reactivity)
 		// This component will automatically re-render when any accessed signal changes
 		const count = $s.count
@@ -74,5 +76,5 @@ export const StoreDebugger = {
 				</div>
 			</div>
 		)
-	},
+	}
 }

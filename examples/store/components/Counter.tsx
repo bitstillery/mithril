@@ -1,8 +1,10 @@
+import {MithrilTsxComponent, Vnode} from '../../../index'
+import m from '../../../index'
 import {$s} from '../store'
 
 // Simple counter component demonstrating signal usage
-export const Counter = {
-	view() {
+export class Counter extends MithrilTsxComponent {
+	view(vnode: Vnode): any {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">
 				<h2>Counter</h2>
@@ -12,5 +14,5 @@ export const Counter = {
 				<button onclick={() => $s.count = 0}>Reset</button>
 			</div>
 		)
-	},
+	}
 }
