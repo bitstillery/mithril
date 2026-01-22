@@ -9,6 +9,8 @@ import buildPathname from './pathname/build'
 import Vnode from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
+import { signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents } from './signal'
+import { store } from './store'
 
 import type {MithrilStatic, Hyperscript} from './index.d.ts'
 
@@ -42,5 +44,21 @@ m.buildPathname = buildPathname
 m.vnode = Vnode
 m.censor = censor
 m.domFor = domFor
+
+// Set up signal-to-component redraw integration
+setSignalRedrawCallback((sig: Signal<any>) => {
+	const components = getSignalComponents(sig)
+	if (components) {
+		components.forEach(component => {
+			// Use the component-level redraw
+			m.redraw(component as any)
+		})
+	}
+})
+
+// Export signals API
+export { signal, computed, effect, Signal, ComputedSignal, store }
+export type { Signal, ComputedSignal } from './signal'
+export type { Store } from './store'
 
 export default m

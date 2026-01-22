@@ -1,4 +1,5 @@
 import Vnode from '../render/vnode'
+import { getSignalComponents, type Signal } from '../signal'
 
 import type {ComponentType} from '../index'
 
@@ -16,11 +17,12 @@ interface Console {
 
 interface MountRedraw {
 	mount: (root: Element, component: ComponentType | null) => void
-	redraw: (() => void) & {sync: () => void}
+	redraw: ((component?: ComponentType) => void) & {sync: () => void}
 }
 
 export default function mountRedrawFactory(render: Render, schedule: Schedule, console: Console): MountRedraw {
 	const subscriptions: Array<Element | ComponentType> = []
+	const componentToElement = new WeakMap<ComponentType, Element>()
 	let pending = false
 	let offset = -1
 
@@ -32,7 +34,36 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 		offset = -1
 	}
 
-	function redraw() {
+	function redrawComponent(component: ComponentType) {
+		const element = componentToElement.get(component)
+		if (element) {
+			try {
+				render(element, Vnode(component), redraw)
+			} catch(e) {
+				console.error(e)
+			}
+		} else {
+			// Fallback: find element in subscriptions
+			const index = subscriptions.indexOf(component)
+			if (index >= 0 && index % 2 === 1) {
+				const rootElement = subscriptions[index - 1] as Element
+				try {
+					render(rootElement, Vnode(component), redraw)
+				} catch(e) {
+					console.error(e)
+				}
+			}
+		}
+	}
+
+	function redraw(component?: ComponentType) {
+		// Component-level redraw
+		if (component !== undefined) {
+			redrawComponent(component)
+			return
+		}
+
+		// Global redraw (backward compatibility)
 		if (!pending) {
 			pending = true
 			schedule(function() {
@@ -44,6 +75,16 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
 	redraw.sync = sync
 
+	// Export function to redraw components affected by signal changes
+	;(redraw as any).signal = function(signal: Signal<any>) {
+		const components = getSignalComponents(signal)
+		if (components) {
+			components.forEach(component => {
+				redrawComponent(component)
+			})
+		}
+	}
+
 	function mount(root: Element, component: ComponentType | null) {
 		if (component != null && (component as any).view == null && typeof component !== 'function') {
 			throw new TypeError('m.mount expects a component, not a vnode.')
@@ -51,6 +92,10 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
 		const index = subscriptions.indexOf(root)
 		if (index >= 0) {
+			const oldComponent = subscriptions[index + 1] as ComponentType
+			if (oldComponent) {
+				componentToElement.delete(oldComponent)
+			}
 			subscriptions.splice(index, 2)
 			if (index <= offset) offset -= 2
 			render(root, [])
@@ -58,6 +103,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
 		if (component != null) {
 			subscriptions.push(root, component)
+			componentToElement.set(component, root)
 			render(root, Vnode(component), redraw)
 		}
 	}

@@ -2,6 +2,7 @@ import Vnode from './vnode'
 import delayedRemoval from './delayedRemoval'
 import domFor from './domFor'
 import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
+import { setCurrentComponent, clearCurrentComponent, clearComponentDependencies } from '../signal'
 
 import type {Vnode as VnodeType, Children} from '../index'
 
@@ -152,7 +153,14 @@ export default function renderFactory() {
 		}
 		initLifecycle(vnode.state, vnode, hooks)
 		if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks)
-		vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
+		
+		// Track component for signal dependency tracking
+		setCurrentComponent(vnode.state)
+		try {
+			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
+		} finally {
+			clearCurrentComponent()
+		}
 		if (vnode.instance === vnode) throw Error('A view cannot return the vnode it received as argument')
 		sentinel.$$reentrantLock$$ = null
 	}
@@ -376,7 +384,13 @@ export default function renderFactory() {
 		}
 	}
 	function updateComponent(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
-		vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
+		// Track component for signal dependency tracking
+		setCurrentComponent(vnode.state)
+		try {
+			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
+		} finally {
+			clearCurrentComponent()
+		}
 		if (vnode.instance === vnode) throw Error('A view cannot return the vnode it received as argument')
 		updateLifecycle(vnode.state, vnode, hooks)
 		if (vnode.attrs != null) updateLifecycle(vnode.attrs, vnode, hooks)
@@ -522,6 +536,10 @@ export default function renderFactory() {
 	}
 
 	function onremove(vnode: any) {
+		// Clean up signal dependencies when component is removed
+		if (typeof vnode.tag !== 'string' && vnode.state != null) {
+			clearComponentDependencies(vnode.state)
+		}
 		if (typeof vnode.tag !== 'string' && typeof vnode.state.onremove === 'function') callHook.call(vnode.state.onremove, vnode)
 		if (vnode.attrs && typeof vnode.attrs.onremove === 'function') callHook.call(vnode.attrs.onremove, vnode)
 		if (typeof vnode.tag !== 'string') {

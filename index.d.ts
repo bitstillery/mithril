@@ -67,8 +67,9 @@ export interface Render {
 }
 
 export interface Redraw {
-	(): void
+	(component?: ComponentType): void
 	sync(): void
+	signal?: (signal: Signal<any>) => void
 }
 
 export interface Mount {
@@ -98,5 +99,27 @@ export interface MithrilStatic {
 }
 
 declare const m: MithrilStatic & Hyperscript
+
+// Signals API
+export function signal<T>(initial: T): Signal<T>
+export function computed<T>(compute: () => T): ComputedSignal<T>
+export function effect(fn: () => void | (() => void)): () => void
+export class Signal<T> {
+	value: T
+	subscribe(callback: () => void): () => void
+	watch(callback: (newValue: T, oldValue: T) => void): () => void
+	peek(): T
+}
+export class ComputedSignal<T> extends Signal<T> {
+	readonly value: T
+}
+export function store<T extends Record<string, any>>(initial: T): Store<T>
+export interface Store<T extends Record<string, any>> {
+	[K in keyof T]: T[K] extends (...args: any[]) => infer R
+		? R
+		: T[K] extends Record<string, any>
+		? Store<T[K]>
+		: T[K]
+}
 
 export default m
