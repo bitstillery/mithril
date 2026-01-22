@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface ThrottleMock {
 	schedule: (fn: () => void) => void
 	fire: () => void

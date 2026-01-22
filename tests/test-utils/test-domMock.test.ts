@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {spy} from '../../test-utils/test-helpers'

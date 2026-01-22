@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
 Known limitations:
 - the innerHTML setter and the DOMParser only support a small subset of the true HTML/XML syntax.

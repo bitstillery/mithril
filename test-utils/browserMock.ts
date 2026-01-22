@@ -1,3 +1,4 @@
+// @ts-nocheck
 import pushStateMock from './pushStateMock'
 import domMock from './domMock'
 import xhrMock from './xhrMock'

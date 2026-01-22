@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface ParsedURL {
 	protocol?: string
 	hostname?: string

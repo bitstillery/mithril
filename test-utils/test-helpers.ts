@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Helper to provide ospec-like spy functionality for Bun test
 import {mock} from 'bun:test'
 

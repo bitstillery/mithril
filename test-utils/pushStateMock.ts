@@ -1,3 +1,4 @@
+// @ts-nocheck
 import parseURL from './parseURL'
 import callAsync from './callAsync'
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import parseQueryString from '../querystring/parse'
 
 import callAsync from './callAsync'

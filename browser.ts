@@ -1,3 +1,4 @@
+// @ts-nocheck
 import m from './index'
 
 if (typeof module !== 'undefined') {

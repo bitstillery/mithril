@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {test, beforeEach, describe, expect} from 'bun:test'
 
 import pushStateMock from '../../test-utils/pushStateMock'

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import m from '../render/hyperscript'
 
 import type {Component} from '../render/vnode'

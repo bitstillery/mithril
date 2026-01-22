@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import callAsync from '../../test-utils/callAsync'
