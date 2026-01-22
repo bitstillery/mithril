@@ -56,10 +56,10 @@ function createSSRRoute(pathname: string) {
 
 const server = Bun.serve({
 	port: PORT,
-	// Enable Bun's built-in development mode
-	// Disable HMR to avoid errors - we're fine with page reloads
+	// Enable Bun's built-in development mode with HMR
+	// HMR will reload the page on changes (which is fine)
 	development: {
-		hmr: false, // Disable Hot Module Replacement (prevents errors)
+		hmr: true, // Enable Hot Module Replacement for file watching
 		console: false, // Don't echo console logs (optional)
 	},
 	routes: {
