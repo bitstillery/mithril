@@ -240,7 +240,7 @@ state: CollectionState = proxy({ loading: true, items: [], ... })
    - `render/renderToString.ts` - Collect and return serialized state
    - `render/render.ts` - Hydration detection and skip `oninit`
    - `api/mount-redraw.ts` - Restore state before mounting
-   - `examples/ssr-test/server.ts` - Inject state into HTML
+   - `examples/ssr/server.ts` - Inject state into HTML
    - `common/lib/proxy.ts` - Optional auto-registration
    - `common/app.ts` - Register global store `$s`
 

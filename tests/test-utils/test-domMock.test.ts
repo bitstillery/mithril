@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
-import {spy} from '../test-helpers'
+import {spy} from '../../test-utils/test-helpers'
 import domMock from '../../test-utils/domMock'
 
 describe('domMock', () => {

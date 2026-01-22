@@ -1,0 +1,4 @@
+[test]
+# Bun test configuration
+# Discover test files with these patterns
+preload = ["./test-utils/test-helpers.ts"]

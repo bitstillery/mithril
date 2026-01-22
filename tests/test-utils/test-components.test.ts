@@ -2,7 +2,7 @@ import {describe, test, expect, afterAll} from 'bun:test'
 
 import components from '../../test-utils/components'
 import m from '../../render/hyperscript'
-import {spy} from '../test-helpers'
+import {spy} from '../../test-utils/test-helpers'
 
 describe('test-utils/components', () => {
 	const testSpy = spy(function(component: any) {

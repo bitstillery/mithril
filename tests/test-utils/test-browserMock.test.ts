@@ -2,7 +2,7 @@ import {describe, test, expect, beforeEach} from 'bun:test'
 
 import browserMock from '../../test-utils/browserMock'
 import callAsync from '../../test-utils/callAsync'
-import {spy} from '../test-helpers'
+import {spy} from '../../test-utils/test-helpers'
 
 describe('browserMock', () => {
 	let $window: any

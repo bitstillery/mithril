@@ -1,7 +1,7 @@
 import {describe, test, expect} from 'bun:test'
 
 import throttleMock from '../../test-utils/throttleMock'
-import {spy} from '../test-helpers'
+import {spy} from '../../test-utils/test-helpers'
 
 describe('throttleMock', () => {
 	test('schedules one callback', () => {

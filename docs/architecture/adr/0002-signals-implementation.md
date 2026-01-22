@@ -454,13 +454,13 @@ export const MyComponent = {
 
 ## Example Projects
 
-### SSR Test (`examples/ssr-test/`)
+### SSR Test (`examples/ssr/`)
 
 - **Purpose**: Demonstrate SSR/hydration with signals
 - **Features**: Server-side rendering, hydration, async data loading
 - **Status**: Existing example (needs signals integration)
 
-### Store Test (`examples/store-test/`) - NEW
+### Store Test (`examples/store/`) - NEW
 
 - **Purpose**: Demonstrate correct signals/store usage patterns
 - **Features**:
