@@ -56,7 +56,7 @@ mServer.redraw = Object.assign(() => {
 }, {
 	sync: () => {
 		throw new Error('m.redraw.sync is not available on server.')
-	}
+	},
 }) as Redraw
 
 export default mServer

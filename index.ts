@@ -12,7 +12,7 @@ import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
 import {store} from './store'
 
-import type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
+import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
 import type {Route, RouteResolver} from './api/router'
 import type {Render, Redraw, Mount} from './api/mount-redraw'
@@ -28,7 +28,7 @@ export interface MithrilStatic {
 	redraw: Redraw
 	parseQueryString: (queryString: string) => Record<string, any>
 	buildQueryString: (values: Record<string, any>) => string
-	parsePathname: (pathname: string) => { path: string, params: Record<string, any> }
+	parsePathname: (pathname: string) => {path: string; params: Record<string, any>}
 	buildPathname: (template: string, params: Record<string, any>) => string
 	vnode: typeof VnodeFactory
 	censor: (attrs: Record<string, any>, extras?: string[]) => Record<string, any>
