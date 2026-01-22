@@ -1,4 +1,4 @@
-import m from '@bitstillery/mithril'
+import m from '../../../index'
 
 export const Home = {
 	view: (_vnode: m.Vnode<any>) => {

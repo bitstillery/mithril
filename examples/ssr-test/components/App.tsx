@@ -1,6 +1,6 @@
 /// <reference path="../jsx.d.ts" />
 
-import m from '@bitstillery/mithril'
+import m from '../../../index'
 
 import {routes} from '../routes'
 

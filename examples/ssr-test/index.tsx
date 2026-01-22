@@ -1,4 +1,4 @@
-import m from '@bitstillery/mithril'
+import m from '../../index'
 
 interface DocumentAttrs {
 	title?: string

@@ -7,9 +7,7 @@
     "dev": "bun run build && bun run server.ts",
     "start": "bun run server.ts"
   },
-  "dependencies": {
-    "@bitstillery/mithril": "../../"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/bun": "latest"
   }

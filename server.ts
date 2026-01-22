@@ -1,5 +1,5 @@
 import hyperscript from './hyperscript'
-import { renderToStringFactory } from './render/renderToString'
+import {renderToStringFactory} from './render/renderToString'
 import routerServerFactory from './api/router-server'
 import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'

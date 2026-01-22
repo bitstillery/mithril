@@ -9,6 +9,17 @@
   "module": "./index.ts",
   "types": "./index.d.ts",
   "repository": "github:bitstillery/mithril",
+  "files": [
+    "*.ts",
+    "*.d.ts",
+    "api/*.ts",
+    "pathname/*.ts",
+    "querystring/*.ts",
+    "render/*.ts",
+    "util/*.ts",
+    "LICENSE",
+    "README.md"
+  ],
   "exports": {
     ".": {
       "types": "./index.d.ts",

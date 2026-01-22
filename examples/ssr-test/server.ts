@@ -1,8 +1,10 @@
-import m from '@bitstillery/mithril/server'
 import {readFile} from 'fs/promises'
 import {join} from 'path'
 
-import {App} from './components/App'
+import m from '../../server'
+
+import {App} from './components/App'	
+
 
 const server = Bun.serve({
 	port: 3000,
@@ -16,6 +18,7 @@ const server = Bun.serve({
 			if (await file.exists()) {
 				return new Response(file, {
 					headers: {
+						// eslint-disable-next-line @typescript-eslint/naming-convention
 						'Content-Type': pathname.endsWith('.js') ? 'application/javascript' : 'text/html',
 					},
 				})
@@ -36,6 +39,7 @@ const server = Bun.serve({
 			// Return full HTML document
 			return new Response(html, {
 				headers: {
+					// eslint-disable-next-line @typescript-eslint/naming-convention
 					'Content-Type': 'text/html; charset=utf-8',
 				},
 			})
