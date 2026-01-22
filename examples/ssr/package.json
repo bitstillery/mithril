@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run build.ts",
-    "dev": "bun run build && bun run server.ts",
+    "dev": "bun --hot server.ts",
     "start": "bun run server.ts"
   },
   "dependencies": {},
