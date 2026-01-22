@@ -3,7 +3,7 @@ import {join} from 'path'
 
 import m from '../../server'
 
-import {App} from './components/App'	
+import {App} from './components/app'	
 
 const server = Bun.serve({
 	port: 3000,

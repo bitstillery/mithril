@@ -1,5 +1,5 @@
-import {Home} from './components/Home'
-import {AsyncData} from './components/AsyncData'
+import {Home} from './components/home'
+import {AsyncData} from './components/async_data'
 
 export const routes: Record<string, {component: any}> = {
 	// eslint-disable-next-line @typescript-eslint/naming-convention

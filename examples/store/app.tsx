@@ -1,9 +1,9 @@
 import m from '../../index'
-import {Counter} from './components/Counter'
-import {TodoList} from './components/TodoList'
-import {UserProfile} from './components/UserProfile'
-import {StoreDebugger} from './components/StoreDebugger'
-import {SignalPropExample} from './components/SignalPropExample'
+import {Counter} from './components/counter'
+import {TodoList} from './components/todo_list'
+import {UserProfile} from './components/user_profile'
+import {StoreDebugger} from './components/store_debugger'
+import {SignalPropExample} from './components/signal_prop_example'
 
 // Main application component
 export const App = {
