@@ -155,6 +155,11 @@ export default function renderFactory() {
 		if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks)
 		
 		// Track component for signal dependency tracking
+		// Store mapping from vnode.state to vnode.tag (component object) for redraw
+		if (vnode.state && vnode.tag) {
+			;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
+			;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
+		}
 		setCurrentComponent(vnode.state)
 		try {
 			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
@@ -385,6 +390,11 @@ export default function renderFactory() {
 	}
 	function updateComponent(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
 		// Track component for signal dependency tracking
+		// Store mapping from vnode.state to vnode.tag (component object) for redraw
+		if (vnode.state && vnode.tag) {
+			;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
+			;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
+		}
 		setCurrentComponent(vnode.state)
 		try {
 			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))

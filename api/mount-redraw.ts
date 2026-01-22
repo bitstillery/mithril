@@ -34,7 +34,15 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 		offset = -1
 	}
 
-	function redrawComponent(component: ComponentType) {
+	function redrawComponent(componentOrState: ComponentType) {
+		// componentOrState might be vnode.state (from signal tracking) or component object
+		// Try to find the actual component object if it's vnode.state
+		let component = componentOrState
+		const stateToComponentMap = (globalThis as any).__mithrilStateToComponent as WeakMap<any, ComponentType> | undefined
+		if (stateToComponentMap && stateToComponentMap.has(componentOrState)) {
+			component = stateToComponentMap.get(componentOrState)!
+		}
+		
 		const element = componentToElement.get(component)
 		if (element) {
 			try {
