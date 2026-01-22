@@ -4,6 +4,8 @@ import Vnode from './vnode'
 import hyperscriptVnode from './hyperscriptVnode'
 import emptyAttrs from './emptyAttrs'
 import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
+import trust from './trust'
+import fragment from './fragment'
 
 import type {ComponentType, Children, Vnode as VnodeType} from './vnode'
 
@@ -114,15 +116,9 @@ function hyperscript(selector: string | ComponentType, attrs?: Record<string, an
 	return vnode
 }
 
-hyperscript.trust = function(html: string) {
-	const trust = require('./trust')
-	return trust(html)
-}
+hyperscript.trust = trust
 
-hyperscript.fragment = function(attrs: Record<string, any> | null, ...children: Children[]) {
-	const fragment = require('./fragment')
-	return fragment(attrs, ...children)
-}
+hyperscript.fragment = fragment
 hyperscript.Fragment = '['
 
 export default hyperscript

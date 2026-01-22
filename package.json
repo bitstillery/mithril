@@ -11,6 +11,8 @@
   "files": [
     "*.ts",
     "*.d.ts",
+    "signal.ts",
+    "store.ts",
     "api/*.ts",
     "pathname/*.ts",
     "querystring/*.ts",
