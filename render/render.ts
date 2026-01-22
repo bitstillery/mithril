@@ -52,31 +52,73 @@ export default function renderFactory() {
 		}
 	}
 	// create
-	function createNodes(parent: Element | DocumentFragment, vnodes: (VnodeType | null)[], start: number, end: number, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
+	function createNodes(parent: Element | DocumentFragment, vnodes: (VnodeType | null)[], start: number, end: number, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
+		// Track which DOM nodes we've matched during hydration to avoid reusing the same node twice
+		// Create a new set if not provided and we're hydrating at the root level
+		const createdMatchedNodes = matchedNodes == null && isHydrating && nextSibling == null
+		if (createdMatchedNodes) {
+			matchedNodes = new Set<Node>()
+		}
 		for (let i = start; i < end; i++) {
 			const vnode = vnodes[i]
 			if (vnode != null) {
-				createNode(parent, vnode, hooks, ns, nextSibling)
+				createNode(parent, vnode, hooks, ns, nextSibling, isHydrating, matchedNodes)
+			}
+		}
+		// After creating/matching all nodes, remove any unmatched nodes that remain
+		// Only do this at the root level to avoid removing nodes that are part of matched subtrees
+		if (createdMatchedNodes && matchedNodes && parent.firstChild && nextSibling == null) {
+			let node: Node | null = parent.firstChild
+			while (node) {
+				const next = node.nextSibling
+				if (!matchedNodes.has(node)) {
+					parent.removeChild(node)
+				}
+				node = next
 			}
 		}
 	}
-	function createNode(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null) {
+	function createNode(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
 		const tag = vnode.tag
 		if (typeof tag === 'string') {
 			vnode.state = {}
-			if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks)
+			if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, isHydrating)
 			switch (tag) {
-				case '#': createText(parent, vnode, nextSibling); break
+				case '#': createText(parent, vnode, nextSibling, isHydrating, matchedNodes); break
 				case '<': createHTML(parent, vnode, ns, nextSibling); break
-				case '[': createFragment(parent, vnode, hooks, ns, nextSibling); break
-				default: createElement(parent, vnode, hooks, ns, nextSibling)
+				case '[': createFragment(parent, vnode, hooks, ns, nextSibling, isHydrating, matchedNodes); break
+				default: createElement(parent, vnode, hooks, ns, nextSibling, isHydrating, matchedNodes)
 			}
 		}
-		else createComponent(parent, vnode, hooks, ns, nextSibling)
+		else createComponent(parent, vnode, hooks, ns, nextSibling, isHydrating, matchedNodes)
 	}
-	function createText(parent: Element | DocumentFragment, vnode: any, nextSibling: Node | null) {
-		vnode.dom = getDocument(parent as Element).createTextNode(vnode.children)
-		insertDOM(parent, vnode.dom, nextSibling)
+	function createText(parent: Element | DocumentFragment, vnode: any, nextSibling: Node | null, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
+		let textNode: Text
+		if (isHydrating && parent.firstChild && nextSibling == null && matchedNodes) {
+			// During hydration, try to reuse existing text node
+			let candidate: Node | null = parent.firstChild
+			while (candidate) {
+				if (candidate.nodeType === 3 && !matchedNodes.has(candidate)) {
+					const candidateText = candidate as Text
+					if (candidateText.nodeValue === String(vnode.children)) {
+						textNode = candidateText
+						matchedNodes.add(textNode)
+						// Don't remove/reinsert - just reuse the existing node in place
+						break
+					}
+				}
+				candidate = candidate.nextSibling
+			}
+			// If no matching text node found, create new one
+			if (!textNode!) {
+				textNode = getDocument(parent as Element).createTextNode(vnode.children)
+				insertDOM(parent, textNode, nextSibling)
+			}
+		} else {
+			textNode = getDocument(parent as Element).createTextNode(vnode.children)
+			insertDOM(parent, textNode, nextSibling)
+		}
+		vnode.dom = textNode
 	}
 	const possibleParents: Record<string, string> = {caption: 'table', thead: 'table', tbody: 'table', tfoot: 'table', tr: 'tbody', th: 'tr', td: 'tr', colgroup: 'table', col: 'colgroup'}
 	function createHTML(parent: Element | DocumentFragment, vnode: any, ns: string | undefined, nextSibling: Node | null) {
@@ -102,43 +144,98 @@ export default function renderFactory() {
 		}
 		insertDOM(parent, fragment, nextSibling)
 	}
-	function createFragment(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null) {
+	function createFragment(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
 		const fragment = getDocument(parent as Element).createDocumentFragment()
 		if (vnode.children != null) {
 			const children = vnode.children
-			createNodes(fragment, children, 0, children.length, hooks, null, ns)
+			createNodes(fragment, children, 0, children.length, hooks, null, ns, isHydrating, matchedNodes)
 		}
 		vnode.dom = fragment.firstChild
 		vnode.domSize = fragment.childNodes.length
 		insertDOM(parent, fragment, nextSibling)
 	}
-	function createElement(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null) {
+	function createElement(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
 		const tag = vnode.tag
 		const attrs = vnode.attrs
 		const is = vnode.is
 
 		ns = getNameSpace(vnode) || ns
 
-		const element = ns ?
-			is ? getDocument(parent as Element).createElementNS(ns, tag, {is: is} as any) : getDocument(parent as Element).createElementNS(ns, tag) :
-			is ? getDocument(parent as Element).createElement(tag, {is: is} as any) : getDocument(parent as Element).createElement(tag)
+		let element: Element
+		if (isHydrating && parent.firstChild && nextSibling == null && matchedNodes) {
+			// During hydration, try to reuse existing DOM node
+			// Only match if we're appending (nextSibling == null) to preserve order
+			// Find the first unmatched child element that matches the tag
+			let candidate: Node | null = parent.firstChild
+			let fallbackCandidate: Element | null = null
+			while (candidate) {
+				if (candidate.nodeType === 1 && !matchedNodes.has(candidate)) {
+					const candidateEl = candidate as Element
+					if (candidateEl.tagName.toLowerCase() === tag.toLowerCase()) {
+						// Prefer exact match (is attribute matches if specified)
+						if (!is || candidateEl.getAttribute('is') === is) {
+							element = candidateEl
+							matchedNodes.add(element)
+							// Don't remove/reinsert - just reuse the existing node in place
+							break
+						}
+						// Keep track of first matching tag as fallback
+						if (!fallbackCandidate) {
+							fallbackCandidate = candidateEl
+						}
+					}
+				}
+				candidate = candidate.nextSibling
+			}
+			// If no exact match found but we have a fallback, use it
+			if (!element! && fallbackCandidate) {
+				element = fallbackCandidate
+				matchedNodes.add(element)
+			}
+			// If still no matching element found, create new one
+			if (!element!) {
+				element = ns ?
+					is ? getDocument(parent as Element).createElementNS(ns, tag, {is: is} as any) : getDocument(parent as Element).createElementNS(ns, tag) :
+					is ? getDocument(parent as Element).createElement(tag, {is: is} as any) : getDocument(parent as Element).createElement(tag)
+				insertDOM(parent, element, nextSibling)
+			}
+		} else {
+			// Normal creation path
+			element = ns ?
+				is ? getDocument(parent as Element).createElementNS(ns, tag, {is: is} as any) : getDocument(parent as Element).createElementNS(ns, tag) :
+				is ? getDocument(parent as Element).createElement(tag, {is: is} as any) : getDocument(parent as Element).createElement(tag)
+			insertDOM(parent, element, nextSibling)
+		}
 		vnode.dom = element
 
 		if (attrs != null) {
 			setAttrs(vnode, attrs, ns)
 		}
 
-		insertDOM(parent, element, nextSibling)
-
 		if (!maybeSetContentEditable(vnode)) {
 			if (vnode.children != null) {
 				const children = vnode.children
-				createNodes(element, children, 0, children.length, hooks, null, ns)
+				// During hydration, if we reused an element, it already has children
+				// Create a new matchedNodes set for this element's children to avoid duplicates
+				const childMatchedNodes = (isHydrating && element.firstChild) ? new Set<Node>() : null
+				createNodes(element, children, 0, children.length, hooks, null, ns, isHydrating, childMatchedNodes)
+				// After creating/matching children, remove any unmatched nodes that remain
+				// Only remove unmatched nodes if we actually matched some nodes (to avoid clearing everything)
+				if (isHydrating && childMatchedNodes && element.firstChild && childMatchedNodes.size > 0) {
+					let node: Node | null = element.firstChild
+					while (node) {
+						const next = node.nextSibling
+						if (!childMatchedNodes.has(node)) {
+							element.removeChild(node)
+						}
+						node = next
+					}
+				}
 				if (vnode.tag === 'select' && attrs != null) setLateSelectAttrs(vnode, attrs)
 			}
 		}
 	}
-	function initComponent(vnode: any, hooks: Array<() => void>) {
+	function initComponent(vnode: any, hooks: Array<() => void>, isHydrating: boolean = false) {
 		let sentinel: any
 		if (typeof vnode.tag.view === 'function') {
 			vnode.state = Object.create(vnode.tag)
@@ -152,8 +249,8 @@ export default function renderFactory() {
 			sentinel.$$reentrantLock$$ = true
 			vnode.state = (vnode.tag.prototype != null && typeof vnode.tag.prototype.view === 'function') ? new vnode.tag(vnode) : vnode.tag(vnode)
 		}
-		initLifecycle(vnode.state, vnode, hooks)
-		if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks)
+		initLifecycle(vnode.state, vnode, hooks, isHydrating)
+		if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, isHydrating)
 		
 		// Track component for signal dependency tracking
 		// Store mapping from vnode.state to vnode.tag (component object) for redraw
@@ -170,10 +267,10 @@ export default function renderFactory() {
 		if (vnode.instance === vnode) throw Error('A view cannot return the vnode it received as argument')
 		sentinel.$$reentrantLock$$ = null
 	}
-	function createComponent(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null) {
-		initComponent(vnode, hooks)
+	function createComponent(parent: Element | DocumentFragment, vnode: any, hooks: Array<() => void>, ns: string | undefined, nextSibling: Node | null, isHydrating: boolean = false, matchedNodes: Set<Node> | null = null) {
+		initComponent(vnode, hooks, isHydrating)
 		if (vnode.instance != null) {
-			createNode(parent, vnode.instance, hooks, ns, nextSibling)
+			createNode(parent, vnode.instance, hooks, ns, nextSibling, isHydrating, matchedNodes)
 			vnode.dom = vnode.instance.dom
 			vnode.domSize = vnode.instance.domSize
 		}
@@ -183,9 +280,9 @@ export default function renderFactory() {
 	}
 
 	// update
-	function updateNodes(parent: Element | DocumentFragment, old: (VnodeType | null)[] | null, vnodes: (VnodeType | null)[] | null, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
+	function updateNodes(parent: Element | DocumentFragment, old: (VnodeType | null)[] | null, vnodes: (VnodeType | null)[] | null, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false) {
 		if (old === vnodes || old == null && vnodes == null) return
-		else if (old == null || old.length === 0) createNodes(parent, vnodes!, 0, vnodes!.length, hooks, nextSibling, ns)
+		else if (old == null || old.length === 0) createNodes(parent, vnodes!, 0, vnodes!.length, hooks, nextSibling, ns, isHydrating)
 		else if (vnodes == null || vnodes.length === 0) removeNodes(parent, old, 0, old.length)
 		else {
 			const isOldKeyed = old[0] != null && old[0]!.key != null
@@ -193,7 +290,7 @@ export default function renderFactory() {
 			let start = 0, oldStart = 0, o: any, v: any
 			if (isOldKeyed !== isKeyed) {
 				removeNodes(parent, old, 0, old.length)
-				createNodes(parent, vnodes, 0, vnodes.length, hooks, nextSibling, ns)
+				createNodes(parent, vnodes, 0, vnodes.length, hooks, nextSibling, ns, isHydrating)
 			} else if (!isKeyed) {
 				// Don't index past the end of either list (causes deopts).
 				const commonLength = old.length < vnodes.length ? old.length : vnodes.length
@@ -207,12 +304,12 @@ export default function renderFactory() {
 					o = old[start]
 					v = vnodes[start]
 					if (o === v || o == null && v == null) continue
-					else if (o == null) createNode(parent, v, hooks, ns, getNextSibling(old, start + 1, old.length, nextSibling))
+					else if (o == null) createNode(parent, v, hooks, ns, getNextSibling(old, start + 1, old.length, nextSibling), isHydrating)
 					else if (v == null) removeNode(parent, o)
-					else updateNode(parent, o, v, hooks, getNextSibling(old, start + 1, old.length, nextSibling), ns)
+					else updateNode(parent, o, v, hooks, getNextSibling(old, start + 1, old.length, nextSibling), ns, isHydrating)
 				}
 				if (old.length > commonLength) removeNodes(parent, old, start, old.length)
-				if (vnodes.length > commonLength) createNodes(parent, vnodes, start, vnodes.length, hooks, nextSibling, ns)
+				if (vnodes.length > commonLength) createNodes(parent, vnodes, start, vnodes.length, hooks, nextSibling, ns, isHydrating)
 			} else {
 				// keyed diff
 				let oldEnd = old.length - 1, end = vnodes.length - 1, oe: any, ve: any, topSibling: Node | null
@@ -222,7 +319,7 @@ export default function renderFactory() {
 					oe = old[oldEnd]
 					ve = vnodes[end]
 					if (oe == null || ve == null || oe.key !== ve.key) break
-					if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
+					if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns, isHydrating)
 					if (ve.dom != null) nextSibling = ve.dom
 					oldEnd--, end--
 				}
@@ -232,7 +329,7 @@ export default function renderFactory() {
 					v = vnodes[start]
 					if (o == null || v == null || o.key !== v.key) break
 					oldStart++, start++
-					if (o !== v) updateNode(parent, o, v, hooks, getNextSibling(old, oldStart, oldEnd + 1, nextSibling), ns)
+					if (o !== v) updateNode(parent, o, v, hooks, getNextSibling(old, oldStart, oldEnd + 1, nextSibling), ns, isHydrating)
 				}
 				// swaps and list reversals
 				while (oldEnd >= oldStart && end >= start) {
@@ -244,9 +341,9 @@ export default function renderFactory() {
 					if (o == null || ve == null || oe == null || v == null || o.key !== ve.key || oe.key !== v.key) break
 					topSibling = getNextSibling(old, oldStart, oldEnd, nextSibling)
 					moveDOM(parent, oe, topSibling)
-					if (oe !== v) updateNode(parent, oe, v, hooks, topSibling, ns)
+					if (oe !== v) updateNode(parent, oe, v, hooks, topSibling, ns, isHydrating)
 					if (++start <= --end) moveDOM(parent, o, nextSibling)
-					if (o !== ve) updateNode(parent, o, ve, hooks, nextSibling, ns)
+					if (o !== ve) updateNode(parent, o, ve, hooks, nextSibling, ns, isHydrating)
 					if (ve.dom != null) nextSibling = ve.dom
 					oldStart++; oldEnd--
 					oe = old[oldEnd]
@@ -259,14 +356,14 @@ export default function renderFactory() {
 					oe = old[oldEnd]
 					ve = vnodes[end]
 					if (oe == null || ve == null || oe.key !== ve.key) break
-					if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
+					if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns, isHydrating)
 					if (ve.dom != null) nextSibling = ve.dom
 					oldEnd--, end--
 					oe = old[oldEnd]
 					ve = vnodes[end]
 				}
 				if (start > end) removeNodes(parent, old, oldStart, oldEnd + 1)
-				else if (oldStart > oldEnd) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns)
+				else if (oldStart > oldEnd) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns, isHydrating)
 				else {
 					// inspired by ivi https://github.com/ivijs/ivi/ by Boris Kaul
 					const originalNextSibling = nextSibling
@@ -285,14 +382,14 @@ export default function renderFactory() {
 							oldIndices[newIndex - start] = i
 							ve = vnodes[newIndex]
 							old[i] = null
-							if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns)
+							if (oe !== ve) updateNode(parent, oe, ve, hooks, nextSibling, ns, isHydrating)
 							if (ve != null && ve.dom != null) nextSibling = ve.dom
 							matched++
 						}
 					}
 					nextSibling = originalNextSibling
 					if (matched !== oldEnd - oldStart + 1) removeNodes(parent, old, oldStart, oldEnd + 1)
-					if (matched === 0) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns)
+					if (matched === 0) createNodes(parent, vnodes, start, end + 1, hooks, nextSibling, ns, isHydrating)
 					else {
 						if (pos === -1) {
 							// the indices of the indices of the items that are part of the
@@ -302,7 +399,7 @@ export default function renderFactory() {
 							for (let i = end; i >= start; i--) {
 								ve = vnodes[i]
 								if (ve == null) continue
-								if (oldIndices[i - start] === -1) createNode(parent, ve, hooks, ns, nextSibling)
+								if (oldIndices[i - start] === -1) createNode(parent, ve, hooks, ns, nextSibling, isHydrating)
 								else {
 									if (lisIndices[li] === i - start) li--
 									else moveDOM(parent, ve, nextSibling)
@@ -313,7 +410,7 @@ export default function renderFactory() {
 							for (let i = end; i >= start; i--) {
 								ve = vnodes[i]
 								if (ve == null) continue
-								if (oldIndices[i - start] === -1) createNode(parent, ve, hooks, ns, nextSibling)
+								if (oldIndices[i - start] === -1) createNode(parent, ve, hooks, ns, nextSibling, isHydrating)
 								if (ve.dom != null) nextSibling = ve.dom
 							}
 						}
@@ -322,7 +419,7 @@ export default function renderFactory() {
 			}
 		}
 	}
-	function updateNode(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
+	function updateNode(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false) {
 		const oldTag = old.tag, tag = vnode.tag
 		if (oldTag === tag && old.is === vnode.is) {
 			vnode.state = old.state
@@ -335,15 +432,15 @@ export default function renderFactory() {
 				switch (oldTag) {
 					case '#': updateText(old, vnode); break
 					case '<': updateHTML(parent, old, vnode, ns, nextSibling); break
-					case '[': updateFragment(parent, old, vnode, hooks, nextSibling, ns); break
-					default: updateElement(old, vnode, hooks, ns)
+					case '[': updateFragment(parent, old, vnode, hooks, nextSibling, ns, isHydrating); break
+					default: updateElement(old, vnode, hooks, ns, isHydrating)
 				}
 			}
-			else updateComponent(parent, old, vnode, hooks, nextSibling, ns)
+			else updateComponent(parent, old, vnode, hooks, nextSibling, ns, isHydrating)
 		}
 		else {
 			removeNode(parent, old)
-			createNode(parent, vnode, hooks, ns, nextSibling)
+			createNode(parent, vnode, hooks, ns, nextSibling, isHydrating)
 		}
 	}
 	function updateText(old: any, vnode: any) {
@@ -362,8 +459,8 @@ export default function renderFactory() {
 			vnode.domSize = old.domSize
 		}
 	}
-	function updateFragment(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
-		updateNodes(parent, old.children, vnode.children, hooks, nextSibling, ns)
+	function updateFragment(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false) {
+		updateNodes(parent, old.children, vnode.children, hooks, nextSibling, ns, isHydrating)
 		let domSize = 0
 		const children = vnode.children
 		vnode.dom = null
@@ -378,7 +475,7 @@ export default function renderFactory() {
 		}
 		vnode.domSize = domSize
 	}
-	function updateElement(old: any, vnode: any, hooks: Array<() => void>, ns: string | undefined) {
+	function updateElement(old: any, vnode: any, hooks: Array<() => void>, ns: string | undefined, isHydrating: boolean = false) {
 		const element = vnode.dom = old.dom
 		ns = getNameSpace(vnode) || ns
 
@@ -386,10 +483,10 @@ export default function renderFactory() {
 			updateAttrs(vnode, old.attrs, vnode.attrs, ns)
 		}
 		if (!maybeSetContentEditable(vnode)) {
-			updateNodes(element, old.children, vnode.children, hooks, null, ns)
+			updateNodes(element, old.children, vnode.children, hooks, null, ns, isHydrating)
 		}
 	}
-	function updateComponent(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined) {
+	function updateComponent(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false) {
 		// Track component for signal dependency tracking
 		// Store mapping from vnode.state to vnode.tag (component object) for redraw
 		if (vnode.state && vnode.tag) {
@@ -406,8 +503,8 @@ export default function renderFactory() {
 		updateLifecycle(vnode.state, vnode, hooks)
 		if (vnode.attrs != null) updateLifecycle(vnode.attrs, vnode, hooks)
 		if (vnode.instance != null) {
-			if (old.instance == null) createNode(parent, vnode.instance, hooks, ns, nextSibling)
-			else updateNode(parent, old.instance, vnode.instance, hooks, nextSibling, ns)
+			if (old.instance == null) createNode(parent, vnode.instance, hooks, ns, nextSibling, isHydrating)
+			else updateNode(parent, old.instance, vnode.instance, hooks, nextSibling, ns, isHydrating)
 			vnode.dom = vnode.instance.dom
 			vnode.domSize = vnode.instance.domSize
 		}
@@ -774,7 +871,11 @@ export default function renderFactory() {
 	}
 
 	// lifecycle
-	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>) {
+	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>, _isHydrating: boolean = false) {
+		// TODO: Skip oninit during hydration once state serialization is implemented
+		// For now, we still call oninit during hydration to initialize component state
+		// When state serialization is added (ADR-0001 Phase 2-4), we can skip oninit here
+		// _isHydrating parameter reserved for future use
 		if (typeof source.oninit === 'function') callHook.call(source.oninit, vnode)
 		if (typeof source.oncreate === 'function') hooks.push(callHook.bind(source.oncreate, vnode))
 	}
@@ -826,10 +927,17 @@ export default function renderFactory() {
 		currentRedraw = typeof redraw === 'function' ? redraw : undefined
 		currentRender = {}
 		try {
-			// First time rendering into a node clears it out
-			if ((dom as any).vnodes == null) dom.textContent = ''
+			// Detect hydration: DOM has children but no vnodes tracked
+			// Only check children for Element nodes (DocumentFragment doesn't have children property)
+			const isHydrating = (dom as any).vnodes == null && 
+				dom.nodeType === 1 && // Element node
+				'children' in dom &&
+				(dom as Element).children.length > 0
+			
+			// First time rendering into a node clears it out (unless hydrating)
+			if (!isHydrating && (dom as any).vnodes == null) dom.textContent = ''
 			const normalized = (Vnode as any).normalizeChildren(Array.isArray(vnodes) ? vnodes : [vnodes])
-			updateNodes(dom, (dom as any).vnodes, normalized, hooks, null, (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined)
+			updateNodes(dom, (dom as any).vnodes, normalized, hooks, null, (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined, isHydrating)
 			;(dom as any).vnodes = normalized
 			// `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
 			if (active != null && activeElement(dom) !== active && typeof (active as any).focus === 'function') (active as any).focus()

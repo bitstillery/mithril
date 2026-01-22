@@ -1,6 +1,6 @@
 import Vnode from './vnode'
 
-import type {Vnode as VnodeType, Children} from './vnode'
+import type {Vnode as VnodeType, Children} from '../index'
 
 // Void elements that don't have closing tags
 const VOID_ELEMENTS = new Set([
@@ -166,8 +166,8 @@ function serializeComponentSync(
 		}
 	}
 	
-	// Call view
-	const instance = Vnode.normalize(view(vnode))
+	// Call view (bind this to state)
+	const instance = Vnode.normalize(view.call(state, vnode))
 	if (instance === vnode) {
 		throw Error('A view cannot return the vnode it received as argument')
 	}
@@ -241,7 +241,7 @@ function serializeNodeSync(
 		} else if (typeof children === 'string' || typeof children === 'number') {
 			html += serializeText(children, options)
 		} else if (children != null) {
-			html += serializeNodeSync(children as unknown as VnodeType, options, promiseTracker)
+			html += serializeNodeSync(children as VnodeType, options, promiseTracker)
 		}
 	}
 	
@@ -315,7 +315,7 @@ async function serializeNode(
 		} else if (typeof children === 'string' || typeof children === 'number') {
 			html += serializeText(children, options)
 		} else if (children != null) {
-			html += await serializeNode(children as unknown as VnodeType, options, promiseTracker, isServer)
+			html += await serializeNode(children as VnodeType, options, promiseTracker, isServer)
 		}
 	}
 	
@@ -377,8 +377,8 @@ async function serializeComponent(
 		}
 	}
 	
-	// Call view
-	const instance = Vnode.normalize(view(vnode))
+	// Call view (bind this to state)
+	const instance = Vnode.normalize(view.call(state, vnode))
 	if (instance === vnode) {
 		throw Error('A view cannot return the vnode it received as argument')
 	}
