@@ -25,10 +25,11 @@ export function serializeStore(store: Store<any>): any {
 	// Add the root store to visited first to detect circular refs
 	visited.add(store)
 	
-	// Early return if signalMap is null (error case)
+	// Check if signalMap exists and is a Map - if not, this is an error case
 	const signalMap = (store as any).__signalMap
-	if (!signalMap) {
-		return {}
+	if (!signalMap || !(signalMap instanceof Map)) {
+		// Throw error so serializeAllStates can catch it and skip this store
+		throw new Error('Store signalMap is null, undefined, or not a Map instance')
 	}
 
 	function serializeValue(value: any): any {
@@ -62,19 +63,19 @@ export function serializeStore(store: Store<any>): any {
 					if (signal instanceof ComputedSignal) {
 						return undefined
 					}
-				// Get the actual value from the signal
-				// If it's a Signal instance, get its value; otherwise it's already the value (could be a store)
-				let sigValue: any
-				// Check if it's a Signal instance (has value property and is an instance of Signal/ComputedSignal)
-				if (signal && typeof signal === 'object' && 'value' in signal && !isStore(signal)) {
-					sigValue = signal.value
-				} else {
+					// Get the actual value from the signal
+					// If it's a Signal instance, get its value; otherwise it's already the value (could be a store)
+					let sigValue: any
+					// Check if it's a Signal instance (has value property and is an instance of Signal/ComputedSignal)
+					if (signal && typeof signal === 'object' && 'value' in signal && !isStore(signal)) {
+						sigValue = signal.value
+					} else {
 					// It's either a primitive or a store (nested object)
-					sigValue = signal
-				}
-				// If sigValue is a store (nested object in array), serialize it
-				// This will use __originalKeys to filter parent keys
-				const serialized = serializeValue(sigValue)
+						sigValue = signal
+					}
+					// If sigValue is a store (nested object in array), serialize it
+					// This will use __originalKeys to filter parent keys
+					const serialized = serializeValue(sigValue)
 					// If circular reference was detected, it returns null - keep it
 					return serialized
 				}).filter((item: any) => item !== undefined)
@@ -177,8 +178,9 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 	}
 
 	const signalMap = (store as any).__signalMap as Map<string, any>
-	if (!signalMap) {
-		return
+	if (!signalMap || !(signalMap instanceof Map)) {
+		// Throw error so deserializeAllStates can catch it and skip this store
+		throw new Error('Store signalMap is null, undefined, or not a Map instance')
 	}
 
 	function deserializeValue(value: any): any {
@@ -226,9 +228,11 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 			} else {
 				// Signal doesn't exist - use proxy setter to create it
 				// But only if signalMap exists (error case: signalMap is null)
+				// If signalMap is null, we can't create new signals, so skip
 				if (signalMap) {
 					;(store as any)[key] = deserializedValue
 				}
+				// If signalMap is null, skip this key (error case)
 			}
 		}
 	}
@@ -245,7 +249,7 @@ export function serializeAllStates(): Record<string, any> {
 	for (const [name, store] of registeredStores.entries()) {
 		try {
 			result[name] = serializeStore(store)
-		} catch (error) {
+		} catch(error) {
 			// Log error but continue with other stores
 			console.error(`Error serializing store "${name}":`, error)
 		}
@@ -278,7 +282,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 
 		try {
 			deserializeStore(store, serializedState)
-		} catch (error) {
+		} catch(error) {
 			// Log error but continue with other stores
 			console.error(`Error deserializing store "${name}":`, error)
 		}
