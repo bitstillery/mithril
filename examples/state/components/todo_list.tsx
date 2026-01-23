@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 interface Todo {
 	id: number

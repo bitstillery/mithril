@@ -1,15 +1,15 @@
-import {MithrilTsxComponent, Vnode, store} from '../../../index'
+import {MithrilTsxComponent, Vnode, state} from '../../../index'
 import m from '../../../index'
 
-// Local store for this component's state
-const state = store({
+// Local state for this component
+const componentState = state({
 	loading: false,
 	data: undefined as string | undefined,
 }, 'AsyncData.state')
 
 export class AsyncData extends MithrilTsxComponent {
 	async oninit(vnode: Vnode) {
-		state.loading = true
+		componentState.loading = true
 
 		// Simulate async data fetching
 		const dataPromise = new Promise<string>((resolve) => {
@@ -20,19 +20,19 @@ export class AsyncData extends MithrilTsxComponent {
 
 		// Server-side: renderToString awaits async oninit before rendering view
 		// Client-side: auto-redraw when async oninit completes (except during hydration)
-		// Store changes automatically trigger redraws, no manual m.redraw() needed
-		state.data = await dataPromise
-		state.loading = false
+		// State changes automatically trigger redraws, no manual m.redraw() needed
+		componentState.data = await dataPromise
+		componentState.loading = false
 	}
 
 	view(vnode: Vnode): any {
-		if (state.loading) {
+		if (componentState.loading) {
 			return <div>Loading...</div>
 		}
 
 		return <div>
 			<h2>Async Data Component</h2>
-			<p>{state.data || 'No data'}</p>
+			<p>{componentState.data || 'No data'}</p>
 			<p>
 				<strong>Note: </strong>
 				This component fetches data asynchronously. On the server, renderToString awaits async oninit before rendering.

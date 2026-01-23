@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode, effect} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 // Component demonstrating effects
 export class Effects extends MithrilTsxComponent {

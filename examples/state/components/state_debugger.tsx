@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 interface Todo {
 	id: number
@@ -8,10 +8,10 @@ interface Todo {
 	completed: boolean
 }
 
-// Store debugger component - shows current store state and updates in real-time
-export class StoreDebugger extends MithrilTsxComponent {
+// State debugger component - shows current state and updates in real-time
+export class StateDebugger extends MithrilTsxComponent {
 	view(vnode: Vnode) {
-		// Access all store properties to track changes (fine-grained reactivity)
+		// Access all state properties to track changes (fine-grained reactivity)
 		// This component will automatically re-render when any accessed signal changes
 		const count = $s.count
 		const userName = $s.user.name
@@ -21,8 +21,8 @@ export class StoreDebugger extends MithrilTsxComponent {
 		const completedTodos = $s.completedTodos
 		const incompleteTodos = $s._incompleteTodos
 
-		// Build store state object for JSON display
-		const storeState = {
+		// Build state object for JSON display
+		const stateObj = {
 			count,
 			user: {
 				name: userName,
@@ -43,7 +43,7 @@ export class StoreDebugger extends MithrilTsxComponent {
 		return (
 			<div style="padding: 20px; border: 2px solid #4CAF50; margin: 10px; background: #f9f9f9; font-family: monospace; position: sticky; top: 20px;">
 				<h2 style="margin-top: 0; color: #4CAF50; display: flex; align-items: center; gap: 8px;">
-					🔍 Store Debugger
+					🔍 State Debugger
 					<span style="font-size: 12px; font-weight: normal; color: #666;">
 						(updates automatically)
 					</span>

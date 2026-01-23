@@ -1,63 +1,63 @@
 // @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
-import {store, clearStoreRegistry, getRegisteredStores} from '../../store'
+import {state, clearStateRegistry, getRegisteredStates} from '../../state'
 import {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from '../../render/ssrState'
 
 describe('SSR State Serialization', () => {
 	beforeEach(() => {
 		// Clear registry before each test to avoid collisions
-		clearStoreRegistry()
+		clearStateRegistry()
 	})
 
-	describe('Store Registration', () => {
-		test('stores register themselves automatically when created with a name', () => {
-			const myStore = store({count: 0}, 'myStore')
-			const registered = getRegisteredStores()
-			expect(registered.has('myStore')).toBe(true)
-			expect(registered.get('myStore')).toBe(myStore)
+	describe('State Registration', () => {
+		test('states register themselves automatically when created with a name', () => {
+			const myState = state({count: 0}, 'myState')
+			const registered = getRegisteredStates()
+			expect(registered.has('myState')).toBe(true)
+			expect(registered.get('myState')).toBe(myState)
 		})
 
-		test('store creation throws error if name is missing', () => {
+		test('state creation throws error if name is missing', () => {
 			expect(() => {
-				store({count: 0})
-			}).toThrow('Store name is required')
+				state({count: 0})
+			}).toThrow('State name is required')
 		})
 
-		test('store creation throws error if name is empty string', () => {
+		test('state creation throws error if name is empty string', () => {
 			expect(() => {
-				store({count: 0}, '')
-			}).toThrow('Store name is required')
+				state({count: 0}, '')
+			}).toThrow('State name is required')
 		})
 
-		test('multiple stores can be registered with different names', () => {
-			const store1 = store({count: 0}, 'store1')
-			const store2 = store({name: 'test'}, 'store2')
-			const registered = getRegisteredStores()
-			expect(registered.has('store1')).toBe(true)
-			expect(registered.has('store2')).toBe(true)
-			expect(registered.get('store1')).toBe(store1)
-			expect(registered.get('store2')).toBe(store2)
+		test('multiple states can be registered with different names', () => {
+			const state1 = state({count: 0}, 'state1')
+			const state2 = state({name: 'test'}, 'state2')
+			const registered = getRegisteredStates()
+			expect(registered.has('state1')).toBe(true)
+			expect(registered.has('state2')).toBe(true)
+			expect(registered.get('state1')).toBe(state1)
+			expect(registered.get('state2')).toBe(state2)
 		})
 
-		test('stores with same name overwrite previous registration (with warning in dev)', () => {
-			store({count: 0}, 'duplicate')
-			const store2 = store({count: 1}, 'duplicate')
-			const registered = getRegisteredStores()
+		test('states with same name overwrite previous registration (with warning in dev)', () => {
+			state({count: 0}, 'duplicate')
+			const state2 = state({count: 1}, 'duplicate')
+			const registered = getRegisteredStates()
 			expect(registered.has('duplicate')).toBe(true)
-			expect(registered.get('duplicate')).toBe(store2) // Last one wins
+			expect(registered.get('duplicate')).toBe(state2) // Last one wins
 		})
 	})
 
-	describe('Store Serialization', () => {
-		test('serializeStore extracts signal values from store', () => {
-			const myStore = store({
+	describe('State Serialization', () => {
+		test('serializeStore extracts signal values from state', () => {
+			const myState = state({
 				count: 0,
 				name: 'test',
 				active: true,
 			}, 'myStore')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			expect(serialized).toEqual({
 				count: 0,
@@ -67,28 +67,28 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('serializeStore skips ComputedSignal instances', () => {
-			const myStore = store({
+			const myState = state({
 				count: 0,
-				doubled: () => myStore.count * 2,
-			}, 'myStore')
+				doubled: () => myState.count * 2,
+			}, 'myState')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			// Computed signal should not be in serialized output
 			expect(serialized.count).toBe(0)
 			expect(serialized.doubled).toBeUndefined()
 		})
 
-		test('serializeStore handles nested stores recursively', () => {
-			const myStore = store({
+		test('serializeStore handles nested states recursively', () => {
+			const myState = state({
 				count: 0,
 				user: {
 					name: 'John',
 					email: 'john@example.com',
 				},
-			}, 'myStore')
+			}, 'myState')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			// Nested store structure is preserved
 			expect(serialized).toEqual({
@@ -101,11 +101,11 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('serializeStore handles arrays', () => {
-			const myStore = store({
+			const myState = state({
 				items: [1, 2, 3],
-			}, 'myStore')
+			}, 'myState')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			expect(serialized).toEqual({
 				items: [1, 2, 3],
@@ -120,7 +120,7 @@ describe('SSR State Serialization', () => {
 				],
 			}, 'myStore')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			// Each object in the array becomes a nested store and is serialized
 			expect(serialized).toEqual({
@@ -132,13 +132,13 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('serializeStore handles null and undefined values', () => {
-			const myStore = store({
+			const myState = state({
 				nullValue: null,
 				undefinedValue: undefined,
 				count: 0,
-			}, 'myStore')
+			}, 'myState')
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			expect(serialized.nullValue).toBe(null)
 			expect(serialized.undefinedValue).toBe(undefined)
@@ -146,14 +146,14 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('serializeStore handles circular references', () => {
-			const myStore = store({
+			const myState = state({
 				name: 'test',
-			}, 'myStore')
+			}, 'myState')
 
 			// Create circular reference
-			myStore.ref = myStore
+			myState.ref = myState
 
-			const serialized = serializeStore(myStore)
+			const serialized = serializeStore(myState)
 
 			// Circular reference is broken (serialized as null)
 			expect(serialized.name).toBe('test')
@@ -161,12 +161,12 @@ describe('SSR State Serialization', () => {
 		})
 	})
 
-	describe('Store Deserialization', () => {
-		test('deserializeStore restores signal values into store', () => {
-			const myStore = store({
+	describe('State Deserialization', () => {
+		test('deserializeStore restores signal values into state', () => {
+			const myState = state({
 				count: 0,
 				name: 'initial',
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = {
 				count: 42,
@@ -189,20 +189,20 @@ describe('SSR State Serialization', () => {
 				newProp: 'new value',
 			}
 
-			deserializeStore(myStore, serialized)
+			deserializeStore(myState, serialized)
 
-			expect(myStore.count).toBe(10)
-			expect(myStore.newProp).toBe('new value')
+			expect(myState.count).toBe(10)
+			expect(myState.newProp).toBe('new value')
 		})
 
-		test('deserializeStore handles nested stores recursively', () => {
-			const myStore = store({
+		test('deserializeStore handles nested states recursively', () => {
+			const myState = state({
 				count: 0,
 				user: {
 					name: 'Initial',
 					email: 'initial@example.com',
 				},
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = {
 				count: 5,
@@ -212,32 +212,32 @@ describe('SSR State Serialization', () => {
 				},
 			}
 
-			deserializeStore(myStore, serialized)
+			deserializeStore(myState, serialized)
 
-			expect(myStore.count).toBe(5)
-			expect(myStore.user.name).toBe('Restored')
-			expect(myStore.user.email).toBe('restored@example.com')
+			expect(myState.count).toBe(5)
+			expect(myState.user.name).toBe('Restored')
+			expect(myState.user.email).toBe('restored@example.com')
 		})
 
 		test('deserializeStore handles arrays', () => {
-			const myStore = store({
+			const myState = state({
 				items: [1, 2, 3],
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = {
 				items: [10, 20, 30],
 			}
 
-			deserializeStore(myStore, serialized)
+			deserializeStore(myState, serialized)
 
-			expect(myStore.items).toEqual([10, 20, 30])
+			expect(myState.items).toEqual([10, 20, 30])
 		})
 
 		test('deserializeStore does not update ComputedSignal values', () => {
-			const myStore = store({
+			const myState = state({
 				count: 0,
-				doubled: () => myStore.count * 2,
-			}, 'myStore')
+				doubled: () => myState.count * 2,
+			}, 'myState')
 
 			// Initial state
 			expect(myStore.doubled).toBe(0)
@@ -263,44 +263,44 @@ describe('SSR State Serialization', () => {
 
 			const allStates = serializeAllStates()
 
-			expect(allStates.store1).toEqual({count: 1})
-			expect(allStates.store2).toEqual({name: 'test'})
+			expect(allStates.state1).toEqual({count: 1})
+			expect(allStates.state2).toEqual({name: 'test'})
 		})
 
 		test('serializeAllStates handles errors gracefully', () => {
-			store({count: 1}, 'goodStore')
-			// Create a bad store that will cause serialization to fail
-			const badStore = store({count: 2}, 'badStore')
-			// Corrupt the store's signalMap
-			badStore.__signalMap = null
+			state({count: 1}, 'goodState')
+			// Create a bad state that will cause serialization to fail
+			const badState = state({count: 2}, 'badState')
+			// Corrupt the state's signalMap
+			badState.__signalMap = null
 
 			const allStates = serializeAllStates()
 
-			// Good store is still serialized
-			expect(allStates.goodStore).toEqual({count: 1})
-			// Bad store is not included (error logged but not thrown)
-			expect(allStates.badStore).toBeUndefined()
+			// Good state is still serialized
+			expect(allStates.goodState).toEqual({count: 1})
+			// Bad state is not included (error logged but not thrown)
+			expect(allStates.badState).toBeUndefined()
 		})
 	})
 
 	describe('Deserializing All States', () => {
-		test('deserializeAllStates restores all stores from serialized data', () => {
-			const store1 = store({count: 0}, 'store1')
-			const store2 = store({name: 'initial'}, 'store2')
+		test('deserializeAllStates restores all states from serialized data', () => {
+			const state1 = state({count: 0}, 'state1')
+			const state2 = state({name: 'initial'}, 'state2')
 
 			const serialized = {
-				store1: {count: 42},
-				store2: {name: 'restored'},
+				state1: {count: 42},
+				state2: {name: 'restored'},
 			}
 
 			deserializeAllStates(serialized)
 
-			expect(store1.count).toBe(42)
-			expect(store2.name).toBe('restored')
+			expect(state1.count).toBe(42)
+			expect(state2.name).toBe('restored')
 		})
 
-		test('deserializeAllStates skips stores not found in registry', () => {
-			const store1 = store({count: 0}, 'store1')
+		test('deserializeAllStates skips states not found in registry', () => {
+			const state1 = state({count: 0}, 'state1')
 
 			const serialized = {
 				store1: {count: 10},
@@ -343,15 +343,15 @@ describe('SSR State Serialization', () => {
 			}, 'AsyncData.state')
 
 			// Simulate async data loading
-			serverStore.data = 'Data loaded from server!'
-			serverStore.loading = false
+			serverState.data = 'Data loaded from server!'
+			serverState.loading = false
 
 			// Serialize on server
 			const serializedState = serializeAllStates()
 
-			// Simulate client-side: create fresh store with same name
-			clearStoreRegistry()
-			const clientStore = store({
+			// Simulate client-side: create fresh state with same name
+			clearStateRegistry()
+			const clientState = state({
 				loading: true,
 				data: undefined,
 			}, 'AsyncData.state')
@@ -359,53 +359,53 @@ describe('SSR State Serialization', () => {
 			// Deserialize on client
 			deserializeAllStates(serializedState)
 
-			// Client store should have server data
-			expect(clientStore.loading).toBe(false)
-			expect(clientStore.data).toBe('Data loaded from server!')
+			// Client state should have server data
+			expect(clientState.loading).toBe(false)
+			expect(clientState.data).toBe('Data loaded from server!')
 		})
 
-		test('multiple stores in SSR flow', () => {
+		test('multiple states in SSR flow', () => {
 			// Server-side
-			store({count: 10}, 'Counter.store')
-			store({user: {name: 'John'}}, 'User.store')
+			state({count: 10}, 'Counter.state')
+			state({user: {name: 'John'}}, 'User.state')
 
 			const serialized = serializeAllStates()
 
 			// Client-side
-			clearStoreRegistry()
-			const clientStore1 = store({count: 0}, 'Counter.store')
-			const clientStore2 = store({user: {name: ''}}, 'User.store')
+			clearStateRegistry()
+			const clientState1 = state({count: 0}, 'Counter.state')
+			const clientState2 = state({user: {name: ''}}, 'User.state')
 
 			deserializeAllStates(serialized)
 
-			expect(clientStore1.count).toBe(10)
-			expect(clientStore2.user.name).toBe('John')
+			expect(clientState1.count).toBe(10)
+			expect(clientState2.user.name).toBe('John')
 		})
 	})
 
 	describe('Edge Cases', () => {
-		test('serializeStore throws error if value is not a store', () => {
+		test('serializeStore throws error if value is not a state', () => {
 			expect(() => {
 				serializeStore({count: 0})
-			}).toThrow('Value is not a store')
+			}).toThrow('Value is not a state')
 		})
 
-		test('deserializeStore throws error if value is not a store', () => {
+		test('deserializeStore throws error if value is not a state', () => {
 			expect(() => {
 				deserializeStore({count: 0}, {count: 1})
-			}).toThrow('Value is not a store')
+			}).toThrow('Value is not a state')
 		})
 
 		test('deserializeStore handles empty serialized data', () => {
-			const myStore = store({count: 0}, 'myStore')
-			deserializeStore(myStore, {})
-			expect(myStore.count).toBe(0) // Unchanged
+			const myState = state({count: 0}, 'myState')
+			deserializeStore(myState, {})
+			expect(myState.count).toBe(0) // Unchanged
 		})
 
 		test('deserializeStore handles null serialized data', () => {
-			const myStore = store({count: 0}, 'myStore')
-			deserializeStore(myStore, null)
-			expect(myStore.count).toBe(0) // Unchanged
+			const myState = state({count: 0}, 'myState')
+			deserializeStore(myState, null)
+			expect(myState.count).toBe(0) // Unchanged
 		})
 	})
 })

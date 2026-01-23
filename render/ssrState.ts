@@ -1,35 +1,35 @@
 import {ComputedSignal} from '../signal'
-import {getRegisteredStores} from '../store'
+import {getRegisteredStates} from '../state'
 
-import type {Store} from '../store'
+import type {State} from '../state'
 
 /**
- * Check if a value is a store (has __isStore flag)
+ * Check if a value is a state (has __isState flag)
  */
-function isStore(value: any): boolean {
-	return value && typeof value === 'object' && (value as any).__isStore === true
+function isState(value: any): boolean {
+	return value && typeof value === 'object' && (value as any).__isState === true
 }
 
 /**
- * Serialize a single store to plain object
- * Extracts signal values by accessing store properties directly
+ * Serialize a single state to plain object
+ * Extracts signal values by accessing state properties directly
  */
-export function serializeStore(store: Store<any>): any {
-	if (!isStore(store)) {
-		throw new Error('Value is not a store')
+export function serializeStore(state: State<any>): any {
+	if (!isState(state)) {
+		throw new Error('Value is not a state')
 	}
 
 	const result: Record<string, any> = {}
 	const visited = new WeakSet<object>()
 	
-	// Add the root store to visited first to detect circular refs
-	visited.add(store)
+	// Add the root state to visited first to detect circular refs
+	visited.add(state)
 	
 	// Check if signalMap exists and is a Map - if not, this is an error case
-	const signalMap = (store as any).__signalMap
+	const signalMap = (state as any).__signalMap
 	if (!signalMap || !(signalMap instanceof Map)) {
-		// Throw error so serializeAllStates can catch it and skip this store
-		throw new Error('Store signalMap is null, undefined, or not a Map instance')
+		// Throw error so serializeAllStates can catch it and skip this state
+		throw new Error('State signalMap is null, undefined, or not a Map instance')
 	}
 
 	function serializeValue(value: any): any {
@@ -52,28 +52,28 @@ export function serializeStore(store: Store<any>): any {
 		// Mark as visited BEFORE processing to detect circular refs
 		visited.add(value)
 
-		// Handle stores (nested stores and arrays)
-		if (isStore(value)) {
+		// Handle states (nested states and arrays)
+		if (isState(value)) {
 			
-			// Check if this is an array store
+			// Check if this is an array state
 			const signals = (value as any).__signals
 			if (signals && Array.isArray(signals)) {
-				// Array store - serialize each element
+				// Array state - serialize each element
 				const arrayResult = signals.map((signal: any) => {
 					if (signal instanceof ComputedSignal) {
 						return undefined
 					}
 					// Get the actual value from the signal
-					// If it's a Signal instance, get its value; otherwise it's already the value (could be a store)
+					// If it's a Signal instance, get its value; otherwise it's already the value (could be a state)
 					let sigValue: any
 					// Check if it's a Signal instance (has value property and is an instance of Signal/ComputedSignal)
-					if (signal && typeof signal === 'object' && 'value' in signal && !isStore(signal)) {
+					if (signal && typeof signal === 'object' && 'value' in signal && !isState(signal)) {
 						sigValue = signal.value
 					} else {
-					// It's either a primitive or a store (nested object)
+					// It's either a primitive or a state (nested object)
 						sigValue = signal
 					}
-					// If sigValue is a store (nested object in array), serialize it
+					// If sigValue is a state (nested object in array), serialize it
 					// This will use __originalKeys to filter parent keys
 					const serialized = serializeValue(sigValue)
 					// If circular reference was detected, it returns null - keep it
@@ -82,17 +82,17 @@ export function serializeStore(store: Store<any>): any {
 				return arrayResult
 			}
 			
-			// Object store - serialize by accessing properties directly through proxy
-			// Use originalKeys to filter out parent store keys
+			// Object state - serialize by accessing properties directly through proxy
+			// Use originalKeys to filter out parent state keys
 			const nestedResult: Record<string, any> = {}
 			const nestedOriginalKeys = (value as any).__originalKeys as Set<string> | undefined
 			
 			for (const key in value) {
-				if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
+				if (key.startsWith('$') || key === '__isState' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
 					continue
 				}
 				
-				// For nested stores, only serialize keys that belong to this store (not parent keys)
+				// For nested states, only serialize keys that belong to this state (not parent keys)
 				if (nestedOriginalKeys && !nestedOriginalKeys.has(key)) {
 					continue
 				}
@@ -137,23 +137,23 @@ export function serializeStore(store: Store<any>): any {
 		return objResult
 	}
 
-	// Serialize by iterating over store properties directly
-	// For top-level store, serialize all keys (including dynamically added ones)
+	// Serialize by iterating over state properties directly
+	// For top-level state, serialize all keys (including dynamically added ones)
 	// Use $ prefix to check if property is a ComputedSignal
-	for (const key in store) {
-		if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
+	for (const key in state) {
+		if (key.startsWith('$') || key === '__isState' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
 			continue
 		}
 		
 		try {
 			// Check if this is a ComputedSignal by accessing $key
-			const signal = (store as any)['$' + key]
+			const signal = (state as any)['$' + key]
 			if (signal instanceof ComputedSignal) {
 				// Skip computed signals (they're functions, recreated on client)
 				continue
 			}
 			
-			const value = (store as any)[key]
+			const value = (state as any)[key]
 			result[key] = serializeValue(value)
 		} catch {
 			// Skip if access fails
@@ -165,22 +165,22 @@ export function serializeStore(store: Store<any>): any {
 }
 
 /**
- * Deserialize state into a store
+ * Deserialize state into a state
  * Restores signal values from serialized data
  */
-export function deserializeStore(store: Store<any>, serialized: any): void {
-	if (!isStore(store)) {
-		throw new Error('Value is not a store')
+export function deserializeStore(state: State<any>, serialized: any): void {
+	if (!isState(state)) {
+		throw new Error('Value is not a state')
 	}
 
 	if (!serialized || typeof serialized !== 'object') {
 		return
 	}
 
-	const signalMap = (store as any).__signalMap as Map<string, any>
+	const signalMap = (state as any).__signalMap as Map<string, any>
 	if (!signalMap || !(signalMap instanceof Map)) {
-		// Throw error so deserializeAllStates can catch it and skip this store
-		throw new Error('Store signalMap is null, undefined, or not a Map instance')
+		// Throw error so deserializeAllStates can catch it and skip this state
+		throw new Error('State signalMap is null, undefined, or not a Map instance')
 	}
 
 	function deserializeValue(value: any): any {
@@ -199,10 +199,10 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 			return value.map(item => deserializeValue(item))
 		}
 
-		// Handle plain objects (could be nested stores)
-		// Check if this looks like a serialized store (has store-like structure)
-		// For now, treat all objects as plain objects - nested stores will be handled
-		// when they're assigned to store properties
+		// Handle plain objects (could be nested states)
+		// Check if this looks like a serialized state (has state-like structure)
+		// For now, treat all objects as plain objects - nested states will be handled
+		// when they're assigned to state properties
 		const objResult: Record<string, any> = {}
 		for (const key in value) {
 			if (Object.prototype.hasOwnProperty.call(value, key)) {
@@ -218,7 +218,7 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 			const serializedValue = serialized[key]
 			const deserializedValue = deserializeValue(serializedValue)
 
-			// Check if signal exists in store
+			// Check if signal exists in state
 			if (signalMap && signalMap.has(key)) {
 				const signal = signalMap.get(key)
 				// Don't update ComputedSignal (they're read-only)
@@ -230,7 +230,7 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 				// But only if signalMap exists (error case: signalMap is null)
 				// If signalMap is null, we can't create new signals, so skip
 				if (signalMap) {
-					;(store as any)[key] = deserializedValue
+					;(state as any)[key] = deserializedValue
 				}
 				// If signalMap is null, skip this key (error case)
 			}
@@ -239,19 +239,19 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 }
 
 /**
- * Serialize all registered stores
- * Returns a Record mapping store names to serialized state
+ * Serialize all registered states
+ * Returns a Record mapping state names to serialized state
  */
 export function serializeAllStates(): Record<string, any> {
-	const registeredStores = getRegisteredStores()
+	const registeredStates = getRegisteredStates()
 	const result: Record<string, any> = {}
 
-	for (const [name, store] of registeredStores.entries()) {
+	for (const [name, state] of registeredStates.entries()) {
 		try {
-			result[name] = serializeStore(store)
+			result[name] = serializeStore(state)
 		} catch(error) {
-			// Log error but continue with other stores
-			console.error(`Error serializing store "${name}":`, error)
+			// Log error but continue with other states
+			console.error(`Error serializing state "${name}":`, error)
 		}
 	}
 
@@ -260,31 +260,31 @@ export function serializeAllStates(): Record<string, any> {
 
 /**
  * Deserialize all states from serialized data
- * Restores state into registered stores
+ * Restores state into registered states
  */
 export function deserializeAllStates(serialized: Record<string, any>): void {
 	if (!serialized || typeof serialized !== 'object') {
 		return
 	}
 
-	const registeredStores = getRegisteredStores()
+	const registeredStates = getRegisteredStates()
 
 	for (const [name, serializedState] of Object.entries(serialized)) {
-		const store = registeredStores.get(name)
+		const state = registeredStates.get(name)
 		
-		if (!store) {
-			// Store not registered on client - warn in development
+		if (!state) {
+			// State not registered on client - warn in development
 			if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-				console.warn(`Store "${name}" not found in registry. Skipping deserialization.`)
+				console.warn(`State "${name}" not found in registry. Skipping deserialization.`)
 			}
 			continue
 		}
 
 		try {
-			deserializeStore(store, serializedState)
+			deserializeStore(state, serializedState)
 		} catch(error) {
-			// Log error but continue with other stores
-			console.error(`Error deserializing store "${name}":`, error)
+			// Log error but continue with other states
+			console.error(`Error deserializing state "${name}":`, error)
 		}
 	}
 }

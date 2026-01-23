@@ -2,7 +2,7 @@
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import {signal, computed} from '../../signal'
-import {store as storeFn} from '../../store'
+import {state} from '../../state'
 import m from '../../index'
 import domMock from '../../test-utils/domMock'
 import throttleMock from '../../test-utils/throttleMock'
@@ -186,8 +186,8 @@ describe('Store Integration - Component Redraws', () => {
 		}
 	})
 
-	test('component redraws when store property changes', () => {
-		const $s = storeFn({count: 0}, 'signalIntegration.storeProperty')
+	test('component redraws when state property changes', () => {
+		const $s = state({count: 0}, 'signalIntegration.stateProperty')
 		let renderCount = 0
 
 		const Component = {
@@ -208,12 +208,12 @@ describe('Store Integration - Component Redraws', () => {
 		expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
 	})
 
-	test('component redraws when nested store property changes', () => {
-		const $s = storeFn({
+	test('component redraws when nested state property changes', () => {
+		const $s = state({
 			user: {
 				name: 'John',
 			},
-		}, 'signalIntegration.nestedStoreProperty')
+		}, 'signalIntegration.nestedStateProperty')
 		let renderCount = 0
 
 		const Component = {
@@ -235,7 +235,7 @@ describe('Store Integration - Component Redraws', () => {
 	})
 
 	test('component redraws when computed property changes', () => {
-		const $s = storeFn({
+		const $s = state({
 			count: 0,
 			doubled: () => $s.count * 2,
 		}, 'signalIntegration.computedProperty')
@@ -260,7 +260,7 @@ describe('Store Integration - Component Redraws', () => {
 	})
 
 	test('only component using changed property redraws', () => {
-		const $s = storeFn({
+		const $s = state({
 			count: 0,
 			name: 'test',
 		}, 'signalIntegration.multipleComponents')

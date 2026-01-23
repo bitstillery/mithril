@@ -1,4 +1,4 @@
-import {store} from '../../index'
+import {state} from '../../index'
 
 interface Todo {
 	id: number
@@ -6,9 +6,9 @@ interface Todo {
 	completed: boolean
 }
 
-// Example store setup
-// Note: store() requires a name parameter for SSR serialization support
-export const $s = store({
+// Example state setup
+// Note: state() requires a name parameter for SSR serialization support
+export const $s = state({
 	count: 0,
 	user: {
 		name: 'John Doe',
@@ -23,4 +23,4 @@ export const $s = store({
 	completedTodos: () => $s.todos.filter((t: Todo) => t.completed).length,
 	// Computed with _ prefix (backward compatibility)
 	_incompleteTodos: () => $s.todos.filter((t: Todo) => !t.completed).length,
-}, 'store.example')
+}, 'state.example')

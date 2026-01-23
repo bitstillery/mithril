@@ -1,12 +1,12 @@
 // @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
-import {store} from '../../store'
+import {state} from '../../state'
 import {Signal} from '../../signal'
 
-describe('store', () => {
-	test('creates store with initial values', () => {
-		const s = store({count: 0, name: 'test'}, 'testStore.initialValues')
+describe('state', () => {
+	test('creates state with initial values', () => {
+		const s = state({count: 0, name: 'test'}, 'testState.initialValues')
 		expect(s.count).toBe(0)
 		expect(s.name).toBe('test')
 	})
@@ -18,12 +18,12 @@ describe('store', () => {
 	})
 
 	test('handles nested objects', () => {
-		const s = store({
+		const s = state({
 			user: {
 				name: 'John',
 				email: 'john@example.com',
 			},
-		}, 'testStore.nestedObjects')
+		}, 'testState.nestedObjects')
 		expect(s.user.name).toBe('John')
 		expect(s.user.email).toBe('john@example.com')
 		s.user.name = 'Jane'
@@ -31,9 +31,9 @@ describe('store', () => {
 	})
 
 	test('handles arrays', () => {
-		const s = store({
+		const s = state({
 			items: [1, 2, 3],
-		}, 'testStore.arrays')
+		}, 'testState.arrays')
 		expect(s.items.length).toBe(3)
 		expect(s.items[0]).toBe(1)
 		s.items[0] = 10
@@ -41,27 +41,27 @@ describe('store', () => {
 	})
 
 	test('converts function properties to computed signals', () => {
-		const s = store({
+		const s = state({
 			count: 0,
 			doubled: () => s.count * 2,
-		}, 'testStore.computedSignals')
+		}, 'testState.computedSignals')
 		expect(s.doubled).toBe(0)
 		s.count = 5
 		expect(s.doubled).toBe(10)
 	})
 
 	test('supports _ prefix for computed properties (backward compatibility)', () => {
-		const s = store({
+		const s = state({
 			count: 0,
 			_doubled: () => s.count * 2,
-		}, 'testStore.underscorePrefix')
+		}, 'testState.underscorePrefix')
 		expect(s._doubled).toBe(0)
 		s.count = 5
 		expect(s._doubled).toBe(10)
 	})
 
 	test('$ prefix returns raw signal object', () => {
-		const s = store({count: 0}, 'testStore.dollarPrefix')
+		const s = state({count: 0}, 'testState.dollarPrefix')
 		const countSignal = s.$count
 		expect(countSignal).toBeInstanceOf(Signal)
 		expect(countSignal.value).toBe(0)
@@ -70,11 +70,11 @@ describe('store', () => {
 	})
 
 	test('$ prefix works for nested properties', () => {
-		const s = store({
+		const s = state({
 			user: {
 				name: 'John',
 			},
-		}, 'testStore.dollarPrefixNested')
+		}, 'testState.dollarPrefixNested')
 		const nameSignal = s.user.$name
 		expect(nameSignal).toBeInstanceOf(Signal)
 		expect(nameSignal.value).toBe('John')
@@ -94,7 +94,7 @@ describe('store', () => {
 	})
 
 	test('pre-initializes signals for immediate $ access', () => {
-		const s = store({count: 0}, 'testStore.preInitialize')
+		const s = state({count: 0}, 'testState.preInitialize')
 		// Should work even if count hasn't been accessed yet
 		const countSignal = s.$count
 		expect(countSignal).toBeInstanceOf(Signal)
@@ -111,7 +111,7 @@ describe('store', () => {
 	})
 
 	test('handles array push/pop operations', () => {
-		const s = store({items: [1, 2, 3]}, 'testStore.arrayOperations')
+		const s = state({items: [1, 2, 3]}, 'testState.arrayOperations')
 		// Note: Array methods need to be handled via assignment for now
 		// Direct push/pop may not work due to Proxy wrapping
 		s.items = [...s.items, 4]
@@ -122,9 +122,9 @@ describe('store', () => {
 	})
 
 	test('requires name parameter', () => {
-		// Store name is required for SSR serialization
+		// State name is required for SSR serialization
 		expect(() => {
-			store({count: 0})
-		}).toThrow('Store name is required')
+			state({count: 0})
+		}).toThrow('State name is required')
 	})
 })

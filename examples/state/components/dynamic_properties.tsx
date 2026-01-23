@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 // Component demonstrating dynamic property assignment
 export class DynamicProperties extends MithrilTsxComponent {

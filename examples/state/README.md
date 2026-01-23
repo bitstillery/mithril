@@ -1,16 +1,16 @@
-# Mithril Store Example
+# Mithril State Example
 
-This example comprehensively demonstrates Mithril's signal-based store system - one of the most important features of the new Mithril implementation. The store provides fine-grained reactivity and is the foundation for SSR state serialization.
+This example comprehensively demonstrates Mithril's signal-based state system - one of the most important features of the new Mithril implementation. The state provides fine-grained reactivity and is the foundation for SSR state serialization.
 
 ## Features Demonstrated
 
-### Core Store Features
+### Core State Features
 
-1. **Basic Signal Access**: Direct property access (`store.property`)
-2. **Raw Signal Access**: `$` prefix convention (`store.$property`) to get Signal instances
+1. **Basic Signal Access**: Direct property access (`state.property`)
+2. **Raw Signal Access**: `$` prefix convention (`state.$property`) to get Signal instances
 3. **Computed Properties**: Function properties automatically become ComputedSignal
-4. **Nested Stores**: Nested objects become reactive stores automatically
-5. **Arrays with Stores**: Arrays containing objects become stores
+4. **Nested States**: Nested objects become reactive states automatically
+5. **Arrays with States**: Arrays containing objects become states
 6. **Dynamic Properties**: Properties can be added at runtime
 
 ### Signal API Methods
@@ -33,13 +33,13 @@ bun run dev
 
 Then open `index.html` in your browser.
 
-## Store Setup
+## State Setup
 
-The store (`store.ts`) demonstrates:
-- **Required name parameter**: `store(initial, 'store.example')` - name is required for SSR serialization support
+The state (`state.ts`) demonstrates:
+- **Required name parameter**: `state(initial, 'state.example')` - name is required for SSR serialization support
 - Primitive values (`count`)
-- Nested objects (`user`) - automatically becomes nested store
-- Arrays (`todos`) - array elements become stores
+- Nested objects (`user`) - automatically becomes nested state
+- Arrays (`todos`) - array elements become states
 - Computed properties:
   - Function properties: `totalTodos: () => ...` (automatically computed)
   - `_` prefix: `_incompleteTodos: () => ...` (backward compatibility)
@@ -52,13 +52,13 @@ The store (`store.ts`) demonstrates:
 - **UserProfile**: User profile with nested signal updates
 
 ### Advanced Features
-- **NestedAccess**: Demonstrates accessing nested store properties and their signals
+- **NestedAccess**: Demonstrates accessing nested state properties and their signals
 - **ArraySignals**: Shows how to access signals for array elements via `$` prefix
 - **DynamicProperties**: Demonstrates adding properties dynamically at runtime
 - **SignalPropExample**: Shows passing raw signals as component props
 - **SignalMethods**: Demonstrates `subscribe()`, `watch()`, and `peek()` methods
 - **Effects**: Shows reactive side effects with `effect()` function
-- **StoreDebugger**: Real-time store state viewer (updates automatically)
+- **StateDebugger**: Real-time state viewer (updates automatically)
 
 ## Key Concepts
 
@@ -82,7 +82,7 @@ The store (`store.ts`) demonstrates:
 - **effect()**: Create reactive side effects
 
 ### Important Notes
-- Store name is required for SSR support (but SSR is optional)
-- Nested stores get their own `signalMap` (prevents cross-contamination)
+- State name is required for SSR support (but SSR is optional)
+- Nested states get their own `signalMap` (prevents cross-contamination)
 - Computed signals are skipped during SSR serialization (recreated on client)
 - Dynamic properties automatically become reactive signals

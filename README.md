@@ -10,19 +10,19 @@ Mithril.js uses global `m.redraw()`—one state change updates **all** component
 
 ## What Makes This Different
 
-### Signal Proxy Store
+### Signal State
 
 Proxy-based reactive state with automatic dependency tracking. No manual redraw calls.
 
 ```tsx
-import { store } from '@bitstillery/mithril'
+import { state } from '@bitstillery/mithril'
 
-const $s = store({
+const $s = state({
   count: 0,
   user: { name: 'John' },
   todos: [],
   totalTodos: () => $s.todos.length, // Computed
-})
+}, 'my.state') // Name required for SSR serialization
 
 // Component only re-renders when $s.count changes
 class Counter extends MithrilTsxComponent {
@@ -60,7 +60,8 @@ m.mount(root, App)
 
 Custom signals implementation—no Preact Signals or other packages. Two APIs:
 - **Raw signals**: `signal()`, `computed()`, `effect()`
-- **Proxy store**: `store()` - DeepSignal-inspired API
+- **Reactive state**: `state()` - DeepSignal-inspired API
+- **Persistence**: `Store` class - Load/save state to localStorage/sessionStorage
 
 ## Quick Start
 
@@ -69,9 +70,9 @@ bun add @bitstillery/mithril
 ```
 
 ```tsx
-import m, { store, MithrilTsxComponent } from '@bitstillery/mithril'
+import m, { state, MithrilTsxComponent } from '@bitstillery/mithril'
 
-const $s = store({ count: 0 })
+const $s = state({ count: 0 }, 'app.state') // Name required for SSR
 
 class App extends MithrilTsxComponent {
   view() {
@@ -90,7 +91,7 @@ m.mount(document.body, App)
 ## Examples
 
 - **SSR**: [`examples/ssr/`](examples/ssr/) - Server-side rendering with hydration
-- **Store**: [`examples/store/`](examples/store/) - Signals and state management patterns
+- **State**: [`examples/state/`](examples/state/) - Signals and state management patterns
 
 ## Differences from Mithril.js
 

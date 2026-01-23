@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 // User profile component demonstrating nested signals
 export class UserProfile extends MithrilTsxComponent {

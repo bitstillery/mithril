@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 // Simple counter component demonstrating signal usage
 export class Counter extends MithrilTsxComponent {

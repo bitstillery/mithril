@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode, Signal} from '../../../index'
 import m from '../../../index'
-import {$s} from '../store'
+import {$s} from '../state'
 
 // Component demonstrating array signal access via $ prefix
 export class ArraySignals extends MithrilTsxComponent {

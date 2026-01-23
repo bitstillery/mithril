@@ -10,7 +10,8 @@ import VnodeFactory, {MithrilTsxComponent} from './render/vnode'
 import censor from './util/censor'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
-import {store} from './store'
+import {state, watch} from './state'
+import {Store} from './store'
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
@@ -78,8 +79,11 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 })
 
 // Export signals API
-export {signal, computed, effect, Signal, ComputedSignal, store}
-export type {Store} from './store'
+export {signal, computed, effect, Signal, ComputedSignal, state, watch}
+export type {State} from './state'
+
+// Export Store class
+export {Store} from './store'
 
 // Export SSR utilities
 export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './render/ssrState'
