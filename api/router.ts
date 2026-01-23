@@ -13,6 +13,9 @@ export interface RouteResolver<Attrs = Record<string, any>, State = any> {
 	render?: (vnode: VnodeType<Attrs, State>) => VnodeType
 }
 
+export type SSRState = Record<string, any>
+export type SSRResult = string | {html: string, state: SSRState}
+
 export interface Route {
 	(path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
 	(path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
@@ -26,9 +29,9 @@ export interface Route {
 	resolve: (
 		pathname: string,
 		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
-		renderToString: (vnodes: any) => Promise<string>,
+		renderToString: (vnodes: any) => Promise<SSRResult>,
 		prefix?: string,
-	) => Promise<string>
+	) => Promise<SSRResult>
 }
 
 interface MountRedraw {
@@ -366,7 +369,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							// Pass matchedRoute path in attrs so Layout component can use it for SSR
 							const routeAttrs = {...data.params, routePath: matchedRoute}
 							const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
-							return await renderToString(resolver.render(vnode))
+							const result = await renderToString(resolver.render(vnode))
+						// Handle both string (backward compatibility) and {html, state} return types
+						return typeof result === 'string' ? result : result
 						}
 					}
 
@@ -378,7 +383,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					)
 					if (isComponentType) {
 						const vnode = hyperscript(payload as ComponentType, data.params)
-						return await renderToString(vnode)
+						const result = await renderToString(vnode)
+						// Handle both string (backward compatibility) and {html, state} return types
+						return typeof result === 'string' ? result : result
 					}
 
 					// Fallback to div

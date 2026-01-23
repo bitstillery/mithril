@@ -31,13 +31,21 @@ async function getProcessedTemplate(): Promise<string> {
 async function createSSRResponse(pathname: string): Promise<Response> {
 	try {
 		// Use isomorphic router to resolve route and render SSR content
-		const appHtml = await m.route.resolve(pathname, routes, m.renderToString)
+		const result = await m.route.resolve(pathname, routes, m.renderToString)
+		
+		// renderToString now returns {html, state}
+		const appHtml = typeof result === 'string' ? result : result.html
+		const serializedState = typeof result === 'string' ? {} : result.state
 
 		// Get Bun's processed HTML template (with HMR scripts)
 		let html = await getProcessedTemplate()
 
 		// Replace the empty app div with server-rendered HTML
 		html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
+
+		// Inject serialized state into HTML
+		const stateScript = `<script id="__SSR_STATE__" type="application/json">${JSON.stringify(serializedState)}</script>`
+		html = html.replace('</head>', `${stateScript}</head>`)
 
 		// Return full HTML document with SSR content
 		return new Response(html, {

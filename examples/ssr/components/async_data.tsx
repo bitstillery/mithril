@@ -5,7 +5,7 @@ import m from '../../../index'
 const state = store({
 	loading: false,
 	data: undefined as string | undefined,
-})
+}, 'AsyncData.state')
 
 export class AsyncData extends MithrilTsxComponent {
 	async oninit(vnode: Vnode) {

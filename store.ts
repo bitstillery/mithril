@@ -25,10 +25,53 @@ function toSignal<T>(value: T): Signal<T> | ComputedSignal<T> {
 	return signal(value)
 }
 
+// State registry for SSR serialization
+// Stores register themselves here when created
+const stateRegistry = new Map<string, any>()
+
+/**
+ * Register a store for SSR serialization
+ * Called automatically when store is created with a name
+ */
+export function registerStore(name: string, store: any): void {
+	if (!name || typeof name !== 'string' || name.trim() === '') {
+		throw new Error('Store name is required and must be a non-empty string')
+	}
+	
+	// Warn in development if name collision detected
+	if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
+		if (stateRegistry.has(name)) {
+			console.warn(`Store name collision detected: "${name}". Last registered store will be used.`)
+		}
+	}
+	
+	stateRegistry.set(name, store)
+}
+
+/**
+ * Get all registered stores
+ */
+export function getRegisteredStores(): Map<string, any> {
+	return stateRegistry
+}
+
+/**
+ * Clear the state registry (useful for testing or after serialization)
+ */
+export function clearStoreRegistry(): void {
+	stateRegistry.clear()
+}
+
 /**
  * Deep signal store - wraps objects/arrays with Proxy to make them reactive
+ * @param initial - Initial state object
+ * @param name - Required name for SSR serialization (must be non-empty string)
  */
-export function store<T extends Record<string, any>>(initial: T): Store<T> {
+export function store<T extends Record<string, any>>(initial: T, name: string): Store<T> {
+	// Validate name parameter
+	if (!name || typeof name !== 'string' || name.trim() === '') {
+		throw new Error('Store name is required and must be a non-empty string')
+	}
 	const signalMap = new Map<string, Signal<any> | ComputedSignal<any>>()
 	const storeCache = new WeakMap<object, any>()
 
@@ -303,6 +346,9 @@ export function store<T extends Record<string, any>>(initial: T): Store<T> {
 			}
 		}
 	}
+	
+	// Register store for SSR serialization
+	registerStore(name, wrapped)
 	
 	return wrapped
 }

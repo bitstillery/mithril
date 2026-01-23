@@ -81,6 +81,9 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 export {signal, computed, effect, Signal, ComputedSignal, store}
 export type {Store} from './store'
 
+// Export SSR utilities
+export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './render/ssrState'
+
 // Export component and vnode types
 export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
 // Export MithrilTsxComponent as a value (class) so it can be extended at runtime
