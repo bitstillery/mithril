@@ -1,6 +1,12 @@
 import {state, State} from './state'
+import {serializeStore} from './render/ssrState'
+import {ComputedSignal} from './signal'
 
 // Utility functions for Store class
+function isState(value: any): boolean {
+	return value && typeof value === 'object' && (value as any).__isState === true
+}
+
 function is_object(v: any): boolean {
 	return v && typeof v === 'object' && !Array.isArray(v)
 }
@@ -49,6 +55,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	}
 	private lookup_verify_interval: number | null = null
 	private lookup_ttl: number
+	private computedPropertiesSetup?: () => void
 
 	constructor(options: {lookup_ttl?: number} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
 		this.lookup_ttl = options.lookup_ttl || DEFAULT_LOOKUP_TTL
@@ -197,9 +204,19 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		
 		// Update the state instance by assigning all properties recursively
 		// This ensures nested objects are properly updated in the reactive state
+		// Note: We skip function properties (computed properties) as they're not serialized
 		function updateState(target: any, source: any) {
 			for (const key in source) {
 				if (Object.prototype.hasOwnProperty.call(source, key)) {
+					// Skip function properties - they're computed properties that should be set separately
+					if (typeof source[key] === 'function') {
+						continue
+					}
+					// Skip if target already has a function at this key (computed property)
+					// This prevents overwriting computed properties that were set before load()
+					if (typeof target[key] === 'function') {
+						continue
+					}
 					if (is_object(source[key]) && is_object(target[key])) {
 						updateState(target[key], source[key])
 					} else {
@@ -209,13 +226,44 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 			}
 		}
 		updateState(this.stateInstance, final_state)
+		
+		// Re-setup computed properties after load (they're not serialized)
+		// This ensures computed properties are available even after reloading from storage
+		if (this.computedPropertiesSetup) {
+			this.computedPropertiesSetup()
+		}
+	}
+	
+	/**
+	 * Register a function to set up computed properties after each load()
+	 * This ensures computed properties are always available, even after reloading from storage
+	 */
+	setupComputedProperties(setupFn: () => void): void {
+		this.computedPropertiesSetup = setupFn
+		// Call immediately to set up computed properties for current state
+		setupFn()
 	}
 
 	save() {
-		// Create a plain object copy of state for blueprint (to avoid proxy issues)
-		const statePlain = JSON.parse(JSON.stringify(this.stateInstance))
+		// Use SSR serialization which properly handles State objects and skips ComputedSignal properties
+		// This is the same mechanism used for SSR, ensuring consistency
+		const statePlain = serializeStore(this.stateInstance)
 		this.set('store', this.blueprint(statePlain, copy_object(this.templates.persistent)))
-		this.set_session('store', this.blueprint((statePlain as any).session || {}, copy_object(this.templates.session)))
+		
+		// Serialize session state if it exists
+		const sessionState = (this.stateInstance as any).session
+		if (sessionState) {
+			// Check if session is a State object
+			if (isState(sessionState)) {
+				const sessionPlain = serializeStore(sessionState)
+				this.set_session('store', this.blueprint(sessionPlain, copy_object(this.templates.session)))
+			} else {
+				// Plain object session
+				this.set_session('store', this.blueprint(sessionState, copy_object(this.templates.session)))
+			}
+		} else {
+			this.set_session('store', this.blueprint({} as any, copy_object(this.templates.session)))
+		}
 	}
 
 	set(key: string, item: object): void {
