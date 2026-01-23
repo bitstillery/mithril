@@ -187,7 +187,7 @@ describe('Store Integration - Component Redraws', () => {
 	})
 
 	test('component redraws when store property changes', () => {
-		const $s = storeFn({count: 0})
+		const $s = storeFn({count: 0}, 'signalIntegration.storeProperty')
 		let renderCount = 0
 
 		const Component = {
@@ -213,7 +213,7 @@ describe('Store Integration - Component Redraws', () => {
 			user: {
 				name: 'John',
 			},
-		})
+		}, 'signalIntegration.nestedStoreProperty')
 		let renderCount = 0
 
 		const Component = {
@@ -238,7 +238,7 @@ describe('Store Integration - Component Redraws', () => {
 		const $s = storeFn({
 			count: 0,
 			doubled: () => $s.count * 2,
-		})
+		}, 'signalIntegration.computedProperty')
 		let renderCount = 0
 
 		const Component = {
@@ -263,7 +263,7 @@ describe('Store Integration - Component Redraws', () => {
 		const $s = storeFn({
 			count: 0,
 			name: 'test',
-		})
+		}, 'signalIntegration.multipleComponents')
 
 		let renderCount1 = 0
 		let renderCount2 = 0
