@@ -299,6 +299,33 @@ export class MyComponent {
 6. **Phase 6**: Update example component to use named stores
 7. **Phase 7**: Test and refine
 
+## Implementation Findings
+
+### Critical Store Bug Fixed
+
+**Nested Store SignalMap Isolation**: Initial implementation had nested stores sharing parent's `signalMap` via closure, causing property access to return wrong values (e.g., `store.users[1].name` returning `store.users[0].name`). Fixed by creating separate `signalMap` for each nested store via `parentSignalMap` parameter in `initializeSignals()`.
+
+**Impact**: This bug affected all nested stores, not just SSR serialization. Fix ensures stores work correctly in all contexts.
+
+### Serialization Implementation Details
+
+**ComputedSignal Detection**: Must access `store.$key` (returns signal instance) not `store[key]` (returns computed value) to detect ComputedSignal instances. Proxy's `$` prefix convention provides access to raw signals.
+
+**Original Keys Tracking**: Added `__originalKeys` Set to each store proxy to distinguish nested store keys from parent keys during serialization. Critical because `Object.keys(nestedStore)` includes parent keys due to shared signalMap structure.
+
+**Circular Reference Handling**: Root store must be added to `visited` WeakSet before serializing properties to detect self-references correctly.
+
+**Array Store Serialization**: Stores in arrays are stored directly in `__signals` array (not wrapped in Signal instances). Serialization checks `isStore(signal)` to distinguish stores from Signal instances before accessing `.value`.
+
+**Error Handling**: Proxy's `__signalMap` getter checks for explicit null values (set via `Reflect.set`) to support error testing. Setting `__signalMap = null` on proxy creates a signal property, requiring special handling in getter.
+
+### Testing Insights
+
+- 28 comprehensive tests covering all edge cases
+- Error handling tests revealed proxy behavior nuances
+- Nested store tests validated signalMap isolation fix
+- All 413 tests across codebase passing after fixes
+
 ## References
 
 - ADR-0001: SSR Hydration Support
