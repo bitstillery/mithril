@@ -1,5 +1,6 @@
-import Vnode from './vnode'
 import {setCurrentComponent, clearCurrentComponent} from '../signal'
+
+import Vnode from './vnode'
 
 import type {Vnode as VnodeType, Children} from '../index'
 

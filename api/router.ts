@@ -27,7 +27,7 @@ export interface Route {
 		pathname: string,
 		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
 		renderToString: (vnodes: any) => Promise<string>,
-		prefix?: string
+		prefix?: string,
 	) => Promise<string>
 }
 
@@ -324,66 +324,66 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		try {
 			// Compile routes (same logic as in route() function)
 			const compiled = Object.keys(routes).map(function(routePath) {
-			if (routePath[0] !== '/') throw new SyntaxError('Routes must start with a \'/\'.')
-			if ((/:([^\/\.-]+)(\.{3})?:/).test(routePath)) {
-				throw new SyntaxError('Route parameter names must be separated with either \'/\', \'.\', or \'-\'.')
-			}
-			// Handle both formats: direct component/resolver or {component: ...}
-			const routeValue = routes[routePath]
-			const component = (routeValue && typeof routeValue === 'object' && 'component' in routeValue)
-				? (routeValue as {component: ComponentType | RouteResolver}).component
-				: routeValue as ComponentType | RouteResolver
-			return {
-				route: routePath,
-				component: component,
-				check: compileTemplate(routePath),
-			}
-		})
+				if (routePath[0] !== '/') throw new SyntaxError('Routes must start with a \'/\'.')
+				if ((/:([^\/\.-]+)(\.{3})?:/).test(routePath)) {
+					throw new SyntaxError('Route parameter names must be separated with either \'/\', \'.\', or \'-\'.')
+				}
+				// Handle both formats: direct component/resolver or {component: ...}
+				const routeValue = routes[routePath]
+				const component = (routeValue && typeof routeValue === 'object' && 'component' in routeValue)
+					? (routeValue as {component: ComponentType | RouteResolver}).component
+					: routeValue as ComponentType | RouteResolver
+				return {
+					route: routePath,
+					component: component,
+					check: compileTemplate(routePath),
+				}
+			})
 
-		// Parse pathname
-		const path = decodeURIComponentSafe(pathname).slice(prefix.length)
-		const data = parsePathname(path)
+			// Parse pathname
+			const path = decodeURIComponentSafe(pathname).slice(prefix.length)
+			const data = parsePathname(path)
 
-		// Find matching route
-		for (const {route: matchedRoute, component, check} of compiled) {
-			if (check(data)) {
-				let payload = component
+			// Find matching route
+			for (const {route: matchedRoute, component, check} of compiled) {
+				if (check(data)) {
+					let payload = component
 
-				// Handle RouteResolver
-				if (payload && typeof payload === 'object' && ('onmatch' in payload || 'render' in payload)) {
-					const resolver = payload as RouteResolver
-					if (resolver.onmatch) {
-						const result = resolver.onmatch(data.params, pathname, matchedRoute)
-						if (result instanceof Promise) {
-							payload = await result
-						} else if (result !== undefined) {
-							payload = result
+					// Handle RouteResolver
+					if (payload && typeof payload === 'object' && ('onmatch' in payload || 'render' in payload)) {
+						const resolver = payload as RouteResolver
+						if (resolver.onmatch) {
+							const result = resolver.onmatch(data.params, pathname, matchedRoute)
+							if (result instanceof Promise) {
+								payload = await result
+							} else if (result !== undefined) {
+								payload = result
+							}
+						}
+
+						// If resolver has render, use it
+						if (resolver.render) {
+							// Pass matchedRoute path in attrs so Layout component can use it for SSR
+							const routeAttrs = {...data.params, routePath: matchedRoute}
+							const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
+							return await renderToString(resolver.render(vnode))
 						}
 					}
 
-					// If resolver has render, use it
-					if (resolver.render) {
-						// Pass matchedRoute path in attrs so Layout component can use it for SSR
-						const routeAttrs = {...data.params, routePath: matchedRoute}
-						const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
-						return await renderToString(resolver.render(vnode))
+					// Render component
+					if (payload != null && (typeof payload.view === 'function' || typeof payload === 'function')) {
+						const vnode = hyperscript(payload, data.params)
+						return await renderToString(vnode)
 					}
-				}
 
-				// Render component
-				if (payload != null && (typeof payload.view === 'function' || typeof payload === 'function')) {
-					const vnode = hyperscript(payload, data.params)
+					// Fallback to div
+					const vnode = hyperscript('div', data.params)
 					return await renderToString(vnode)
 				}
-
-				// Fallback to div
-				const vnode = hyperscript('div', data.params)
-				return await renderToString(vnode)
 			}
-		}
 
-		// No route found
-		throw new Error(`No route found for ${pathname}`)
+			// No route found
+			throw new Error(`No route found for ${pathname}`)
 		} finally {
 			// Restore original prefix
 			route.prefix = savedPrefix
