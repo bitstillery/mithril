@@ -28,7 +28,7 @@ if (typeof setInterval !== 'undefined') {
 
 // Helper function to get session data from request
 // Returns both session data and sessionId
-function getSessionData(req: Request): {sessionData: Partial<any>, sessionId: string} {
+function getSessionData(req: Request): {sessionData: Partial<any>; sessionId: string} {
 	// Extract session ID from cookie or create new session
 	let sessionId = extractSessionId(req)
 	
@@ -57,7 +57,7 @@ function getSessionData(req: Request): {sessionData: Partial<any>, sessionId: st
 					name: sessionData.user?.name || (session?.userId ? `User ${session.userId}` : ''),
 					role: sessionData.user?.role || (session?.userId ? 'user' : ''),
 				},
-				serverData: sessionData.serverData || session?.data.serverData || `Server data for session ${sessionId}`,
+				serverData: sessionData.serverData || session?.data.serverData || '',
 				lastServerUpdate: sessionData.lastServerUpdate || Date.now(),
 			},
 		},

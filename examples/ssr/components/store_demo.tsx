@@ -24,9 +24,17 @@ export class StoreDemo extends MithrilTsxComponent {
 					<p>Visit Count: {$store.saved.visitCount}</p>
 					<button onclick={() => {
 						$store.saved.visitCount++
-						store.save()
 						m.redraw()
 					}}>Increment Visit Count</button>
+					<button onclick={async () => {
+						try {
+							await store.save({saved: true})
+							alert('localStorage state saved! Reload page to see it persist.')
+						} catch (error) {
+							console.error('Failed to save localStorage state:', error)
+							alert('Failed to save localStorage state')
+						}
+					}}>Save localStorage State</button>
 				</div>
 			</div>
 
