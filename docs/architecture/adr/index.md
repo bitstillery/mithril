@@ -20,6 +20,7 @@ Architecture Decision Records are documents that capture important architectural
 | [0003](./0003-typescript-typing-consolidation.md) | TypeScript Typing Consolidation | Proposed | 2025-01-XX |
 | [0004](./0004-ssr-state-serialization-signal-stores.md) | SSR State Serialization for Signal Stores | Proposed | 2025-01-23 |
 | [0005](./0005-state-naming-and-store-persistence.md) | State Naming and Store Persistence | Proposed | 2025-01-23 |
+| [0006](./0006-unified-serialization-computed-properties.md) | Unified Serialization/Deserialization and Computed Property Restoration | Proposed | 2025-01-23 |
 
 ## Status Definitions
 
