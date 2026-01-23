@@ -98,22 +98,35 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		const lookup = (this.stateInstance as any).lookup
 		if (!lookup) return
 		
-		for (const [key, value] of Object.entries(lookup)) {
+		// Build a new lookup object with only valid entries
+		const newLookup: Record<string, any> = {}
+		// Get keys first to avoid iteration issues when deleting
+		// Filter out $ prefix keys added by reactive proxy
+		const keys = Object.keys(lookup).filter(k => !k.startsWith('$') && k !== '__isState' && k !== '__signalMap')
+		for (const key of keys) {
+			const value = lookup[key]
 			// Previously stored values may not have a modified timestamp.
 			// Set it now, and let it be cleaned up after the interval.
 			if (!value || !is_object(value)) {
-				delete lookup[key]
+				// Skip invalid entries
 				store_modified = true
-			} else if (!(value as any).modified) {
-				(value as any).modified = Date.now()
-				store_modified = true
-			} else if ((value as any).modified < (Date.now() - this.lookup_ttl)) {
-				console.info(`[store] removing outdated lookup path: ${key}`)
-				delete lookup[key]
-				store_modified = true
+			} else {
+				if (!(value as any).modified) {
+					(value as any).modified = Date.now()
+					store_modified = true
+				}
+				if ((value as any).modified >= (Date.now() - this.lookup_ttl)) {
+					// Keep entries that are not expired
+					newLookup[key] = value
+				} else {
+					console.info(`[store] removing outdated lookup path: ${key}`)
+					store_modified = true
+				}
 			}
 		}
 		if (store_modified) {
+			// Replace lookup with cleaned version
+			(this.stateInstance as any).lookup = newLookup
 			this.save()
 		}
 	}
@@ -194,8 +207,10 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	}
 
 	save() {
-		this.set('store', this.blueprint(this.stateInstance as any, copy_object(this.templates.persistent)))
-		this.set_session('store', this.blueprint((this.stateInstance as any).session || {}, copy_object(this.templates.session)))
+		// Create a plain object copy of state for blueprint (to avoid proxy issues)
+		const statePlain = JSON.parse(JSON.stringify(this.stateInstance))
+		this.set('store', this.blueprint(statePlain, copy_object(this.templates.persistent)))
+		this.set_session('store', this.blueprint((statePlain as any).session || {}, copy_object(this.templates.session)))
 	}
 
 	set(key: string, item: object): void {

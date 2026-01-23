@@ -1,0 +1,609 @@
+// @ts-nocheck
+import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
+
+import {Store} from '../../store'
+import {clearStateRegistry} from '../../state'
+
+// Mock localStorage and sessionStorage
+const localStorageMock = (() => {
+	let store: Record<string, string> = {}
+	return {
+		getItem: (key: string) => store[key] || null,
+		setItem: (key: string, value: string) => {
+			store[key] = value.toString()
+		},
+		removeItem: (key: string) => {
+			delete store[key]
+		},
+		clear: () => {
+			store = {}
+		},
+	}
+})()
+
+const sessionStorageMock = (() => {
+	let store: Record<string, string> = {}
+	return {
+		getItem: (key: string) => store[key] || null,
+		setItem: (key: string, value: string) => {
+			store[key] = value.toString()
+		},
+		removeItem: (key: string) => {
+			delete store[key]
+		},
+		clear: () => {
+			store = {}
+		},
+	}
+})()
+
+// Setup global window if it doesn't exist (for Node.js test environment)
+if (typeof window === 'undefined') {
+	;(global as any).window = {
+		localStorage: localStorageMock,
+		sessionStorage: sessionStorageMock,
+		setInterval: (fn: () => void, delay: number) => {
+			// Return a mock interval ID
+			return 1
+		},
+		clearInterval: () => {},
+	}
+}
+
+describe('Store', () => {
+	beforeEach(() => {
+		// Clear state registry to avoid name collisions
+		clearStateRegistry()
+		// Setup mocks
+		if (typeof window !== 'undefined') {
+			Object.defineProperty(window, 'localStorage', {
+				value: localStorageMock,
+				writable: true,
+			})
+			Object.defineProperty(window, 'sessionStorage', {
+				value: sessionStorageMock,
+				writable: true,
+			})
+		}
+		localStorageMock.clear()
+		sessionStorageMock.clear()
+	})
+
+	afterEach(() => {
+		// Clean up any intervals
+		if (typeof window !== 'undefined' && window.clearInterval) {
+			// Clear any intervals that might have been set
+			for (let i = 1; i < 10000; i++) {
+				window.clearInterval(i)
+			}
+		}
+	})
+
+	describe('Store Initialization', () => {
+		test('creates store with default lookup TTL', () => {
+			const store = new Store()
+			expect(store).toBeInstanceOf(Store)
+			expect(store.state).toBeDefined()
+		})
+
+		test('creates store with custom lookup TTL', () => {
+			const customTTL = 1000 * 60 * 30 // 30 minutes
+			const store = new Store({lookup_ttl: customTTL})
+			expect(store).toBeInstanceOf(Store)
+		})
+
+		test('store.state returns reactive state instance', () => {
+			const store = new Store()
+			const state = store.state
+			expect(state).toBeDefined()
+			// State should be reactive (has __isState flag)
+			expect((state as any).__isState).toBe(true)
+		})
+	})
+
+	describe('Store.load()', () => {
+		test('loads state from templates when storage is empty', () => {
+			const store = new Store()
+			const persistent = {count: 0, name: 'initial'}
+			const volatile = {temp: 'value'}
+			const session = {sessionId: 'abc123'}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.count).toBe(0)
+			expect(store.state.name).toBe('initial')
+			expect(store.state.temp).toBe('value')
+			expect((store.state as any).session.sessionId).toBe('abc123')
+		})
+
+		test('loads state from localStorage when available', () => {
+			localStorageMock.setItem('store', JSON.stringify({
+				count: 42,
+				name: 'restored',
+			}))
+
+			const store = new Store()
+			const persistent = {count: 0, name: 'initial'}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.count).toBe(42)
+			expect(store.state.name).toBe('restored')
+		})
+
+		test('loads session state from sessionStorage when available', () => {
+			sessionStorageMock.setItem('store', JSON.stringify({
+				sessionId: 'restored-session',
+			}))
+
+			const store = new Store()
+			const persistent = {}
+			const volatile = {}
+			const session = {sessionId: 'new-session'}
+
+			store.load(persistent, volatile, session)
+
+			expect((store.state as any).session.sessionId).toBe('restored-session')
+		})
+
+		test('merges persistent template with localStorage data', () => {
+			localStorageMock.setItem('store', JSON.stringify({
+				count: 100,
+				// name is not in localStorage, should come from template
+			}))
+
+			const store = new Store()
+			const persistent = {count: 0, name: 'template-name'}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.count).toBe(100) // From localStorage
+			expect(store.state.name).toBe('template-name') // From template
+		})
+
+		test('preserves identity from localStorage for version bumps', () => {
+			localStorageMock.setItem('store', JSON.stringify({
+				count: 0,
+				identity: 'old-identity-123',
+			}))
+
+			const store = new Store()
+			const persistent = {count: 0}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect((store.state as any).identity).toBe('old-identity-123')
+		})
+
+		test('handles invalid JSON in localStorage gracefully', () => {
+			localStorageMock.setItem('store', 'invalid json{')
+
+			const store = new Store()
+			const persistent = {count: 0}
+			const volatile = {}
+			const session = {}
+
+			// Should not throw, should use template values
+			store.load(persistent, volatile, session)
+			expect(store.state.count).toBe(0)
+		})
+
+		test('handles nested objects correctly', () => {
+			localStorageMock.setItem('store', JSON.stringify({
+				user: {
+					name: 'John',
+					email: 'john@example.com',
+				},
+			}))
+
+			const store = new Store()
+			const persistent = {
+				user: {
+					name: '',
+					email: '',
+				},
+			}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.user.name).toBe('John')
+			expect(store.state.user.email).toBe('john@example.com')
+		})
+
+		test('volatile data overrides persistent data', () => {
+			localStorageMock.setItem('store', JSON.stringify({
+				count: 100,
+			}))
+
+			const store = new Store()
+			const persistent = {count: 0}
+			const volatile = {count: 999} // Should override
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.count).toBe(999)
+		})
+	})
+
+	describe('Store.save()', () => {
+		test('saves persistent data to localStorage', () => {
+			const store = new Store()
+			const persistent = {count: 0, name: 'test'}
+			const volatile = {temp: 'value'}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			store.state.count = 42
+			store.state.name = 'updated'
+			store.save()
+
+			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(saved.count).toBe(42)
+			expect(saved.name).toBe('updated')
+			expect(saved.temp).toBeUndefined() // Volatile should not be saved
+		})
+
+		test('saves session data to sessionStorage', () => {
+			const store = new Store()
+			const persistent = {}
+			const volatile = {}
+			const session = {sessionId: 'abc123'}
+
+			store.load(persistent, volatile, session)
+			;(store.state as any).session.sessionId = 'updated-session'
+			store.save()
+
+			const saved = JSON.parse(sessionStorageMock.getItem('store') || '{}')
+			expect(saved.sessionId).toBe('updated-session')
+		})
+
+		test('only saves keys defined in persistent template', () => {
+			const store = new Store()
+			const persistent = {count: 0} // Only count should be saved
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			store.state.count = 42
+			;(store.state as any).extraProperty = 'should not be saved'
+			store.save()
+
+			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(saved.count).toBe(42)
+			expect(saved.extraProperty).toBeUndefined()
+		})
+
+		test('handles save errors gracefully', () => {
+			// Mock localStorage.setItem to throw
+			const originalSetItem = localStorageMock.setItem
+			localStorageMock.setItem = () => {
+				throw new Error('Storage quota exceeded')
+			}
+
+			const store = new Store()
+			const persistent = {count: 0}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			// Should not throw
+			store.save()
+
+			// Restore original
+			localStorageMock.setItem = originalSetItem
+		})
+	})
+
+	describe('Store.blueprint()', () => {
+		test('extracts only keys defined in blueprint', () => {
+			const store = new Store()
+			const state = {
+				count: 42,
+				name: 'test',
+				extra: 'should not be in result',
+			}
+			const blueprint = {
+				count: 0,
+				name: '',
+			}
+
+			const result = store.blueprint(state as any, blueprint)
+
+			expect(result.count).toBe(42)
+			expect(result.name).toBe('test')
+			expect(result.extra).toBeUndefined()
+		})
+
+		test('handles nested objects recursively', () => {
+			const store = new Store()
+			const state = {
+				user: {
+					name: 'John',
+					email: 'john@example.com',
+					extra: 'should not be in result',
+				},
+			}
+			const blueprint = {
+				user: {
+					name: '',
+					email: '',
+				},
+			}
+
+			const result = store.blueprint(state as any, blueprint)
+
+			expect(result.user.name).toBe('John')
+			expect(result.user.email).toBe('john@example.com')
+			expect(result.user.extra).toBeUndefined()
+		})
+
+		test('handles lookup key specially (one-one copy)', () => {
+			const store = new Store()
+			const state = {
+				lookup: {
+					key1: {value: 'value1', modified: Date.now()},
+					key2: {value: 'value2', modified: Date.now()},
+					key3: {value: 'value3', modified: Date.now()},
+				},
+			}
+			const blueprint = {
+				lookup: {},
+			}
+
+			const result = store.blueprint(state as any, blueprint)
+
+			// Lookup should be copied entirely, not blueprinted per-key
+			expect(result.lookup).toEqual(state.lookup)
+			expect(result.lookup.key1).toBeDefined()
+			expect(result.lookup.key2).toBeDefined()
+			expect(result.lookup.key3).toBeDefined()
+		})
+
+		test('handles arrays correctly', () => {
+			const store = new Store()
+			const state = {
+				items: [1, 2, 3],
+			}
+			const blueprint = {
+				items: [],
+			}
+
+			const result = store.blueprint(state as any, blueprint)
+
+			expect(result.items).toEqual([1, 2, 3])
+		})
+
+		test('only includes keys that exist in state', () => {
+			const store = new Store()
+			const state = {
+				count: 42,
+			}
+			const blueprint = {
+				count: 0,
+				missing: '',
+			}
+
+			const result = store.blueprint(state as any, blueprint)
+
+			expect(result.count).toBe(42)
+			expect(result.missing).toBeUndefined()
+		})
+	})
+
+	describe('Store.clean_lookup()', () => {
+		test('removes invalid lookup entries', () => {
+			const store = new Store()
+			const persistent = {lookup: {
+				valid: {value: 'test', modified: Date.now()},
+				invalid: null,
+				invalid2: 'not an object',
+			}}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			
+			// Verify initial state
+			expect((store.state as any).lookup.valid).toBeDefined()
+			expect((store.state as any).lookup.invalid).toBe(null)
+			expect((store.state as any).lookup.invalid2).toBe('not an object')
+			
+			store.clean_lookup()
+
+			// After cleanup, invalid entries should be removed
+			// Verify by checking saved state (clean_lookup calls save())
+			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(saved.lookup).toBeDefined()
+			expect(saved.lookup.valid).toBeDefined()
+			expect(saved.lookup.invalid).toBeUndefined()
+			expect(saved.lookup.invalid2).toBeUndefined()
+		})
+
+		test('adds modified timestamp to entries without one', () => {
+			const store = new Store()
+			const persistent = {lookup: {}}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			const now = Date.now()
+			;(store.state as any).lookup = {
+				entry: {value: 'test'},
+			}
+
+			store.clean_lookup()
+
+			expect((store.state as any).lookup.entry.modified).toBeDefined()
+			expect(typeof (store.state as any).lookup.entry.modified).toBe('number')
+			expect((store.state as any).lookup.entry.modified).toBeGreaterThanOrEqual(now)
+		})
+
+		test('removes entries older than TTL', () => {
+			const store = new Store({lookup_ttl: 1000}) // 1 second TTL
+			const persistent = {lookup: {
+				old: {value: 'old', modified: Date.now() - 2000}, // 2 seconds ago
+				new: {value: 'new', modified: Date.now()}, // Just now
+			}}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			
+			// Verify initial state
+			expect((store.state as any).lookup.old).toBeDefined()
+			expect((store.state as any).lookup.new).toBeDefined()
+			
+			store.clean_lookup()
+
+			// After cleanup, old entry should be removed
+			// Verify by checking saved state (clean_lookup calls save())
+			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(saved.lookup).toBeDefined()
+			expect(saved.lookup.old).toBeUndefined()
+			expect(saved.lookup.new).toBeDefined()
+			expect(saved.lookup.new.value).toBe('new')
+		})
+
+		test('does nothing if lookup does not exist', () => {
+			const store = new Store()
+			const persistent = {}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			// No lookup property
+
+			// Should not throw
+			store.clean_lookup()
+		})
+
+		test('calls save() when lookup is modified', () => {
+			const store = new Store()
+			const persistent = {lookup: {}}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+			;(store.state as any).lookup = {
+				invalid: null,
+			}
+
+			// Clear localStorage before clean_lookup
+			localStorageMock.clear()
+			store.clean_lookup()
+
+			// Verify save was called by checking if localStorage was updated
+			const saved = localStorageMock.getItem('store')
+			expect(saved).not.toBeNull()
+		})
+	})
+
+	describe('Store.get() and Store.get_session_storage()', () => {
+		test('get() returns localStorage value', () => {
+			localStorageMock.setItem('test-key', 'test-value')
+			const store = new Store()
+			expect(store.get('test-key')).toBe('test-value')
+		})
+
+		test('get() returns "{}" when key does not exist', () => {
+			const store = new Store()
+			expect(store.get('non-existent')).toBe('{}')
+		})
+
+		test('get_session_storage() returns sessionStorage value', () => {
+			sessionStorageMock.setItem('test-key', 'test-value')
+			const store = new Store()
+			expect(store.get_session_storage('test-key')).toBe('test-value')
+		})
+
+		test('get_session_storage() returns "{}" when key does not exist', () => {
+			const store = new Store()
+			expect(store.get_session_storage('non-existent')).toBe('{}')
+		})
+	})
+
+	describe('Store.set() and Store.set_session()', () => {
+		test('set() saves to localStorage', () => {
+			const store = new Store()
+			store.set('test-key', {count: 42})
+			const saved = JSON.parse(localStorageMock.getItem('test-key') || '{}')
+			expect(saved.count).toBe(42)
+		})
+
+		test('set_session() saves to sessionStorage', () => {
+			const store = new Store()
+			store.set_session('test-key', {sessionId: 'abc123'})
+			const saved = JSON.parse(sessionStorageMock.getItem('test-key') || '{}')
+			expect(saved.sessionId).toBe('abc123')
+		})
+
+		test('set() handles errors gracefully', () => {
+			const originalSetItem = localStorageMock.setItem
+			localStorageMock.setItem = () => {
+				throw new Error('Storage error')
+			}
+
+			const store = new Store()
+			// Should not throw
+			store.set('test-key', {count: 42})
+
+			localStorageMock.setItem = originalSetItem
+		})
+	})
+
+	describe('Integration Tests', () => {
+		test('complete flow: load, modify, save, reload', () => {
+			const store1 = new Store()
+			const persistent = {count: 0, name: 'initial'}
+			const volatile = {}
+			const session = {}
+
+			// Load initial state
+			store1.load(persistent, volatile, session)
+			expect(store1.state.count).toBe(0)
+
+			// Modify state
+			store1.state.count = 100
+			store1.state.name = 'updated'
+
+			// Save
+			store1.save()
+
+			// Create new store and reload
+			const store2 = new Store()
+			store2.load(persistent, volatile, session)
+
+			// Should have saved values
+			expect(store2.state.count).toBe(100)
+			expect(store2.state.name).toBe('updated')
+		})
+
+		test('volatile data is not persisted', () => {
+			const store1 = new Store()
+			const persistent = {count: 0}
+			const volatile = {temp: 'temporary'}
+			const session = {}
+
+			store1.load(persistent, volatile, session)
+			store1.state.count = 42
+			;(store1.state as any).temp = 'modified-temp'
+			store1.save()
+
+			// Reload
+			const store2 = new Store()
+			store2.load(persistent, {}, session) // No volatile data
+
+			expect(store2.state.count).toBe(42) // Persistent
+			expect((store2.state as any).temp).toBeUndefined() // Volatile not saved
+		})
+	})
+})
