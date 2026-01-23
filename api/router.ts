@@ -115,11 +115,20 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					let payload = compiled[i].component
 					const matchedRoute = compiled[i].route
 					const localComp = payload
+					// Store the RouteResolver if payload has both onmatch and render
+					// This allows us to preserve the resolver even after onmatch returns a component
+					const resolverWithRender = payload && typeof payload === 'object' && payload.onmatch && payload.render && !payload.view && typeof payload !== 'function' ? payload : null
+					
 					const update = lastUpdate = function(comp: any) {
 						if (update !== lastUpdate) return
 						if (comp === SKIP) return loop(i + 1)
+						// If we have a preserved resolver with render, use it
+						if (resolverWithRender) {
+							currentResolver = resolverWithRender
+							component = comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
+						}
 						// If comp is a RouteResolver with render, set currentResolver instead of component
-						if (comp && typeof comp === 'object' && comp.render && !comp.view && typeof comp !== 'function') {
+						else if (comp && typeof comp === 'object' && comp.render && !comp.view && typeof comp !== 'function') {
 							currentResolver = comp
 							component = 'div' // Placeholder, won't be used since currentResolver.render will be called
 						} else {
