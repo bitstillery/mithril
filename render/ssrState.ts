@@ -272,7 +272,7 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
 		return
 	}
 	
-	function is_object(v: any): boolean {
+	function isObject(v: any): boolean {
 		return v && typeof v === 'object' && !Array.isArray(v)
 	}
 	
@@ -300,7 +300,7 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
 						}
 					}
 					targetState[key] = value
-				} else if (is_object(value)) {
+				} else if (isObject(value)) {
 					// Recursively restore nested computed properties
 					const nestedPrefix = prefix ? `${prefix}.${key}` : key
 					restore(value, target, nestedPrefix)

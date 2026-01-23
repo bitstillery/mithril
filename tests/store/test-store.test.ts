@@ -524,7 +524,7 @@ describe('Store', () => {
 		})
 	})
 
-		describe('Store.get() and Store.get_tab_storage()', () => {
+	describe('Store.get() and Store.get_tab_storage()', () => {
 		test('get() returns localStorage value', () => {
 			localStorageMock.setItem('test-key', 'test-value')
 			const store = new Store()
@@ -548,7 +548,7 @@ describe('Store', () => {
 		})
 	})
 
-		describe('Store.set() and Store.set_tab()', () => {
+	describe('Store.set() and Store.set_tab()', () => {
 		test('set() saves to localStorage', () => {
 			const store = new Store()
 			store.set('test-key', {count: 42})

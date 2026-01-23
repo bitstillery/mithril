@@ -1,25 +1,26 @@
 import {readFile} from 'fs/promises'
-import {join} from 'path'
 
 import m from '../server'
 import {clearStateRegistry} from '../state'
-import type {SessionStore} from './session'
+
 import {extractSessionId} from './session'
+
+import type {SessionStore} from './session'
 
 export interface SSROptions {
 	routes: Record<string, any>
 	initStore: (sessionData: any) => void
-	getSessionData: (req: Request) => {sessionData: any, sessionId: string}
+	getSessionData: (req: Request) => {sessionData: any; sessionId: string}
 	getHtmlTemplate: () => Promise<string>
-	appSelector?: string  // Default: '#app'
-	stateScriptId?: string  // Default: '__SSR_STATE__'
+	appSelector?: string // Default: '#app'
+	stateScriptId?: string // Default: '__SSR_STATE__'
 }
 
 export interface BunSSRConfig {
 	port: number
 	templatePath: string
-	templateRoute?: string  // Default: '/__template__'
-	htmlTemplate: any  // Bun route handler
+	templateRoute?: string // Default: '/__template__'
+	htmlTemplate: any // Bun route handler
 }
 
 /**
@@ -29,7 +30,7 @@ export interface BunSSRConfig {
 export async function getBunProcessedTemplate(
 	port: number,
 	templatePath: string,
-	templateRoute: string = '/__template__'
+	templateRoute: string = '/__template__',
 ): Promise<string> {
 	// Fetch from Bun's route handler to get processed template with HMR scripts
 	// Use a special route that Bun processes but we don't use for SSR
@@ -73,7 +74,7 @@ export function createBunSSRConfig(config: BunSSRConfig) {
 export async function createSSRResponse(
 	pathname: string,
 	req: Request,
-	options: SSROptions
+	options: SSROptions,
 ): Promise<Response> {
 	try {
 		// Clear state registry before each SSR request to avoid collisions
@@ -109,6 +110,7 @@ export async function createSSRResponse(
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Content-Type': 'text/html; charset=utf-8',
+				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
 			},
 		})
@@ -124,32 +126,33 @@ export async function createSSRResponse(
  */
 export function createSessionUpdateHandler(
 	sessionStore: SessionStore,
-	extractSessionIdFn: (req: Request) => string | null = extractSessionId
+	extractSessionIdFn: (req: Request) => string | null = extractSessionId,
 ): (req: Request) => Promise<Response> {
-	return async (req: Request): Promise<Response> => {
+	return async(req: Request): Promise<Response> => {
 		const sessionId = extractSessionIdFn(req)
 		
 		if (!sessionId) {
-			return new Response('No session ID', { status: 401 })
+			return new Response('No session ID', {status: 401})
 		}
 		
 		try {
 			const body = await req.json()
 			// Blueprint extracts { session: {...} }, so body.session contains the actual session data
 			// body structure: { session: { user: {...}, serverData: '...', lastServerUpdate: ... } }
-			const sessionData = body.session_data || body.session || {}  // Support both session_data and session for compatibility
+			const sessionData = body.session_data || body.session || {} // Support both session_data and session for compatibility
 			
 			// Update session store with new session state
 			// Store under session_data key in sessionStore.data
 			// sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
-			sessionStore.updateSession(sessionId, { session_data: sessionData })
+			sessionStore.updateSession(sessionId, {session_data: sessionData})
 			
-			return new Response(JSON.stringify({ success: true }), {
-				headers: { 'Content-Type': 'application/json' }
+			return new Response(JSON.stringify({success: true}), {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				headers: {'Content-Type': 'application/json'},
 			})
-		} catch (error) {
+		} catch(error) {
 			console.error('Error updating session:', error)
-			return new Response('Internal Server Error', { status: 500 })
+			return new Response('Internal Server Error', {status: 500})
 		}
 	}
 }
