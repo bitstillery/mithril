@@ -158,8 +158,11 @@ export function store<T extends Record<string, any>>(initial: T, name: string): 
 		}
 
 		// Handle objects
+		// Store original keys for SSR serialization (to distinguish nested store keys from parent keys)
+		const originalKeys = new Set(Object.keys(obj))
 		const wrapped = new Proxy(obj, {
 			get(target, prop) {
+				if (prop === '__originalKeys') return originalKeys
 				if (prop === '__isStore') return true
 				if (prop === '__signalMap') return signalMap
 				

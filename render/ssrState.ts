@@ -21,6 +21,15 @@ export function serializeStore(store: Store<any>): any {
 
 	const result: Record<string, any> = {}
 	const visited = new WeakSet<object>()
+	
+	// Add the root store to visited first to detect circular refs
+	visited.add(store)
+	
+	// Early return if signalMap is null (error case)
+	const signalMap = (store as any).__signalMap
+	if (!signalMap) {
+		return {}
+	}
 
 	function serializeValue(value: any): any {
 		// Handle null/undefined
@@ -34,13 +43,16 @@ export function serializeStore(store: Store<any>): any {
 		}
 
 		// Handle circular references
+		// Check before adding to visited to avoid false positives
 		if (visited.has(value)) {
 			return null // Circular reference - serialize as null
 		}
+		
+		// Mark as visited BEFORE processing to detect circular refs
+		visited.add(value)
 
 		// Handle stores (nested stores and arrays)
 		if (isStore(value)) {
-			visited.add(value)
 			
 			// Check if this is an array store
 			const signals = (value as any).__signals
@@ -50,67 +62,98 @@ export function serializeStore(store: Store<any>): any {
 					if (signal instanceof ComputedSignal) {
 						return undefined
 					}
-					const sigValue = signal && typeof signal === 'object' && 'value' in signal ? signal.value : signal
-					return serializeValue(sigValue)
+				// Get the actual value from the signal
+				// If it's a Signal instance, get its value; otherwise it's already the value (could be a store)
+				let sigValue: any
+				// Check if it's a Signal instance (has value property and is an instance of Signal/ComputedSignal)
+				if (signal && typeof signal === 'object' && 'value' in signal && !isStore(signal)) {
+					sigValue = signal.value
+				} else {
+					// It's either a primitive or a store (nested object)
+					sigValue = signal
+				}
+				// If sigValue is a store (nested object in array), serialize it
+				// This will use __originalKeys to filter parent keys
+				const serialized = serializeValue(sigValue)
+					// If circular reference was detected, it returns null - keep it
+					return serialized
 				}).filter((item: any) => item !== undefined)
-				visited.delete(value)
 				return arrayResult
 			}
 			
 			// Object store - serialize by accessing properties directly through proxy
-			// This naturally only gets the store's own properties
+			// Use originalKeys to filter out parent store keys
 			const nestedResult: Record<string, any> = {}
+			const nestedOriginalKeys = (value as any).__originalKeys as Set<string> | undefined
+			
 			for (const key in value) {
-				if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals') {
+				if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
 					continue
 				}
+				
+				// For nested stores, only serialize keys that belong to this store (not parent keys)
+				if (nestedOriginalKeys && !nestedOriginalKeys.has(key)) {
+					continue
+				}
+				
 				try {
-					const propValue = (value as any)[key]
-					// Skip computed signals (functions)
-					if (!(propValue instanceof ComputedSignal)) {
-						nestedResult[key] = serializeValue(propValue)
+					// Check if this is a ComputedSignal by accessing $key
+					const signal = (value as any)['$' + key]
+					if (signal instanceof ComputedSignal) {
+						// Skip computed signals
+						continue
 					}
+					
+					const propValue = (value as any)[key]
+					const serialized = serializeValue(propValue)
+					// Include null values (they might be circular ref markers)
+					nestedResult[key] = serialized
 				} catch {
 					// Skip if access fails
 					continue
 				}
 			}
-			visited.delete(value)
+			// Don't delete from visited here - it will be cleaned up when we finish serializing this value
 			return nestedResult
 		}
 
 		// Handle plain arrays
 		if (Array.isArray(value)) {
-			visited.add(value)
 			const arrayResult = value.map(item => serializeValue(item))
-			visited.delete(value)
 			return arrayResult
 		}
 
 		// Handle plain objects
-		visited.add(value)
 		const objResult: Record<string, any> = {}
 		for (const key in value) {
 			if (Object.prototype.hasOwnProperty.call(value, key)) {
-				objResult[key] = serializeValue(value[key])
+				const serialized = serializeValue(value[key])
+				// Include null values (they might be circular ref markers)
+				objResult[key] = serialized
 			}
 		}
-		visited.delete(value)
+		// Don't delete from visited - let it be cleaned up naturally
 		return objResult
 	}
 
 	// Serialize by iterating over store properties directly
-	// This goes through the proxy and naturally gets only this store's properties
+	// For top-level store, serialize all keys (including dynamically added ones)
+	// Use $ prefix to check if property is a ComputedSignal
 	for (const key in store) {
-		if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals') {
+		if (key.startsWith('$') || key === '__isStore' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
 			continue
 		}
+		
 		try {
-			const value = (store as any)[key]
-			// Skip computed signals (they're functions, recreated on client)
-			if (!(value instanceof ComputedSignal)) {
-				result[key] = serializeValue(value)
+			// Check if this is a ComputedSignal by accessing $key
+			const signal = (store as any)['$' + key]
+			if (signal instanceof ComputedSignal) {
+				// Skip computed signals (they're functions, recreated on client)
+				continue
 			}
+			
+			const value = (store as any)[key]
+			result[key] = serializeValue(value)
 		} catch {
 			// Skip if access fails
 			continue
@@ -174,7 +217,7 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 			const deserializedValue = deserializeValue(serializedValue)
 
 			// Check if signal exists in store
-			if (signalMap.has(key)) {
+			if (signalMap && signalMap.has(key)) {
 				const signal = signalMap.get(key)
 				// Don't update ComputedSignal (they're read-only)
 				if (signal && !(signal instanceof ComputedSignal)) {
@@ -182,7 +225,10 @@ export function deserializeStore(store: Store<any>, serialized: any): void {
 				}
 			} else {
 				// Signal doesn't exist - use proxy setter to create it
-				;(store as any)[key] = deserializedValue
+				// But only if signalMap exists (error case: signalMap is null)
+				if (signalMap) {
+					;(store as any)[key] = deserializedValue
+				}
 			}
 		}
 	}
