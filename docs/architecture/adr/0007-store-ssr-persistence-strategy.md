@@ -2,7 +2,7 @@
 
 **Status**: Proposed  
 **Date**: 2025-01-23  
-**Related ADRs**: [ADR-0005](./0005-state-naming-and-store-persistence.md) (State naming and Store persistence), [ADR-0006](./0006-unified-serialization-computed-properties.md) (Unified serialization/computed properties)
+**Related ADRs**: [ADR-0005](./0005-state-naming-and-store-persistence.md) (State naming and Store persistence), [ADR-0006](./0006-unified-serialization-computed-properties.md) (Unified serialization/computed properties), [ADR-0008](./0008-session-state-update-api.md) (Session State Update API)
 
 ## Context
 
