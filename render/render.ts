@@ -254,15 +254,23 @@ export default function renderFactory() {
 		
 		// Track component for signal dependency tracking
 		// Store mapping from vnode.state to vnode.tag (component object) for redraw
-		if (vnode.state && vnode.tag) {
+		if (vnode.state && vnode.tag && !isHydrating) {
 			;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
 			;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
 		}
-		setCurrentComponent(vnode.state)
+		// Always track component dependencies for signal tracking (even during hydration)
+		// This allows signals to know which components depend on them
+		// We only skip oninit during hydration, not signal tracking
+		// Only set currentComponent if vnode.state exists (it might be undefined for some component types)
+		if (vnode.state != null) {
+			setCurrentComponent(vnode.state)
+		}
 		try {
 			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
 		} finally {
-			clearCurrentComponent()
+			if (vnode.state != null) {
+				clearCurrentComponent()
+			}
 		}
 		if (vnode.instance === vnode) throw Error('A view cannot return the vnode it received as argument')
 		sentinel.$$reentrantLock$$ = null
@@ -273,6 +281,12 @@ export default function renderFactory() {
 			createNode(parent, vnode.instance, hooks, ns, nextSibling, isHydrating, matchedNodes)
 			vnode.dom = vnode.instance.dom
 			vnode.domSize = vnode.instance.domSize
+			
+			// Store component's DOM element for fine-grained redraw (not during hydration)
+			if (vnode.state && vnode.dom && !isHydrating) {
+				;(globalThis as any).__mithrilStateToDom = (globalThis as any).__mithrilStateToDom || new WeakMap()
+				;(globalThis as any).__mithrilStateToDom.set(vnode.state, vnode.dom)
+			}
 		}
 		else {
 			vnode.domSize = 0
@@ -489,15 +503,23 @@ export default function renderFactory() {
 	function updateComponent(parent: Element | DocumentFragment, old: any, vnode: any, hooks: Array<() => void>, nextSibling: Node | null, ns: string | undefined, isHydrating: boolean = false) {
 		// Track component for signal dependency tracking
 		// Store mapping from vnode.state to vnode.tag (component object) for redraw
-		if (vnode.state && vnode.tag) {
+		if (vnode.state && vnode.tag && !isHydrating) {
 			;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
 			;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
 		}
-		setCurrentComponent(vnode.state)
+		// Always track component dependencies for signal tracking (even during hydration)
+		// This allows signals to know which components depend on them
+		// We only skip oninit during hydration, not signal tracking
+		// Only set currentComponent if vnode.state exists (it might be undefined for some component types)
+		if (vnode.state != null) {
+			setCurrentComponent(vnode.state)
+		}
 		try {
 			vnode.instance = Vnode.normalize(callHook.call(vnode.state.view, vnode))
 		} finally {
-			clearCurrentComponent()
+			if (vnode.state != null) {
+				clearCurrentComponent()
+			}
 		}
 		if (vnode.instance === vnode) throw Error('A view cannot return the vnode it received as argument')
 		updateLifecycle(vnode.state, vnode, hooks)
@@ -507,6 +529,12 @@ export default function renderFactory() {
 			else updateNode(parent, old.instance, vnode.instance, hooks, nextSibling, ns, isHydrating)
 			vnode.dom = vnode.instance.dom
 			vnode.domSize = vnode.instance.domSize
+			
+			// Store component's DOM element for fine-grained redraw (not during hydration)
+			if (vnode.state && vnode.dom && !isHydrating) {
+				;(globalThis as any).__mithrilStateToDom = (globalThis as any).__mithrilStateToDom || new WeakMap()
+				;(globalThis as any).__mithrilStateToDom.set(vnode.state, vnode.dom)
+			}
 		}
 		else {
 			if (old.instance != null) removeNode(parent, old.instance)
@@ -872,14 +900,13 @@ export default function renderFactory() {
 
 	// lifecycle
 	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>, isHydrating: boolean = false) {
-		// TODO: Skip oninit during hydration once state serialization is implemented
-		// For now, we still call oninit during hydration to initialize component state
-		// When state serialization is added (ADR-0001 Phase 2-4), we can skip oninit here
-		if (typeof source.oninit === 'function') {
+		// Skip oninit during hydration - DOM already has correct content from SSR
+		// Component state (like stores) should be initialized at module level, not in oninit
+		// This prevents unnecessary data fetching and state updates during hydration
+		if (typeof source.oninit === 'function' && !isHydrating) {
 			const result = callHook.call(source.oninit, vnode)
-			// Auto-redraw when async oninit completes (client-side only, skip during hydration)
-			// During hydration, data is already in DOM from SSR, so no redraw needed
-			if (result != null && typeof result.then === 'function' && currentRedraw != null && !isHydrating) {
+			// Auto-redraw when async oninit completes (client-side only)
+			if (result != null && typeof result.then === 'function' && currentRedraw != null) {
 				Promise.resolve(result).then(function() {
 					if (currentRedraw != null) (0, currentRedraw)()
 				})

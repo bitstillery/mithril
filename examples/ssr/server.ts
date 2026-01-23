@@ -3,72 +3,62 @@ import {join} from 'path'
 
 import m from '../../server'
 
-// Import HTML template for Bun's fullstack dev server
-// Bun automatically processes <script> tags in HTML and bundles TypeScript/JSX files
 import htmlTemplate from './public/index.html'
 import {routes} from './routes'
 
 const PORT = 3000
 
-// Helper function to create SSR route handler
-function createSSRRoute(pathname: string) {
-	return async function(_req: Request) {
-		try {
-			// Use isomorphic router to resolve route and render SSR content
-			const appHtml = await m.route.resolve(pathname, routes, m.renderToString)
-
-			// Get Bun's processed HTML by fetching from the base route
-			// This gets us Bun's processed HTML with HMR support
-			const baseUrl = `http://localhost:${PORT}/`
-			let html: string
-			
-			try {
-				const processedResponse = await fetch(baseUrl)
-				if (processedResponse.ok) {
-					html = await processedResponse.text()
-				} else {
-					// Fallback: read the HTML template file
-					const templatePath = join(import.meta.dir, 'public', 'index.html')
-					html = await readFile(templatePath, 'utf-8')
-				}
-			} catch {
-				// Fallback: read the HTML template file
-				const templatePath = join(import.meta.dir, 'public', 'index.html')
-				html = await readFile(templatePath, 'utf-8')
-			}
-
-			// Replace the empty app div with server-rendered HTML
-			html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
-
-			// Return full HTML document with SSR content
-			return new Response(html, {
-				headers: {
-					// eslint-disable-next-line @typescript-eslint/naming-convention
-					'Content-Type': 'text/html; charset=utf-8',
-				},
-			})
-		} catch(error) {
-			console.error('SSR Error:', error)
-			return new Response('Internal Server Error', {status: 500})
+// Helper function to get Bun's processed HTML template
+// This ensures HMR scripts and proper asset serving work
+async function getProcessedTemplate(): Promise<string> {
+	// Fetch from Bun's route handler to get processed template with HMR scripts
+	// Use a special route that Bun processes but we don't use for SSR
+	const templateUrl = `http://localhost:${PORT}/__template__`
+	try {
+		const response = await fetch(templateUrl)
+		if (response.ok) {
+			return await response.text()
 		}
+	} catch {
+		// Fallback: read template file directly (won't have HMR, but will work)
+	}
+	
+	const templatePath = join(import.meta.dir, 'public', 'index.html')
+	return await readFile(templatePath, 'utf-8')
+}
+
+// Helper function to create SSR response
+async function createSSRResponse(pathname: string): Promise<Response> {
+	try {
+		// Use isomorphic router to resolve route and render SSR content
+		const appHtml = await m.route.resolve(pathname, routes, m.renderToString)
+
+		// Get Bun's processed HTML template (with HMR scripts)
+		let html = await getProcessedTemplate()
+
+		// Replace the empty app div with server-rendered HTML
+		html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
+
+		// Return full HTML document with SSR content
+		return new Response(html, {
+			headers: {
+				// eslint-disable-next-line @typescript-eslint/naming-convention
+				'Content-Type': 'text/html; charset=utf-8',
+			},
+		})
+	} catch(error) {
+		console.error('SSR Error:', error)
+		return new Response('Internal Server Error', {status: 500})
 	}
 }
 
 const server = Bun.serve({
 	port: PORT,
-	// Enable Bun's built-in development mode with HMR
-	// HMR will reload the page on changes (which is fine)
-	development: {
-		hmr: true, // Enable Hot Module Replacement for file watching
-		console: false, // Don't echo console logs (optional)
-	},
 	routes: {
-		// Use Bun's fullstack dev server for HTML processing
-		// Bun will process the HTML and add HMR support automatically
+		// Let Bun process the HTML template for HMR and asset serving
+		// Use a special route that we don't use for SSR, so fetch handler can intercept SSR routes
 		// eslint-disable-next-line @typescript-eslint/naming-convention
-		'/': htmlTemplate,
-		// eslint-disable-next-line @typescript-eslint/naming-convention
-		'/async': createSSRRoute('/async'),
+		'/__template__': htmlTemplate,
 	},
 	async fetch(req) {
 		const url = new URL(req.url)
@@ -79,49 +69,15 @@ const server = Bun.serve({
 			return undefined // Let Bun handle it
 		}
 
-		// Root route is handled by Bun's routes (htmlTemplate)
-		if (pathname === '/') {
-			return undefined // Let Bun's routes handle it
+		// Handle SSR routes (including root)
+		// Check if this is a route we want to SSR
+		// This must come BEFORE returning undefined, so we intercept SSR routes
+		if (pathname === '/' || pathname === '/async' || routes[pathname]) {
+			return await createSSRResponse(pathname)
 		}
 
-		// Handle other routes with SSR (fallback)
-		try {
-			// Use isomorphic router to resolve route and render SSR content
-			const appHtml = await m.route.resolve(pathname, routes, m.renderToString)
-
-			// Get Bun's processed HTML by fetching from the base route
-			const baseUrl = `http://localhost:${PORT}/`
-			let html: string
-			
-			try {
-				const processedResponse = await fetch(baseUrl)
-				if (processedResponse.ok) {
-					html = await processedResponse.text()
-				} else {
-					// Fallback: read the HTML template file
-					const templatePath = join(import.meta.dir, 'public', 'index.html')
-					html = await readFile(templatePath, 'utf-8')
-				}
-			} catch {
-				// Fallback: read the HTML template file
-				const templatePath = join(import.meta.dir, 'public', 'index.html')
-				html = await readFile(templatePath, 'utf-8')
-			}
-
-			// Replace the empty app div with server-rendered HTML
-			html = html.replace('<div id="app"></div>', `<div id="app">${appHtml}</div>`)
-
-			// Return full HTML document with SSR content
-			return new Response(html, {
-				headers: {
-					// eslint-disable-next-line @typescript-eslint/naming-convention
-					'Content-Type': 'text/html; charset=utf-8',
-				},
-			})
-		} catch(error) {
-			console.error('SSR Error:', error)
-			return new Response('Internal Server Error', {status: 500})
-		}
+		// For other routes (like client.tsx, __template__), return undefined to let Bun handle them
+		return undefined
 	},
 })
 
