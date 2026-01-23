@@ -46,6 +46,7 @@ function setupComputedProperties() {
 // This should be called once when the app starts
 export function initStore() {
 	const persistent: Partial<AppState> = {
+		count: 0, // Count is persistent - it will be saved to localStorage
 		persistentData: {
 			username: 'Guest',
 			theme: 'light',
@@ -61,7 +62,6 @@ export function initStore() {
 	}
 
 	const volatile: Partial<AppState> = {
-		count: 0,
 		volatileData: {
 			currentView: 'home',
 			tempMessage: '',

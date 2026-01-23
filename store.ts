@@ -197,8 +197,10 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		} else {
 			console.log('[store] restoring existing session state')
 			session_state = merge_deep(copy_object(this.templates.session), copy_object(restored_state.session))
-			merge_deep(store_state, {session: session_state})
 		}
+		
+		// Always merge session_state into store_state to ensure it's included in final_state
+		merge_deep(store_state, {session: session_state})
 
 		const final_state = merge_deep(store_state, copy_object(volatile))
 		
@@ -251,18 +253,31 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		this.set('store', this.blueprint(statePlain, copy_object(this.templates.persistent)))
 		
 		// Serialize session state if it exists
+		// Match the original implementation: blueprint(this.state.session, this.templates.session)
 		const sessionState = (this.stateInstance as any).session
 		if (sessionState) {
+			// Get the session template - unwrap if it's nested under a 'session' key
+			// The template might be: { session: { sessionId, ... } } or { sessionId, ... }
+			// The state is always: { sessionId, ... }
+			const sessionTemplate = (this.templates.session as any).session || this.templates.session
+			
 			// Check if session is a State object
 			if (isState(sessionState)) {
 				const sessionPlain = serializeStore(sessionState)
-				this.set_session('store', this.blueprint(sessionPlain, copy_object(this.templates.session)))
+				// blueprint expects both arguments to have the same structure
+				this.set_session('store', this.blueprint(sessionPlain, copy_object(sessionTemplate)))
 			} else {
 				// Plain object session
-				this.set_session('store', this.blueprint(sessionState, copy_object(this.templates.session)))
+				this.set_session('store', this.blueprint(sessionState, copy_object(sessionTemplate)))
 			}
 		} else {
-			this.set_session('store', this.blueprint({} as any, copy_object(this.templates.session)))
+			// No session state - save empty session based on template structure
+			const sessionTemplate = (this.templates.session as any).session || this.templates.session
+			if (sessionTemplate && Object.keys(sessionTemplate).length > 0) {
+				this.set_session('store', this.blueprint({} as any, copy_object(sessionTemplate)))
+			} else {
+				this.set_session('store', {})
+			}
 		}
 	}
 

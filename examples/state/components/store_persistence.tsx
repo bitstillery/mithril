@@ -104,11 +104,29 @@ export class StorePersistence extends MithrilTsxComponent {
 						Saved to sessionStorage - survives reloads but clears when tab closes
 					</p>
 					<div style="font-size: 12px;">
-						<p>Session ID: <code>{$store.session.sessionId}</code></p>
-						<p>Login Time: <code>{new Date($store.session.loginTime).toLocaleString()}</code></p>
+						<p>Session ID: <code>{$store.session?.sessionId || 'Not set'}</code></p>
+						<p>Login Time: <code>
+							{$store.session?.loginTime 
+								? new Date($store.session.loginTime).toLocaleString() 
+								: 'Not set'}
+						</code></p>
+						<p>Last Activity: <code>
+							{$store.session?.lastActivity 
+								? new Date($store.session.lastActivity).toLocaleString() 
+								: 'Not set'}
+						</code></p>
 						<button
 							onclick={() => {
-								$store.session.lastActivity = Date.now()
+								if (!$store.session) {
+									// Initialize session if it doesn't exist
+									$store.session = {
+										sessionId: `session-${Date.now()}`,
+										loginTime: Date.now(),
+										lastActivity: Date.now(),
+									}
+								} else {
+									$store.session.lastActivity = Date.now()
+								}
 								store.save()
 							}}
 							style="margin-top: 10px; padding: 6px 12px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;"
