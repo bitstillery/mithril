@@ -33,14 +33,8 @@ interface AppState {
 // Create Store instance
 export const store = new Store<AppState>()
 
-// Helper function to set computed properties on the state
-// This will be called automatically after every load() via setupComputedProperties()
-function setupComputedProperties() {
-	// Set computed properties directly on the state
-	// The state proxy will convert these functions into ComputedSignal instances
-	store.state.totalTodos = () => store.state.todos.length
-	store.state.completedTodos = () => store.state.todos.filter((t: Todo) => t.completed).length
-}
+// Computed properties are now automatically restored after load() and SSR deserialization
+// They can be defined directly in templates - no manual setup needed!
 
 // Initialize store with templates
 // This should be called once when the app starts
@@ -66,10 +60,10 @@ export function initStore() {
 			currentView: 'home',
 			tempMessage: '',
 		},
-		// Note: Computed properties (functions) cannot be in templates because
-		// they are not serializable. Store uses the same SSR serialization mechanism
-		// (serializeStore) which automatically skips ComputedSignal properties.
-		// They must be set directly on the state after loading, just like in SSR.
+		// Computed properties can be defined directly in templates!
+		// They are automatically restored after load() and SSR deserialization
+		totalTodos: () => store.state.todos.length,
+		completedTodos: () => store.state.todos.filter((t: Todo) => t.completed).length,
 	}
 
 	const session: Partial<AppState> = {
@@ -80,15 +74,9 @@ export function initStore() {
 		},
 	}
 
-	// Register computed properties setup function BEFORE load
-	// This ensures the setup function is registered and will be called after load
-	store.setupComputedProperties(setupComputedProperties)
-	
+	// Load store with templates
+	// Computed properties defined in templates are automatically restored
 	store.load(persistent, volatile, session)
-	
-	// Ensure computed properties are set immediately after load
-	// (setupComputedProperties should have already been called by load(), but ensure it's set)
-	setupComputedProperties()
 }
 
 // Initialize store on module load (synchronously)
@@ -97,6 +85,5 @@ if (typeof window !== 'undefined') {
 }
 
 // Export state accessor
-// Note: Computed properties are set synchronously in initStore() above,
-// so they will be available when components import $store
+// Computed properties are automatically available after load()
 export const $store = store.state

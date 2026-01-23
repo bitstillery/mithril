@@ -246,9 +246,9 @@ export function serializeAllStates(): Record<string, any> {
 	const registeredStates = getRegisteredStates()
 	const result: Record<string, any> = {}
 
-	for (const [name, state] of registeredStates.entries()) {
+	for (const [name, entry] of registeredStates.entries()) {
 		try {
-			result[name] = serializeStore(state)
+			result[name] = serializeStore(entry.state)
 		} catch(error) {
 			// Log error but continue with other states
 			console.error(`Error serializing state "${name}":`, error)
@@ -262,6 +262,49 @@ export function serializeAllStates(): Record<string, any> {
  * Deserialize all states from serialized data
  * Restores state into registered states
  */
+/**
+ * Restore computed properties from initial state
+ * Extracts function properties and sets them on state instance
+ * State proxy will automatically convert them to ComputedSignal instances
+ */
+function restoreComputedProperties(state: State<any>, initial: any): void {
+	if (!initial || typeof initial !== 'object') {
+		return
+	}
+	
+	function is_object(v: any): boolean {
+		return v && typeof v === 'object' && !Array.isArray(v)
+	}
+	
+	function restore(obj: any, target: any, prefix: string = ''): void {
+		for (const key in obj) {
+			if (Object.prototype.hasOwnProperty.call(obj, key)) {
+				const value = obj[key]
+				
+				if (typeof value === 'function') {
+					// Set function property - state proxy will convert to ComputedSignal
+					const keys = prefix ? prefix.split('.').filter(k => k) : []
+					let targetState = target
+					for (let i = 0; i < keys.length; i++) {
+						if (!targetState[keys[i]]) {
+							// Nested state doesn't exist yet, skip
+							return
+						}
+						targetState = targetState[keys[i]]
+					}
+					targetState[key] = value
+				} else if (is_object(value)) {
+					// Recursively restore nested computed properties
+					const nestedPrefix = prefix ? `${prefix}.${key}` : key
+					restore(value, target, nestedPrefix)
+				}
+			}
+		}
+	}
+	
+	restore(initial, state)
+}
+
 export function deserializeAllStates(serialized: Record<string, any>): void {
 	if (!serialized || typeof serialized !== 'object') {
 		return
@@ -269,10 +312,11 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 
 	const registeredStates = getRegisteredStates()
 
+	// First, deserialize all states
 	for (const [name, serializedState] of Object.entries(serialized)) {
-		const state = registeredStates.get(name)
+		const entry = registeredStates.get(name)
 		
-		if (!state) {
+		if (!entry) {
 			// State not registered on client - warn in development
 			// @ts-expect-error - process is a Node.js global, not available in browser
 			if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
@@ -282,10 +326,21 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 		}
 
 		try {
-			deserializeStore(state, serializedState)
+			deserializeStore(entry.state, serializedState)
 		} catch(error) {
 			// Log error but continue with other states
 			console.error(`Error deserializing state "${name}":`, error)
+		}
+	}
+	
+	// After deserializing, restore computed properties from original initial states
+	// This ensures computed properties work after SSR deserialization
+	for (const [name, entry] of registeredStates.entries()) {
+		try {
+			restoreComputedProperties(entry.state, entry.initial)
+		} catch(error) {
+			// Log error but continue with other states
+			console.error(`Error restoring computed properties for state "${name}":`, error)
 		}
 	}
 }

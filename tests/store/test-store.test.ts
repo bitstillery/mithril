@@ -2,7 +2,8 @@
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {Store} from '../../store'
-import {clearStateRegistry} from '../../state'
+import {clearStateRegistry, getRegisteredStates} from '../../state'
+import {deserializeAllStates, serializeAllStates} from '../../render/ssrState'
 
 // Mock localStorage and sessionStorage
 const localStorageMock = (() => {
@@ -620,6 +621,220 @@ describe('Store', () => {
 
 			expect(store2.state.count).toBe(42) // Persistent
 			expect((store2.state as any).temp).toBeUndefined() // Volatile not saved
+		})
+	})
+
+	describe('Unified Deserialization and Computed Properties', () => {
+		test('computed properties defined in templates are automatically restored after load()', () => {
+			const store = new Store<{
+				count: number
+				doubled: () => number
+			}>()
+
+			const persistent = {count: 0}
+			const volatile = {
+				doubled: function(this: {count: number}) {
+					return this.count * 2
+				},
+			}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			// Debug: Check if doubled is in signalMap
+			const signalMap = (store.state as any).__signalMap
+			expect(signalMap).toBeDefined()
+			expect(signalMap.has('doubled')).toBe(true)
+			
+			// Computed property should be automatically restored and work
+			expect(store.state.doubled).toBe(0) // 0 * 2 = 0
+			
+			store.state.count = 5
+			expect(store.state.doubled).toBe(10) // 5 * 2 = 10
+		})
+
+		test('computed properties work after SSR deserialization', () => {
+			// Simulate server-side: create store and populate data
+			const serverStore = new Store<{
+				count: number
+				doubled: () => number
+			}>()
+
+			const persistent = {count: 0}
+			const volatile = {
+				doubled: function(this: {count: number}) {
+					return this.count * 2
+				},
+			}
+			const session = {}
+
+			serverStore.load(persistent, volatile, session)
+			serverStore.state.count = 10
+
+			// Serialize on server - get the store's state name from registry
+			const registered = getRegisteredStates()
+			const serverStoreEntry = Array.from(registered.entries()).find(entry => entry[1].state === serverStore.state)
+			const serverStoreName = serverStoreEntry![0]
+			const serialized = serializeAllStates()
+
+			// Simulate client-side: create fresh store with same templates
+			clearStateRegistry()
+			const clientStore = new Store<{
+				count: number
+				doubled: () => number
+			}>()
+
+			clientStore.load(persistent, volatile, session)
+
+			// Get client store name and update serialized data to use client store name
+			const clientRegistered = getRegisteredStates()
+			const clientStoreEntry = Array.from(clientRegistered.entries()).find(entry => entry[1].state === clientStore.state)
+			const clientStoreName = clientStoreEntry![0]
+			
+			// Update serialized data to use client store name
+			const updatedSerialized: Record<string, any> = {}
+			updatedSerialized[clientStoreName] = serialized[serverStoreName]
+
+			// Deserialize on client
+			deserializeAllStates(updatedSerialized)
+
+			// Client state should have server data
+			expect(clientStore.state.count).toBe(10)
+			// Computed property should be automatically restored and work
+			expect(clientStore.state.doubled).toBe(20) // 10 * 2 = 20
+
+			// Update count - computed property should still work
+			clientStore.state.count = 5
+			expect(clientStore.state.doubled).toBe(10) // 5 * 2 = 10
+		})
+
+		test('computed properties can be defined in persistent template', () => {
+			const store = new Store<{
+				count: number
+				squared: () => number
+			}>()
+
+			const persistent = {
+				count: 0,
+				squared: function(this: {count: number}) {
+					return this.count * this.count
+				},
+			}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			store.state.count = 4
+			expect(store.state.squared).toBe(16) // 4 * 4 = 16
+		})
+
+		test('computed properties can be defined in session template', () => {
+			const store = new Store<{
+				session: {
+					sessionId: string
+					isValid: () => boolean
+				}
+			}>()
+
+			const persistent = {}
+			const volatile = {}
+			// Session template structure: session data is nested under 'session' key
+			// This matches how Store.load() merges session_state into store_state
+			const session = {
+				sessionId: 'abc123',
+				isValid: function(this: {sessionId: string}) {
+					return this.sessionId && this.sessionId.length > 0
+				},
+			}
+
+			store.load(persistent, volatile, session)
+
+			// sessionId should be set (session template is merged into store_state.session)
+			expect((store.state as any).session.sessionId).toBe('abc123')
+			// Computed property should work
+			expect((store.state as any).session.isValid).toBe(true)
+		})
+
+		test('computed properties work with nested state', () => {
+			const store = new Store<{
+				user: {
+					name: string
+					fullName: () => string
+				}
+			}>()
+
+			const persistent = {
+				user: {
+					name: 'John',
+					fullName: function(this: {name: string}) {
+						return `Mr. ${this.name}`
+					},
+				},
+			}
+			const volatile = {}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			expect(store.state.user.fullName).toBe('Mr. John')
+			
+			store.state.user.name = 'Jane'
+			expect(store.state.user.fullName).toBe('Mr. Jane')
+		})
+
+		test('registry entry is updated with merged templates after load()', () => {
+			const store = new Store<{
+				count: number
+				doubled: () => number
+			}>()
+
+			const persistent = {count: 0}
+			const volatile = {
+				doubled: function(this: {count: number}) {
+					return this.count * 2
+				},
+			}
+			const session = {}
+
+			store.load(persistent, volatile, session)
+
+			// Check registry entry
+			const registered = getRegisteredStates()
+			const storeEntry = Array.from(registered.values()).find(entry => entry.state === store.state)
+			
+			expect(storeEntry).toBeDefined()
+			expect(storeEntry?.initial).toBeDefined()
+			expect(storeEntry?.initial.count).toBe(0)
+			expect(typeof storeEntry?.initial.doubled).toBe('function')
+		})
+
+		test('computed properties persist across multiple load() calls', () => {
+			const store = new Store<{
+				count: number
+				doubled: () => number
+			}>()
+
+			const persistent = {count: 0}
+			const volatile = {
+				doubled: function(this: {count: number}) {
+					return this.count * 2
+				},
+			}
+			const session = {}
+
+			// First load
+			store.load(persistent, volatile, session)
+			store.state.count = 5
+			expect(store.state.doubled).toBe(10)
+
+			// Save and reload
+			store.save()
+			store.load(persistent, volatile, session)
+
+			// Computed property should still work after reload
+			expect(store.state.count).toBe(5) // Restored from localStorage
+			expect(store.state.doubled).toBe(10) // Computed property still works
 		})
 	})
 })

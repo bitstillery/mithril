@@ -34,7 +34,10 @@ describe('SSR State Serialization', () => {
 			const myState = state({count: 0}, 'myState')
 			const registered = getRegisteredStates()
 			expect(registered.has('myState')).toBe(true)
-			expect(registered.get('myState')).toBe(myState)
+			const entry = registered.get('myState')
+			expect(entry).toBeDefined()
+			expect(entry?.state).toBe(myState)
+			expect(entry?.initial).toEqual({count: 0})
 		})
 
 		test('state creation throws error if name is missing', () => {
@@ -55,8 +58,8 @@ describe('SSR State Serialization', () => {
 			const registered = getRegisteredStates()
 			expect(registered.has('state1')).toBe(true)
 			expect(registered.has('state2')).toBe(true)
-			expect(registered.get('state1')).toBe(state1)
-			expect(registered.get('state2')).toBe(state2)
+			expect(registered.get('state1')?.state).toBe(state1)
+			expect(registered.get('state2')?.state).toBe(state2)
 		})
 
 		test('states with same name overwrite previous registration (with warning in dev)', () => {
@@ -64,7 +67,7 @@ describe('SSR State Serialization', () => {
 			const state2 = state({count: 1}, 'duplicate')
 			const registered = getRegisteredStates()
 			expect(registered.has('duplicate')).toBe(true)
-			expect(registered.get('duplicate')).toBe(state2) // Last one wins
+			expect(registered.get('duplicate')?.state).toBe(state2) // Last one wins
 		})
 	})
 
@@ -272,6 +275,39 @@ describe('SSR State Serialization', () => {
 			expect(myState.count).toBe(5)
 			// Doubled is recomputed, not set from serialized data
 			expect(myState.doubled).toBe(10)
+		})
+
+		test('deserializeAllStates automatically restores computed properties', () => {
+			// Create state with computed property
+			const myState = state({
+				count: 0,
+				doubled: () => myState.count * 2,
+			}, 'myState')
+
+			// Serialize state (computed properties are skipped)
+			const serialized = serializeAllStates()
+
+			// Clear and recreate state (simulating client-side)
+			clearStateRegistry()
+			const clientState = state({
+				count: 0,
+				doubled: () => clientState.count * 2,
+			}, 'myState')
+
+			// Update count value
+			clientState.count = 5
+
+			// Deserialize - should restore count and computed property
+			deserializeAllStates(serialized)
+
+			// Count should be restored
+			expect(clientState.count).toBe(0)
+			// Computed property should be automatically restored and work
+			expect(clientState.doubled).toBe(0)
+
+			// Update count - computed property should still work
+			clientState.count = 10
+			expect(clientState.doubled).toBe(20)
 		})
 	})
 

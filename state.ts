@@ -25,14 +25,22 @@ function toSignal<T>(value: T): Signal<T> | ComputedSignal<T> {
 }
 
 // State registry for SSR serialization
-// States register themselves here when created
-const stateRegistry = new Map<string, any>()
+// Stores both state instance and original initial state (with computed properties)
+interface StateRegistryEntry {
+	state: any
+	initial: any
+}
+
+const stateRegistry = new Map<string, StateRegistryEntry>()
 
 /**
  * Register a state for SSR serialization
  * Called automatically when state is created with a name
+ * @param name - Unique name for the state
+ * @param stateInstance - The state instance to register
+ * @param initial - Original initial state (with computed properties) for restoration
  */
-export function registerState(name: string, state: any): void {
+export function registerState(name: string, stateInstance: any, initial: any): void {
 	if (!name || typeof name !== 'string' || name.trim() === '') {
 		throw new Error('State name is required and must be a non-empty string')
 	}
@@ -45,13 +53,32 @@ export function registerState(name: string, state: any): void {
 		}
 	}
 	
-	stateRegistry.set(name, state)
+	stateRegistry.set(name, {state: stateInstance, initial})
+}
+
+/**
+ * Update the registry entry for an existing state
+ * Used by Store to update its "initial" state after load() is called
+ * @param stateInstance - The state instance to update
+ * @param initial - New initial state (merged templates for Store)
+ */
+export function updateStateRegistry(stateInstance: any, initial: any): void {
+	// Find the registry entry for this state and update its initial value
+	for (const [name, entry] of stateRegistry.entries()) {
+		if (entry.state === stateInstance) {
+			stateRegistry.set(name, {state: stateInstance, initial})
+			return
+		}
+	}
+	// If not found, this is an error case - state should be registered
+	throw new Error('State instance not found in registry. State must be registered before updating.')
 }
 
 /**
  * Get all registered states
+ * Returns Map of state names to registry entries (state instance and initial state)
  */
-export function getRegisteredStates(): Map<string, any> {
+export function getRegisteredStates(): Map<string, StateRegistryEntry> {
 	return stateRegistry
 }
 
@@ -381,7 +408,8 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 	}
 	
 	// Register state for SSR serialization
-	registerState(name, wrapped)
+	// Store original initial state (with computed properties) for restoration after deserialization
+	registerState(name, wrapped, initial)
 	
 	return wrapped
 }

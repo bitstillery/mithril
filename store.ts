@@ -1,6 +1,47 @@
-import {state, State} from './state'
-import {serializeStore} from './render/ssrState'
+import {state, State, updateStateRegistry} from './state'
+import {serializeStore, deserializeStore} from './render/ssrState'
 import {ComputedSignal} from './signal'
+
+// Helper function to restore computed properties (same as in ssrState.ts)
+function restoreComputedProperties(state: State<any>, initial: any): void {
+	if (!initial || typeof initial !== 'object') {
+		return
+	}
+	
+	function is_object(v: any): boolean {
+		return v && typeof v === 'object' && !Array.isArray(v)
+	}
+	
+	function restore(obj: any, target: any, prefix: string = ''): void {
+		for (const key in obj) {
+			if (Object.prototype.hasOwnProperty.call(obj, key)) {
+				const value = obj[key]
+				
+				if (typeof value === 'function') {
+					// Set function property - state proxy will convert to ComputedSignal
+					const keys = prefix ? prefix.split('.').filter(k => k) : []
+					let targetState = target
+					for (let i = 0; i < keys.length; i++) {
+						if (!targetState || !targetState[keys[i]]) {
+							// Nested state doesn't exist yet, skip
+							return
+						}
+						targetState = targetState[keys[i]]
+					}
+					if (targetState) {
+						targetState[key] = value
+					}
+				} else if (is_object(value)) {
+					// Recursively restore nested computed properties
+					const nestedPrefix = prefix ? `${prefix}.${key}` : key
+					restore(value, target, nestedPrefix)
+				}
+			}
+		}
+	}
+	
+	restore(initial, state)
+}
 
 // Utility functions for Store class
 function isState(value: any): boolean {
@@ -13,6 +54,39 @@ function is_object(v: any): boolean {
 
 function copy_object<T>(obj: T): T {
 	return JSON.parse(JSON.stringify(obj))
+}
+
+/**
+ * Deep copy object while preserving functions (computed properties)
+ * Used for merging templates that may contain computed properties
+ */
+function copy_object_preserve_functions<T>(obj: T): T {
+	if (obj === null || typeof obj !== 'object') {
+		return obj
+	}
+	
+	if (Array.isArray(obj)) {
+		return obj.map(item => copy_object_preserve_functions(item)) as T
+	}
+	
+	if (typeof obj === 'function') {
+		return obj as T
+	}
+	
+	const result: any = {}
+	for (const key in obj) {
+		if (Object.prototype.hasOwnProperty.call(obj, key)) {
+			const value = (obj as any)[key]
+			if (typeof value === 'function') {
+				// Preserve functions (computed properties)
+				result[key] = value
+			} else {
+				// Deep copy other values
+				result[key] = copy_object_preserve_functions(value)
+			}
+		}
+	}
+	return result as T
 }
 
 function merge_deep(target: any, ...sources: any[]): any {
@@ -202,35 +276,39 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		// Always merge session_state into store_state to ensure it's included in final_state
 		merge_deep(store_state, {session: session_state})
 
+		// Merge volatile into store_state to create final_state
+		// Note: copy_object removes functions, but volatile data shouldn't have functions anyway
+		// (computed properties are handled separately via mergedInitial)
 		const final_state = merge_deep(store_state, copy_object(volatile))
 		
-		// Update the state instance by assigning all properties recursively
-		// This ensures nested objects are properly updated in the reactive state
-		// Note: We skip function properties (computed properties) as they're not serialized
-		function updateState(target: any, source: any) {
-			for (const key in source) {
-				if (Object.prototype.hasOwnProperty.call(source, key)) {
-					// Skip function properties - they're computed properties that should be set separately
-					if (typeof source[key] === 'function') {
-						continue
-					}
-					// Skip if target already has a function at this key (computed property)
-					// This prevents overwriting computed properties that were set before load()
-					if (typeof target[key] === 'function') {
-						continue
-					}
-					if (is_object(source[key]) && is_object(target[key])) {
-						updateState(target[key], source[key])
-					} else {
-						target[key] = source[key]
-					}
-				}
-			}
-		}
-		updateState(this.stateInstance, final_state)
+		// Merge templates (including computed properties) into "merged initial state"
+		// This will be stored in registry so computed properties can be automatically restored
+		// Use copy_object_preserve_functions to deep copy while preserving functions
+		// Note: session template structure needs to match final_state structure (nested under 'session')
+		const mergedInitialPersistent = copy_object_preserve_functions(persistent)
+		const mergedInitialVolatile = copy_object_preserve_functions(volatile)
+		// Session template is merged into store_state.session, so wrap it in {session: ...}
+		const mergedInitialSession = session && Object.keys(session).length > 0 ? {session: copy_object_preserve_functions(session)} : {}
+		const mergedInitial = merge_deep(
+			mergedInitialPersistent,
+			mergedInitialVolatile,
+			mergedInitialSession
+		)
 		
-		// Re-setup computed properties after load (they're not serialized)
-		// This ensures computed properties are available even after reloading from storage
+		// Update registry entry to store merged templates as "initial" state
+		// This allows deserializeAllStates() to automatically restore computed properties
+		updateStateRegistry(this.stateInstance, mergedInitial)
+		
+		// Use deserializeStore() instead of custom updateState()
+		// This ensures consistency with SSR deserialization mechanism
+		deserializeStore(this.stateInstance, final_state)
+		
+		// Restore computed properties from merged templates
+		// This ensures computed properties are available immediately after load()
+		// Note: mergedInitial contains all templates (persistent, volatile, session) with computed properties
+		restoreComputedProperties(this.stateInstance, mergedInitial)
+		
+		// Note: setupComputedProperties() callback is no longer needed, but kept for backward compatibility
 		if (this.computedPropertiesSetup) {
 			this.computedPropertiesSetup()
 		}
