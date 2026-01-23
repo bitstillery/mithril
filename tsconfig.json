@@ -20,7 +20,7 @@
     "declarationMap": true,
     "outDir": "./dist",
     "rootDir": ".",
-    "types": [],
+    "types": ["bun-types"],
     "skipDefaultLibCheck": true
   },
   "include": [
