@@ -306,12 +306,12 @@ We will implement a component-level redraw API similar to PR #3036...
 
 ### Running Tests
 
-**Run tests with only failures:**
+**Run tests:**
 ```bash
-bun run test --only-failures
+AGENT=1 bun run test
 ```
 
-This command runs only tests that failed in the previous test run, which is useful for iteratively fixing test failures.
+This command runs the test suite. The `AGENT=1` environment variable can be used to configure test behavior when running tests in an automated context.
 
 ### Code Quality Checks
 

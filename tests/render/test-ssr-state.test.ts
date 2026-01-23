@@ -1,13 +1,32 @@
 // @ts-nocheck
-import {describe, test, expect, beforeEach} from 'bun:test'
+import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {state, clearStateRegistry, getRegisteredStates} from '../../state'
 import {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from '../../render/ssrState'
 
 describe('SSR State Serialization', () => {
+	let originalConsoleError: typeof console.error
+	let originalConsoleWarn: typeof console.warn
+	let originalConsoleLog: typeof console.log
+
 	beforeEach(() => {
+		// Suppress console output in tests - errors/warnings are expected when testing error handling
+		originalConsoleError = console.error
+		originalConsoleWarn = console.warn
+		originalConsoleLog = console.log
+		console.error = () => {}
+		console.warn = () => {}
+		console.log = () => {}
+
 		// Clear registry before each test to avoid collisions
 		clearStateRegistry()
+	})
+
+	afterEach(() => {
+		// Restore original console methods
+		console.error = originalConsoleError
+		console.warn = originalConsoleWarn
+		console.log = originalConsoleLog
 	})
 
 	describe('State Registration', () => {

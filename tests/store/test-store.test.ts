@@ -42,7 +42,7 @@ if (typeof window === 'undefined') {
 	;(global as any).window = {
 		localStorage: localStorageMock,
 		sessionStorage: sessionStorageMock,
-		setInterval: (fn: () => void, delay: number) => {
+		setInterval: (_fn: () => void, _delay: number) => {
 			// Return a mock interval ID
 			return 1
 		},
@@ -51,7 +51,17 @@ if (typeof window === 'undefined') {
 }
 
 describe('Store', () => {
+	let originalConsoleError: typeof console.error
+	let originalConsoleLog: typeof console.log
+
 	beforeEach(() => {
+		// Suppress console.error and console.log in tests - these are informational
+		// and don't indicate test failures
+		originalConsoleError = console.error
+		originalConsoleLog = console.log
+		console.error = () => {}
+		console.log = () => {}
+
 		// Clear state registry to avoid name collisions
 		clearStateRegistry()
 		// Setup mocks
@@ -67,6 +77,12 @@ describe('Store', () => {
 		}
 		localStorageMock.clear()
 		sessionStorageMock.clear()
+	})
+
+	afterEach(() => {
+		// Restore original console methods
+		console.error = originalConsoleError
+		console.log = originalConsoleLog
 	})
 
 	afterEach(() => {
@@ -553,7 +569,7 @@ describe('Store', () => {
 			}
 
 			const store = new Store()
-			// Should not throw
+			// Should not throw - error is caught and handled gracefully
 			store.set('test-key', {count: 42})
 
 			localStorageMock.setItem = originalSetItem

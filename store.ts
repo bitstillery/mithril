@@ -33,6 +33,9 @@ function merge_deep(target: any, ...sources: any[]): any {
 const DEFAULT_LOOKUP_VERIFY_INTERVAL = 1000 * 10 // 10 seconds
 const DEFAULT_LOOKUP_TTL = 1000 * 60 * 60 * 24 // 1 day
 
+// Counter for generating unique store instance names
+let storeInstanceCounter = 0
+
 /**
  * Store class - wraps state() with persistence functionality
  * Provides load/save/blueprint methods for localStorage/sessionStorage persistence
@@ -50,7 +53,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	constructor(options: {lookup_ttl?: number} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
 		this.lookup_ttl = options.lookup_ttl || DEFAULT_LOOKUP_TTL
 		// Initialize with empty state, will be loaded later
-		this.stateInstance = state({} as T, 'store.default')
+		// Generate unique name for each Store instance to avoid collisions
+		const instanceName = `store.instance.${storeInstanceCounter++}`
+		this.stateInstance = state({} as T, instanceName)
 		
 		if (typeof window !== 'undefined' && !this.lookup_verify_interval) {
 			// Check every 10 seconds for outdated lookup paths. This is
