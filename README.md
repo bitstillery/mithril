@@ -10,9 +10,26 @@ Mithril.js uses global `m.redraw()`—one state change updates **all** component
 
 ## What Makes This Different
 
+### Signals
+
+Fine-grained reactivity primitives with automatic dependency tracking. Zero-dependency implementation—no Preact Signals or other packages.
+
+```typescript
+import { signal, computed, effect } from '@bitstillery/mithril'
+
+const count = signal(0)
+const doubled = computed(() => count() * 2)
+
+effect(() => {
+  console.log(`Count: ${count()}, Doubled: ${doubled()}`)
+})
+
+count(5) // Logs: Count: 5, Doubled: 10
+```
+
 ### Signal State
 
-Proxy-based reactive state with automatic dependency tracking. No manual redraw calls.
+Proxy-based reactive state that makes signals developer-friendly. Automatic dependency tracking with no manual redraw calls.
 
 ```tsx
 import { state } from '@bitstillery/mithril'
@@ -37,6 +54,28 @@ class Counter extends MithrilTsxComponent {
 }
 ```
 
+### Persistent Store
+
+State persistence with automatic serialization. The `Store` class wraps `state()` with localStorage/sessionStorage support, seamlessly integrating with SSR hydration.
+
+```typescript
+import { Store } from '@bitstillery/mithril'
+
+const store = new Store<{ user: { name: string }, preferences: Record<string, any> }>()
+
+// Define what persists vs what's volatile
+store.blueprint({ user: { name: '' }, preferences: {} }, {
+  user: { name: '' },        // Persistent
+  preferences: {},           // Persistent
+})
+
+// Load from storage, or initialize with defaults
+store.load({ user: { name: 'John' }, preferences: { theme: 'dark' } })
+
+// State is reactive and automatically saves on changes
+store.state.user.name = 'Jane' // Auto-saves to localStorage
+```
+
 ### SSR Hydration
 
 Server-side rendering with state preservation. `renderToString` automatically serializes state; restore it on the client before mounting.
@@ -56,12 +95,9 @@ if (ssrState?.textContent) {
 m.mount(root, App)
 ```
 
-### Zero Dependencies
+## The Complete Picture
 
-Custom signals implementation—no Preact Signals or other packages. Two APIs:
-- **Raw signals**: `signal()`, `computed()`, `effect()`
-- **Reactive state**: `state()` - DeepSignal-inspired API
-- **Persistence**: `Store` class - Load/save state to localStorage/sessionStorage
+These features build on each other: signals provide the foundation for fine-grained reactivity, proxy-based state makes them developer-friendly, `Store` adds persistence for localStorage/sessionStorage, and SSR hydration enables search-engine friendly websites. The result? State that "just works"—from initial render through hydration, user interactions, and page refreshes—all while maintaining Mithril's familiar API.
 
 ## Quick Start
 
@@ -91,7 +127,7 @@ m.mount(document.body, App)
 ## Examples
 
 - **SSR**: [`examples/ssr/`](examples/ssr/) - Server-side rendering with hydration
-- **State**: [`examples/state/`](examples/state/) - Signals and state management patterns
+- **State**: [`examples/state/`](examples/state/) - Signals, state management, and Store persistence patterns
 
 ## Differences from Mithril.js
 
