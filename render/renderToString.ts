@@ -1,6 +1,6 @@
 import {setCurrentComponent, clearCurrentComponent} from '../signal'
-import {serializeAllStates} from './ssrState'
 
+import {serializeAllStates} from './ssrState'
 import Vnode from './vnode'
 
 import type {Vnode as VnodeType, Children} from '../index'
@@ -418,7 +418,7 @@ export function renderToStringFactory() {
 	async function renderToString(
 		vnodes: Children | VnodeType | null,
 		options?: RenderToStringOptions,
-	): Promise<{html: string, state: Record<string, any>}> {
+	): Promise<{html: string; state: Record<string, any>}> {
 		const opts: Required<RenderToStringOptions> = {
 			...defaultOptions,
 			...options,

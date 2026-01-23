@@ -3,7 +3,6 @@ import {describe, test, expect, beforeEach} from 'bun:test'
 
 import {store, clearStoreRegistry, getRegisteredStores} from '../../store'
 import {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from '../../render/ssrState'
-import {ComputedSignal} from '../../signal'
 
 describe('SSR State Serialization', () => {
 	beforeEach(() => {
@@ -42,7 +41,7 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('stores with same name overwrite previous registration (with warning in dev)', () => {
-			const store1 = store({count: 0}, 'duplicate')
+			store({count: 0}, 'duplicate')
 			const store2 = store({count: 1}, 'duplicate')
 			const registered = getRegisteredStores()
 			expect(registered.has('duplicate')).toBe(true)
@@ -259,8 +258,8 @@ describe('SSR State Serialization', () => {
 
 	describe('Serializing All States', () => {
 		test('serializeAllStates serializes all registered stores', () => {
-			const store1 = store({count: 1}, 'store1')
-			const store2 = store({name: 'test'}, 'store2')
+			store({count: 1}, 'store1')
+			store({name: 'test'}, 'store2')
 
 			const allStates = serializeAllStates()
 
@@ -269,7 +268,7 @@ describe('SSR State Serialization', () => {
 		})
 
 		test('serializeAllStates handles errors gracefully', () => {
-			const goodStore = store({count: 1}, 'goodStore')
+			store({count: 1}, 'goodStore')
 			// Create a bad store that will cause serialization to fail
 			const badStore = store({count: 2}, 'badStore')
 			// Corrupt the store's signalMap
@@ -367,8 +366,8 @@ describe('SSR State Serialization', () => {
 
 		test('multiple stores in SSR flow', () => {
 			// Server-side
-			const serverStore1 = store({count: 10}, 'Counter.store')
-			const serverStore2 = store({user: {name: 'John'}}, 'User.store')
+			store({count: 10}, 'Counter.store')
+			store({user: {name: 'John'}}, 'User.store')
 
 			const serialized = serializeAllStates()
 

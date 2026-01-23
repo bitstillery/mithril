@@ -14,7 +14,7 @@ export interface RouteResolver<Attrs = Record<string, any>, State = any> {
 }
 
 export type SSRState = Record<string, any>
-export type SSRResult = string | {html: string, state: SSRState}
+export type SSRResult = string | {html: string; state: SSRState}
 
 export interface Route {
 	(path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
@@ -370,8 +370,8 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							const routeAttrs = {...data.params, routePath: matchedRoute}
 							const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
 							const result = await renderToString(resolver.render(vnode))
-						// Handle both string (backward compatibility) and {html, state} return types
-						return typeof result === 'string' ? result : result
+							// Handle both string (backward compatibility) and {html, state} return types
+							return typeof result === 'string' ? result : result
 						}
 					}
 
