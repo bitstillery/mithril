@@ -16,23 +16,15 @@ initStore({})
 
 // Read and restore SSR state after store is registered
 // This will hydrate the store state and restore computed properties
-const ssrStateScript = document.getElementById('__SSR_STATE__')
-if (ssrStateScript && ssrStateScript.textContent) {
-	try {
-		const serializedState = JSON.parse(ssrStateScript.textContent)
-		deserializeAllStates(serializedState)
-		
-		// Ensure computed properties are available after deserialization
-		// deserializeAllStates() should restore them, but verify they're functions
-		if (typeof $store.isAuthenticated !== 'function') {
-			console.warn('Computed properties not restored correctly, re-initializing store')
-			// Re-initialize to ensure computed properties are restored
-			initStore({})
+	const ssrStateScript = document.getElementById('__SSR_STATE__')
+	if (ssrStateScript && ssrStateScript.textContent) {
+		try {
+			const serializedState = JSON.parse(ssrStateScript.textContent)
+			deserializeAllStates(serializedState)
+		} catch (error) {
+			console.error('Error deserializing SSR state:', error)
 		}
-	} catch (error) {
-		console.error('Error deserializing SSR state:', error)
 	}
-}
 
 // Client-side routing with isomorphic router
 m.route(document.getElementById('app')!, '/', routes)

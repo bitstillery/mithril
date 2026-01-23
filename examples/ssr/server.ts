@@ -30,12 +30,18 @@ async function getProcessedTemplate(): Promise<string> {
 	return await readFile(templatePath, 'utf-8')
 }
 
-// Helper function to get session data from request
-function getSessionData(req: Request): Partial<any> {
-	// Extract session ID from cookie or create new session
+// Helper function to extract session ID from request
+function extractSessionId(req: Request): string | null {
 	const cookies = req.headers.get('cookie') || ''
 	const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
-	let sessionId = sessionIdMatch ? sessionIdMatch[1] : null
+	return sessionIdMatch ? sessionIdMatch[1] : null
+}
+
+// Helper function to get session data from request
+// Returns both session data and sessionId
+function getSessionData(req: Request): {sessionData: Partial<any>, sessionId: string} {
+	// Extract session ID from cookie or create new session
+	let sessionId = extractSessionId(req)
 	
 	// For demo purposes, simulate user authentication
 	// In production, decode JWT token to get user ID
@@ -48,17 +54,52 @@ function getSessionData(req: Request): Partial<any> {
 	
 	const session = sessionStore.getSession(sessionId)
 	
+	// Read session_data from sessionStore if it exists
+	// sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
+	const sessionData = session?.data.session_data || {}
+	
 	// Return session data for Store.load()
 	return {
-		session: {
-			user: {
-				id: session?.userId || null,
-				name: session?.userId ? `User ${session.userId}` : '',
-				role: session?.userId ? 'user' : '',
+		sessionId,
+		sessionData: {
+			session: {
+				user: {
+					id: session?.userId || sessionData.user?.id || null,
+					name: sessionData.user?.name || (session?.userId ? `User ${session.userId}` : ''),
+					role: sessionData.user?.role || (session?.userId ? 'user' : ''),
+				},
+				serverData: sessionData.serverData || session?.data.serverData || `Server data for session ${sessionId}`,
+				lastServerUpdate: sessionData.lastServerUpdate || Date.now(),
 			},
-			serverData: session?.data.serverData || `Server data for session ${sessionId}`,
-			lastServerUpdate: Date.now(),
 		},
+	}
+}
+
+// Handle session state update API endpoint
+async function handleSessionUpdate(req: Request): Promise<Response> {
+	const sessionId = extractSessionId(req)
+	
+	if (!sessionId) {
+		return new Response('No session ID', { status: 401 })
+	}
+	
+	try {
+		const body = await req.json()
+		// Blueprint extracts { session: {...} }, so body.session contains the actual session data
+		// body structure: { session: { user: {...}, serverData: '...', lastServerUpdate: ... } }
+		const sessionData = body.session_data || body.session || {}  // Support both session_data and session for compatibility
+		
+		// Update session store with new session state
+		// Store under session_data key in sessionStore.data
+		// sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
+		sessionStore.updateSession(sessionId, { session_data: sessionData })
+		
+		return new Response(JSON.stringify({ success: true }), {
+			headers: { 'Content-Type': 'application/json' }
+		})
+	} catch (error) {
+		console.error('Error updating session:', error)
+		return new Response('Internal Server Error', { status: 500 })
 	}
 }
 
@@ -70,7 +111,7 @@ async function createSSRResponse(pathname: string, req: Request): Promise<Respon
 		
 		// Initialize store with session data before SSR
 		// This ensures session state is available during server-side rendering
-		const sessionData = getSessionData(req)
+		const {sessionData, sessionId: currentSessionId} = getSessionData(req)
 		initStore(sessionData)
 		
 		// Use isomorphic router to resolve route and render SSR content
@@ -90,17 +131,15 @@ async function createSSRResponse(pathname: string, req: Request): Promise<Respon
 		const stateScript = `<script id="__SSR_STATE__" type="application/json">${JSON.stringify(serializedState)}</script>`
 		html = html.replace('</head>', `${stateScript}</head>`)
 
-		// Set session cookie
-		const cookies = req.headers.get('cookie') || ''
-		const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
-		const sessionId = sessionIdMatch ? sessionIdMatch[1] : sessionStore.createSession(null)
+		// Set session cookie using the sessionId from getSessionData()
+		// This ensures the cookie matches the session that was used for SSR
 
 		// Return full HTML document with SSR content
 		return new Response(html, {
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Content-Type': 'text/html; charset=utf-8',
-				'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
+				'Set-Cookie': `sessionId=${currentSessionId}; Path=/; HttpOnly; SameSite=Lax`,
 			},
 		})
 	} catch(error) {
@@ -124,6 +163,11 @@ const server = Bun.serve({
 		// Handle Bun's internal assets (HMR, etc.)
 		if (pathname.startsWith('/_bun/')) {
 			return undefined // Let Bun handle it
+		}
+
+		// Handle API endpoints
+		if (pathname === '/api/session' && req.method === 'POST') {
+			return await handleSessionUpdate(req)
 		}
 
 		// Handle SSR routes (including root)

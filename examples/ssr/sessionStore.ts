@@ -51,6 +51,8 @@ class SessionStore {
 	updateSession(sessionId: string, data: Record<string, any>): void {
 		const session = this.sessions.get(sessionId)
 		if (session) {
+			// Merge data with existing session data
+			// Handle nested structures like session_data
 			session.data = {...session.data, ...data}
 		}
 	}

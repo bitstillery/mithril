@@ -346,46 +346,64 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		setupFn()
 	}
 
-	save() {
+	async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void> {
+		// Default to saving all storage types if no options provided
+		const saveSaved = options?.saved ?? (options === undefined)
+		const saveTab = options?.tab ?? (options === undefined)
+		const saveSession = options?.session ?? (options === undefined)
+		
 		// Use SSR serialization which properly handles State objects and skips ComputedSignal properties
 		// This is the same mechanism used for SSR, ensuring consistency
 		const statePlain = serializeStore(this.stateInstance)
-		this.set('store', this.blueprint(statePlain, copy_object(this.templates.saved)))
 		
-		// Serialize tab state if it exists
-		const tabState = (this.stateInstance as any).tab
-		if (tabState) {
-			// Get the tab template - unwrap if it's nested under a 'tab' key
-			// The template might be: { tab: { sessionId, ... } } or { sessionId, ... }
-			// The state is always: { sessionId, ... }
-			const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
-			
-			// Check if tab is a State object
-			if (isState(tabState)) {
-				const tabPlain = serializeStore(tabState)
-				// blueprint expects both arguments to have the same structure
-				this.set_tab('store', this.blueprint(tabPlain, copy_object(tabTemplate)))
+		// Save to localStorage (saved state)
+		if (saveSaved && this.templates.saved) {
+			this.set('store', this.blueprint(statePlain, copy_object(this.templates.saved)))
+		}
+		
+		// Save to sessionStorage (tab state)
+		if (saveTab && this.templates.tab) {
+			const tabState = (this.stateInstance as any).tab
+			if (tabState) {
+				// Get the tab template - unwrap if it's nested under a 'tab' key
+				// The template might be: { tab: { sessionId, ... } } or { sessionId, ... }
+				// The state is always: { sessionId, ... }
+				const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+				
+				// Check if tab is a State object
+				if (isState(tabState)) {
+					const tabPlain = serializeStore(tabState)
+					// blueprint expects both arguments to have the same structure
+					this.set_tab('store', this.blueprint(tabPlain, copy_object(tabTemplate)))
+				} else {
+					// Plain object tab
+					this.set_tab('store', this.blueprint(tabState, copy_object(tabTemplate)))
+				}
 			} else {
-				// Plain object tab
-				this.set_tab('store', this.blueprint(tabState, copy_object(tabTemplate)))
-			}
-		} else {
-			// No tab state - save empty tab based on template structure
-			const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
-			if (tabTemplate && Object.keys(tabTemplate).length > 0) {
-				this.set_tab('store', this.blueprint({} as any, copy_object(tabTemplate)))
-			} else {
-				this.set_tab('store', {})
+				// No tab state - save empty tab based on template structure
+				const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+				if (tabTemplate && Object.keys(tabTemplate).length > 0) {
+					this.set_tab('store', this.blueprint({} as any, copy_object(tabTemplate)))
+				} else {
+					this.set_tab('store', {})
+				}
 			}
 		}
 		
-		// Session state is saved via HTTP endpoint (application-specific)
-		// Use blueprint to extract only session properties for saving to server
-		// Note: Actual HTTP call is not implemented here - application needs to handle it
-		if (this.templates.session && Object.keys(this.templates.session).length > 0) {
+		// Save to session API (session state) - async by nature
+		if (saveSession && this.templates.session && Object.keys(this.templates.session).length > 0) {
 			const sessionData = this.blueprint(statePlain, copy_object(this.templates.session))
-			// Application should save sessionData via HTTP endpoint
-			// Example: await fetch(`/api/session/${sessionId}`, { method: 'POST', body: JSON.stringify(sessionData) })
+			
+			// Call API endpoint with batched session updates
+			const response = await fetch('/api/session', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(sessionData)
+			})
+			
+			if (!response.ok) {
+				throw new Error(`Failed to save session state: ${response.statusText}`)
+			}
 		}
 	}
 

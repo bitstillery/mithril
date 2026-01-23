@@ -70,15 +70,32 @@ export class StoreDemo extends MithrilTsxComponent {
 
 			<div class="state-section">
 				<h3>Session State (server-side)</h3>
-				<p>Comes from server via SSR. Overwritten by SSR. Not stored in localStorage.</p>
+				<p>Comes from server via SSR. Persists across reloads (via API), clears on server restart.</p>
 				<div class="state-display">
 					<p>User ID: {$store.session.user.id || 'Not authenticated'}</p>
 					<p>User Name: {$store.session.user.name || 'Guest'}</p>
 					<p>Role: {$store.session.user.role || 'None'}</p>
-					<p>Server Data: {$store.session.serverData || 'No server data'}</p>
+					<label>Server Data:</label>
+					<input
+						type="text"
+						value={$store.session.serverData || ''}
+						placeholder="Enter server data"
+						oninput={(e: Event) => {
+							$store.session.serverData = (e.target as HTMLInputElement).value
+						}}
+					/>
 					<p>Last Server Update: {$store.session.lastServerUpdate ? new Date($store.session.lastServerUpdate).toLocaleString() : 'Never'}</p>
 					<p>Authenticated: {$store.isAuthenticated ? 'Yes' : 'No'}</p>
 					<p>Display Name: {$store.displayName}</p>
+					<button onclick={async () => {
+						try {
+							await store.save({session: true})
+							alert('Session state saved! Reload page to see it persist.')
+						} catch (error) {
+							console.error('Failed to save session state:', error)
+							alert('Failed to save session state')
+						}
+					}}>Save Session State</button>
 				</div>
 			</div>
 
