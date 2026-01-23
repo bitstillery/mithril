@@ -68,6 +68,18 @@ export class App extends MithrilTsxComponent<AppAttrs> {
 				>
 					Async Data
 				</a>
+				<a
+					href="/store"
+					onclick={(e: MouseEvent) => {
+						if (typeof window !== 'undefined') {
+							e.preventDefault()
+							navigate('/store')
+						}
+					}}
+					class={currentPath === '/store' ? 'active' : ''}
+				>
+					Store Demo
+				</a>
 			</nav>
 			<main>
 				{/* Use key to ensure component is recreated on route change */}

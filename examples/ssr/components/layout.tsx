@@ -26,6 +26,10 @@ export class Layout extends MithrilTsxComponent<LayoutAttrs> {
 				<m.route.Link href="/async" selector="a" class={currentPath === '/async' ? 'active' : ''}>
 					Async Data
 				</m.route.Link>
+				{' '}
+				<m.route.Link href="/store" selector="a" class={currentPath === '/store' ? 'active' : ''}>
+					Store Demo
+				</m.route.Link>
 			</nav>
 			<main>
 				<CurrentComponent key={componentKey} />

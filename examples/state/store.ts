@@ -39,8 +39,8 @@ export const store = new Store<AppState>()
 // Initialize store with templates
 // This should be called once when the app starts
 export function initStore() {
-	const persistent: Partial<AppState> = {
-		count: 0, // Count is persistent - it will be saved to localStorage
+	const saved: Partial<AppState> = {
+		count: 0, // Count is saved - it will be saved to localStorage
 		persistentData: {
 			username: 'Guest',
 			theme: 'light',
@@ -55,7 +55,7 @@ export function initStore() {
 		],
 	}
 
-	const volatile: Partial<AppState> = {
+	const temporary: Partial<AppState> = {
 		volatileData: {
 			currentView: 'home',
 			tempMessage: '',
@@ -66,7 +66,7 @@ export function initStore() {
 		completedTodos: () => store.state.todos.filter((t: Todo) => t.completed).length,
 	}
 
-	const session: Partial<AppState> = {
+	const tab: Partial<AppState> = {
 		session: {
 			sessionId: `session-${Date.now()}`,
 			loginTime: Date.now(),
@@ -76,7 +76,7 @@ export function initStore() {
 
 	// Load store with templates
 	// Computed properties defined in templates are automatically restored
-	store.load(persistent, volatile, session)
+	store.load(saved, temporary, tab)
 }
 
 // Initialize store on module load (synchronously)

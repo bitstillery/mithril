@@ -292,6 +292,13 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
 						}
 						targetState = targetState[keys[i]]
 					}
+					// Clear any existing signal in signalMap so function is re-initialized as ComputedSignal
+					if (targetState && typeof targetState === 'object' && (targetState as any).__isState) {
+						const signalMap = (targetState as any).__signalMap
+						if (signalMap && signalMap instanceof Map) {
+							signalMap.delete(key)
+						}
+					}
 					targetState[key] = value
 				} else if (is_object(value)) {
 					// Recursively restore nested computed properties

@@ -429,7 +429,7 @@ if (userId) {
 
 // 3. Pass serverData as session template to Store.load()
 // Templates define which properties belong to which storage type
-store.load(persistent, volatile, tab, serverData)
+store.load(saved, temporary, tab, serverData)
 
 // 4. Server session state is serialized with SSR state and sent to client
 

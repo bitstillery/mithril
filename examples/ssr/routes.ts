@@ -2,6 +2,7 @@ import m from '../../index'
 
 import {Home} from './components/home'
 import {AsyncData} from './components/async_data'
+import {StoreDemo} from './components/store_demo'
 import {Layout} from './components/layout'
 
 import type {ComponentType, Vnode} from '../../index'
@@ -25,4 +26,6 @@ export const routes: Record<string, ComponentType | RouteResolver> = {
 	'/': createRoute(Home as unknown as ComponentType, '/'),
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	'/async': createRoute(AsyncData as unknown as ComponentType, '/async'),
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	'/store': createRoute(StoreDemo as unknown as ComponentType, '/store'),
 }

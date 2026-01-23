@@ -5,6 +5,9 @@ import m from '../../server'
 
 import htmlTemplate from './public/index.html'
 import {routes} from './routes'
+import {initStore} from './store'
+import {sessionStore} from './sessionStore'
+import {clearStateRegistry} from '../../state'
 
 const PORT = 3000
 
@@ -27,9 +30,49 @@ async function getProcessedTemplate(): Promise<string> {
 	return await readFile(templatePath, 'utf-8')
 }
 
+// Helper function to get session data from request
+function getSessionData(req: Request): Partial<any> {
+	// Extract session ID from cookie or create new session
+	const cookies = req.headers.get('cookie') || ''
+	const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
+	let sessionId = sessionIdMatch ? sessionIdMatch[1] : null
+	
+	// For demo purposes, simulate user authentication
+	// In production, decode JWT token to get user ID
+	const userId = sessionId ? sessionStore.getSession(sessionId)?.userId : null
+	
+	// Create or retrieve session
+	if (!sessionId || !sessionStore.getSession(sessionId)) {
+		sessionId = sessionStore.createSession(userId || null)
+	}
+	
+	const session = sessionStore.getSession(sessionId)
+	
+	// Return session data for Store.load()
+	return {
+		session: {
+			user: {
+				id: session?.userId || null,
+				name: session?.userId ? `User ${session.userId}` : '',
+				role: session?.userId ? 'user' : '',
+			},
+			serverData: session?.data.serverData || `Server data for session ${sessionId}`,
+			lastServerUpdate: Date.now(),
+		},
+	}
+}
+
 // Helper function to create SSR response
-async function createSSRResponse(pathname: string): Promise<Response> {
+async function createSSRResponse(pathname: string, req: Request): Promise<Response> {
 	try {
+		// Clear state registry before each SSR request to avoid collisions
+		clearStateRegistry()
+		
+		// Initialize store with session data before SSR
+		// This ensures session state is available during server-side rendering
+		const sessionData = getSessionData(req)
+		initStore(sessionData)
+		
 		// Use isomorphic router to resolve route and render SSR content
 		const result = await m.route.resolve(pathname, routes, m.renderToString)
 		
@@ -47,11 +90,17 @@ async function createSSRResponse(pathname: string): Promise<Response> {
 		const stateScript = `<script id="__SSR_STATE__" type="application/json">${JSON.stringify(serializedState)}</script>`
 		html = html.replace('</head>', `${stateScript}</head>`)
 
+		// Set session cookie
+		const cookies = req.headers.get('cookie') || ''
+		const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
+		const sessionId = sessionIdMatch ? sessionIdMatch[1] : sessionStore.createSession(null)
+
 		// Return full HTML document with SSR content
 		return new Response(html, {
 			headers: {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				'Content-Type': 'text/html; charset=utf-8',
+				'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
 			},
 		})
 	} catch(error) {
@@ -80,8 +129,8 @@ const server = Bun.serve({
 		// Handle SSR routes (including root)
 		// Check if this is a route we want to SSR
 		// This must come BEFORE returning undefined, so we intercept SSR routes
-		if (pathname === '/' || pathname === '/async' || routes[pathname]) {
-			return await createSSRResponse(pathname)
+		if (pathname === '/' || pathname === '/async' || pathname === '/store' || routes[pathname]) {
+			return await createSSRResponse(pathname, req)
 		}
 
 		// For other routes (like client.tsx, __template__), return undefined to let Bun handle them

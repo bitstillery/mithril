@@ -121,16 +121,16 @@ describe('Store', () => {
 	describe('Store.load()', () => {
 		test('loads state from templates when storage is empty', () => {
 			const store = new Store()
-			const persistent = {count: 0, name: 'initial'}
-			const volatile = {temp: 'value'}
-			const session = {sessionId: 'abc123'}
+			const saved = {count: 0, name: 'initial'}
+			const temporary = {temp: 'value'}
+			const tab = {sessionId: 'abc123'}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.count).toBe(0)
 			expect(store.state.name).toBe('initial')
 			expect(store.state.temp).toBe('value')
-			expect((store.state as any).session.sessionId).toBe('abc123')
+			expect((store.state as any).tab.sessionId).toBe('abc123')
 		})
 
 		test('loads state from localStorage when available', () => {
@@ -140,43 +140,43 @@ describe('Store', () => {
 			}))
 
 			const store = new Store()
-			const persistent = {count: 0, name: 'initial'}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0, name: 'initial'}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.count).toBe(42)
 			expect(store.state.name).toBe('restored')
 		})
 
-		test('loads session state from sessionStorage when available', () => {
+		test('loads tab state from sessionStorage when available', () => {
 			sessionStorageMock.setItem('store', JSON.stringify({
 				sessionId: 'restored-session',
 			}))
 
 			const store = new Store()
-			const persistent = {}
-			const volatile = {}
-			const session = {sessionId: 'new-session'}
+			const saved = {}
+			const temporary = {}
+			const tab = {sessionId: 'new-session'}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
-			expect((store.state as any).session.sessionId).toBe('restored-session')
+			expect((store.state as any).tab.sessionId).toBe('restored-session')
 		})
 
-		test('merges persistent template with localStorage data', () => {
+		test('merges saved template with localStorage data', () => {
 			localStorageMock.setItem('store', JSON.stringify({
 				count: 100,
 				// name is not in localStorage, should come from template
 			}))
 
 			const store = new Store()
-			const persistent = {count: 0, name: 'template-name'}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0, name: 'template-name'}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.count).toBe(100) // From localStorage
 			expect(store.state.name).toBe('template-name') // From template
@@ -189,11 +189,11 @@ describe('Store', () => {
 			}))
 
 			const store = new Store()
-			const persistent = {count: 0}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect((store.state as any).identity).toBe('old-identity-123')
 		})
@@ -202,12 +202,12 @@ describe('Store', () => {
 			localStorageMock.setItem('store', 'invalid json{')
 
 			const store = new Store()
-			const persistent = {count: 0}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0}
+			const temporary = {}
+			const tab = {}
 
 			// Should not throw, should use template values
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			expect(store.state.count).toBe(0)
 		})
 
@@ -220,83 +220,83 @@ describe('Store', () => {
 			}))
 
 			const store = new Store()
-			const persistent = {
+			const saved = {
 				user: {
 					name: '',
 					email: '',
 				},
 			}
-			const volatile = {}
-			const session = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.user.name).toBe('John')
 			expect(store.state.user.email).toBe('john@example.com')
 		})
 
-		test('volatile data overrides persistent data', () => {
+		test('temporary data overrides saved data', () => {
 			localStorageMock.setItem('store', JSON.stringify({
 				count: 100,
 			}))
 
 			const store = new Store()
-			const persistent = {count: 0}
-			const volatile = {count: 999} // Should override
-			const session = {}
+			const saved = {count: 0}
+			const temporary = {count: 999} // Should override
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.count).toBe(999)
 		})
 	})
 
 	describe('Store.save()', () => {
-		test('saves persistent data to localStorage', () => {
+		test('saves saved data to localStorage', () => {
 			const store = new Store()
-			const persistent = {count: 0, name: 'test'}
-			const volatile = {temp: 'value'}
-			const session = {}
+			const saved = {count: 0, name: 'test'}
+			const temporary = {temp: 'value'}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			store.state.count = 42
 			store.state.name = 'updated'
 			store.save()
 
-			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
-			expect(saved.count).toBe(42)
-			expect(saved.name).toBe('updated')
-			expect(saved.temp).toBeUndefined() // Volatile should not be saved
+			const savedData = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(savedData.count).toBe(42)
+			expect(savedData.name).toBe('updated')
+			expect(savedData.temp).toBeUndefined() // Temporary should not be saved
 		})
 
-		test('saves session data to sessionStorage', () => {
+		test('saves tab data to sessionStorage', () => {
 			const store = new Store()
-			const persistent = {}
-			const volatile = {}
-			const session = {sessionId: 'abc123'}
+			const saved = {}
+			const temporary = {}
+			const tab = {sessionId: 'abc123'}
 
-			store.load(persistent, volatile, session)
-			;(store.state as any).session.sessionId = 'updated-session'
+			store.load(saved, temporary, tab)
+			;(store.state as any).tab.sessionId = 'updated-session'
 			store.save()
 
-			const saved = JSON.parse(sessionStorageMock.getItem('store') || '{}')
-			expect(saved.sessionId).toBe('updated-session')
+			const savedData = JSON.parse(sessionStorageMock.getItem('store') || '{}')
+			expect(savedData.sessionId).toBe('updated-session')
 		})
 
-		test('only saves keys defined in persistent template', () => {
+		test('only saves keys defined in saved template', () => {
 			const store = new Store()
-			const persistent = {count: 0} // Only count should be saved
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0} // Only count should be saved
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			store.state.count = 42
 			;(store.state as any).extraProperty = 'should not be saved'
 			store.save()
 
-			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
-			expect(saved.count).toBe(42)
-			expect(saved.extraProperty).toBeUndefined()
+			const savedData = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(savedData.count).toBe(42)
+			expect(savedData.extraProperty).toBeUndefined()
 		})
 
 		test('handles save errors gracefully', () => {
@@ -307,11 +307,11 @@ describe('Store', () => {
 			}
 
 			const store = new Store()
-			const persistent = {count: 0}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			// Should not throw
 			store.save()
 
@@ -419,15 +419,15 @@ describe('Store', () => {
 	describe('Store.clean_lookup()', () => {
 		test('removes invalid lookup entries', () => {
 			const store = new Store()
-			const persistent = {lookup: {
+			const saved = {lookup: {
 				valid: {value: 'test', modified: Date.now()},
 				invalid: null,
 				invalid2: 'not an object',
 			}}
-			const volatile = {}
-			const session = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			
 			// Verify initial state
 			expect((store.state as any).lookup.valid).toBeDefined()
@@ -438,20 +438,20 @@ describe('Store', () => {
 
 			// After cleanup, invalid entries should be removed
 			// Verify by checking saved state (clean_lookup calls save())
-			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
-			expect(saved.lookup).toBeDefined()
-			expect(saved.lookup.valid).toBeDefined()
-			expect(saved.lookup.invalid).toBeUndefined()
-			expect(saved.lookup.invalid2).toBeUndefined()
+			const savedData = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(savedData.lookup).toBeDefined()
+			expect(savedData.lookup.valid).toBeDefined()
+			expect(savedData.lookup.invalid).toBeUndefined()
+			expect(savedData.lookup.invalid2).toBeUndefined()
 		})
 
 		test('adds modified timestamp to entries without one', () => {
 			const store = new Store()
-			const persistent = {lookup: {}}
-			const volatile = {}
-			const session = {}
+			const saved = {lookup: {}}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			const now = Date.now()
 			;(store.state as any).lookup = {
 				entry: {value: 'test'},
@@ -466,14 +466,14 @@ describe('Store', () => {
 
 		test('removes entries older than TTL', () => {
 			const store = new Store({lookup_ttl: 1000}) // 1 second TTL
-			const persistent = {lookup: {
+			const saved = {lookup: {
 				old: {value: 'old', modified: Date.now() - 2000}, // 2 seconds ago
 				new: {value: 'new', modified: Date.now()}, // Just now
 			}}
-			const volatile = {}
-			const session = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			
 			// Verify initial state
 			expect((store.state as any).lookup.old).toBeDefined()
@@ -483,20 +483,20 @@ describe('Store', () => {
 
 			// After cleanup, old entry should be removed
 			// Verify by checking saved state (clean_lookup calls save())
-			const saved = JSON.parse(localStorageMock.getItem('store') || '{}')
-			expect(saved.lookup).toBeDefined()
-			expect(saved.lookup.old).toBeUndefined()
+			const savedData = JSON.parse(localStorageMock.getItem('store') || '{}')
+			expect(savedData.lookup).toBeDefined()
+			expect(savedData.lookup.old).toBeUndefined()
 			expect(saved.lookup.new).toBeDefined()
 			expect(saved.lookup.new.value).toBe('new')
 		})
 
 		test('does nothing if lookup does not exist', () => {
 			const store = new Store()
-			const persistent = {}
-			const volatile = {}
-			const session = {}
+			const saved = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			// No lookup property
 
 			// Should not throw
@@ -505,11 +505,11 @@ describe('Store', () => {
 
 		test('calls save() when lookup is modified', () => {
 			const store = new Store()
-			const persistent = {lookup: {}}
-			const volatile = {}
-			const session = {}
+			const saved = {lookup: {}}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			;(store.state as any).lookup = {
 				invalid: null,
 			}
@@ -519,12 +519,12 @@ describe('Store', () => {
 			store.clean_lookup()
 
 			// Verify save was called by checking if localStorage was updated
-			const saved = localStorageMock.getItem('store')
-			expect(saved).not.toBeNull()
+			const savedData = localStorageMock.getItem('store')
+			expect(savedData).not.toBeNull()
 		})
 	})
 
-	describe('Store.get() and Store.get_session_storage()', () => {
+		describe('Store.get() and Store.get_tab_storage()', () => {
 		test('get() returns localStorage value', () => {
 			localStorageMock.setItem('test-key', 'test-value')
 			const store = new Store()
@@ -536,31 +536,31 @@ describe('Store', () => {
 			expect(store.get('non-existent')).toBe('{}')
 		})
 
-		test('get_session_storage() returns sessionStorage value', () => {
+		test('get_tab_storage() returns sessionStorage value', () => {
 			sessionStorageMock.setItem('test-key', 'test-value')
 			const store = new Store()
-			expect(store.get_session_storage('test-key')).toBe('test-value')
+			expect(store.get_tab_storage('test-key')).toBe('test-value')
 		})
 
-		test('get_session_storage() returns "{}" when key does not exist', () => {
+		test('get_tab_storage() returns "{}" when key does not exist', () => {
 			const store = new Store()
-			expect(store.get_session_storage('non-existent')).toBe('{}')
+			expect(store.get_tab_storage('non-existent')).toBe('{}')
 		})
 	})
 
-	describe('Store.set() and Store.set_session()', () => {
+		describe('Store.set() and Store.set_tab()', () => {
 		test('set() saves to localStorage', () => {
 			const store = new Store()
 			store.set('test-key', {count: 42})
-			const saved = JSON.parse(localStorageMock.getItem('test-key') || '{}')
-			expect(saved.count).toBe(42)
+			const savedData = JSON.parse(localStorageMock.getItem('test-key') || '{}')
+			expect(savedData.count).toBe(42)
 		})
 
-		test('set_session() saves to sessionStorage', () => {
+		test('set_tab() saves to sessionStorage', () => {
 			const store = new Store()
-			store.set_session('test-key', {sessionId: 'abc123'})
-			const saved = JSON.parse(sessionStorageMock.getItem('test-key') || '{}')
-			expect(saved.sessionId).toBe('abc123')
+			store.set_tab('test-key', {sessionId: 'abc123'})
+			const savedData = JSON.parse(sessionStorageMock.getItem('test-key') || '{}')
+			expect(savedData.sessionId).toBe('abc123')
 		})
 
 		test('set() handles errors gracefully', () => {
@@ -580,12 +580,12 @@ describe('Store', () => {
 	describe('Integration Tests', () => {
 		test('complete flow: load, modify, save, reload', () => {
 			const store1 = new Store()
-			const persistent = {count: 0, name: 'initial'}
-			const volatile = {}
-			const session = {}
+			const saved = {count: 0, name: 'initial'}
+			const temporary = {}
+			const tab = {}
 
 			// Load initial state
-			store1.load(persistent, volatile, session)
+			store1.load(saved, temporary, tab)
 			expect(store1.state.count).toBe(0)
 
 			// Modify state
@@ -597,30 +597,30 @@ describe('Store', () => {
 
 			// Create new store and reload
 			const store2 = new Store()
-			store2.load(persistent, volatile, session)
+			store2.load(saved, temporary, tab)
 
 			// Should have saved values
 			expect(store2.state.count).toBe(100)
 			expect(store2.state.name).toBe('updated')
 		})
 
-		test('volatile data is not persisted', () => {
+		test('temporary data is not persisted', () => {
 			const store1 = new Store()
-			const persistent = {count: 0}
-			const volatile = {temp: 'temporary'}
-			const session = {}
+			const saved = {count: 0}
+			const temporary = {temp: 'temporary'}
+			const tab = {}
 
-			store1.load(persistent, volatile, session)
+			store1.load(saved, temporary, tab)
 			store1.state.count = 42
 			;(store1.state as any).temp = 'modified-temp'
 			store1.save()
 
 			// Reload
 			const store2 = new Store()
-			store2.load(persistent, {}, session) // No volatile data
+			store2.load(saved, {}, tab) // No temporary data
 
-			expect(store2.state.count).toBe(42) // Persistent
-			expect((store2.state as any).temp).toBeUndefined() // Volatile not saved
+			expect(store2.state.count).toBe(42) // Saved
+			expect((store2.state as any).temp).toBeUndefined() // Temporary not saved
 		})
 	})
 
@@ -631,15 +631,15 @@ describe('Store', () => {
 				doubled: () => number
 			}>()
 
-			const persistent = {count: 0}
-			const volatile = {
+			const saved = {count: 0}
+			const temporary = {
 				doubled: function(this: {count: number}) {
 					return this.count * 2
 				},
 			}
-			const session = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			// Debug: Check if doubled is in signalMap
 			const signalMap = (store.state as any).__signalMap
@@ -660,15 +660,15 @@ describe('Store', () => {
 				doubled: () => number
 			}>()
 
-			const persistent = {count: 0}
-			const volatile = {
+			const saved = {count: 0}
+			const temporary = {
 				doubled: function(this: {count: number}) {
 					return this.count * 2
 				},
 			}
-			const session = {}
+			const tab = {}
 
-			serverStore.load(persistent, volatile, session)
+			serverStore.load(saved, temporary, tab)
 			serverStore.state.count = 10
 
 			// Serialize on server - get the store's state name from registry
@@ -684,7 +684,7 @@ describe('Store', () => {
 				doubled: () => number
 			}>()
 
-			clientStore.load(persistent, volatile, session)
+			clientStore.load(saved, temporary, tab)
 
 			// Get client store name and update serialized data to use client store name
 			const clientRegistered = getRegisteredStates()
@@ -708,52 +708,52 @@ describe('Store', () => {
 			expect(clientStore.state.doubled).toBe(10) // 5 * 2 = 10
 		})
 
-		test('computed properties can be defined in persistent template', () => {
+		test('computed properties can be defined in saved template', () => {
 			const store = new Store<{
 				count: number
 				squared: () => number
 			}>()
 
-			const persistent = {
+			const saved = {
 				count: 0,
 				squared: function(this: {count: number}) {
 					return this.count * this.count
 				},
 			}
-			const volatile = {}
-			const session = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			store.state.count = 4
 			expect(store.state.squared).toBe(16) // 4 * 4 = 16
 		})
 
-		test('computed properties can be defined in session template', () => {
+		test('computed properties can be defined in tab template', () => {
 			const store = new Store<{
-				session: {
+				tab: {
 					sessionId: string
 					isValid: () => boolean
 				}
 			}>()
 
-			const persistent = {}
-			const volatile = {}
-			// Session template structure: session data is nested under 'session' key
-			// This matches how Store.load() merges session_state into store_state
-			const session = {
+			const saved = {}
+			const temporary = {}
+			// Tab template structure: tab data is nested under 'tab' key
+			// This matches how Store.load() merges tab_state into store_state
+			const tab = {
 				sessionId: 'abc123',
 				isValid: function(this: {sessionId: string}) {
 					return this.sessionId && this.sessionId.length > 0
 				},
 			}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
-			// sessionId should be set (session template is merged into store_state.session)
-			expect((store.state as any).session.sessionId).toBe('abc123')
+			// sessionId should be set (tab template is merged into store_state.tab)
+			expect((store.state as any).tab.sessionId).toBe('abc123')
 			// Computed property should work
-			expect((store.state as any).session.isValid).toBe(true)
+			expect((store.state as any).tab.isValid).toBe(true)
 		})
 
 		test('computed properties work with nested state', () => {
@@ -764,7 +764,7 @@ describe('Store', () => {
 				}
 			}>()
 
-			const persistent = {
+			const saved = {
 				user: {
 					name: 'John',
 					fullName: function(this: {name: string}) {
@@ -772,10 +772,10 @@ describe('Store', () => {
 					},
 				},
 			}
-			const volatile = {}
-			const session = {}
+			const temporary = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			expect(store.state.user.fullName).toBe('Mr. John')
 			
@@ -789,15 +789,15 @@ describe('Store', () => {
 				doubled: () => number
 			}>()
 
-			const persistent = {count: 0}
-			const volatile = {
+			const saved = {count: 0}
+			const temporary = {
 				doubled: function(this: {count: number}) {
 					return this.count * 2
 				},
 			}
-			const session = {}
+			const tab = {}
 
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			// Check registry entry
 			const registered = getRegisteredStates()
@@ -815,22 +815,22 @@ describe('Store', () => {
 				doubled: () => number
 			}>()
 
-			const persistent = {count: 0}
-			const volatile = {
+			const saved = {count: 0}
+			const temporary = {
 				doubled: function(this: {count: number}) {
 					return this.count * 2
 				},
 			}
-			const session = {}
+			const tab = {}
 
 			// First load
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 			store.state.count = 5
 			expect(store.state.doubled).toBe(10)
 
 			// Save and reload
 			store.save()
-			store.load(persistent, volatile, session)
+			store.load(saved, temporary, tab)
 
 			// Computed property should still work after reload
 			expect(store.state.count).toBe(5) // Restored from localStorage

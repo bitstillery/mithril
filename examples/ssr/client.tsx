@@ -4,16 +4,31 @@ import m from '../../index'
 import {deserializeAllStates} from '../../render/ssrState'
 
 import {routes} from './routes'
+import {initStore, $store} from './store'
 
 // Set prefix to empty string for pathname-based routing (not hash-based)
 m.route.prefix = ''
 
-// Read and restore SSR state before mounting
+// Initialize store FIRST so it's registered before SSR deserialization
+// This ensures computed properties can be restored after deserialization
+// Session data comes from SSR state (will be hydrated by deserializeAllStates)
+initStore({})
+
+// Read and restore SSR state after store is registered
+// This will hydrate the store state and restore computed properties
 const ssrStateScript = document.getElementById('__SSR_STATE__')
 if (ssrStateScript && ssrStateScript.textContent) {
 	try {
 		const serializedState = JSON.parse(ssrStateScript.textContent)
 		deserializeAllStates(serializedState)
+		
+		// Ensure computed properties are available after deserialization
+		// deserializeAllStates() should restore them, but verify they're functions
+		if (typeof $store.isAuthenticated !== 'function') {
+			console.warn('Computed properties not restored correctly, re-initializing store')
+			// Re-initialize to ensure computed properties are restored
+			initStore({})
+		}
 	} catch (error) {
 		console.error('Error deserializing SSR state:', error)
 	}

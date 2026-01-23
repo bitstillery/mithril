@@ -176,7 +176,7 @@ Single global store (`$s`) automatically serialized:
 
 ```typescript
 // In app.ts
-store.load(persistent, volatile, session)
+store.load(saved, temporary, tab)
 // $s is the unified store containing all state
 // Only $s needs to be registered for SSR
 registerState('$s', $s)

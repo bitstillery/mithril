@@ -29,6 +29,13 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
 						targetState = targetState[keys[i]]
 					}
 					if (targetState) {
+						// Clear any existing signal in signalMap so function is re-initialized as ComputedSignal
+						if (typeof targetState === 'object' && (targetState as any).__isState) {
+							const signalMap = (targetState as any).__signalMap
+							if (signalMap && signalMap instanceof Map) {
+								signalMap.delete(key)
+							}
+						}
 						targetState[key] = value
 					}
 				} else if (is_object(value)) {
@@ -119,12 +126,19 @@ let storeInstanceCounter = 0
 /**
  * Store class - wraps state() with persistence functionality
  * Provides load/save/blueprint methods for localStorage/sessionStorage persistence
+ * 
+ * State types:
+ * - saved: localStorage (survives browser restarts)
+ * - temporary: not persisted (resets on reload)
+ * - tab: sessionStorage (survives page reloads, clears when tab closes)
+ * - session: server-side session storage (requires backend, hydrated via SSR)
  */
 export class Store<T extends Record<string, any> = Record<string, any>> {
 	private stateInstance: State<T>
 	private templates = {
-		persistent: {} as Partial<T>,
-		volatile: {} as Partial<T>,
+		saved: {} as Partial<T>,
+		temporary: {} as Partial<T>,
+		tab: {} as Partial<T>,
 		session: {} as Partial<T>,
 	}
 	private lookup_verify_interval: number | null = null
@@ -230,7 +244,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		}
 	}
 
-	get_session_storage(key: string): string {
+	get_tab_storage(key: string): string {
 		if (typeof window === 'undefined') return '{}'
 		try {
 			return window.sessionStorage.getItem(key) || '{}'
@@ -239,59 +253,67 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		}
 	}
 
-	load(persistent: Partial<T>, volatile: Partial<T>, session: Partial<T> = {} as Partial<T>) {
+	load(saved: Partial<T>, temporary: Partial<T>, tab: Partial<T> = {} as Partial<T>, session: Partial<T> = {} as Partial<T>) {
 		const restored_state = {
-			session: this.get_session_storage('store'),
+			tab: this.get_tab_storage('store'),
 			store: this.get('store'),
 		}
 
 		this.templates = {
-			persistent,
+			saved,
+			temporary,
+			tab,
 			session,
-			volatile,
 		}
 
 		try {
 			restored_state.store = JSON.parse(restored_state.store)
-			restored_state.session = JSON.parse(restored_state.session)
+			restored_state.tab = JSON.parse(restored_state.tab)
 		} catch(err) {
-			console.log(`[store] failed to parse store/session: ${err}`)
+			console.log(`[store] failed to parse store/tab: ${err}`)
 		}
 
-		const store_state = merge_deep(copy_object(this.templates.persistent), copy_object(restored_state.store))
+		const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store))
 		// override with previous identity for a better version bump experience.
 		if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in restored_state.store) {
 			store_state.identity = (restored_state.store as any).identity
 		}
-		let session_state
+		let tab_state
 
-		if (!restored_state.session) {
-			console.log('[store] loading session state from local store')
-			session_state = merge_deep(copy_object(this.templates.session), store_state.session)
+		if (!restored_state.tab) {
+			console.log('[store] loading tab state from local store')
+			tab_state = merge_deep(copy_object(this.templates.tab), store_state.tab)
 		} else {
-			console.log('[store] restoring existing session state')
-			session_state = merge_deep(copy_object(this.templates.session), copy_object(restored_state.session))
+			console.log('[store] restoring existing tab state')
+			tab_state = merge_deep(copy_object(this.templates.tab), copy_object(restored_state.tab))
 		}
 		
-		// Always merge session_state into store_state to ensure it's included in final_state
-		merge_deep(store_state, {session: session_state})
+		// Always merge tab_state into store_state to ensure it's included in final_state
+		merge_deep(store_state, {tab: tab_state})
 
-		// Merge volatile into store_state to create final_state
-		// Note: copy_object removes functions, but volatile data shouldn't have functions anyway
+		// Merge temporary into store_state
+		// Note: copy_object removes functions, but temporary data shouldn't have functions anyway
 		// (computed properties are handled separately via mergedInitial)
-		const final_state = merge_deep(store_state, copy_object(volatile))
+		const temp_state = merge_deep(store_state, copy_object(temporary))
+		
+		// Merge session into temp_state to create final_state
+		// Session state comes from server (SSR), not localStorage
+		const final_state = merge_deep(temp_state, copy_object(session))
 		
 		// Merge templates (including computed properties) into "merged initial state"
 		// This will be stored in registry so computed properties can be automatically restored
 		// Use copy_object_preserve_functions to deep copy while preserving functions
-		// Note: session template structure needs to match final_state structure (nested under 'session')
-		const mergedInitialPersistent = copy_object_preserve_functions(persistent)
-		const mergedInitialVolatile = copy_object_preserve_functions(volatile)
-		// Session template is merged into store_state.session, so wrap it in {session: ...}
-		const mergedInitialSession = session && Object.keys(session).length > 0 ? {session: copy_object_preserve_functions(session)} : {}
+		// Note: tab template structure needs to match final_state structure (nested under 'tab')
+		const mergedInitialSaved = copy_object_preserve_functions(saved)
+		const mergedInitialTemporary = copy_object_preserve_functions(temporary)
+		// Tab template is merged into store_state.tab, so wrap it in {tab: ...}
+		const mergedInitialTab = tab && Object.keys(tab).length > 0 ? {tab: copy_object_preserve_functions(tab)} : {}
+		// Session template is merged directly (no nesting needed, structure matches final_state)
+		const mergedInitialSession = copy_object_preserve_functions(session)
 		const mergedInitial = merge_deep(
-			mergedInitialPersistent,
-			mergedInitialVolatile,
+			mergedInitialSaved,
+			mergedInitialTemporary,
+			mergedInitialTab,
 			mergedInitialSession
 		)
 		
@@ -305,7 +327,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		
 		// Restore computed properties from merged templates
 		// This ensures computed properties are available immediately after load()
-		// Note: mergedInitial contains all templates (persistent, volatile, session) with computed properties
+		// Note: mergedInitial contains all templates (saved, temporary, tab, session) with computed properties
 		restoreComputedProperties(this.stateInstance, mergedInitial)
 		
 		// Note: setupComputedProperties() callback is no longer needed, but kept for backward compatibility
@@ -328,34 +350,42 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		// Use SSR serialization which properly handles State objects and skips ComputedSignal properties
 		// This is the same mechanism used for SSR, ensuring consistency
 		const statePlain = serializeStore(this.stateInstance)
-		this.set('store', this.blueprint(statePlain, copy_object(this.templates.persistent)))
+		this.set('store', this.blueprint(statePlain, copy_object(this.templates.saved)))
 		
-		// Serialize session state if it exists
-		// Match the original implementation: blueprint(this.state.session, this.templates.session)
-		const sessionState = (this.stateInstance as any).session
-		if (sessionState) {
-			// Get the session template - unwrap if it's nested under a 'session' key
-			// The template might be: { session: { sessionId, ... } } or { sessionId, ... }
+		// Serialize tab state if it exists
+		const tabState = (this.stateInstance as any).tab
+		if (tabState) {
+			// Get the tab template - unwrap if it's nested under a 'tab' key
+			// The template might be: { tab: { sessionId, ... } } or { sessionId, ... }
 			// The state is always: { sessionId, ... }
-			const sessionTemplate = (this.templates.session as any).session || this.templates.session
+			const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
 			
-			// Check if session is a State object
-			if (isState(sessionState)) {
-				const sessionPlain = serializeStore(sessionState)
+			// Check if tab is a State object
+			if (isState(tabState)) {
+				const tabPlain = serializeStore(tabState)
 				// blueprint expects both arguments to have the same structure
-				this.set_session('store', this.blueprint(sessionPlain, copy_object(sessionTemplate)))
+				this.set_tab('store', this.blueprint(tabPlain, copy_object(tabTemplate)))
 			} else {
-				// Plain object session
-				this.set_session('store', this.blueprint(sessionState, copy_object(sessionTemplate)))
+				// Plain object tab
+				this.set_tab('store', this.blueprint(tabState, copy_object(tabTemplate)))
 			}
 		} else {
-			// No session state - save empty session based on template structure
-			const sessionTemplate = (this.templates.session as any).session || this.templates.session
-			if (sessionTemplate && Object.keys(sessionTemplate).length > 0) {
-				this.set_session('store', this.blueprint({} as any, copy_object(sessionTemplate)))
+			// No tab state - save empty tab based on template structure
+			const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+			if (tabTemplate && Object.keys(tabTemplate).length > 0) {
+				this.set_tab('store', this.blueprint({} as any, copy_object(tabTemplate)))
 			} else {
-				this.set_session('store', {})
+				this.set_tab('store', {})
 			}
+		}
+		
+		// Session state is saved via HTTP endpoint (application-specific)
+		// Use blueprint to extract only session properties for saving to server
+		// Note: Actual HTTP call is not implemented here - application needs to handle it
+		if (this.templates.session && Object.keys(this.templates.session).length > 0) {
+			const sessionData = this.blueprint(statePlain, copy_object(this.templates.session))
+			// Application should save sessionData via HTTP endpoint
+			// Example: await fetch(`/api/session/${sessionId}`, { method: 'POST', body: JSON.stringify(sessionData) })
 		}
 	}
 
@@ -368,7 +398,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		}
 	}
 
-	set_session(key: string, item: object): void {
+	set_tab(key: string, item: object): void {
 		if (typeof window === 'undefined') return
 		try {
 			return window.sessionStorage.setItem(key, JSON.stringify(item))
