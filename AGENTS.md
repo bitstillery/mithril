@@ -302,6 +302,16 @@ We will implement a component-level redraw API similar to PR #3036...
 6. **Document rationale**: Explain why decisions were made
 7. **Track evolution**: Update ADRs when decisions change
 
+## Writing Guidelines
+
+### Runtime Environment
+
+**Always use "Bun" instead of "Node.js" in documentation and code comments:**
+- This project uses Bun as the JavaScript runtime
+- When referring to server-side execution, use "Bun" or "server-side"
+- When referring to browser APIs not available on the server, mention "Bun" (not "Node.js")
+- Examples: "Not available on server (no localStorage in Bun)" instead of "no localStorage in Node.js"
+
 ## Development Workflow
 
 ### Running Tests
