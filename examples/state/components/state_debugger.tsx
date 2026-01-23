@@ -21,8 +21,8 @@ export class StateDebugger extends MithrilTsxComponent {
 		const completedTodos = $s.completedTodos
 		const incompleteTodos = $s._incompleteTodos
 
-		// Build state object for JSON display
-		const stateObj = {
+		// Build store state object for JSON display
+		const storeState = {
 			count,
 			user: {
 				name: userName,
@@ -43,7 +43,7 @@ export class StateDebugger extends MithrilTsxComponent {
 		return (
 			<div style="padding: 20px; border: 2px solid #4CAF50; margin: 10px; background: #f9f9f9; font-family: monospace; position: sticky; top: 20px;">
 				<h2 style="margin-top: 0; color: #4CAF50; display: flex; align-items: center; gap: 8px;">
-					🔍 State Debugger
+					🔍 Store Debugger
 					<span style="font-size: 12px; font-weight: normal; color: #666;">
 						(updates automatically)
 					</span>

@@ -11,8 +11,8 @@ describe('state', () => {
 		expect(s.name).toBe('test')
 	})
 
-	test('updates store values', () => {
-		const s = store({count: 0}, 'testStore.updateValues')
+	test('updates state values', () => {
+		const s = state({count: 0}, 'testState.updateValues')
 		s.count = 10
 		expect(s.count).toBe(10)
 	})
@@ -83,9 +83,9 @@ describe('state', () => {
 	})
 
 	test('$ prefix works for array elements', () => {
-		const s = store({
+		const s = state({
 			items: [1, 2, 3],
-		}, 'testStore.dollarPrefixArray')
+		}, 'testState.dollarPrefixArray')
 		const firstSignal = s.items.$0
 		expect(firstSignal).toBeInstanceOf(Signal)
 		expect(firstSignal.value).toBe(1)
@@ -102,7 +102,7 @@ describe('state', () => {
 	})
 
 	test('handles dynamic property assignment', () => {
-		const s = store({count: 0} as any, 'testStore.dynamicProperty')
+		const s = state({count: 0} as any, 'testState.dynamicProperty')
 		s.newProp = 'test'
 		expect(s.newProp).toBe('test')
 		const newSignal = s.$newProp

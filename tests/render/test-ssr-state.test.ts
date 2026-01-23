@@ -55,7 +55,7 @@ describe('SSR State Serialization', () => {
 				count: 0,
 				name: 'test',
 				active: true,
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = serializeStore(myState)
 
@@ -112,13 +112,13 @@ describe('SSR State Serialization', () => {
 			})
 		})
 
-		test('serializeStore handles arrays containing stores', () => {
-			const myStore = store({
+		test('serializeStore handles arrays containing states', () => {
+			const myState = state({
 				users: [
 					{name: 'Alice', age: 30},
 					{name: 'Bob', age: 25},
 				],
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = serializeStore(myState)
 
@@ -173,16 +173,16 @@ describe('SSR State Serialization', () => {
 				name: 'restored',
 			}
 
-			deserializeStore(myStore, serialized)
+			deserializeStore(myState, serialized)
 
-			expect(myStore.count).toBe(42)
-			expect(myStore.name).toBe('restored')
+			expect(myState.count).toBe(42)
+			expect(myState.name).toBe('restored')
 		})
 
 		test('deserializeStore creates new signals for properties that did not exist', () => {
-			const myStore = store({
+			const myState = state({
 				count: 0,
-			}, 'myStore')
+			}, 'myState')
 
 			const serialized = {
 				count: 10,
@@ -240,26 +240,26 @@ describe('SSR State Serialization', () => {
 			}, 'myState')
 
 			// Initial state
-			expect(myStore.doubled).toBe(0)
+			expect(myState.doubled).toBe(0)
 
 			const serialized = {
 				count: 5,
 				doubled: 999, // This should be ignored
 			}
 
-			deserializeStore(myStore, serialized)
+			deserializeStore(myState, serialized)
 
 			// Count is updated
-			expect(myStore.count).toBe(5)
+			expect(myState.count).toBe(5)
 			// Doubled is recomputed, not set from serialized data
-			expect(myStore.doubled).toBe(10)
+			expect(myState.doubled).toBe(10)
 		})
 	})
 
 	describe('Serializing All States', () => {
-		test('serializeAllStates serializes all registered stores', () => {
-			store({count: 1}, 'store1')
-			store({name: 'test'}, 'store2')
+		test('serializeAllStates serializes all registered states', () => {
+			state({count: 1}, 'state1')
+			state({name: 'test'}, 'state2')
 
 			const allStates = serializeAllStates()
 
@@ -303,41 +303,41 @@ describe('SSR State Serialization', () => {
 			const state1 = state({count: 0}, 'state1')
 
 			const serialized = {
-				store1: {count: 10},
-				missingStore: {count: 999},
+				state1: {count: 10},
+				missingState: {count: 999},
 			}
 
 			deserializeAllStates(serialized)
 
-			// Existing store is updated
-			expect(store1.count).toBe(10)
-			// Missing store is skipped (warning logged)
+			// Existing state is updated
+			expect(state1.count).toBe(10)
+			// Missing state is skipped (warning logged)
 		})
 
 		test('deserializeAllStates handles errors gracefully', () => {
-			const goodStore = store({count: 0}, 'goodStore')
-			const badStore = store({count: 0}, 'badStore')
-			// Corrupt the bad store's signalMap
-			badStore.__signalMap = null
+			const goodState = state({count: 0}, 'goodState')
+			const badState = state({count: 0}, 'badState')
+			// Corrupt the bad state's signalMap
+			badState.__signalMap = null
 
 			const serialized = {
-				goodStore: {count: 42},
-				badStore: {count: 100},
+				goodState: {count: 42},
+				badState: {count: 100},
 			}
 
 			deserializeAllStates(serialized)
 
-			// Good store is still restored
-			expect(goodStore.count).toBe(42)
-			// Bad store is not updated (error occurred)
-			expect(badStore.count).toBe(0)
+			// Good state is still restored
+			expect(goodState.count).toBe(42)
+			// Bad state is not updated (error occurred)
+			expect(badState.count).toBe(0)
 		})
 	})
 
 	describe('SSR Flow Integration', () => {
 		test('complete SSR flow: serialize on server, deserialize on client', () => {
-			// Simulate server-side: create store and populate data
-			const serverStore = store({
+			// Simulate server-side: create state and populate data
+			const serverState = state({
 				loading: false,
 				data: 'Server data',
 			}, 'AsyncData.state')

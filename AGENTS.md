@@ -302,6 +302,27 @@ We will implement a component-level redraw API similar to PR #3036...
 6. **Document rationale**: Explain why decisions were made
 7. **Track evolution**: Update ADRs when decisions change
 
+## Development Workflow
+
+### Running Tests
+
+**Run tests with only failures:**
+```bash
+bun run test --only-failures
+```
+
+This command runs only tests that failed in the previous test run, which is useful for iteratively fixing test failures.
+
+### Code Quality Checks
+
+**Run linting commands for code quality:**
+
+- **Style linting**: `bun run lint:ts:style` - Checks code style and formatting
+- **Syntax linting**: `bun run lint:ts:syntax` - Checks TypeScript syntax errors
+- **Type linting**: `bun run lint:ts:types` - Checks TypeScript type errors
+
+Always run these linting commands before submitting code changes to ensure code quality and consistency.
+
 ## Resources
 
 - **ADR Directory**: `docs/architecture/adr/`
