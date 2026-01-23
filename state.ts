@@ -1,5 +1,4 @@
-import { signal, computed, Signal, ComputedSignal, setCurrentComponent, getCurrentComponent } from './signal'
-import type { ComponentType } from './render/vnode'
+import {signal, computed, Signal, ComputedSignal} from './signal'
 
 // Type guard to check if value is a Signal
 function isSignal<T>(value: any): value is Signal<T> {
@@ -39,6 +38,7 @@ export function registerState(name: string, state: any): void {
 	}
 	
 	// Warn in development if name collision detected
+	// @ts-expect-error - process is a Node.js global, not available in browser
 	if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
 		if (stateRegistry.has(name)) {
 			console.warn(`State name collision detected: "${name}". Last registered state will be used.`)
@@ -399,18 +399,16 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
  * TypeScript's type system cannot fully express the $ prefix pattern,
  * but the implementation correctly handles it.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type State<T extends Record<string, any>> = {
 	[K in keyof T]: T[K] extends (...args: any[]) => infer R
-		? R  // Function properties return computed value
+		? R // Function properties return computed value
 		: T[K] extends Record<string, any>
-		? State<T[K]>  // Nested objects become states
-		: T[K]  // Primitive values
+			? State<T[K]> // Nested objects become states
+			: T[K] // Primitive values
 } & {
 	// Index signature for $ prefix access (runtime only, not fully typed)
 	[key: string]: any
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Watch a signal for changes
@@ -420,7 +418,7 @@ export type State<T extends Record<string, any>> = {
  */
 export function watch<T>(
 	signal: Signal<T> | ComputedSignal<T>,
-	callback: (newValue: T, oldValue: T) => void
+	callback: (newValue: T, oldValue: T) => void,
 ): () => void {
 	return signal.watch(callback)
 }

@@ -11,7 +11,6 @@ import censor from './util/censor'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
 import {state, watch} from './state'
-import {Store} from './store'
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
