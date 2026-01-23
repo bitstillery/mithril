@@ -1,6 +1,6 @@
 import {MithrilTsxComponent, Vnode} from '../../../index'
 import m from '../../../index'
-import {$store} from '../store'
+import {$store, store} from '../store'
 
 export class StoreDemo extends MithrilTsxComponent {
 	view() {
@@ -24,7 +24,7 @@ export class StoreDemo extends MithrilTsxComponent {
 					<p>Visit Count: {$store.saved.visitCount}</p>
 					<button onclick={() => {
 						$store.saved.visitCount++
-						$store.save()
+						store.save()
 						m.redraw()
 					}}>Increment Visit Count</button>
 				</div>
@@ -62,7 +62,7 @@ export class StoreDemo extends MithrilTsxComponent {
 					<button onclick={() => {
 						$store.tab.lastActivity = Date.now()
 						$store.tab.tabSpecificData = `Updated at ${new Date().toLocaleTimeString()}`
-						$store.save()
+						store.save()
 						m.redraw()
 					}}>Update Tab Activity</button>
 				</div>
