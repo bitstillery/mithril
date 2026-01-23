@@ -7,6 +7,7 @@ interface Todo {
 }
 
 // Example store setup
+// Note: store() requires a name parameter for SSR serialization support
 export const $s = store({
 	count: 0,
 	user: {
@@ -22,4 +23,4 @@ export const $s = store({
 	completedTodos: () => $s.todos.filter((t: Todo) => t.completed).length,
 	// Computed with _ prefix (backward compatibility)
 	_incompleteTodos: () => $s.todos.filter((t: Todo) => !t.completed).length,
-})
+}, 'store.example')
