@@ -371,8 +371,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					}
 
 					// Render component
-					if (payload != null && (typeof payload.view === 'function' || typeof payload === 'function')) {
-						const vnode = hyperscript(payload, data.params)
+					// Check if payload is a ComponentType (not a RouteResolver)
+					const isComponentType = payload != null && (
+						typeof payload === 'function' ||
+						(typeof payload === 'object' && 'view' in payload && typeof (payload as any).view === 'function')
+					)
+					if (isComponentType) {
+						const vnode = hyperscript(payload as ComponentType, data.params)
 						return await renderToString(vnode)
 					}
 

@@ -70,7 +70,7 @@ export default function renderFactory() {
 		if (createdMatchedNodes && matchedNodes && parent.firstChild && nextSibling == null) {
 			let node: Node | null = parent.firstChild
 			while (node) {
-				const next = node.nextSibling
+				const next: Node | null = node.nextSibling
 				if (!matchedNodes.has(node)) {
 					parent.removeChild(node)
 				}
@@ -224,7 +224,7 @@ export default function renderFactory() {
 				if (isHydrating && childMatchedNodes && element.firstChild && childMatchedNodes.size > 0) {
 					let node: Node | null = element.firstChild
 					while (node) {
-						const next = node.nextSibling
+						const next: Node | null = node.nextSibling
 						if (!childMatchedNodes.has(node)) {
 							element.removeChild(node)
 						}
@@ -908,7 +908,10 @@ export default function renderFactory() {
 			// Auto-redraw when async oninit completes (client-side only)
 			if (result != null && typeof result.then === 'function' && currentRedraw != null) {
 				Promise.resolve(result).then(function() {
-					if (currentRedraw != null) (0, currentRedraw)()
+					if (currentRedraw != null) {
+						// @ts-expect-error - Comma operator intentionally used to call without 'this' binding
+						(0, currentRedraw)()
+					}
 				})
 			}
 		}
