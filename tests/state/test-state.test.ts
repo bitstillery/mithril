@@ -120,6 +120,110 @@ describe('state', () => {
 		s.items = s.items.slice(0, -1)
 		expect(s.items.length).toBe(3)
 	})
+	
+	describe('array mutations', () => {
+		test('splice replaces array contents correctly', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.spliceReplace')
+			const originalArray = s.items
+			
+			s.items.splice(0, s.items.length, 4, 5, 6)
+			
+			expect(s.items).toBe(originalArray) // Reference should be kept
+			expect(s.items).toEqual([4, 5, 6])
+			expect(s.items.length).toBe(3)
+		})
+		
+		test('splice does not result in empty array', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.spliceNotEmpty')
+			
+			s.items.splice(0, s.items.length, 10, 20, 30)
+			
+			expect(s.items.length).toBe(3)
+			expect(s.items).not.toEqual([])
+			expect(s.items[0]).toBe(10)
+			expect(s.items[1]).toBe(20)
+			expect(s.items[2]).toBe(30)
+		})
+		
+		test('splice handles empty replacement', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.spliceEmpty')
+			
+			s.items.splice(0, s.items.length)
+			
+			expect(s.items.length).toBe(0)
+			expect(s.items).toEqual([])
+		})
+		
+		test('splice returns removed items', () => {
+			const s = state({items: [1, 2, 3, 4, 5]}, 'testState.spliceReturn')
+			
+			const removed = s.items.splice(1, 2)
+			
+			expect(removed).toEqual([2, 3])
+			expect(s.items).toEqual([1, 4, 5])
+		})
+		
+		test('splice handles partial replacement', () => {
+			const s = state({items: [1, 2, 3, 4, 5]}, 'testState.splicePartial')
+			
+			s.items.splice(2, 2, 10, 11, 12)
+			
+			expect(s.items).toEqual([1, 2, 10, 11, 12, 5])
+		})
+		
+		test('splice works with nested arrays', () => {
+			const s = state({
+				filter: {
+					options: [['a', 'A'], ['b', 'B']],
+				},
+			}, 'testState.spliceNested')
+			
+			s.filter.options.splice(0, s.filter.options.length, ['c', 'C'], ['d', 'D'])
+			
+			expect(s.filter.options.length).toBe(2)
+			expect(s.filter.options[0]).toEqual(['c', 'C'])
+			expect(s.filter.options[1]).toEqual(['d', 'D'])
+		})
+		
+		test('push adds items correctly', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.push')
+			const originalArray = s.items
+			
+			s.items.push(4, 5)
+			
+			expect(s.items).toBe(originalArray)
+			expect(s.items).toEqual([1, 2, 3, 4, 5])
+			expect(s.items.length).toBe(5)
+		})
+		
+		test('pop removes and returns last item', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.pop')
+			
+			const popped = s.items.pop()
+			
+			expect(popped).toBe(3)
+			expect(s.items).toEqual([1, 2])
+		})
+		
+		test('unshift adds items to beginning', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.unshift')
+			const originalArray = s.items
+			
+			s.items.unshift(0, -1)
+			
+			expect(s.items).toBe(originalArray)
+			expect(s.items).toEqual([0, -1, 1, 2, 3])
+		})
+		
+		test('shift removes and returns first item', () => {
+			const s = state({items: [1, 2, 3]}, 'testState.shift')
+			
+			const shifted = s.items.shift()
+			
+			expect(shifted).toBe(1)
+			expect(s.items).toEqual([2, 3])
+		})
+	})
 
 	test('requires name parameter', () => {
 		// State name is required for SSR serialization

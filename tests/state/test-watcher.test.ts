@@ -360,4 +360,195 @@ describe('watch API', () => {
 		
 		unwatch2()
 	})
+	
+	describe('array mutations with splice', () => {
+		test('splice should trigger watcher', () => {
+			const $state = state({items: [1, 2, 3]}, 'watch.spliceTrigger')
+			
+			// Verify array is wrapped
+			expect(($state.items as any).__isState).toBe(true)
+			expect(Array.isArray(($state.items as any).__signals)).toBe(true)
+			
+			let watchCount = 0
+			let lastNewValue: any
+			let lastOldValue: any
+			
+			const unwatch = watch($state.$items, (newValue, oldValue) => {
+				watchCount++
+				lastNewValue = newValue
+				lastOldValue = oldValue
+			})
+			
+			expect(watchCount).toBe(0)
+			
+			// Access the array to ensure parent signal is stored
+			const arrayRef = $state.items
+			// Verify parent signal is stored (either in WeakMap or as property)
+			const parentSignalFromProp = (arrayRef as any)._parentSignal
+			const parentSignalFromMap = (arrayRef as any).__parentSignal
+			expect(parentSignalFromProp || parentSignalFromMap).toBeDefined()
+			
+			// Use splice to replace all items
+			$state.items.splice(0, $state.items.length, 4, 5, 6)
+			// Watcher should trigger exactly once
+			expect(watchCount).toBe(1)
+			// Verify array contents
+			expect($state.items).toEqual([4, 5, 6])
+			expect(lastNewValue).toEqual([4, 5, 6])
+			
+			unwatch()
+		})
+		
+		test('splice should keep array reference', () => {
+			const $state = state({items: [1, 2, 3]}, 'watch.spliceReference')
+			const originalArray = $state.items
+			
+			$state.items.splice(0, $state.items.length, 4, 5, 6)
+			
+			// Array reference should be the same
+			expect($state.items).toBe(originalArray)
+			expect($state.items).toEqual([4, 5, 6])
+		})
+		
+		test('splice should not result in empty array when replacing', () => {
+			const $state = state({items: [1, 2, 3]}, 'watch.spliceNotEmpty')
+			
+			$state.items.splice(0, $state.items.length, 4, 5, 6)
+			
+			expect($state.items).toEqual([4, 5, 6])
+		})
+		
+		test('splice with empty replacement should clear array', () => {
+			const $state = state({items: [1, 2, 3]}, 'watch.spliceClear')
+			let watchCount = 0
+			
+			const unwatch = watch($state.$items, () => {
+				watchCount++
+			})
+			
+			$state.items.splice(0, $state.items.length)
+			
+			expect(watchCount).toBe(1)
+			expect($state.items.length).toBe(0)
+			
+			unwatch()
+		})
+		
+		test('splice should handle partial replacement', () => {
+			const $state = state({items: [1, 2, 3, 4, 5]}, 'watch.splicePartial')
+			let watchCount = 0
+			
+			const unwatch = watch($state.$items, () => {
+				watchCount++
+			})
+			
+			// Replace middle items
+			$state.items.splice(1, 2, 10, 11)
+			
+			expect(watchCount).toBe(1)
+			expect($state.items).toEqual([1, 10, 11, 4, 5])
+			
+			unwatch()
+		})
+		
+		test('splice should return removed items', () => {
+			const $state = state({items: [1, 2, 3, 4, 5]}, 'watch.spliceReturn')
+			
+			const removed = $state.items.splice(1, 2)
+			
+			expect(removed).toEqual([2, 3])
+			expect($state.items).toEqual([1, 4, 5])
+		})
+		
+		test('splice should work with nested state arrays (filter options pattern)', () => {
+			const $filters = state({
+				offertype: {
+					options: [['SPECIALS', 'Special Offers'], ['NEW_ARRIVALS', 'New Arrivals']],
+					selection: '',
+				},
+			}, 'watch.spliceNested')
+			
+			let watchCount = 0
+			const unwatch = watch($filters.offertype.$options, () => {
+				watchCount++
+			})
+			
+			const newOptions = [['FAVORITES', 'My Favorites'], ['SPECIALS', 'Special Offers']]
+			$filters.offertype.options.splice(0, $filters.offertype.options.length, ...newOptions)
+			
+			expect(watchCount).toBe(1)
+			expect($filters.offertype.options.length).toBe(2)
+			const opt0 = $filters.offertype.options[0]
+			const opt1 = $filters.offertype.options[1]
+			expect(opt0[0]).toBe('FAVORITES')
+			expect(opt0[1]).toBe('My Favorites')
+			expect(opt1[0]).toBe('SPECIALS')
+			expect(opt1[1]).toBe('Special Offers')
+			
+			unwatch()
+		})
+		
+		test('splice should handle array of primitives', () => {
+			const $state = state({selection: ['a', 'b', 'c']}, 'watch.splicePrimitives')
+			let watchCount = 0
+			
+			const unwatch = watch($state.$selection, () => {
+				watchCount++
+			})
+			
+			$state.selection.splice(0, $state.selection.length, 'x', 'y', 'z')
+			
+			expect(watchCount).toBe(1)
+			expect($state.selection[0]).toBe('x')
+			expect($state.selection[1]).toBe('y')
+			expect($state.selection[2]).toBe('z')
+			expect($state.selection.length).toBe(3)
+			
+			unwatch()
+		})
+		
+		test('splice should handle array of numbers', () => {
+			const $state = state({ids: [1, 2, 3]}, 'watch.spliceNumbers')
+			let watchCount = 0
+			
+			const unwatch = watch($state.$ids, () => {
+				watchCount++
+			})
+			
+			$state.ids.splice(0, $state.ids.length, 10, 20, 30)
+			
+			expect(watchCount).toBe(1)
+			expect($state.ids[0]).toBe(10)
+			expect($state.ids[1]).toBe(20)
+			expect($state.ids[2]).toBe(30)
+			expect($state.ids.length).toBe(3)
+			
+			unwatch()
+		})
+		
+		test('multiple splice operations should trigger watcher each time', () => {
+			const $state = state({items: [1, 2, 3]}, 'watch.spliceMultiple')
+			let watchCount = 0
+			
+			const unwatch = watch($state.$items, () => {
+				watchCount++
+			})
+			
+			$state.items.splice(0, $state.items.length, 4, 5)
+			expect(watchCount).toBe(1)
+			
+			$state.items.splice(0, $state.items.length, 6, 7, 8)
+			expect(watchCount).toBe(2)
+			
+			$state.items.splice(1, 1, 9)
+			expect(watchCount).toBe(3)
+			
+			expect($state.items[0]).toBe(6)
+			expect($state.items[1]).toBe(9)
+			expect($state.items[2]).toBe(8)
+			expect($state.items.length).toBe(3)
+			
+			unwatch()
+		})
+	})
 })

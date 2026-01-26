@@ -1,5 +1,8 @@
 import {signal, computed, Signal, ComputedSignal} from './signal'
 
+// WeakMap to store parent signal references for arrays
+const arrayParentSignalMap = new WeakMap<any, Signal<any>>()
+
 // Type guard to check if value is a Signal
 function isSignal<T>(value: any): value is Signal<T> {
 	return value instanceof Signal || value instanceof ComputedSignal
@@ -140,10 +143,30 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 				}
 				return toSignal(item)
 			})
-			const wrapped = new Proxy([...signals], {
+			
+			// List of mutating array methods that should trigger the parent signal
+			const mutatingMethods = ['splice', 'push', 'pop', 'shift', 'unshift', 'reverse', 'sort', 'fill', 'copyWithin']
+			
+			// Wrap the signals array directly (not a copy) so mutations stay in sync
+			// Store parent signal reference directly on the Proxy for reliable lookup
+			const wrapped = new Proxy(signals, {
 				get(target, prop) {
 					if (prop === '__isState') return true
 					if (prop === '__signals') return signals
+					if (prop === '__parentSignal') {
+						// Allow accessing parent signal directly for debugging
+						return arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+					}
+					if (prop === Symbol.toStringTag) return 'Array' // Make Array.isArray() work
+					if (prop === Symbol.iterator) {
+						// Provide custom iterator that unwraps Signal values
+						return function* () {
+							for (let i = 0; i < signals.length; i++) {
+								const sig = signals[i]
+								yield isSignal(sig) ? sig.value : sig
+							}
+						}
+					}
 					if (prop === 'length') return signals.length
 					
 					const propStr = String(prop)
@@ -168,7 +191,143 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 							return isSignal(sig) ? sig.value : sig
 						}
 					}
+					
 					const value = Reflect.get(target, prop)
+					
+					// Intercept mutating methods to trigger parent signal
+					if (typeof value === 'function' && mutatingMethods.includes(propStr)) {
+						return function(...args: any[]) {
+							// Look up parent signal when function is called, not when created
+							// This ensures we get the signal even if it was stored after accessing the method
+							// Try WeakMap first, then fallback to direct property access
+							let parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+							
+							// For splice, we need to handle it specially to convert new items to signals
+							if (propStr === 'splice') {
+								const start = args[0] ?? 0
+								const deleteCount = args[1] ?? (signals.length - start)
+								const newItems = args.slice(2)
+								
+								// Convert new items to signals
+								const newSignals = newItems.map(item => {
+									if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+										return initializeSignals(item, undefined)
+									}
+									return toSignal(item)
+								})
+								
+								// Update the signals array (target is signals array)
+								const removed = signals.splice(start, deleteCount, ...newSignals)
+								
+								// Trigger parent signal if it exists
+								// Notify subscribers directly since the array reference hasn't changed
+								if (parentSignal) {
+									// Access the signal's internal subscribers and notify them
+									const subscribers = (parentSignal as any)._subscribers
+									if (subscribers) {
+										subscribers.forEach((fn: () => void) => {
+											try {
+												fn()
+											} catch(e) {
+												console.error('Error in signal subscriber:', e)
+											}
+										})
+									}
+									// Also trigger component redraws if callback is set
+									// __redrawCallback is set on the signal function itself
+									if ((signal as any).__redrawCallback) {
+										;(signal as any).__redrawCallback(parentSignal)
+									}
+								}
+								
+								// Return removed items (unwrapped)
+								return removed.map(sig => isSignal(sig) ? sig.value : sig)
+							} else {
+								// For other mutating methods, convert new items to signals first
+								let result
+								if (propStr === 'push' || propStr === 'unshift') {
+									const newItems = args
+									const newSignals = newItems.map(item => {
+										if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+											return initializeSignals(item, undefined)
+										}
+										return toSignal(item)
+									})
+									if (propStr === 'push') {
+										result = signals.push(...newSignals)
+									} else {
+										result = signals.unshift(...newSignals)
+									}
+								} else if (propStr === 'pop' || propStr === 'shift') {
+									// Call on signals array directly and unwrap result
+									if (propStr === 'pop') {
+										const sig = signals.pop()
+										result = sig !== undefined ? (isSignal(sig) ? sig.value : sig) : undefined
+									} else {
+										const sig = signals.shift()
+										result = sig !== undefined ? (isSignal(sig) ? sig.value : sig) : undefined
+									}
+								} else if (propStr === 'reverse' || propStr === 'sort') {
+									// For reverse/sort, apply to signals array
+									if (propStr === 'reverse') {
+										result = signals.reverse()
+									} else {
+										// sort needs a comparator function that works on signals
+										const comparator = args[0]
+										if (comparator) {
+											result = signals.sort((a, b) => {
+												const aVal = isSignal(a) ? a.value : a
+												const bVal = isSignal(b) ? b.value : b
+												return comparator(aVal, bVal)
+											})
+										} else {
+											result = signals.sort((a, b) => {
+												const aVal = isSignal(a) ? a.value : a
+												const bVal = isSignal(b) ? b.value : b
+												return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
+											})
+										}
+									}
+								} else if (propStr === 'fill') {
+									const fillValue = args[0]
+									const start = args[1] ?? 0
+									const end = args[2] ?? signals.length
+									const fillSignal = toSignal(fillValue)
+									for (let i = start; i < end; i++) {
+										signals[i] = fillSignal
+									}
+									result = signals.length
+								} else {
+									// For other methods, just apply to target
+									result = value.apply(target, args)
+								}
+								
+								// Trigger parent signal if it exists (look up again in case it was stored)
+								const currentParentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+								if (currentParentSignal) {
+									// Notify subscribers directly since the array reference hasn't changed
+									const subscribers = (currentParentSignal as any)._subscribers
+									if (subscribers) {
+										subscribers.forEach((fn: () => void) => {
+											try {
+												fn()
+											} catch(e) {
+												console.error('Error in signal subscriber:', e)
+											}
+										})
+									}
+									// Also trigger component redraws if callback is set
+									// __redrawCallback is set on the signal function itself
+									if ((signal as any).__redrawCallback) {
+										;(signal as any).__redrawCallback(currentParentSignal)
+									}
+								}
+								
+								return result
+							}
+						}
+					}
+					
 					if (typeof value === 'function') {
 						return value.bind(target)
 					}
@@ -181,17 +340,89 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 							const sig = signals[index]
 							if (isSignal(sig)) {
 								sig.value = value
-								return true
 							} else {
 								signals[index] = toSignal(value)
-								return true
 							}
+							// Trigger parent signal on element assignment (look up when called)
+							const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+							if (parentSignal) {
+								// Notify subscribers directly since the array reference hasn't changed
+								const subscribers = (parentSignal as any)._subscribers
+								if (subscribers) {
+									subscribers.forEach((fn: () => void) => {
+										try {
+											fn()
+										} catch(e) {
+											console.error('Error in signal subscriber:', e)
+										}
+									})
+								}
+								// Also trigger component redraws if callback is set
+								if ((signal as any).__redrawCallback) {
+									;(signal as any).__redrawCallback(parentSignal)
+								}
+							}
+							return true
 						} else if (prop === 'length') {
 							signals.length = Number(value)
+							// Trigger parent signal on length change (look up when called)
+							const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+							if (parentSignal) {
+								// Notify subscribers directly since the array reference hasn't changed
+								const subscribers = (parentSignal as any)._subscribers
+								if (subscribers) {
+									subscribers.forEach((fn: () => void) => {
+										try {
+											fn()
+										} catch(e) {
+											console.error('Error in signal subscriber:', e)
+										}
+									})
+								}
+								// Also trigger component redraws if callback is set
+								if ((signal as any).__redrawCallback) {
+									;(signal as any).__redrawCallback(parentSignal)
+								}
+							}
 							return true
 						}
 					}
 					return Reflect.set(target, prop, value)
+				},
+				ownKeys(target) {
+					// Return array indices as keys for proper enumeration (needed for Bun's toEqual)
+					const keys: (string | symbol)[] = []
+					for (let i = 0; i < signals.length; i++) {
+						keys.push(String(i))
+					}
+					keys.push('length')
+					return keys
+				},
+				getOwnPropertyDescriptor(target, prop) {
+					// Provide property descriptors for array indices (needed for Bun's toEqual)
+					if (typeof prop === 'string' && !isNaN(Number(prop))) {
+						const index = Number(prop)
+						if (index >= 0 && index < signals.length) {
+							return {
+								enumerable: true,
+								configurable: true,
+								value: (() => {
+									const sig = signals[index]
+									return isSignal(sig) ? sig.value : sig
+								})(),
+								writable: true,
+							}
+						}
+					}
+					if (prop === 'length') {
+						return {
+							enumerable: false,
+							configurable: false,
+							value: signals.length,
+							writable: true,
+						}
+					}
+					return Reflect.getOwnPropertyDescriptor(target, prop)
 				},
 			})
 			stateCache.set(obj, wrapped)
@@ -244,11 +475,27 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 									const sig = signal(undefined)
 									nestedSignalMap.set(key, sig)
 								}
-							} else if (typeof originalValue === 'object' && originalValue !== null) {
-								// Create nested state with its own signalMap
-								const nestedState = initializeSignals(originalValue, undefined)
-								nestedSignalMap.set(key, signal(nestedState))
+						} else if (typeof originalValue === 'object' && originalValue !== null) {
+							// Get the already-wrapped state from the wrapped object
+							// Don't call initializeSignals again as it would create a new wrapped array
+							const nestedState = (wrapped as any)[key]
+							if (nestedState === undefined) {
+								// Fallback: initialize if not already wrapped
+								const initialized = initializeSignals(originalValue, undefined)
+								const sig = signal(initialized)
+								if (Array.isArray(initialized)) {
+									arrayParentSignalMap.set(initialized, sig)
+								}
+								nestedSignalMap.set(key, sig)
 							} else {
+								const sig = signal(nestedState)
+								// Store parent signal reference for arrays
+								if (Array.isArray(nestedState)) {
+									arrayParentSignalMap.set(nestedState, sig)
+								}
+								nestedSignalMap.set(key, sig)
+							}
+						} else {
 								const sig = toSignal(originalValue)
 								nestedSignalMap.set(key, sig)
 							}
@@ -292,7 +539,12 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 						} else if (typeof originalValue === 'object' && originalValue !== null) {
 							// Nested object -> recursive state with its own signalMap
 							const nestedState = initializeSignals(originalValue, undefined)
-							nestedSignalMap.set(key, signal(nestedState))
+							const sig = signal(nestedState)
+							// Store parent signal reference for arrays
+							if (Array.isArray(nestedState)) {
+								arrayParentSignalMap.set(nestedState, sig)
+							}
+							nestedSignalMap.set(key, sig)
 						} else {
 							// Primitive value -> signal
 							const sig = toSignal(originalValue)
@@ -308,7 +560,22 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 				const sig = nestedSignalMap.get(key)
 				if (sig) {
 					// Access signal.value to track component dependency
-					return sig.value
+					const value = sig.value
+					// Always ensure parent signal is stored for arrays (in case it wasn't stored during initialization)
+					// Check for wrapped arrays by looking for __isState and __signals properties
+					// Array.isArray() may return false for Proxies, so we check __isState instead
+					if (value && typeof value === 'object') {
+						if ((value as any).__isState === true && Array.isArray((value as any).__signals)) {
+							// This is a wrapped array - store parent signal
+							arrayParentSignalMap.set(value, sig as Signal<any>)
+							// Also store directly on the Proxy as a fallback
+							;(value as any)._parentSignal = sig as Signal<any>
+						} else if (Array.isArray(value)) {
+							// Regular array (shouldn't happen but just in case)
+							arrayParentSignalMap.set(value, sig as Signal<any>)
+						}
+					}
+					return value
 				}
 
 				// Fallback to original property
@@ -383,19 +650,35 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 						if (typeof value === 'object' && value !== null) {
 							// Nested object -> recursive state with its own signalMap
 							const nestedState = initializeSignals(value, undefined)
+							// Store parent signal reference for arrays
+							if (Array.isArray(nestedState)) {
+								arrayParentSignalMap.set(nestedState, sig as Signal<any>)
+							}
 							;(sig as Signal<any>).value = nestedState
 						} else {
 							;(sig as Signal<any>).value = value
 						}
 					} else {
 						// Replace computed with regular signal
-						nestedSignalMap.set(key, toSignal(value))
+						if (typeof value === 'object' && value !== null && Array.isArray(value)) {
+							const nestedState = initializeSignals(value, undefined)
+							const sig = signal(nestedState)
+							arrayParentSignalMap.set(nestedState, sig)
+							nestedSignalMap.set(key, sig)
+						} else {
+							nestedSignalMap.set(key, toSignal(value))
+						}
 					}
 				} else {
 					// Create new signal
 					if (typeof value === 'object' && value !== null) {
 						const nestedState = initializeSignals(value, undefined)
-						nestedSignalMap.set(key, signal(nestedState))
+						const sig = signal(nestedState)
+						// Store parent signal reference for arrays
+						if (Array.isArray(nestedState)) {
+							arrayParentSignalMap.set(nestedState, sig)
+						}
+						nestedSignalMap.set(key, sig)
 					} else {
 						nestedSignalMap.set(key, toSignal(value))
 					}
@@ -474,9 +757,23 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 							signalMap.set(key, sig)
 						}
 					} else if (typeof value === 'object' && value !== null) {
-						// Create nested state with its own signalMap
-						const nestedState = initializeSignals(value, undefined)
-						signalMap.set(key, signal(nestedState))
+						// Get the already-wrapped state from stateCache (bypass Proxy to get the actual wrapped value)
+						// This ensures we get the same wrapped array that was created during initializeSignals
+						const nestedState = stateCache.has(value) ? stateCache.get(value) : initializeSignals(value, undefined)
+						const sig = signal(nestedState)
+						// Always store parent signal reference for arrays
+						// Check for wrapped arrays by looking for __isState and __signals properties
+						// Array.isArray() may return false for Proxies, so we check __isState instead
+						if (nestedState && typeof nestedState === 'object' && 
+							((nestedState as any).__isState === true && Array.isArray((nestedState as any).__signals))) {
+							arrayParentSignalMap.set(nestedState, sig)
+							// Also store directly on the Proxy as a fallback
+							;(nestedState as any)._parentSignal = sig
+						} else if (Array.isArray(nestedState)) {
+							// Fallback for regular arrays (shouldn't happen but just in case)
+							arrayParentSignalMap.set(nestedState, sig)
+						}
+						signalMap.set(key, sig)
 					} else {
 						const sig = toSignal(value)
 						signalMap.set(key, sig)
