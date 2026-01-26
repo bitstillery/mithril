@@ -333,18 +333,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 		}
 
 		try {
-			// Filter out saved and tab properties - they should NOT be overwritten by SSR
-			// According to ADR-0007: saved and tab state are preserved, only temporary and session are overwritten
-			const filteredState: Record<string, any> = {}
-			for (const key in serializedState) {
-				if (Object.prototype.hasOwnProperty.call(serializedState, key)) {
-					// Skip 'saved' and 'tab' top-level properties
-					if (key !== 'saved' && key !== 'tab') {
-						filteredState[key] = serializedState[key]
-					}
-				}
-			}
-			deserializeStore(entry.state, filteredState)
+			deserializeStore(entry.state, serializedState)
 		} catch(error) {
 			// Log error but continue with other states
 			console.error(`Error deserializing state "${name}":`, error)

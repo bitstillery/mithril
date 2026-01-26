@@ -11,6 +11,15 @@ function isState(value: any): boolean {
 }
 
 /**
+ * Check if a value is a get/set descriptor object (like JavaScript property descriptors)
+ * Used to detect computed properties defined as { get: () => T, set?: (value: T) => void }
+ */
+function isGetSetDescriptor(value: any): boolean {
+	return value && typeof value === 'object' && 
+	       (typeof value.get === 'function' || typeof value.set === 'function')
+}
+
+/**
  * Convert a value to a signal if it's not already one
  */
 function toSignal<T>(value: T): Signal<T> | ComputedSignal<T> {
@@ -223,6 +232,18 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 									return originalValue.call(wrapped)
 								})
 								nestedSignalMap.set(key, computedSig)
+							} else if (isGetSetDescriptor(originalValue)) {
+								// Get/set descriptor -> computed signal from get function
+								if (typeof originalValue.get === 'function') {
+									const computedSig = computed(() => {
+										return originalValue.get.call(wrapped)
+									})
+									nestedSignalMap.set(key, computedSig)
+								} else {
+									// Only setter, no getter - treat as regular signal with undefined initial value
+									const sig = signal(undefined)
+									nestedSignalMap.set(key, sig)
+								}
 							} else if (typeof originalValue === 'object' && originalValue !== null) {
 								// Create nested state with its own signalMap
 								const nestedState = initializeSignals(originalValue, undefined)
@@ -256,6 +277,18 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 								return originalValue.call(wrapped)
 							})
 							nestedSignalMap.set(key, computedSig)
+						} else if (isGetSetDescriptor(originalValue)) {
+							// Get/set descriptor -> computed signal from get function
+							if (typeof originalValue.get === 'function') {
+								const computedSig = computed(() => {
+									return originalValue.get.call(wrapped)
+								})
+								nestedSignalMap.set(key, computedSig)
+							} else {
+								// Only setter, no getter - treat as regular signal with undefined initial value
+								const sig = signal(undefined)
+								nestedSignalMap.set(key, sig)
+							}
 						} else if (typeof originalValue === 'object' && originalValue !== null) {
 							// Nested object -> recursive state with its own signalMap
 							const nestedState = initializeSignals(originalValue, undefined)
@@ -297,6 +330,40 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 				if (key === '__isState' || key === '__originalKeys' || key === '__signals') {
 					// Silently ignore attempts to set internal properties
 					return true
+				}
+				
+				// Check if the original property was a get/set descriptor
+				const originalValue = Reflect.get(target, prop)
+				if (isGetSetDescriptor(originalValue)) {
+					// Handle get/set descriptor
+					if (typeof originalValue.set === 'function') {
+						// Call the setter function
+						originalValue.set.call(wrapped, value)
+						return true
+					} else if (typeof originalValue.get === 'function') {
+						// Read-only property (get but no set)
+						throw new Error(`Cannot set read-only computed property "${key}"`)
+					}
+				}
+				
+				// Check if the new value being set is a get/set descriptor
+				if (isGetSetDescriptor(value)) {
+					// Replace with computed signal from get function
+					if (typeof value.get === 'function') {
+						const computedSig = computed(() => {
+							return value.get.call(wrapped)
+						})
+						nestedSignalMap.set(key, computedSig)
+						// Also update the target so setter can be found later
+						Reflect.set(target, prop, value)
+						return true
+					} else {
+						// Only setter, no getter - treat as regular signal with undefined initial value
+						const sig = signal(undefined)
+						nestedSignalMap.set(key, sig)
+						Reflect.set(target, prop, value)
+						return true
+					}
 				}
 				
 				// Skip computed properties (functions)
@@ -361,7 +428,7 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 					const key = propStr.slice(1)
 					if (nestedSignalMap.has(key)) {
 						return {
-							enumerable: true,
+							enumerable: false,
 							configurable: true,
 						}
 					}
@@ -394,6 +461,18 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 							return value.call(wrapped)
 						})
 						signalMap.set(key, computedSig)
+					} else if (isGetSetDescriptor(value)) {
+						// Get/set descriptor -> computed signal from get function
+						if (typeof value.get === 'function') {
+							const computedSig = computed(() => {
+								return value.get.call(wrapped)
+							})
+							signalMap.set(key, computedSig)
+						} else {
+							// Only setter, no getter - treat as regular signal with undefined initial value
+							const sig = signal(undefined)
+							signalMap.set(key, sig)
+						}
 					} else if (typeof value === 'object' && value !== null) {
 						// Create nested state with its own signalMap
 						const nestedState = initializeSignals(value, undefined)

@@ -75,6 +75,10 @@ export class Signal<T> {
 	}
 
 	get value(): T {
+		// Ensure _subscribers is initialized (defensive check)
+		if (!this._subscribers) {
+			this._subscribers = new Set()
+		}
 		// Track access during render/effect
 		if (currentEffect) {
 			this._subscribers.add(currentEffect)
@@ -89,6 +93,10 @@ export class Signal<T> {
 	set value(newValue: T) {
 		if (this._value !== newValue) {
 			this._value = newValue
+			// Ensure _subscribers is initialized (defensive check)
+			if (!this._subscribers) {
+				this._subscribers = new Set()
+			}
 			// Notify all subscribers
 			this._subscribers.forEach(fn => {
 				try {
@@ -109,9 +117,15 @@ export class Signal<T> {
 	 * Subscribe to signal changes
 	 */
 	subscribe(callback: () => void): () => void {
+		// Ensure _subscribers is initialized (defensive check)
+		if (!this._subscribers) {
+			this._subscribers = new Set()
+		}
 		this._subscribers.add(callback)
 		return () => {
-			this._subscribers.delete(callback)
+			if (this._subscribers) {
+				this._subscribers.delete(callback)
+			}
 		}
 	}
 
@@ -180,6 +194,10 @@ export class ComputedSignal<T> extends Signal<T> {
 	private _markDirty() {
 		if (!this._isDirty) {
 			this._isDirty = true
+			// Ensure _subscribers is initialized (defensive check)
+			if (!(this as any)._subscribers) {
+				(this as any)._subscribers = new Set()
+			}
 			// Notify subscribers that computed value changed
 			;(this as any)._subscribers.forEach((fn: () => void) => {
 				try {
