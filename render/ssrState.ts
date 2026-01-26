@@ -325,7 +325,6 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 		
 		if (!entry) {
 			// State not registered on client - warn in development
-			// @ts-expect-error - process is a Node.js global, not available in browser
 			if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
 				console.warn(`State "${name}" not found in registry. Skipping deserialization.`)
 			}

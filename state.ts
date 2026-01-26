@@ -58,7 +58,6 @@ export function registerState(name: string, stateInstance: any, initial: any): v
 	}
 	
 	// Warn in development if name collision detected
-	// @ts-expect-error - process is a Node.js global, not available in browser
 	if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
 		if (stateRegistry.has(name)) {
 			console.warn(`State name collision detected: "${name}". Last registered state will be used.`)
@@ -135,10 +134,10 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 		// Handle arrays
 		if (Array.isArray(obj)) {
 			// Arrays don't get their own signalMap - they use the parent's
-			// But nested objects inside arrays should get their own signalMaps
+			// Nested objects AND arrays should be recursively wrapped
 			const signals = obj.map(item => {
-				if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
-					// Create nested state with its own signalMap (pass undefined to create new one)
+				if (typeof item === 'object' && item !== null) {
+					// Recursively wrap nested objects AND arrays in Proxies
 					return initializeSignals(item, undefined)
 				}
 				return toSignal(item)
@@ -194,6 +193,16 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 					
 					const value = Reflect.get(target, prop)
 					
+					// For array methods that iterate (map, filter, forEach, etc.), bind to wrapped Proxy
+					// so they go through our get trap for element access
+					if (typeof value === 'function' && Array.isArray(target)) {
+						// Array iteration methods need to use the Proxy so element access is unwrapped
+						const iterationMethods = ['map', 'filter', 'forEach', 'some', 'every', 'find', 'findIndex', 'reduce', 'reduceRight']
+						if (iterationMethods.includes(propStr)) {
+							return value.bind(wrapped)
+						}
+					}
+					
 					// Intercept mutating methods to trigger parent signal
 					if (typeof value === 'function' && mutatingMethods.includes(propStr)) {
 						return function(...args: any[]) {
@@ -208,9 +217,10 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 								const deleteCount = args[1] ?? (signals.length - start)
 								const newItems = args.slice(2)
 								
-								// Convert new items to signals
+								// Convert new items - nested arrays/objects become Proxies, primitives become Signals
 								const newSignals = newItems.map(item => {
-									if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+									if (typeof item === 'object' && item !== null) {
+										// Wrap objects/arrays in Proxies (NOT in Signals - the Proxy IS the value)
 										return initializeSignals(item, undefined)
 									}
 									return toSignal(item)
@@ -247,8 +257,10 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 								let result
 								if (propStr === 'push' || propStr === 'unshift') {
 									const newItems = args
+									// Convert new items - nested arrays/objects become Proxies, primitives become Signals
 									const newSignals = newItems.map(item => {
-										if (typeof item === 'object' && item !== null && !Array.isArray(item)) {
+										if (typeof item === 'object' && item !== null) {
+											// Wrap objects/arrays in Proxies (NOT in Signals - the Proxy IS the value)
 											return initializeSignals(item, undefined)
 										}
 										return toSignal(item)
@@ -389,7 +401,7 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 					}
 					return Reflect.set(target, prop, value)
 				},
-				ownKeys(target) {
+				ownKeys(_target) {
 					// Return array indices as keys for proper enumeration (needed for Bun's toEqual)
 					const keys: (string | symbol)[] = []
 					for (let i = 0; i < signals.length; i++) {
@@ -475,27 +487,27 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 									const sig = signal(undefined)
 									nestedSignalMap.set(key, sig)
 								}
-						} else if (typeof originalValue === 'object' && originalValue !== null) {
+							} else if (typeof originalValue === 'object' && originalValue !== null) {
 							// Get the already-wrapped state from the wrapped object
 							// Don't call initializeSignals again as it would create a new wrapped array
-							const nestedState = (wrapped as any)[key]
-							if (nestedState === undefined) {
+								const nestedState = (wrapped as any)[key]
+								if (nestedState === undefined) {
 								// Fallback: initialize if not already wrapped
-								const initialized = initializeSignals(originalValue, undefined)
-								const sig = signal(initialized)
-								if (Array.isArray(initialized)) {
-									arrayParentSignalMap.set(initialized, sig)
+									const initialized = initializeSignals(originalValue, undefined)
+									const sig = signal(initialized)
+									if (Array.isArray(initialized)) {
+										arrayParentSignalMap.set(initialized, sig)
+									}
+									nestedSignalMap.set(key, sig)
+								} else {
+									const sig = signal(nestedState)
+									// Store parent signal reference for arrays
+									if (Array.isArray(nestedState)) {
+										arrayParentSignalMap.set(nestedState, sig)
+									}
+									nestedSignalMap.set(key, sig)
 								}
-								nestedSignalMap.set(key, sig)
 							} else {
-								const sig = signal(nestedState)
-								// Store parent signal reference for arrays
-								if (Array.isArray(nestedState)) {
-									arrayParentSignalMap.set(nestedState, sig)
-								}
-								nestedSignalMap.set(key, sig)
-							}
-						} else {
 								const sig = toSignal(originalValue)
 								nestedSignalMap.set(key, sig)
 							}

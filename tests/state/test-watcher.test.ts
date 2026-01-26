@@ -107,13 +107,9 @@ describe('watch API', () => {
 	test('watch array state property - element assignment', () => {
 		const $state = state({items: [1, 2, 3]}, 'watch.arrayElement')
 		let watchCount = 0
-		let lastNewValue: any
-		let lastOldValue: any
 		
-		const unwatch = watch($state.$items, (newValue, oldValue) => {
+		const unwatch = watch($state.$items, (_newValue, _oldValue) => {
 			watchCount++
-			lastNewValue = newValue
-			lastOldValue = oldValue
 		})
 		
 		expect(watchCount).toBe(0) // watch doesn't call immediately
@@ -370,13 +366,9 @@ describe('watch API', () => {
 			expect(Array.isArray(($state.items as any).__signals)).toBe(true)
 			
 			let watchCount = 0
-			let lastNewValue: any
-			let lastOldValue: any
 			
-			const unwatch = watch($state.$items, (newValue, oldValue) => {
+			const unwatch = watch($state.$items, (_newValue, _oldValue) => {
 				watchCount++
-				lastNewValue = newValue
-				lastOldValue = oldValue
 			})
 			
 			expect(watchCount).toBe(0)
@@ -549,6 +541,166 @@ describe('watch API', () => {
 			expect($state.items.length).toBe(3)
 			
 			unwatch()
+		})
+		
+		test('splice with filter options structure - simulates real filter data', () => {
+			// Simulate the exact filter structure from offer_list.tsx
+			// Filters have options that are arrays of [value, label, count]
+			const $filters = state({
+				offertype: {
+					options: [['SPECIALS', 'Special Offers', 10], ['NEW_ARRIVALS', 'New Arrivals', 5]],
+					selection: '',
+				},
+			}, 'watch.filterOptions')
+			
+			// Verify initial state
+			expect($filters.offertype.options.length).toBe(2)
+			expect($filters.offertype.options[0]).toEqual(['SPECIALS', 'Special Offers', 10])
+			expect($filters.offertype.options[1]).toEqual(['NEW_ARRIVALS', 'New Arrivals', 5])
+			
+			// Simulate what happens in offer_list.tsx line 221:
+			// filters.offertype.options.splice(0, filters.offertype.options.length, ...offerTypeStats)
+			// where offerTypeStats = result.offer_item_statistics?.map((i) => [i.offer_item_type, i.offer_item_type, i.count])
+			const offerTypeStats = [
+				['SPECIALS', 'SPECIALS', 15],
+				['NEW_ARRIVALS', 'NEW_ARRIVALS', 8],
+				['FAVORITES', 'FAVORITES', 3],
+			]
+			
+			// This is the exact pattern used in the real code
+			$filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats)
+			
+			// Verify the array structure is preserved
+			expect($filters.offertype.options.length).toBe(3)
+			
+			// Critical: Check that nested arrays are preserved correctly
+			// If option[0] or option[1] is undefined, labels will show as "filters.types.offertype.undefined"
+			const opt0 = $filters.offertype.options[0]
+			const opt1 = $filters.offertype.options[1]
+			const opt2 = $filters.offertype.options[2]
+			
+			// These assertions should pass - if they fail, we've found the bug
+			expect(opt0).toBeDefined()
+			expect(Array.isArray(opt0)).toBe(true)
+			expect(opt0[0]).toBe('SPECIALS')
+			expect(opt0[1]).toBe('SPECIALS')
+			expect(opt0[2]).toBe(15)
+			
+			expect(opt1).toBeDefined()
+			expect(Array.isArray(opt1)).toBe(true)
+			expect(opt1[0]).toBe('NEW_ARRIVALS')
+			expect(opt1[1]).toBe('NEW_ARRIVALS')
+			expect(opt1[2]).toBe(8)
+			
+			expect(opt2).toBeDefined()
+			expect(Array.isArray(opt2)).toBe(true)
+			expect(opt2[0]).toBe('FAVORITES')
+			expect(opt2[1]).toBe('FAVORITES')
+			expect(opt2[2]).toBe(3)
+			
+			// Verify we can iterate over options (as RadioGroup does)
+			const optionValues = $filters.offertype.options.map(opt => opt[0])
+			expect(optionValues).toEqual(['SPECIALS', 'NEW_ARRIVALS', 'FAVORITES'])
+			
+			const optionLabels = $filters.offertype.options.map(opt => opt[1])
+			expect(optionLabels).toEqual(['SPECIALS', 'NEW_ARRIVALS', 'FAVORITES'])
+			
+			// Critical: Simulate RadioGroup's exact access pattern
+			// RadioGroup does: option[1] where option comes from options.map()
+			const radioGroupLabels = $filters.offertype.options.map((option) => {
+				// This is exactly what RadioGroup does (line 30 in radio.tsx)
+				if (!option || typeof option !== 'object') {
+					return undefined
+				}
+				return option[1] // This should return the label string
+			})
+			expect(radioGroupLabels).toEqual(['SPECIALS', 'NEW_ARRIVALS', 'FAVORITES'])
+			expect(radioGroupLabels.every(label => label !== undefined)).toBe(true)
+			
+			// Also test the exact pattern from RadioGroup with translate prefix
+			// RadioGroup does: $t(`${vn.attrs.translate.prefix}${option[1]}`)
+			// If option[1] is undefined, it would show "filters.types.offertype.undefined"
+			const translatePrefix = 'filters.types.offertype.'
+			const translatedLabels = $filters.offertype.options.map((option) => {
+				if (!option || typeof option !== 'object') {
+					return undefined
+				}
+				const label = option[1]
+				if (label === undefined) {
+					return `${translatePrefix}undefined` // This is what would show in UI
+				}
+				return `${translatePrefix}${label}`
+			})
+			expect(translatedLabels).toEqual([
+				'filters.types.offertype.SPECIALS',
+				'filters.types.offertype.NEW_ARRIVALS',
+				'filters.types.offertype.FAVORITES',
+			])
+			expect(translatedLabels.every(label => !label.includes('undefined'))).toBe(true)
+		})
+		
+		test('splice with empty initial options then populate - simulates filter initialization', () => {
+			// Simulate filter that starts empty and gets populated later
+			const $filters = state({
+				offertype: {
+					options: [],
+					selection: '',
+				},
+			}, 'watch.filterEmptyInit')
+			
+			expect($filters.offertype.options.length).toBe(0)
+			
+			// Populate with options (simulating API response)
+			const offerTypeStats = [
+				['SPECIALS', 'SPECIALS', 15],
+				['NEW_ARRIVALS', 'NEW_ARRIVALS', 8],
+			]
+			
+			$filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats)
+			
+			expect($filters.offertype.options.length).toBe(2)
+			expect($filters.offertype.options[0][0]).toBe('SPECIALS')
+			expect($filters.offertype.options[0][1]).toBe('SPECIALS')
+			expect($filters.offertype.options[1][0]).toBe('NEW_ARRIVALS')
+			expect($filters.offertype.options[1][1]).toBe('NEW_ARRIVALS')
+		})
+		
+		test('splice with multiple filter updates - simulates real usage pattern', () => {
+			// Simulate multiple filters being updated in sequence
+			const $filters = state({
+				offertype: {
+					options: [['SPECIALS', 'SPECIALS', 10]],
+					selection: '',
+				},
+				availability: {
+					options: [['stock', 'stock', 5]],
+					selection: [],
+				},
+			}, 'watch.multipleFilters')
+			
+			// First update
+			const offerTypeStats1 = [['SPECIALS', 'SPECIALS', 15], ['NEW_ARRIVALS', 'NEW_ARRIVALS', 8]]
+			$filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats1)
+			
+			expect($filters.offertype.options.length).toBe(2)
+			expect($filters.offertype.options[0][0]).toBe('SPECIALS')
+			expect($filters.offertype.options[1][0]).toBe('NEW_ARRIVALS')
+			
+			// Second update (simulating another API call)
+			const offerTypeStats2 = [['FAVORITES', 'FAVORITES', 3]]
+			$filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats2)
+			
+			expect($filters.offertype.options.length).toBe(1)
+			expect($filters.offertype.options[0][0]).toBe('FAVORITES')
+			expect($filters.offertype.options[0][1]).toBe('FAVORITES')
+			
+			// Update another filter
+			const availabilityStats = [['stock', 'stock', 10], ['tbo', 'tbo', 5]]
+			$filters.availability.options.splice(0, $filters.availability.options.length, ...availabilityStats)
+			
+			expect($filters.availability.options.length).toBe(2)
+			expect($filters.availability.options[0][0]).toBe('stock')
+			expect($filters.availability.options[1][0]).toBe('tbo')
 		})
 	})
 })
