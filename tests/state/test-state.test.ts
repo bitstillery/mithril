@@ -171,6 +171,50 @@ describe('state', () => {
 			expect(s.items).toEqual([1, 2, 10, 11, 12, 5])
 		})
 		
+		test('includes and indexOf work correctly with reactive arrays', () => {
+			const s = state({selection: []}, 'testState.arraySearch')
+			
+			// Initially empty
+			expect(s.selection.includes('option1')).toBe(false)
+			expect(s.selection.indexOf('option1')).toBe(-1)
+			
+			// Add items via splice (simulating CheckboxGroup behavior)
+			s.selection.splice(0, s.selection.length, 'option1', 'option2')
+			expect(s.selection.length).toBe(2)
+			expect(s.selection.includes('option1')).toBe(true)
+			expect(s.selection.includes('option2')).toBe(true)
+			expect(s.selection.indexOf('option1')).toBe(0)
+			expect(s.selection.indexOf('option2')).toBe(1)
+			
+			// Update selection (simulating checkbox uncheck)
+			s.selection.splice(0, s.selection.length, 'option2')
+			expect(s.selection.length).toBe(1)
+			expect(s.selection.includes('option1')).toBe(false)
+			expect(s.selection.includes('option2')).toBe(true)
+			expect(s.selection.indexOf('option1')).toBe(-1)
+			expect(s.selection.indexOf('option2')).toBe(0)
+		})
+		
+		test('array methods return unwrapped values', () => {
+			const s = state({items: ['a', 'b', 'c']}, 'testState.arrayMethods')
+			
+			// Search methods
+			expect(s.items.includes('b')).toBe(true)
+			expect(s.items.indexOf('b')).toBe(1)
+			expect(s.items.lastIndexOf('c')).toBe(2)
+			
+			// Return methods
+			expect(s.items.join(', ')).toBe('a, b, c')
+			expect(s.items.toString()).toBe('a,b,c')
+			expect(s.items.slice(0, 2)).toEqual(['a', 'b'])
+			expect(s.items.concat(['d'])).toEqual(['a', 'b', 'c', 'd'])
+			
+			// Iterator methods
+			expect(Array.from(s.items.values())).toEqual(['a', 'b', 'c'])
+			expect(Array.from(s.items.keys())).toEqual([0, 1, 2])
+			expect(Array.from(s.items.entries())).toEqual([[0, 'a'], [1, 'b'], [2, 'c']])
+		})
+		
 		test('splice works with nested arrays', () => {
 			const s = state({
 				filter: {

@@ -198,7 +198,14 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 					if (typeof value === 'function' && Array.isArray(target)) {
 						// Array iteration methods need to use the Proxy so element access is unwrapped
 						const iterationMethods = ['map', 'filter', 'forEach', 'some', 'every', 'find', 'findIndex', 'reduce', 'reduceRight']
-						if (iterationMethods.includes(propStr)) {
+						// Search methods also need unwrapped values for comparison
+						const searchMethods = ['includes', 'indexOf', 'lastIndexOf']
+						// Methods that return new arrays or strings need unwrapped values
+						const returnMethods = ['slice', 'concat', 'flat', 'flatMap', 'join', 'toString', 'toLocaleString']
+						// Iterator methods need unwrapped values
+						const iteratorMethods = ['entries', 'keys', 'values']
+						if (iterationMethods.includes(propStr) || searchMethods.includes(propStr) || 
+							returnMethods.includes(propStr) || iteratorMethods.includes(propStr)) {
 							return value.bind(wrapped)
 						}
 					}
