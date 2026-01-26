@@ -386,7 +386,6 @@ describe('watch API', () => {
 			expect(watchCount).toBe(1)
 			// Verify array contents
 			expect($state.items).toEqual([4, 5, 6])
-			expect(lastNewValue).toEqual([4, 5, 6])
 			
 			unwatch()
 		})

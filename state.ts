@@ -206,11 +206,6 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 					// Intercept mutating methods to trigger parent signal
 					if (typeof value === 'function' && mutatingMethods.includes(propStr)) {
 						return function(...args: any[]) {
-							// Look up parent signal when function is called, not when created
-							// This ensures we get the signal even if it was stored after accessing the method
-							// Try WeakMap first, then fallback to direct property access
-							let parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
-							
 							// For splice, we need to handle it specially to convert new items to signals
 							if (propStr === 'splice') {
 								const start = args[0] ?? 0
@@ -228,6 +223,11 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 								
 								// Update the signals array (target is signals array)
 								const removed = signals.splice(start, deleteCount, ...newSignals)
+								
+								// Look up parent signal AFTER mutation to ensure we have the latest reference
+								// This ensures we get the signal even if it was stored after accessing the method
+								// Try WeakMap first, then fallback to direct property access
+								const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
 								
 								// Trigger parent signal if it exists
 								// Notify subscribers directly since the array reference hasn't changed
