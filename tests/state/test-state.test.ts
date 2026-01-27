@@ -323,6 +323,44 @@ describe('state', () => {
 			expect(values).toContainEqual({id: 2})
 		})
 
+		test('deleting a property updates computed that depends on it', () => {
+			const s = state({
+				items: {} as Record<string, {value: number}>,
+				getItem: () => s.items['key1'],
+			}, 'testState.deleteProperty')
+			
+			// Set a property
+			s.items['key1'] = {value: 42}
+			expect(s.getItem).toEqual({value: 42})
+			
+			// Delete the property
+			delete s.items['key1']
+			
+			// Computed should now return undefined
+			expect(s.getItem).toBeUndefined()
+		})
+
+		test('deleting a property removes it from Object.values', () => {
+			const s = state({items: {}}, 'testState.deleteFromValues')
+			
+			// Add some items
+			s.items['a'] = {id: 1}
+			s.items['b'] = {id: 2}
+			s.items['c'] = {id: 3}
+			
+			expect(Object.values(s.items).length).toBe(3)
+			
+			// Delete one
+			delete s.items['b']
+			
+			// Should only have 2 items now
+			const values = Object.values(s.items)
+			expect(values.length).toBe(2)
+			expect(values).toContainEqual({id: 1})
+			expect(values).toContainEqual({id: 3})
+			expect(values).not.toContainEqual({id: 2})
+		})
+
 		test('computed updates when dynamic property is set after creation', () => {
 			const s = state({
 				items: {},

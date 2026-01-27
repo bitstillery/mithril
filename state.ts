@@ -743,6 +743,23 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 				}
 				return Reflect.getOwnPropertyDescriptor(target, prop)
 			},
+			deleteProperty(target, prop) {
+				const key = String(prop)
+				
+				// Update the signal to undefined to notify subscribers
+				if (nestedSignalMap.has(key)) {
+					const sig = nestedSignalMap.get(key)
+					if (sig && !(sig instanceof ComputedSignal)) {
+						// Set signal value to undefined to notify subscribers
+						;(sig as Signal<any>).value = undefined
+					}
+					// Remove from the signal map
+					nestedSignalMap.delete(key)
+				}
+				
+				// Delete from target
+				return Reflect.deleteProperty(target, prop)
+			},
 		})
 
 		stateCache.set(obj, wrapped)
