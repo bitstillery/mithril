@@ -165,6 +165,12 @@ export class ComputedSignal<T> extends Signal<T> {
 	}
 
 	get value(): T {
+		// Track access by other computed signals - this enables computed-to-computed dependency chains
+		// When computed B accesses computed A, A should notify B when A's dependencies change
+		if (currentEffect) {
+			this._subscribers.add(currentEffect)
+		}
+
 		if (this._isDirty) {
 			// Clear old dependencies
 			this._dependencies.forEach(dep => {
