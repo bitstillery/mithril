@@ -14,7 +14,7 @@ import {state, watch, registerState, getRegisteredStates} from './state'
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
-import type {Route, RouteResolver} from './api/router'
+import type {Route, RouteResolver, RedirectObject} from './api/router'
 import type {Render, Redraw, Mount} from './api/mount-redraw'
 
 export interface MithrilStatic {
@@ -23,7 +23,7 @@ export interface MithrilStatic {
 	fragment: (attrs: Record<string, any> | null, ...children: Children[]) => Vnode
 	Fragment: string
 	mount: Mount
-	route: Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void)
+	route: Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void) & {redirect: (path: string) => RedirectObject}
 	render: Render
 	redraw: Redraw
 	parseQueryString: (queryString: string) => Record<string, any>
@@ -55,7 +55,7 @@ m.trust = hyperscript.trust
 m.fragment = hyperscript.fragment
 m.Fragment = '['
 m.mount = mountRedrawInstance.mount
-m.route = router
+m.route = router as Route & typeof router & {redirect: (path: string) => RedirectObject}
 m.render = renderFactory()
 m.redraw = mountRedrawInstance.redraw
 m.parseQueryString = parseQueryString
@@ -92,7 +92,7 @@ export type {Vnode, Children, Component, ComponentFactory, ComponentType} from '
 // Export MithrilTsxComponent as a value (class) so it can be extended at runtime
 export {MithrilTsxComponent}
 export type {Hyperscript} from './render/hyperscript'
-export type {Route, RouteResolver} from './api/router'
+export type {Route, RouteResolver, RedirectObject} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'
 
 export default m

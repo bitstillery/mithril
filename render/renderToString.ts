@@ -339,6 +339,17 @@ async function serializeComponent(
 ): Promise<string> {
 	const component = vnode.tag as any
 	
+	// Validate component before processing
+	// Check for RouteResolver objects (should never reach here, but safety check)
+	if (component != null && typeof component === 'object' && !Array.isArray(component)) {
+		// Check if it's a RouteResolver object (has onmatch/render but no view)
+		if ('onmatch' in component && 'render' in component && !('view' in component) && typeof component !== 'function') {
+			// This is a RouteResolver object, not a component - should not be here
+			console.error('RouteResolver object passed as component in serializeComponent:', component, 'vnode:', vnode)
+			return ''
+		}
+	}
+	
 	// Initialize component state
 	let state: any
 	let view: ((vnode: any) => any) | undefined
@@ -351,8 +362,13 @@ async function serializeComponent(
 		// Component factory/class
 		if (component.prototype && typeof component.prototype.view === 'function') {
 			state = new component(vnode)
-		} else {
+		} else if (typeof component === 'function') {
+			// Component factory function
 			state = component(vnode)
+		} else {
+			// Invalid component - log error and return empty string
+			console.error('Invalid component in serializeComponent:', component, 'vnode:', vnode)
+			return ''
 		}
 		view = state.view
 	}

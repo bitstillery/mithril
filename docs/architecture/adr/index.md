@@ -24,6 +24,7 @@ Architecture Decision Records are documents that capture important architectural
 | [0007](./0007-store-ssr-persistence-strategy.md) | Store SSR and Persistence Strategy | Proposed | 2025-01-23 |
 | [0008](./0008-session-state-update-api.md) | Session State Update API | Proposed | 2025-01-23 |
 | [0009](./0009-ssr-server-abstraction.md) | SSR Server Component Abstraction | Proposed | 2025-01-23 |
+| [0010](./0010-isomorphic-redirect-system.md) | Isomorphic Redirect System for Mithril Router | Proposed | 2025-01-28 |
 
 ## Status Definitions
 

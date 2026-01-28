@@ -9,8 +9,16 @@ import {getPathname, getSearch, getHash} from '../util/uri'
 
 import type {ComponentType, Vnode as VnodeType} from '../render/vnode'
 
+// RedirectObject will be defined after REDIRECT symbol is created
+// Using a type that references the symbol indirectly
+export type RedirectObject = {[key: symbol]: string}
+
 export interface RouteResolver<Attrs = Record<string, any>, State = any> {
-	onmatch?: (args: Attrs, requestedPath: string, route: string) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | void
+	onmatch?: (
+		args: Attrs,
+		requestedPath: string,
+		route: string,
+	) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | RedirectObject | Promise<RedirectObject> | void
 	render?: (vnode: VnodeType<Attrs, State>) => VnodeType
 }
 
@@ -27,6 +35,9 @@ export interface Route {
 	param: (key?: string) => any
 	params: Record<string, any>
 	Link: ComponentType
+	SKIP: {}
+	REDIRECT: symbol
+	redirect: (path: string) => RedirectObject
 	resolve: (
 		pathname: string,
 		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
@@ -85,6 +96,19 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	}
 
 	const SKIP = route.SKIP = {}
+	
+	// Redirect symbol for isomorphic redirect handling
+	const REDIRECT = route.REDIRECT = Symbol('REDIRECT')
+	
+	// Helper function to create redirect objects
+	route.redirect = function(path: string) {
+		return {[REDIRECT]: path} as RedirectObject
+	}
+	
+	// Type guard to check if value is a redirect object
+	function isRedirect(value: any): value is RedirectObject {
+		return value != null && typeof value === 'object' && REDIRECT in value
+	}
 
 	function resolveRoute() {
 		scheduled = false
@@ -127,6 +151,15 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 					const update = lastUpdate = function(comp: any) {
 						if (update !== lastUpdate) return
 						if (comp === SKIP) return loop(i + 1)
+						// Handle redirect objects: explicit redirect signal
+						if (isRedirect(comp)) {
+							// Extract redirect target path
+							const redirectPath = comp[REDIRECT]
+							// Trigger navigation to redirect target
+							route.set(redirectPath, null)
+							// Skip rendering current route - new route resolution will handle redirect target
+							return
+						}
 						// If we have a preserved resolver with render, use it
 						if (resolverWithRender) {
 							currentResolver = resolverWithRender
@@ -348,7 +381,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
 		renderToString: (vnodes: any) => Promise<string>,
 		prefix: string = '',
+		redirectDepth: number = 0,
 	): Promise<string> {
+		// Prevent infinite redirect loops
+		const MAX_REDIRECT_DEPTH = 5
+		if (redirectDepth > MAX_REDIRECT_DEPTH) {
+			throw new Error(`Maximum redirect depth (${MAX_REDIRECT_DEPTH}) exceeded. Possible redirect loop.`)
+		}
 		// Save current prefix and set to provided prefix for SSR
 		// This ensures Link components use the correct prefix during server-side rendering
 		const savedPrefix = route.prefix
@@ -403,14 +442,33 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							}
 						}
 
+						// Check for redirect BEFORE processing as component
+						// This prevents redirect objects from being treated as components
+						if (isRedirect(payload)) {
+							// Extract redirect target path
+							const redirectPath = payload[REDIRECT]
+							// Recursively resolve redirect target route
+							return await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
+						}
+
 						// If resolver has render, use it
 						if (resolver.render) {
-							// Pass matchedRoute path in attrs so Layout component can use it for SSR
-							const routeAttrs = {...data.params, routePath: matchedRoute}
-							const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
-							const result = await renderToString(resolver.render(vnode))
-							// Handle both string (backward compatibility) and {html, state} return types
-							return typeof result === 'string' ? result : result
+							// Only render if payload is a valid component (onmatch returned a component)
+							const isComponentType = payload != null && (
+								typeof payload === 'function' ||
+								(typeof payload === 'object' && 'view' in payload && typeof (payload as any).view === 'function')
+							)
+							
+							if (isComponentType) {
+								// Pass matchedRoute path in attrs so Layout component can use it for SSR
+								const routeAttrs = {...data.params, routePath: matchedRoute}
+								const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
+								const result = await renderToString(resolver.render(vnode))
+								// Handle both string (backward compatibility) and {html, state} return types
+								return typeof result === 'string' ? result : result
+							}
+							// If payload is not a valid component, skip rendering
+							// This should not happen if redirects are properly handled above
 						}
 					}
 
@@ -442,5 +500,5 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		}
 	}
 
-	return route as unknown as Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void)
+	return route as unknown as Route & ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void) & {redirect: (path: string) => RedirectObject}
 }
