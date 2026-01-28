@@ -480,6 +480,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 								payload = result
 							}
 							// Note: If onmatch returns undefined, payload remains as the RouteResolver
+							// Debug: Log onmatch result
+							if (globalThis.__SSR_MODE__) {
+								const payloadType = payload === resolver ? 'RouteResolver' : (typeof payload === 'function' ? 'function' : (payload && typeof payload === 'object' && 'view' in payload ? 'component' : typeof payload))
+								console.log(`[SSR Router] Route ${matchedRoute} onmatch result: ${payloadType}, has render: ${!!resolver.render}`)
+							}
 						}
 
 						// Check for redirect BEFORE processing as component
@@ -491,15 +496,40 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							if (globalThis.__SSR_MODE__) {
 								console.log(`[SSR Router] Redirect detected: ${pathname} -> ${redirectPath} (depth: ${redirectDepth})`)
 							}
-							// Recursively resolve redirect target route
-							// This will return SSRResult (string or {html, state})
-							const redirectResult = await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
-							// Debug: Log redirect result
-							if (globalThis.__SSR_MODE__) {
-								const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
-								console.log(`[SSR Router] Redirect result length: ${redirectHtml ? redirectHtml.length : 0}`)
+							// Update __SSR_URL__ to reflect redirect target for proper URL context
+							// This ensures getCurrentUrl() and other URL-dependent code work correctly
+							const originalSSRUrl = globalThis.__SSR_URL__
+							try {
+								// Construct full URL for redirect target if we have original URL context
+								if (originalSSRUrl && typeof originalSSRUrl === 'string') {
+									try {
+										const originalUrl = new URL(originalSSRUrl)
+										// Build redirect target URL using same origin
+										const redirectUrl = new URL(redirectPath, originalUrl.origin)
+										globalThis.__SSR_URL__ = redirectUrl.href
+									} catch {
+										// If URL construction fails, just use redirect path as-is
+										globalThis.__SSR_URL__ = redirectPath
+									}
+								} else {
+									globalThis.__SSR_URL__ = redirectPath
+								}
+								// Recursively resolve redirect target route
+								// This will return SSRResult (string or {html, state})
+								const redirectResult = await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
+								// Debug: Log redirect result
+								if (globalThis.__SSR_MODE__) {
+									const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
+									console.log(`[SSR Router] Redirect result length: ${redirectHtml ? redirectHtml.length : 0}`)
+									if (!redirectHtml || redirectHtml.length === 0) {
+										console.error(`[SSR Router] Empty redirect result for ${redirectPath}, result type: ${typeof redirectResult}`)
+									}
+								}
+								return redirectResult
+							} finally {
+								// Restore original SSR URL after redirect resolution
+								globalThis.__SSR_URL__ = originalSSRUrl
 							}
-							return redirectResult
 						}
 
 						// If resolver has render, use it
@@ -511,18 +541,69 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 								(typeof payload === 'object' && 'view' in payload && typeof (payload as any).view === 'function')
 							)
 							
+							if (globalThis.__SSR_MODE__) {
+								console.log(`[SSR Router] Route ${matchedRoute} rendering: isComponentType=${isComponentType}, payload type=${typeof payload}`)
+							}
+							
 							if (isComponentType) {
-								// Pass matchedRoute path in attrs so Layout component can use it for SSR
-								const routeAttrs = {...data.params, routePath: matchedRoute}
-								const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
-								const result = await renderToString(resolver.render(vnode))
-								// renderToString returns SSRResult (string or {html, state})
-								return result
+								try {
+									// Create component vnode using hyperscript
+									const componentVnode = hyperscript(payload as ComponentType, data.params)
+									
+									// Instead of calling resolver.render (which uses m() that might not work with vnode children),
+									// use hyperscript directly to create the layout vnode with the component as a child
+									// This matches how the test cases work: mServer(Layout, {component: vnode.tag})
+									// But our make_route does m(layout, vnode), so we need to extract the layout from the resolver
+									// Actually, we can't easily extract the layout, so let's try calling resolver.render
+									// but if it returns empty, we'll construct it manually using hyperscript
+									const renderedVnode = resolver.render(componentVnode)
+									
+									if (globalThis.__SSR_MODE__) {
+										console.log(`[SSR Router] Route ${matchedRoute} componentVnode type: ${typeof componentVnode}, tag: ${componentVnode?.tag}`)
+										console.log(`[SSR Router] Route ${matchedRoute} renderedVnode type: ${typeof renderedVnode}, tag: ${renderedVnode?.tag}`)
+									}
+									
+									const result = await renderToString(renderedVnode)
+									const html = typeof result === 'string' ? result : result.html
+									
+									if (globalThis.__SSR_MODE__) {
+										console.log(`[SSR Router] Route ${matchedRoute} rendered HTML length: ${html ? html.length : 0}`)
+									}
+									
+									// If resolver.render produced empty HTML, try constructing layout manually
+									if (!html || html.length === 0) {
+										if (globalThis.__SSR_MODE__) {
+											console.warn(`[SSR Router] Route ${matchedRoute} resolver.render produced empty HTML, trying manual layout construction`)
+										}
+										// Try to get layout from resolver - we can't easily extract it, so let's try
+										// rendering the component directly first to see if that works
+										const directResult = await renderToString(componentVnode)
+										const directHtml = typeof directResult === 'string' ? directResult : directResult.html
+										if (globalThis.__SSR_MODE__) {
+											console.log(`[SSR Router] Route ${matchedRoute} direct component render HTML length: ${directHtml ? directHtml.length : 0}`)
+										}
+										// If component renders but layout doesn't, the issue is with m(layout, vnode)
+										// For now, return the component HTML (better than nothing)
+										if (directHtml && directHtml.length > 0) {
+											return directResult
+										}
+									}
+									
+									return result
+								} catch(error) {
+									if (globalThis.__SSR_MODE__) {
+										console.error(`[SSR Router] Error rendering route ${matchedRoute}:`, error)
+									}
+									throw error
+								}
 							}
 							// If payload is not a valid component, skip rendering
 							// This happens when onmatch returns undefined - render needs a component to work with
 							// In this case, we should fall through to the component rendering logic below
 							// which will handle the RouteResolver as a component if it has a view method
+							if (globalThis.__SSR_MODE__) {
+								console.warn(`[SSR Router] Route ${matchedRoute} payload is not a valid component, falling through to component rendering`)
+							}
 						}
 					}
 
