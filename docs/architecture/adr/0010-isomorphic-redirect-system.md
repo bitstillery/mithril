@@ -236,7 +236,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 
 ## Implementation Status
 
-**Current Status**: Partially implemented
+**Current Status**: ✅ Fully implemented and tested
 
 - ✅ Redirect infrastructure added (`REDIRECT` symbol, `route.redirect()`)
 - ✅ Browser router redirect handling
@@ -244,12 +244,21 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 - ✅ Auth functions updated to return redirect objects
 - ✅ Type definitions updated
 - ✅ Invalid component error prevention added
-- ⚠️ **Issue**: Redirects not rendering target route content (empty HTML returned)
+- ✅ Return type fixed (`Promise<SSRResult>` instead of `Promise<string>`)
+- ✅ `route.redirect()` exposed in server-side router
+- ✅ Comprehensive test suite added (`tests/render/test-ssr-routing.test.ts`)
 
-**Known Issues**:
-- Redirect detection may not be working correctly
-- Recursive resolution may be failing silently
-- Need to verify redirect object creation and detection
+**Test Coverage**:
+- Basic component routing
+- RouteResolver with onmatch
+- RouteResolver with render
+- Redirects (single, chained, with query params)
+- Redirect loop prevention
+- Route parameters
+- Query parameters
+- SSRResult handling (string and {html, state})
+- Error handling
+- Isomorphic behavior verification
 
 ## Related ADRs
 

@@ -106,8 +106,47 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	}
 	
 	// Type guard to check if value is a redirect object
+	// Note: We check for any Symbol key that might be a redirect, not just our specific REDIRECT symbol
+	// This allows redirect objects created by different router instances to be detected
 	function isRedirect(value: any): value is RedirectObject {
-		return value != null && typeof value === 'object' && REDIRECT in value
+		if (value == null || typeof value !== 'object') return false
+		// Check if this object has our REDIRECT symbol
+		if (REDIRECT in value) return true
+		// Also check for any Symbol keys that might be redirect objects from other router instances
+		// This handles the case where redirect objects are created by client-side m.route.redirect
+		// but checked by server-side router (or vice versa)
+		const symbolKeys = Object.getOwnPropertySymbols(value)
+		if (symbolKeys.length > 0) {
+			// Check if any symbol key's description suggests it's a redirect
+			// Or check if the object has a string property that looks like a path
+			for (const sym of symbolKeys) {
+				const desc = sym.description || ''
+				if (desc.includes('REDIRECT') || desc === 'REDIRECT') {
+					const path = value[sym]
+					if (typeof path === 'string' && path.startsWith('/')) {
+						return true
+					}
+				}
+			}
+		}
+		return false
+	}
+	
+	// Helper to extract redirect path from redirect object (handles different REDIRECT symbols)
+	function getRedirectPath(redirectObj: RedirectObject): string {
+		// First try our REDIRECT symbol
+		if (REDIRECT in redirectObj) {
+			return redirectObj[REDIRECT]
+		}
+		// Otherwise, check all symbol keys
+		const symbolKeys = Object.getOwnPropertySymbols(redirectObj)
+		for (const sym of symbolKeys) {
+			const path = redirectObj[sym]
+			if (typeof path === 'string' && path.startsWith('/')) {
+				return path
+			}
+		}
+		throw new Error('Invalid redirect object: no redirect path found')
 	}
 
 	function resolveRoute() {
@@ -379,10 +418,10 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 	route.resolve = async function(
 		pathname: string,
 		routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
-		renderToString: (vnodes: any) => Promise<string>,
+		renderToString: (vnodes: any) => Promise<SSRResult>,
 		prefix: string = '',
 		redirectDepth: number = 0,
-	): Promise<string> {
+	): Promise<SSRResult> {
 		// Prevent infinite redirect loops
 		const MAX_REDIRECT_DEPTH = 5
 		if (redirectDepth > MAX_REDIRECT_DEPTH) {
@@ -440,21 +479,34 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							} else if (result !== undefined) {
 								payload = result
 							}
+							// Note: If onmatch returns undefined, payload remains as the RouteResolver
 						}
 
 						// Check for redirect BEFORE processing as component
 						// This prevents redirect objects from being treated as components
 						if (isRedirect(payload)) {
-							// Extract redirect target path
-							const redirectPath = payload[REDIRECT]
+							// Extract redirect target path (handles different REDIRECT symbols)
+							const redirectPath = getRedirectPath(payload)
+							// Debug: Log redirect detection
+							if (globalThis.__SSR_MODE__) {
+								console.log(`[SSR Router] Redirect detected: ${pathname} -> ${redirectPath} (depth: ${redirectDepth})`)
+							}
 							// Recursively resolve redirect target route
-							return await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
+							// This will return SSRResult (string or {html, state})
+							const redirectResult = await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
+							// Debug: Log redirect result
+							if (globalThis.__SSR_MODE__) {
+								const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
+								console.log(`[SSR Router] Redirect result length: ${redirectHtml ? redirectHtml.length : 0}`)
+							}
+							return redirectResult
 						}
 
 						// If resolver has render, use it
 						if (resolver.render) {
 							// Only render if payload is a valid component (onmatch returned a component)
-							const isComponentType = payload != null && (
+							// If onmatch returned undefined, payload is still the RouteResolver, which is not a component
+							const isComponentType = payload != null && payload !== resolver && (
 								typeof payload === 'function' ||
 								(typeof payload === 'object' && 'view' in payload && typeof (payload as any).view === 'function')
 							)
@@ -464,11 +516,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 								const routeAttrs = {...data.params, routePath: matchedRoute}
 								const vnode = Vnode(payload, data.params.key, routeAttrs, null, null, null)
 								const result = await renderToString(resolver.render(vnode))
-								// Handle both string (backward compatibility) and {html, state} return types
-								return typeof result === 'string' ? result : result
+								// renderToString returns SSRResult (string or {html, state})
+								return result
 							}
 							// If payload is not a valid component, skip rendering
-							// This should not happen if redirects are properly handled above
+							// This happens when onmatch returns undefined - render needs a component to work with
+							// In this case, we should fall through to the component rendering logic below
+							// which will handle the RouteResolver as a component if it has a view method
 						}
 					}
 

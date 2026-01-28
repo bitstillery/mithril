@@ -8,6 +8,7 @@ import parsePathname from './pathname/parse'
 import buildPathname from './pathname/build'
 import VnodeFactory, {MithrilTsxComponent} from './render/vnode'
 import censor from './util/censor'
+import next_tick from './util/next_tick'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
 import {state, watch, registerState, getRegisteredStates} from './state'
@@ -32,6 +33,7 @@ export interface MithrilStatic {
 	buildPathname: (template: string, params: Record<string, any>) => string
 	vnode: typeof VnodeFactory
 	censor: (attrs: Record<string, any>, extras?: string[]) => Record<string, any>
+	next_tick: () => Promise<void>
 	domFor: (vnode: Vnode) => Generator<Node, void, unknown>
 }
 
@@ -64,6 +66,7 @@ m.parsePathname = parsePathname
 m.buildPathname = buildPathname
 m.vnode = VnodeFactory
 m.censor = censor
+m.next_tick = next_tick
 m.domFor = domFor
 
 // Set up signal-to-component redraw integration
@@ -86,6 +89,9 @@ export {Store} from './store'
 
 // Export SSR utilities
 export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './render/ssrState'
+
+// Export next_tick utility
+export {next_tick} from './util/next_tick'
 
 // Export component and vnode types
 export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'

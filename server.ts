@@ -37,6 +37,9 @@ const routerServer = {
 	param: router.param.bind(router),
 	params: router.params,
 	link: router.link.bind(router),
+	redirect: router.redirect.bind(router),
+	REDIRECT: router.REDIRECT,
+	SKIP: router.SKIP,
 }
 
 // Server-side Mithril instance
