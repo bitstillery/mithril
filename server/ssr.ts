@@ -115,9 +115,8 @@ export async function createSSRResponse(
 		// Inject serialized state into HTML
 		const stateScriptId = options.stateScriptId || '__SSR_STATE__'
 		const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
-		// Set global SSR mode flag for client-side code
-		const ssrModeScript = '<script>globalThis.__SSR_MODE__ = true;</script>'
-		html = html.replace('</head>', `${stateScript}${ssrModeScript}</head>`)
+
+		html = html.replace('</head>', `${stateScript}</head>`)
 
 		// Return full HTML document with SSR content and session cookie
 		return new Response(html, {
