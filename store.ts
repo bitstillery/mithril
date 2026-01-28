@@ -194,6 +194,12 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	}
 
 	clean_lookup() {
+		// Skip during SSR (server-side rendering in Bun)
+		// Check both window existence and __SSR_MODE__ flag for safety
+		if (typeof window === 'undefined' || globalThis.__SSR_MODE__) {
+			return
+		}
+		
 		let store_modified = false
 		const lookup = (this.stateInstance as any).lookup
 		if (!lookup) return
@@ -347,6 +353,12 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	}
 
 	async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void> {
+		// Skip saving during SSR (server-side rendering in Bun)
+		// On the server, there's no localStorage/sessionStorage and no need to persist state
+		if (globalThis.__SSR_MODE__) {
+			return
+		}
+		
 		// Default to saving all storage types if no options provided
 		const saveSaved = options?.saved ?? (options === undefined)
 		const saveTab = options?.tab ?? (options === undefined)
@@ -391,15 +403,18 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		}
 		
 		// Save to session API (session state) - async by nature
-		if (saveSession && this.templates.session && Object.keys(this.templates.session).length > 0) {
+		// Only save session on client side (not during SSR)
+		if (saveSession && this.templates.session && Object.keys(this.templates.session).length > 0 && typeof window !== 'undefined') {
 			const sessionData = this.blueprint(statePlain, copy_object(this.templates.session))
 			
 			// Call API endpoint with batched session updates
-			const response = await fetch('/api/session', {
+			const endpoint = '/api/session'
+			const response = await fetch(endpoint, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(sessionData)
 			})
+
 			
 			if (!response.ok) {
 				throw new Error(`Failed to save session state: ${response.statusText}`)

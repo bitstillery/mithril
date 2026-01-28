@@ -107,10 +107,37 @@ export async function createSSRResponse(
 		// Get HTML template
 		let html = await options.getHtmlTemplate()
 
-		// Replace the empty app div with server-rendered HTML
+		// Replace the empty app element with server-rendered HTML
 		const appSelector = options.appSelector || '#app'
-		const appId = appSelector.slice(1) // Remove '#' prefix
-		html = html.replace(`<div id="${appId}"></div>`, `<div id="${appId}">${appHtml}</div>`)
+		
+		// Build regex pattern to match opening tag based on selector type
+		let openingTagPattern: string
+		
+		if (appSelector.startsWith('#')) {
+			// ID selector: #app -> matches <div id="app"...> or <div id="app" class="...">
+			const id = appSelector.slice(1)
+			// Match any element with the id attribute, allowing other attributes
+			openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)\\s+id="${id}"([^>]*)>`
+		} else if (appSelector.startsWith('.')) {
+			// Class selector: .app -> matches <div class="app"> or <div class="foo app bar">
+			const className = appSelector.slice(1)
+			// Match any element with the class (handles space-separated classes)
+			openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)([^>]*\\s+class="[^"]*\\b${className}\\b[^"]*"[^>]*)>`
+		} else {
+			// Element selector: div -> <div>
+			openingTagPattern = `<${appSelector}([^>]*)>`
+		}
+		
+		// Match opening tag with empty content: <tag...></tag>
+		// Capture the full opening tag and the closing tag name
+		const fullPattern = new RegExp(`(${openingTagPattern})\\s*</([a-zA-Z][a-zA-Z0-9]*)>`, 'i')
+		
+		html = html.replace(fullPattern, (match, openingTag, closingTagName) => {
+			// Extract element name from opening tag (first word after <)
+			const tagMatch = openingTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/)
+			const elementName = tagMatch ? tagMatch[1] : (closingTagName || 'div')
+			return `${openingTag}${appHtml}</${elementName}>`
+		})
 
 		// Inject serialized state into HTML
 		const stateScriptId = options.stateScriptId || '__SSR_STATE__'
