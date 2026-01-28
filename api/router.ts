@@ -5,6 +5,7 @@ import buildPathname from '../pathname/build'
 import parsePathname from '../pathname/parse'
 import compileTemplate from '../pathname/compileTemplate'
 import censor from '../util/censor'
+import {getPathname, getSearch, getHash} from '../util/uri'
 
 import type {ComponentType, Vnode as VnodeType} from '../render/vnode'
 
@@ -89,11 +90,15 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		scheduled = false
 		// Consider the pathname holistically. The prefix might even be invalid,
 		// but that's not our problem.
-		let prefix = $window.location.hash
+		// Use isomorphic URI API unconditionally - it handles environment detection internally
+		const hash = getHash()
+		let prefix = hash
 		if (route.prefix[0] !== '#') {
-			prefix = $window.location.search + prefix
+			const search = getSearch()
+			prefix = search + prefix
 			if (route.prefix[0] !== '?') {
-				prefix = $window.location.pathname + prefix
+				const pathname = getPathname()
+				prefix = pathname + prefix
 				if (prefix[0] !== '/') prefix = '/' + prefix
 			}
 		}
@@ -221,14 +226,22 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 
 		path = buildPathname(path, data || {})
 		if (ready) {
+			// Router is initialized - use history API for navigation
 			fireAsync()
 			const state = options ? options.state : null
 			const title = options ? options.title : null
-			if (options && options.replace) $window.history.replaceState(state, title, route.prefix + path)
-			else $window.history.pushState(state, title, route.prefix + path)
+			if ($window?.history) {
+				if (options && options.replace) $window.history.replaceState(state, title, route.prefix + path)
+				else $window.history.pushState(state, title, route.prefix + path)
+			}
+			// In SSR context (no $window), navigation is a no-op since we're just rendering HTML
 		}
 		else {
-			$window.location.href = route.prefix + path
+			// Router not yet initialized - use location.href for initial navigation
+			if ($window?.location) {
+				$window.location.href = route.prefix + path
+			}
+			// In SSR context (no $window), this is a no-op since we're just rendering HTML
 		}
 	}
 	route.get = function() {return currentPath}

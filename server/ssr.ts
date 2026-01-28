@@ -7,6 +7,15 @@ import {extractSessionId} from './session'
 
 import type {SessionStore} from './session'
 
+declare global {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	var __SSR_MODE__: boolean | undefined
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	var __SSR_URL__: string | undefined
+}
+
+globalThis.__SSR_MODE__ = true
+
 export interface SSROptions {
 	routes: Record<string, any>
 	initStore: (sessionData: any) => void
@@ -80,6 +89,9 @@ export async function createSSRResponse(
 		// Clear state registry before each SSR request to avoid collisions
 		clearStateRegistry()
 		
+		// Set global SSR URL for client code running on server
+		globalThis.__SSR_URL__ = req.url
+		
 		// Initialize store with session data before SSR
 		// This ensures session state is available during server-side rendering
 		const {sessionData, sessionId} = options.getSessionData(req)
@@ -103,7 +115,9 @@ export async function createSSRResponse(
 		// Inject serialized state into HTML
 		const stateScriptId = options.stateScriptId || '__SSR_STATE__'
 		const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
-		html = html.replace('</head>', `${stateScript}</head>`)
+		// Set global SSR mode flag for client-side code
+		const ssrModeScript = '<script>globalThis.__SSR_MODE__ = true;</script>'
+		html = html.replace('</head>', `${stateScript}${ssrModeScript}</head>`)
 
 		// Return full HTML document with SSR content and session cookie
 		return new Response(html, {
