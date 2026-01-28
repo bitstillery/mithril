@@ -244,7 +244,14 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// In SSR context (no $window), this is a no-op since we're just rendering HTML
 		}
 	}
-	route.get = function() {return currentPath}
+	route.get = function() {
+		// If currentPath is not set (e.g., during SSR before route.resolve is called),
+		// fall back to extracting pathname from __SSR_URL__ using the isomorphic URI API
+		if (currentPath === undefined) {
+			return getPathname()
+		}
+		return currentPath
+	}
 	route.prefix = '#!'
 	route.link = function(vnode: VnodeType) {
 		return route.Link.view(vnode)
@@ -346,6 +353,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 		// This ensures Link components use the correct prefix during server-side rendering
 		const savedPrefix = route.prefix
 		route.prefix = prefix
+		// Save current path to restore after SSR
+		const savedCurrentPath = currentPath
+		
+		// Set currentPath immediately so m.route.get() works during SSR
+		// Use pathname (full path) - this is what m.route.get() should return
+		currentPath = pathname || '/'
+		
 		try {
 			// Compile routes (same logic as in route() function)
 			const compiled = Object.keys(routes).map(function(routePath) {
@@ -366,8 +380,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			})
 
 			// Parse pathname
-			const path = decodeURIComponentSafe(pathname).slice(prefix.length)
+			const path = decodeURIComponentSafe(pathname || '/').slice(prefix.length)
 			const data = parsePathname(path)
+			
+			// Update attrs for SSR so m.route.param() works during server-side rendering
+			attrs = data.params
 
 			// Find matching route
 			for (const {route: matchedRoute, component, check} of compiled) {
@@ -419,8 +436,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// No route found
 			throw new Error(`No route found for ${pathname}`)
 		} finally {
-			// Restore original prefix
+			// Restore original prefix and currentPath
 			route.prefix = savedPrefix
+			currentPath = savedCurrentPath
 		}
 	}
 
