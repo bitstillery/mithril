@@ -97,6 +97,10 @@ export type {SSRAccessContext} from './ssrContext'
 // Export next_tick utility
 export {next_tick} from './util/next_tick'
 
+// Export URI utilities
+export {getCurrentUrl, getPathname, getSearch, getHash, getLocation} from './util/uri'
+export type {IsomorphicLocation} from './util/uri'
+
 // Export component and vnode types
 export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
 // Export MithrilTsxComponent as a value (class) so it can be extended at runtime
