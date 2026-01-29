@@ -33,6 +33,8 @@ export interface SSRAccessContext {
 	stateRegistry: Map<string, {state: any; initial: any}>
 	sessionId?: string
 	sessionData?: any
+	/** Per-request EventEmitter; prevents event listeners from persisting between requests. */
+	events?: any
 }
 
 /**
