@@ -200,7 +200,9 @@ export default function renderFactory() {
 				if (candidate.nodeType === 1 && !matchedNodes.has(candidate)) {
 					const candidateEl = candidate as Element
 					// Case-insensitive tag matching (browsers normalize to uppercase for some tags)
-					if (candidateEl.tagName.toLowerCase() === tag.toLowerCase()) {
+					// Use tagName if available, fallback to nodeName (for DOM mocks)
+					const candidateTag = (candidateEl as any).tagName || candidateEl.nodeName
+					if (candidateTag && candidateTag.toLowerCase() === tag.toLowerCase()) {
 						// Prefer exact match (is attribute matches if specified)
 						if (!is || candidateEl.getAttribute('is') === is) {
 							element = candidateEl
