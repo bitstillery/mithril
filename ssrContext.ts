@@ -35,6 +35,8 @@ export interface SSRAccessContext {
 	sessionData?: any
 	/** Per-request EventEmitter; prevents event listeners from persisting between requests. */
 	events?: any
+	/** Per-request watcher cleanup functions; prevents watchers from persisting between requests. */
+	watchers?: Array<() => void>
 }
 
 /**
@@ -54,11 +56,35 @@ export function runWithContext<T>(context: SSRAccessContext, fn: () => T): T {
 }
 
 /**
+ * Clean up all watchers registered in the current SSR context.
+ * Called automatically at the end of runWithContextAsync, but can be called manually if needed.
+ */
+export function cleanupWatchers(context?: SSRAccessContext): void {
+	const ctx = context || getSSRContext()
+	if (ctx && ctx.watchers && ctx.watchers.length > 0) {
+		ctx.watchers.forEach(unwatch => {
+			try {
+				unwatch()
+			} catch(e) {
+				console.error('Error cleaning up watcher:', e)
+			}
+		})
+		ctx.watchers.length = 0
+	}
+}
+
+/**
  * Same as runWithContext but for async functions.
+ * Automatically cleans up watchers at the end of the request.
  */
 export async function runWithContextAsync<T>(
 	context: SSRAccessContext,
 	fn: () => Promise<T>,
 ): Promise<T> {
-	return ssrStorage.run(context, fn)
+	try {
+		return await ssrStorage.run(context, fn)
+	} finally {
+		// Clean up watchers at the end of SSR request
+		cleanupWatchers(context)
+	}
 }

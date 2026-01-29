@@ -877,5 +877,26 @@ export function watch<T>(
 	signal: Signal<T> | ComputedSignal<T>,
 	callback: (newValue: T, oldValue: T) => void,
 ): () => void {
-	return signal.watch(callback)
+	const unwatch = signal.watch(callback)
+	
+	// Register watcher in SSR context for cleanup at end of request
+	if (globalThis.__SSR_MODE__) {
+		const context = getSSRContext()
+		if (context) {
+			if (!context.watchers) {
+				context.watchers = []
+			}
+			context.watchers.push(unwatch)
+			// During SSR, fire watcher immediately with current value to catch any changes
+			// that happened before watcher registration (e.g., from restore_filters_sort)
+			try {
+				const currentValue = signal.peek()
+				callback(currentValue, currentValue)
+			} catch(e) {
+				console.error('Error firing initial watcher callback:', e)
+			}
+		}
+	}
+	
+	return unwatch
 }

@@ -91,7 +91,7 @@ export {Store} from './store'
 export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './render/ssrState'
 
 // Export SSR request context (for per-request store and state registry)
-export {getSSRContext, runWithContext, runWithContextAsync} from './ssrContext'
+export {getSSRContext, runWithContext, runWithContextAsync, cleanupWatchers} from './ssrContext'
 export type {SSRAccessContext} from './ssrContext'
 
 // Export next_tick utility

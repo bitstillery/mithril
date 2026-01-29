@@ -1,5 +1,7 @@
 // Core signal primitive for fine-grained reactivity
 
+import {getSSRContext, runWithContext} from './ssrContext'
+
 // Current effect context for dependency tracking
 let currentEffect: (() => void) | null = null
 
@@ -98,9 +100,18 @@ export class Signal<T> {
 				this._subscribers = new Set()
 			}
 			// Notify all subscribers
+			const context = getSSRContext()
 			this._subscribers.forEach(fn => {
 				try {
-					fn()
+					// Always run watchers - wrap in SSR context if available
+					if (context) {
+						// Run watcher inside SSR context, similar to events
+						runWithContext(context, () => {
+							fn()
+						})
+					} else {
+						fn()
+					}
 				} catch(e) {
 					console.error('Error in signal subscriber:', e)
 				}
@@ -168,7 +179,11 @@ export class ComputedSignal<T> extends Signal<T> {
 		// Track access by other computed signals - this enables computed-to-computed dependency chains
 		// When computed B accesses computed A, A should notify B when A's dependencies change
 		if (currentEffect) {
-			this._subscribers.add(currentEffect)
+			// Ensure _subscribers is initialized (defensive check)
+			if (!(this as any)._subscribers) {
+				(this as any)._subscribers = new Set()
+			}
+			;(this as any)._subscribers.add(currentEffect)
 		}
 
 		if (this._isDirty) {
@@ -205,9 +220,17 @@ export class ComputedSignal<T> extends Signal<T> {
 				(this as any)._subscribers = new Set()
 			}
 			// Notify subscribers that computed value changed
+			const context = getSSRContext()
 			;(this as any)._subscribers.forEach((fn: () => void) => {
 				try {
-					fn()
+					if (context) {
+						// Run watcher inside SSR context, similar to events
+						runWithContext(context, () => {
+							fn()
+						})
+					} else {
+						fn()
+					}
 				} catch(e) {
 					console.error('Error in computed signal subscriber:', e)
 				}
