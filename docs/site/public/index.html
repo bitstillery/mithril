@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8" />
+	<title>Mithril.js</title>
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet" />
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/themes/prism.min.css" rel="stylesheet" />
+	<link href="/style.css" rel="stylesheet" />
+	<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="description" content="Mithril.js Documentation">
+</head>
+
+<body>
+	<div id="app"></div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/prism.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-jsx.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.17.1/components/prism-diff.min.js"></script>
+	<script type="module" src="/app.js"></script>
+	<script src="https://flems.io/flems.html" id="flems" defer></script>
+	<script>
+		document.querySelector(".hamburger")?.addEventListener('click', function () {
+			document.body.className = document.body.className === "navigating" ? "" : "navigating"
+			document.querySelector("h1 + ul")?.addEventListener('click', function () {
+				document.body.className = ''
+			})
+		})
+		document.getElementById("flems")?.addEventListener('load', function () {
+			var systemFonts = [
+				"body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; }",
+				"body { height: 100%; overflow:hidden; display:flex; justify-content: center; align-items:center; }"
+			].join("")
+				;[].forEach.call(document.querySelectorAll("pre code.language-js"), function (el) {
+					el = el.parentNode
+
+					var div = document.createElement("div")
+					window.Flems(div, {
+						middle: 60,
+						editable: true,
+						toolbar: false,
+						shareButton: true,
+						console: false,
+						autoHeight: true,
+						files: [{
+							name: ".js",
+							content: el.textContent
+						}, {
+							name: ".css",
+							content: systemFonts
+						}],
+						links: [{
+							name: "mithril",
+							type: "script",
+							url: "https://unpkg.com/mithril@2.3.8/mithril.js"
+						}]
+					}, "https://flems.io/flems.html")
+
+					el.parentNode.insertBefore(div, el)
+					el.parentNode.removeChild(el)
+				})
+		})
+	</script>
+</body>
+
+</html>
