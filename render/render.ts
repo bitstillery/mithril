@@ -900,11 +900,14 @@ export default function renderFactory() {
 
 	// lifecycle
 	function initLifecycle(source: any, vnode: any, hooks: Array<() => void>, isHydrating: boolean = false) {
-		// Skip oninit during hydration - DOM already has correct content from SSR
-		// Component state (like stores) should be initialized at module level, not in oninit
-		// This prevents unnecessary data fetching and state updates during hydration
-		if (typeof source.oninit === 'function' && !isHydrating) {
-			const result = callHook.call(source.oninit, vnode)
+		// Always call oninit, but pass context so components can make intelligent decisions
+		// Components can check context.isSSR or context.isHydrating to conditionally load data
+		if (typeof source.oninit === 'function') {
+			const context = {
+				isSSR: false,
+				isHydrating: isHydrating,
+			}
+			const result = callHook.call(source.oninit, vnode, context)
 			// Auto-redraw when async oninit completes (client-side only)
 			if (result != null && typeof result.then === 'function' && currentRedraw != null) {
 				Promise.resolve(result).then(function() {

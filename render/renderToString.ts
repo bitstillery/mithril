@@ -159,11 +159,15 @@ function serializeComponentSync(
 	
 	vnode.state = state
 	
-	// Call oninit without waitFor (sync mode)
+	// Call oninit with context (sync mode - don't await)
 	if (typeof state.oninit === 'function') {
 		try {
-			// Call oninit but don't wait for it or track promises
-			state.oninit(vnode)
+			const context = {
+				isSSR: true,
+				isHydrating: false,
+			}
+			// Call oninit but don't wait for it (sync mode)
+			state.oninit(vnode, context)
 		} catch(_e) {
 			// Ignore errors
 		}
@@ -339,17 +343,6 @@ async function serializeComponent(
 ): Promise<string> {
 	const component = vnode.tag as any
 	
-	// Validate component before processing
-	// Check for RouteResolver objects (should never reach here, but safety check)
-	if (component != null && typeof component === 'object' && !Array.isArray(component)) {
-		// Check if it's a RouteResolver object (has onmatch/render but no view)
-		if ('onmatch' in component && 'render' in component && !('view' in component) && typeof component !== 'function') {
-			// This is a RouteResolver object, not a component - should not be here
-			console.error('RouteResolver object passed as component in serializeComponent:', component, 'vnode:', vnode)
-			return ''
-		}
-	}
-	
 	// Initialize component state
 	let state: any
 	let view: ((vnode: any) => any) | undefined
@@ -362,13 +355,8 @@ async function serializeComponent(
 		// Component factory/class
 		if (component.prototype && typeof component.prototype.view === 'function') {
 			state = new component(vnode)
-		} else if (typeof component === 'function') {
-			// Component factory function
-			state = component(vnode)
 		} else {
-			// Invalid component - log error and return empty string
-			console.error('Invalid component in serializeComponent:', component, 'vnode:', vnode)
-			return ''
+			state = component(vnode)
 		}
 		view = state.view
 	}
@@ -385,16 +373,16 @@ async function serializeComponent(
 	
 	let instance: any
 	try {
-		// Call oninit with waitFor if on server
+		// Call oninit with context if on server
 		if (isServer && typeof state.oninit === 'function') {
-			const waitFor = (promise: Promise<any>) => {
-				promiseTracker.waitFor(promise)
+			const context = {
+				isSSR: true,
+				isHydrating: false,
 			}
 			try {
-				const result = state.oninit(vnode, waitFor)
-				// If oninit returns a promise, wait for it (but don't add to tracker twice)
+				const result = state.oninit(vnode, context)
+				// If oninit returns a promise, await it
 				if (result && typeof result.then === 'function') {
-					// The promise might already be tracked via waitFor, but we still need to await it
 					await result
 				}
 			} catch(_e) {
