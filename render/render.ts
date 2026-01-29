@@ -16,6 +16,9 @@ export default function renderFactory() {
 
 	let currentRedraw: (() => void) | undefined
 	let currentRender: any
+	// Track hydration mismatches for override mode
+	let hydrationMismatchCount = 0
+	const MAX_HYDRATION_MISMATCHES = 5
 
 	function getDocument(dom: Node): Document {
 		return dom.ownerDocument!
@@ -110,13 +113,22 @@ export default function renderFactory() {
 		let textNode: Text
 		if (isHydrating && parent.firstChild && nextSibling == null && matchedNodes) {
 			// During hydration, try to reuse existing text node
+			// Normalize text for comparison (trim whitespace differences)
+			const expectedText = String(vnode.children || '').trim()
 			let candidate: Node | null = parent.firstChild
 			while (candidate) {
 				if (candidate.nodeType === 3 && !matchedNodes.has(candidate)) {
 					const candidateText = candidate as Text
-					if (candidateText.nodeValue === String(vnode.children)) {
+					const candidateValue = candidateText.nodeValue || ''
+					// Exact match preferred, but also accept trimmed match for whitespace differences
+					if (candidateValue === String(vnode.children) || 
+						(expectedText && candidateValue.trim() === expectedText)) {
 						textNode = candidateText
 						matchedNodes.add(textNode)
+						// Update text content if there's a minor difference (whitespace normalization)
+						if (candidateValue !== String(vnode.children)) {
+							textNode.nodeValue = String(vnode.children)
+						}
 						// Don't remove/reinsert - just reuse the existing node in place
 						break
 					}
@@ -180,11 +192,14 @@ export default function renderFactory() {
 			// During hydration, try to reuse existing DOM node
 			// Only match if we're appending (nextSibling == null) to preserve order
 			// Find the first unmatched child element that matches the tag
+			// More lenient matching: skip text nodes and comments, allow tag name case differences
 			let candidate: Node | null = parent.firstChild
 			let fallbackCandidate: Element | null = null
 			while (candidate) {
+				// Skip text nodes, comments, and already matched nodes
 				if (candidate.nodeType === 1 && !matchedNodes.has(candidate)) {
 					const candidateEl = candidate as Element
+					// Case-insensitive tag matching (browsers normalize to uppercase for some tags)
 					if (candidateEl.tagName.toLowerCase() === tag.toLowerCase()) {
 						// Prefer exact match (is attribute matches if specified)
 						if (!is || candidateEl.getAttribute('is') === is) {
@@ -193,7 +208,7 @@ export default function renderFactory() {
 							// Don't remove/reinsert - just reuse the existing node in place
 							break
 						}
-						// Keep track of first matching tag as fallback
+						// Keep track of first matching tag as fallback (even if is attribute doesn't match)
 						if (!fallbackCandidate) {
 							fallbackCandidate = candidateEl
 						}
@@ -202,6 +217,7 @@ export default function renderFactory() {
 				candidate = candidate.nextSibling
 			}
 			// If no exact match found but we have a fallback, use it
+			// This handles cases where is attribute differs but tag matches
 			if (!element! && fallbackCandidate) {
 				element = fallbackCandidate
 				matchedNodes.add(element)
@@ -240,20 +256,32 @@ export default function renderFactory() {
 					while (node) {
 						const next: Node | null = node.nextSibling
 						if (!childMatchedNodes.has(node)) {
-							try {
-								element.removeChild(node)
-							} catch(e) {
-								const error = e as Error
-								logHydrationError(
-									'removeChild (element children cleanup)',
-									vnode,
-									element,
-									error,
-									{parent: element, node, matchedNodes: childMatchedNodes},
-								)
-								// Don't re-throw - we've already logged the error with all details
-								// Re-throwing causes the browser to log the DOMException stack trace
+							// Verify node is still a child before attempting removal
+							if (element.contains && element.contains(node)) {
+								try {
+									element.removeChild(node)
+									hydrationMismatchCount++
+								} catch(e) {
+									const error = e as Error
+									// Check if node was already removed (not a child anymore)
+									if (!element.contains || !element.contains(node)) {
+										// Node already removed, skip silently
+										node = next
+										continue
+									}
+									hydrationMismatchCount++
+									logHydrationError(
+										'removeChild (element children cleanup)',
+										vnode,
+										element,
+										error,
+										{parent: element, node, matchedNodes: childMatchedNodes},
+									)
+									// Don't re-throw - we've already logged the error with all details
+									// Re-throwing causes the browser to log the DOMException stack trace
+								}
 							}
+							// Node not in parent, already removed - skip silently
 						}
 						node = next
 					}
@@ -692,36 +720,56 @@ export default function renderFactory() {
 	function removeDOM(parent: Element | DocumentFragment, vnode: any, newVnode?: any) {
 		if (vnode.dom == null) return
 		if (vnode.domSize == null || vnode.domSize === 1) {
-			try {
-				parent.removeChild(vnode.dom)
-			} catch(e) {
-				const error = e as Error
-				logHydrationError(
-					'removeDOM (single node)',
-					vnode,
-					parent instanceof Element ? parent : null,
-					error,
-					{parent: parent instanceof Element ? parent : undefined, node: vnode.dom, oldVnode: vnode, newVnode: newVnode},
-				)
-				// Don't re-throw - we've already logged the error with all details
-				// Re-throwing causes the browser to log the DOMException stack trace
-			}
-		} else {
-			for (const dom of domFor(vnode)) {
+			// Check if node is still a child before attempting removal
+			const node = vnode.dom
+			if (parent.contains && parent.contains(node)) {
+				// Verify node is actually a direct or indirect child
 				try {
-					parent.removeChild(dom)
+					parent.removeChild(node)
 				} catch(e) {
 					const error = e as Error
+					// Check if node was already removed (not a child anymore)
+					if (!parent.contains || !parent.contains(node)) {
+						// Node already removed, skip silently
+						return
+					}
 					logHydrationError(
-						'removeDOM (multiple nodes)',
+						'removeDOM (single node)',
 						vnode,
 						parent instanceof Element ? parent : null,
 						error,
-						{parent: parent instanceof Element ? parent : undefined, node: dom, oldVnode: vnode, newVnode: newVnode},
+						{parent: parent instanceof Element ? parent : undefined, node: vnode.dom, oldVnode: vnode, newVnode: newVnode},
 					)
 					// Don't re-throw - we've already logged the error with all details
 					// Re-throwing causes the browser to log the DOMException stack trace
 				}
+			}
+			// Node not in parent, already removed - skip silently
+		} else {
+			for (const dom of domFor(vnode)) {
+				// Check if node is still a child before attempting removal
+				if (parent.contains && parent.contains(dom)) {
+					try {
+						parent.removeChild(dom)
+					} catch(e) {
+						const error = e as Error
+						// Check if node was already removed (not a child anymore)
+						if (!parent.contains || !parent.contains(dom)) {
+							// Node already removed, skip silently
+							continue
+						}
+						logHydrationError(
+							'removeDOM (multiple nodes)',
+							vnode,
+							parent instanceof Element ? parent : null,
+							error,
+							{parent: parent instanceof Element ? parent : undefined, node: dom, oldVnode: vnode, newVnode: newVnode},
+						)
+						// Don't re-throw - we've already logged the error with all details
+						// Re-throwing causes the browser to log the DOMException stack trace
+					}
+				}
+				// Node not in parent, already removed - skip silently
 			}
 		}
 	}
@@ -1022,12 +1070,13 @@ export default function renderFactory() {
 		currentDOM = dom
 		currentRedraw = typeof redraw === 'function' ? redraw : undefined
 		currentRender = {}
-		// Reset hydration error counter at start of each render cycle
+		// Reset hydration error counter and mismatch count at start of each render cycle
 		resetHydrationErrorCount()
+		hydrationMismatchCount = 0
 		try {
 			// Detect hydration: DOM has children but no vnodes tracked
 			// Only check children for Element nodes (DocumentFragment doesn't have children property)
-			const isHydrating = (dom as any).vnodes == null && 
+			let isHydrating = (dom as any).vnodes == null && 
 				dom.nodeType === 1 && // Element node
 				'children' in dom &&
 				(dom as Element).children.length > 0
@@ -1036,6 +1085,22 @@ export default function renderFactory() {
 			if (!isHydrating && (dom as any).vnodes == null) dom.textContent = ''
 			const normalized = (Vnode as any).normalizeChildren(Array.isArray(vnodes) ? vnodes : [vnodes])
 			updateNodes(dom, (dom as any).vnodes, normalized, hooks, null, (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined, isHydrating)
+			
+			// Check if we've exceeded mismatch threshold after processing nodes
+			// If so, clear and re-render from scratch (client VDOM wins)
+			if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
+				console.warn(`⚠️ Hydration mismatch threshold exceeded (${hydrationMismatchCount} mismatches). Clearing parent and re-rendering from client VDOM.`)
+				dom.textContent = ''
+				hydrationMismatchCount = 0
+				// Clear old vnodes and re-render without hydration flag
+				;(dom as any).vnodes = null
+				// Re-render with fresh hooks array (hooks from first render are discarded)
+				const overrideHooks: Array<() => void> = []
+				updateNodes(dom, null, normalized, overrideHooks, null, (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined, false)
+				// Execute hooks from override render
+				for (let i = 0; i < overrideHooks.length; i++) overrideHooks[i]()
+			}
+			
 			;(dom as any).vnodes = normalized
 			// `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
 			if (active != null && activeElement(dom) !== active && typeof (active as any).focus === 'function') (active as any).focus()

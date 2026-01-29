@@ -260,11 +260,23 @@ export function logHydrationError(
 	error: Error,
 	context?: HydrationErrorContext,
 ): void {
+	// Update hydration statistics
+	updateHydrationStats(vnode)
+	
 	// Throttle error logging to avoid performance issues
 	hydrationErrorCount++
 	if (hydrationErrorCount > MAX_HYDRATION_ERRORS) {
 		if (hydrationErrorCount === MAX_HYDRATION_ERRORS + 1) {
 			console.warn(`⚠️ Hydration errors throttled: More than ${MAX_HYDRATION_ERRORS} errors detected. Suppressing further logs to improve performance.`)
+			console.warn(`📊 Total hydration mismatches: ${hydrationStats.totalMismatches}`)
+			const topComponents = Array.from(hydrationStats.componentMismatches.entries())
+				.sort((a, b) => b[1] - a[1])
+				.slice(0, 5)
+				.map(([name, count]) => `  - ${name}: ${count}`)
+				.join('\n')
+			if (topComponents) {
+				console.warn('Top components with mismatches:\n' + topComponents)
+			}
 		}
 		return
 	}
@@ -321,5 +333,50 @@ export function logHydrationError(
 		console.error('Affected Node:', nodeInfo)
 	}
 
+	// Provide recovery suggestions
+	console.log('\n💡 Recovery Suggestions:')
+	console.log('1. Check if component state differs between SSR and client (e.g., async data loading)')
+	console.log('2. Verify conditional rendering logic matches on server and client')
+	console.log('3. Ensure component props/attrs are consistent between SSR and hydration')
+	console.log('4. Check for browser-specific DOM differences (text node normalization, whitespace)')
+	console.log('5. Review component lifecycle hooks - ensure oninit behavior is consistent')
+	if (operation.includes('removeChild') || operation.includes('removeDOM')) {
+		console.log('6. This error was handled gracefully - DOM will be corrected automatically')
+	}
+
 	console.groupEnd()
+}
+
+// Track hydration statistics for debugging
+interface HydrationStats {
+	totalMismatches: number
+	componentMismatches: Map<string, number>
+	lastMismatchTime: number
+}
+
+let hydrationStats: HydrationStats = {
+	totalMismatches: 0,
+	componentMismatches: new Map(),
+	lastMismatchTime: 0,
+}
+
+export function getHydrationStats(): HydrationStats {
+	return {...hydrationStats, componentMismatches: new Map(hydrationStats.componentMismatches)}
+}
+
+export function resetHydrationStats(): void {
+	hydrationStats = {
+		totalMismatches: 0,
+		componentMismatches: new Map(),
+		lastMismatchTime: 0,
+	}
+}
+
+// Update stats when hydration error occurs
+function updateHydrationStats(vnode: any): void {
+	hydrationStats.totalMismatches++
+	hydrationStats.lastMismatchTime = Date.now()
+	const componentName = getComponentName(vnode)
+	const currentCount = hydrationStats.componentMismatches.get(componentName) || 0
+	hydrationStats.componentMismatches.set(componentName, currentCount + 1)
 }
