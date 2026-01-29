@@ -22,7 +22,7 @@ export interface SSROptions {
 	/** Create per-request context (store, stateRegistry, sessionId, sessionData). */
 	createRequestContext: (req: Request) => SSRAccessContext
 	/** Load store and register state for this request; runs inside request context. */
-	initRequestContext: (context: SSRAccessContext) => void
+	initRequestContext: (context: SSRAccessContext) => void | Promise<void>
 	getHtmlTemplate: () => Promise<string>
 	appSelector?: string // Default: '#app'
 	stateScriptId?: string // Default: '__SSR_STATE__'
@@ -92,9 +92,9 @@ export async function createSSRResponse(
 ): Promise<Response> {
 	const context = options.createRequestContext(req)
 
-	return runWithContextAsync(context, async () => {
+	return runWithContextAsync(context, async() => {
 		try {
-			options.initRequestContext(context)
+			await options.initRequestContext(context)
 
 			globalThis.__SSR_URL__ = req.url
 
@@ -125,7 +125,7 @@ export async function createSSRResponse(
 			}
 
 			const fullPattern = new RegExp(`(${openingTagPattern})\\s*</([a-zA-Z][a-zA-Z0-9]*)>`, 'i')
-			html = html.replace(fullPattern, (match, openingTag, closingTagName) => {
+			html = html.replace(fullPattern, (_match, openingTag, closingTagName) => {
 				const tagMatch = openingTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/)
 				const elementName = tagMatch ? tagMatch[1] : (closingTagName || 'div')
 				return `${openingTag}${appHtml}</${elementName}>`
@@ -144,7 +144,7 @@ export async function createSSRResponse(
 					'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
 				},
 			})
-		} catch (error) {
+		} catch(error) {
 			console.error('SSR Error:', error)
 			return new Response('Internal Server Error', {status: 500})
 		}
