@@ -99,16 +99,31 @@ export async function createSSRResponse(
 
 			globalThis.__SSR_URL__ = req.url
 
+			logger.debug('Resolving route', {
+				pathname,
+				routesAvailable: Object.keys(options.routes),
+				routeExists: !!options.routes[pathname],
+			})
+
 			const result = await m.route.resolve(pathname, options.routes, m.renderToString)
 
 			const appHtml = typeof result === 'string' ? result : result.html
 			const serializedState = typeof result === 'string' ? {} : result.state
+
+			logger.debug('Route resolution result', {
+				pathname,
+				resultType: typeof result === 'string' ? 'string' : 'object',
+				htmlLength: appHtml?.length || 0,
+				htmlPreview: appHtml?.substring(0, 200) || 'empty',
+				stateSize: JSON.stringify(serializedState).length,
+			})
 
 			if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
 				logger.warn('Empty/minimal HTML rendered', {
 					pathname,
 					method: req.method,
 					sessionId: context.sessionId,
+					htmlPreview: appHtml?.substring(0, 100) || 'null/undefined',
 				})
 			} else {
 				logger.info(`Rendered ${appHtml.length} characters`, {
@@ -116,6 +131,7 @@ export async function createSSRResponse(
 					method: req.method,
 					sessionId: context.sessionId,
 					htmlSize: appHtml.length,
+					htmlPreview: appHtml.substring(0, 300),
 				})
 			}
 

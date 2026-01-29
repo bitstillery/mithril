@@ -12,7 +12,15 @@ interface LayoutAttrs {
 
 export class Layout extends MithrilTsxComponent<LayoutAttrs> {
 	view(vnode: Vnode<LayoutAttrs>) {
+		const isServer = typeof window === 'undefined'
 		const {page, navGuides = '', navMethods = '', version = '2.3.8'} = vnode.attrs
+		console.log('[Layout] view called, isServer:', isServer, 'has page:', !!page, 'has content:', !!(page?.content), 'content length:', page?.content?.length || 0)
+		
+		if (!page || !page.content) {
+			console.log('[Layout] No page or content, rendering loading state')
+			return m('div', 'Loading...')
+		}
+		
 		const currentPath = vnode.attrs.routePath || (typeof window !== 'undefined' ? m.route.get() : null) || '/'
 		
 		// Determine which nav to show based on current path
@@ -33,7 +41,7 @@ export class Layout extends MithrilTsxComponent<LayoutAttrs> {
 						<a href="https://mithril.zulipchat.com/">Chat</a>
 						<a href="https://github.com/MithrilJS/mithril.js">GitHub</a>
 					</nav>
-					{navContent ? m.trust(navContent) : null}
+					{navContent && navContent.trim() ? m.trust(navContent) : null}
 				</section>
 			</header>
 			<main>

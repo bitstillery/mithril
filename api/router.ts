@@ -570,6 +570,41 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 									throw error
 								}
 							}
+							
+							// If resolver has render but no onmatch (or onmatch returned undefined),
+							// call render directly with a vnode that has routePath in attrs
+							// This allows render-only resolvers to work
+							if (!resolver.onmatch || payload === resolver) {
+								try {
+									logger.debug('Calling render-only resolver', {
+										pathname,
+										route: matchedRoute,
+									})
+									// Create a vnode with the resolver as tag and routePath in attrs
+									// Use Vnode() directly since resolver is not a component
+									const resolverVnode = Vnode(resolver as any, pathname, {
+										...data.params,
+										routePath: pathname,
+									}, null, null, null)
+									const renderedVnode = resolver.render(resolverVnode)
+									const result = await renderToString(renderedVnode)
+									const html = typeof result === 'string' ? result : result.html
+									if (html) {
+										logger.info(`Rendered route with render-only resolver`, {
+											pathname,
+											route: matchedRoute,
+											htmlSize: html.length,
+										})
+									}
+									return result
+								} catch(error) {
+									logger.error('Route render-only resolver failed', error, {
+										pathname,
+										route: matchedRoute,
+									})
+									throw error
+								}
+							}
 							// If payload is not a valid component, skip rendering
 							// This happens when onmatch returns undefined - render needs a component to work with
 							// In this case, we should fall through to the component rendering logic below

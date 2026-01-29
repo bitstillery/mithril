@@ -108,10 +108,13 @@ const server = Bun.serve({
 		// Handle SSR routes
 		if (pathname === '/' || routes[pathname]) {
 			try {
-				return await createSSRResponse(pathname, req, {
+				console.log('[Server] Handling SSR route:', pathname)
+				console.log('[Server] Route exists:', !!routes[pathname])
+				const response = await createSSRResponse(pathname, req, {
 					routes,
 					createRequestContext: (req: Request): SSRAccessContext => {
 						const {sessionId, sessionData} = getSessionData(req)
+						console.log('[Server] Creating request context, sessionId:', sessionId)
 						return {
 							sessionId,
 							sessionData,
@@ -120,12 +123,18 @@ const server = Bun.serve({
 						}
 					},
 					initRequestContext: async () => {
+						console.log('[Server] Initializing request context')
 						// No store initialization needed for docs site
 					},
 					getHtmlTemplate: getProcessedTemplate,
 				})
+				console.log('[Server] SSR response created, status:', response.status)
+				return response
 			} catch (error) {
-				console.error('SSR error:', error)
+				console.error('[Server] SSR error:', error)
+				if (error instanceof Error) {
+					console.error('[Server] Error stack:', error.stack)
+				}
 				return new Response('Internal Server Error', {status: 500})
 			}
 		}

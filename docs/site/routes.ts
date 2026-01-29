@@ -49,12 +49,20 @@ function createRoute(routePath: string, docName: string): RouteResolver {
 		render: (vnode: Vnode) => {
 			// Use routePath from router's vnode attrs (passed by route.resolve)
 			const actualRoutePath = vnode.attrs?.routePath || routePath
+			console.log('[createRoute] Rendering route:', routePath, 'docName:', docName, 'actualRoutePath:', actualRoutePath)
 			// Return DocLoader component which will load data in oninit
-			return m(DocLoader as unknown as any, {
+			const result = m(DocLoader as unknown as any, {
 				key: actualRoutePath,
 				routePath: actualRoutePath,
 				docName,
 			})
+			// Ensure we always return a valid vnode
+			if (!result || !result.tag) {
+				console.error('[createRoute] Invalid vnode returned for route:', routePath, 'result:', result)
+				return m('div', `Error loading route: ${routePath}`)
+			}
+			console.log('[createRoute] Created vnode for route:', routePath, 'tag type:', typeof result.tag === 'string' ? result.tag : 'component')
+			return result
 		},
 	}
 }
