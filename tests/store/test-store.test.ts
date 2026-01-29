@@ -63,6 +63,11 @@ describe('Store', () => {
 		console.error = () => {}
 		console.log = () => {}
 
+		// Clear SSR mode flag to ensure save() works in tests
+		if (typeof globalThis !== 'undefined') {
+			(globalThis as any).__SSR_MODE__ = false
+		}
+
 		// Clear state registry to avoid name collisions
 		clearStateRegistry()
 		// Setup mocks
