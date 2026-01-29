@@ -104,9 +104,10 @@ export async function createSSRResponse(
 		const appHtml = typeof result === 'string' ? result : result.html
 		const serializedState = typeof result === 'string' ? {} : result.state
 		
-		// Debug: Log if HTML is empty or minimal
 		if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
-			console.warn(`[SSR] Empty or minimal HTML for pathname: ${pathname}, result type: ${typeof result}`)
+			console.warn(`[SSR] Empty/minimal HTML: ${pathname}`)
+		} else if (globalThis.__SSR_MODE__) {
+			console.log(`[SSR] ${pathname} -> ${appHtml.length} chars`)
 		}
 
 		// Get HTML template
