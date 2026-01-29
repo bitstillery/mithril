@@ -889,12 +889,16 @@ export function watch<T>(
 			context.watchers.push(unwatch)
 			// During SSR, fire watcher immediately with current value to catch any changes
 			// that happened before watcher registration (e.g., from restore_filters_sort)
-			try {
-				const currentValue = signal.peek()
-				callback(currentValue, currentValue)
-			} catch(e) {
-				console.error('Error firing initial watcher callback:', e)
-			}
+			// Use Promise.resolve().then() to defer execution until after unwatch is returned,
+			// so callbacks that reference unwatch won't cause ReferenceError
+			Promise.resolve().then(() => {
+				try {
+					const currentValue = signal.peek()
+					callback(currentValue, currentValue)
+				} catch(e) {
+					console.error('Error firing initial watcher callback:', e)
+				}
+			})
 		}
 	}
 	
