@@ -1,11 +1,12 @@
 import {readFile} from 'fs/promises'
 
 import m from '../server'
-import {clearStateRegistry} from '../state'
+import {runWithContextAsync} from '../ssrContext'
 
 import {extractSessionId} from './session'
 
 import type {SessionStore} from './session'
+import type {SSRAccessContext} from '../ssrContext'
 
 declare global {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -18,8 +19,10 @@ globalThis.__SSR_MODE__ = true
 
 export interface SSROptions {
 	routes: Record<string, any>
-	initStore: (sessionData: any) => void
-	getSessionData: (req: Request) => {sessionData: any; sessionId: string}
+	/** Create per-request context (store, stateRegistry, sessionId, sessionData). */
+	createRequestContext: (req: Request) => SSRAccessContext
+	/** Load store and register state for this request; runs inside request context. */
+	initRequestContext: (context: SSRAccessContext) => void
 	getHtmlTemplate: () => Promise<string>
 	appSelector?: string // Default: '#app'
 	stateScriptId?: string // Default: '__SSR_STATE__'
@@ -78,92 +81,74 @@ export function createBunSSRConfig(config: BunSSRConfig) {
 }
 
 /**
- * Create SSR response with serialized state and session cookie
+ * Create SSR response with serialized state and session cookie.
+ * Runs the whole request inside runWithContextAsync so getSSRContext() returns
+ * this request's context; initRequestContext then loads the store and registers state.
  */
 export async function createSSRResponse(
 	pathname: string,
 	req: Request,
 	options: SSROptions,
 ): Promise<Response> {
-	try {
-		// Clear state registry before each SSR request to avoid collisions
-		clearStateRegistry()
-		
-		// Set global SSR URL for client code running on server
-		globalThis.__SSR_URL__ = req.url
-		
-		// Initialize store with session data before SSR
-		// This ensures session state is available during server-side rendering
-		const {sessionData, sessionId} = options.getSessionData(req)
-		options.initStore(sessionData)
-		
-		// Use isomorphic router to resolve route and render SSR content
-		const result = await m.route.resolve(pathname, options.routes, m.renderToString)
-		
-		// renderToString now returns {html, state}
-		const appHtml = typeof result === 'string' ? result : result.html
-		const serializedState = typeof result === 'string' ? {} : result.state
-		
-		if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
-			console.warn(`[SSR] Empty/minimal HTML: ${pathname}`)
-		} else if (globalThis.__SSR_MODE__) {
-			console.log(`[SSR] ${pathname} -> ${appHtml.length} chars`)
+	const context = options.createRequestContext(req)
+
+	return runWithContextAsync(context, async () => {
+		try {
+			options.initRequestContext(context)
+
+			globalThis.__SSR_URL__ = req.url
+
+			const result = await m.route.resolve(pathname, options.routes, m.renderToString)
+
+			const appHtml = typeof result === 'string' ? result : result.html
+			const serializedState = typeof result === 'string' ? {} : result.state
+
+			if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
+				console.warn(`[SSR] Empty/minimal HTML: ${pathname}`)
+			} else if (globalThis.__SSR_MODE__) {
+				console.log(`[SSR] ${pathname} -> ${appHtml.length} chars`)
+			}
+
+			let html = await options.getHtmlTemplate()
+
+			const appSelector = options.appSelector || '#app'
+
+			let openingTagPattern: string
+			if (appSelector.startsWith('#')) {
+				const id = appSelector.slice(1)
+				openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)\\s+id="${id}"([^>]*)>`
+			} else if (appSelector.startsWith('.')) {
+				const className = appSelector.slice(1)
+				openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)([^>]*\\s+class="[^"]*\\b${className}\\b[^"]*"[^>]*)>`
+			} else {
+				openingTagPattern = `<${appSelector}([^>]*)>`
+			}
+
+			const fullPattern = new RegExp(`(${openingTagPattern})\\s*</([a-zA-Z][a-zA-Z0-9]*)>`, 'i')
+			html = html.replace(fullPattern, (match, openingTag, closingTagName) => {
+				const tagMatch = openingTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/)
+				const elementName = tagMatch ? tagMatch[1] : (closingTagName || 'div')
+				return `${openingTag}${appHtml}</${elementName}>`
+			})
+
+			const stateScriptId = options.stateScriptId || '__SSR_STATE__'
+			const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
+			html = html.replace('</head>', `${stateScript}</head>`)
+
+			const sessionId = context.sessionId ?? ''
+			return new Response(html, {
+				headers: {
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					'Content-Type': 'text/html; charset=utf-8',
+					// eslint-disable-next-line @typescript-eslint/naming-convention
+					'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
+				},
+			})
+		} catch (error) {
+			console.error('SSR Error:', error)
+			return new Response('Internal Server Error', {status: 500})
 		}
-
-		// Get HTML template
-		let html = await options.getHtmlTemplate()
-
-		// Replace the empty app element with server-rendered HTML
-		const appSelector = options.appSelector || '#app'
-		
-		// Build regex pattern to match opening tag based on selector type
-		let openingTagPattern: string
-		
-		if (appSelector.startsWith('#')) {
-			// ID selector: #app -> matches <div id="app"...> or <div id="app" class="...">
-			const id = appSelector.slice(1)
-			// Match any element with the id attribute, allowing other attributes
-			openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)\\s+id="${id}"([^>]*)>`
-		} else if (appSelector.startsWith('.')) {
-			// Class selector: .app -> matches <div class="app"> or <div class="foo app bar">
-			const className = appSelector.slice(1)
-			// Match any element with the class (handles space-separated classes)
-			openingTagPattern = `<([a-zA-Z][a-zA-Z0-9]*)([^>]*\\s+class="[^"]*\\b${className}\\b[^"]*"[^>]*)>`
-		} else {
-			// Element selector: div -> <div>
-			openingTagPattern = `<${appSelector}([^>]*)>`
-		}
-		
-		// Match opening tag with empty content: <tag...></tag>
-		// Capture the full opening tag and the closing tag name
-		const fullPattern = new RegExp(`(${openingTagPattern})\\s*</([a-zA-Z][a-zA-Z0-9]*)>`, 'i')
-		
-		html = html.replace(fullPattern, (match, openingTag, closingTagName) => {
-			// Extract element name from opening tag (first word after <)
-			const tagMatch = openingTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/)
-			const elementName = tagMatch ? tagMatch[1] : (closingTagName || 'div')
-			return `${openingTag}${appHtml}</${elementName}>`
-		})
-
-		// Inject serialized state into HTML
-		const stateScriptId = options.stateScriptId || '__SSR_STATE__'
-		const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
-
-		html = html.replace('</head>', `${stateScript}</head>`)
-
-		// Return full HTML document with SSR content and session cookie
-		return new Response(html, {
-			headers: {
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				'Content-Type': 'text/html; charset=utf-8',
-				// eslint-disable-next-line @typescript-eslint/naming-convention
-				'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
-			},
-		})
-	} catch(error) {
-		console.error('SSR Error:', error)
-		return new Response('Internal Server Error', {status: 500})
-	}
+	})
 }
 
 /**

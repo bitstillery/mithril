@@ -11,6 +11,7 @@
   "files": [
     "*.ts",
     "*.d.ts",
+    "ssrContext.ts",
     "signal.ts",
     "store.ts",
     "api/*.ts",

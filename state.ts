@@ -1,4 +1,5 @@
 import {signal, computed, Signal, ComputedSignal} from './signal'
+import {getSSRContext} from './ssrContext'
 
 // WeakMap to store parent signal references for arrays
 const arrayParentSignalMap = new WeakMap<any, Signal<any>>()
@@ -43,7 +44,19 @@ interface StateRegistryEntry {
 	initial: any
 }
 
-const stateRegistry = new Map<string, StateRegistryEntry>()
+const globalStateRegistry = new Map<string, StateRegistryEntry>()
+
+/**
+ * Returns the registry to use: per-request registry when inside an SSR
+ * runWithContext(), otherwise the global registry (client or tests).
+ */
+function getCurrentStateRegistry(): Map<string, StateRegistryEntry> {
+	const ctx = getSSRContext()
+	if (ctx?.stateRegistry) {
+		return ctx.stateRegistry as Map<string, StateRegistryEntry>
+	}
+	return globalStateRegistry
+}
 
 /**
  * Register a state for SSR serialization
@@ -56,15 +69,17 @@ export function registerState(name: string, stateInstance: any, initial: any): v
 	if (!name || typeof name !== 'string' || name.trim() === '') {
 		throw new Error('State name is required and must be a non-empty string')
 	}
-	
+
+	const registry = getCurrentStateRegistry()
+
 	// Warn in development if name collision detected
 	if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-		if (stateRegistry.has(name)) {
+		if (registry.has(name)) {
 			console.warn(`State name collision detected: "${name}". Last registered state will be used.`)
 		}
 	}
-	
-	stateRegistry.set(name, {state: stateInstance, initial})
+
+	registry.set(name, {state: stateInstance, initial})
 }
 
 /**
@@ -74,10 +89,11 @@ export function registerState(name: string, stateInstance: any, initial: any): v
  * @param initial - New initial state (merged templates for Store)
  */
 export function updateStateRegistry(stateInstance: any, initial: any): void {
+	const registry = getCurrentStateRegistry()
 	// Find the registry entry for this state and update its initial value
-	for (const [name, entry] of stateRegistry.entries()) {
+	for (const [name, entry] of registry.entries()) {
 		if (entry.state === stateInstance) {
-			stateRegistry.set(name, {state: stateInstance, initial})
+			registry.set(name, {state: stateInstance, initial})
 			return
 		}
 	}
@@ -90,14 +106,15 @@ export function updateStateRegistry(stateInstance: any, initial: any): void {
  * Returns Map of state names to registry entries (state instance and initial state)
  */
 export function getRegisteredStates(): Map<string, StateRegistryEntry> {
-	return stateRegistry
+	return getCurrentStateRegistry()
 }
 
 /**
- * Clear the state registry (useful for testing or after serialization)
+ * Clear the state registry (useful for testing or after serialization).
+ * Clears the current registry (per-request in SSR, global on client).
  */
 export function clearStateRegistry(): void {
-	stateRegistry.clear()
+	getCurrentStateRegistry().clear()
 }
 
 /**
