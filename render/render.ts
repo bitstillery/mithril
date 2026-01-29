@@ -16,6 +16,97 @@ export default function renderFactory() {
 	let currentRedraw: (() => void) | undefined
 	let currentRender: any
 
+	// Development-only hydration debugging
+	const HYDRATION_DEBUG = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production'
+
+	function getComponentName(vnode: any): string {
+		if (!vnode) return 'Unknown'
+		if (typeof vnode.tag === 'string') return vnode.tag
+		if (vnode.tag?.name) return vnode.tag.name
+		if (vnode.tag?.displayName) return vnode.tag.displayName
+		if (vnode.state?.constructor?.name) return vnode.state.constructor.name
+		return 'Unknown'
+	}
+
+	function getDOMStructure(element: Element, maxDepth: number = 3): string {
+		if (!HYDRATION_DEBUG) return ''
+		const indent = '  '.repeat(3 - maxDepth)
+		let result = `${element.tagName.toLowerCase()}`
+		if (element.id) result += `#${element.id}`
+		if (element.className) result += `.${element.className.split(' ').join('.')}`
+		if (maxDepth > 0 && element.children.length > 0) {
+			result += '\n' + Array.from(element.children).slice(0, 5).map(child => 
+				indent + getDOMStructure(child as Element, maxDepth - 1),
+			).join('\n')
+			if (element.children.length > 5) {
+				result += `\n${indent}... (${element.children.length - 5} more)`
+			}
+		}
+		return result
+	}
+
+	function getVnodeStructure(vnode: any, maxDepth: number = 3): string {
+		if (!HYDRATION_DEBUG) return ''
+		if (!vnode) return 'null'
+		const indent = '  '.repeat(3 - maxDepth)
+		const tag = typeof vnode.tag === 'string' ? vnode.tag : getComponentName(vnode)
+		let result = tag
+		if (vnode.attrs?.key) result += ` [key=${vnode.attrs.key}]`
+		if (maxDepth > 0 && vnode.children && Array.isArray(vnode.children)) {
+			const children = vnode.children.filter((c: any) => c != null).slice(0, 5)
+			if (children.length > 0) {
+				result += '\n' + children.map((child: any) =>
+					indent + getVnodeStructure(child, maxDepth - 1),
+				).join('\n')
+				if (vnode.children.filter((c: any) => c != null).length > 5) {
+					result += `\n${indent}... (${vnode.children.filter((c: any) => c != null).length - 5} more)`
+				}
+			}
+		}
+		return result
+	}
+
+	function logHydrationError(
+		operation: string,
+		vnode: any,
+		element: Element | null,
+		error: Error,
+		context?: {parent?: Element; node?: Node; matchedNodes?: Set<Node>; oldVnode?: any; newVnode?: any},
+	): void {
+		const componentName = vnode ? getComponentName(vnode) : 'Unknown'
+		
+		console.group(`🚨 Hydration Error: ${operation}`)
+		console.error('Component:', componentName)
+		console.error('Error:', error.message)
+		console.error('Stack Trace:', error.stack)
+		if (vnode) {
+			console.error('VNode Structure:', getVnodeStructure(vnode, 2))
+		}
+		if (context?.oldVnode) {
+			console.error('Old VNode Structure (being removed):', getVnodeStructure(context.oldVnode, 2))
+		}
+		if (context?.newVnode) {
+			console.error('New VNode Structure (replacing old):', getVnodeStructure(context.newVnode, 2))
+		}
+		if (element) {
+			console.error('DOM Structure:', getDOMStructure(element, 2))
+		}
+		if (context?.parent) {
+			console.error('Parent Structure:', getDOMStructure(context.parent, 2))
+		}
+		if (context?.node) {
+			const nodeInfo = context.node.nodeType === 1 
+				? `${context.node.nodeType} ${(context.node as Element).tagName}` 
+				: `${context.node.nodeType} text`
+			console.error('Node Info:', nodeInfo)
+		}
+		if (context?.matchedNodes) {
+			console.error('Matched Nodes:', context.matchedNodes.size)
+		}
+		console.error('Full Error Object:', error)
+		console.groupEnd()
+	}
+
 	function getDocument(dom: Node): Document {
 		return dom.ownerDocument!
 	}
@@ -72,7 +163,28 @@ export default function renderFactory() {
 			while (node) {
 				const next: Node | null = node.nextSibling
 				if (!matchedNodes.has(node)) {
-					parent.removeChild(node)
+					try {
+						parent.removeChild(node)
+					} catch(e) {
+						const error = e instanceof Error ? e : new Error(String(e))
+						// Capture stack trace at the point of error
+						if (!error.stack) {
+							if (typeof Error.captureStackTrace === 'function') {
+								Error.captureStackTrace(error)
+							} else {
+								error.stack = new Error().stack
+							}
+						}
+						logHydrationError(
+							'removeChild (root level cleanup)',
+							null, // No vnode at root level
+							parent instanceof Element ? parent : null,
+							error,
+							{parent: parent instanceof Element ? parent : undefined, node, matchedNodes},
+						)
+						// Re-throw to surface the error
+						throw error
+					}
 				}
 				node = next
 			}
@@ -226,7 +338,28 @@ export default function renderFactory() {
 					while (node) {
 						const next: Node | null = node.nextSibling
 						if (!childMatchedNodes.has(node)) {
-							element.removeChild(node)
+							try {
+								element.removeChild(node)
+							} catch(e) {
+								const error = e instanceof Error ? e : new Error(String(e))
+								// Capture stack trace at the point of error
+								if (!error.stack) {
+									if (typeof Error.captureStackTrace === 'function') {
+										Error.captureStackTrace(error)
+									} else {
+										error.stack = new Error().stack
+									}
+								}
+								logHydrationError(
+									'removeChild (element children cleanup)',
+									vnode,
+									element,
+									error,
+									{parent: element, node, matchedNodes: childMatchedNodes},
+								)
+								// Re-throw to surface the error
+								throw error
+							}
 						}
 						node = next
 					}
@@ -453,7 +586,7 @@ export default function renderFactory() {
 			else updateComponent(parent, old, vnode, hooks, nextSibling, ns, isHydrating)
 		}
 		else {
-			removeNode(parent, old)
+			removeNode(parent, old, vnode) // Pass new vnode for context
 			createNode(parent, vnode, hooks, ns, nextSibling, isHydrating)
 		}
 	}
@@ -650,24 +783,68 @@ export default function renderFactory() {
 			tryResumeRemove(parent, vnode, counter)
 		})
 	}
-	function tryResumeRemove(parent: Element | DocumentFragment, vnode: any, counter: {v: number}) {
+	function tryResumeRemove(parent: Element | DocumentFragment, vnode: any, counter: {v: number}, newVnode?: any) {
 		if (--counter.v === 0) {
 			onremove(vnode)
-			removeDOM(parent, vnode)
+			removeDOM(parent, vnode, newVnode)
 		}
 	}
-	function removeNode(parent: Element | DocumentFragment, vnode: any) {
+	function removeNode(parent: Element | DocumentFragment, vnode: any, newVnode?: any) {
 		const counter = {v: 1}
 		if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeremove === 'function') tryBlockRemove(parent, vnode, vnode.state, counter)
 		if (vnode.attrs && typeof vnode.attrs.onbeforeremove === 'function') tryBlockRemove(parent, vnode, vnode.attrs, counter)
-		tryResumeRemove(parent, vnode, counter)
+		tryResumeRemove(parent, vnode, counter, newVnode)
 	}
-	function removeDOM(parent: Element | DocumentFragment, vnode: any) {
+	function removeDOM(parent: Element | DocumentFragment, vnode: any, newVnode?: any) {
 		if (vnode.dom == null) return
 		if (vnode.domSize == null || vnode.domSize === 1) {
-			parent.removeChild(vnode.dom)
+			try {
+				parent.removeChild(vnode.dom)
+			} catch(e) {
+				const error = e instanceof Error ? e : new Error(String(e))
+				// Capture stack trace at the point of error
+				if (!error.stack) {
+					if (typeof Error.captureStackTrace === 'function') {
+						Error.captureStackTrace(error)
+					} else {
+						error.stack = new Error().stack
+					}
+				}
+				logHydrationError(
+					'removeDOM (single node)',
+					vnode,
+					parent instanceof Element ? parent : null,
+					error,
+					{parent: parent instanceof Element ? parent : undefined, node: vnode.dom, oldVnode: vnode, newVnode: newVnode},
+				)
+				// Re-throw to surface the error
+				throw error
+			}
 		} else {
-			for (const dom of domFor(vnode)) parent.removeChild(dom)
+			for (const dom of domFor(vnode)) {
+				try {
+					parent.removeChild(dom)
+				} catch(e) {
+					const error = e instanceof Error ? e : new Error(String(e))
+					// Capture stack trace at the point of error
+					if (!error.stack) {
+						if (typeof Error.captureStackTrace === 'function') {
+							Error.captureStackTrace(error)
+						} else {
+							error.stack = new Error().stack
+						}
+					}
+					logHydrationError(
+						'removeDOM (multiple nodes)',
+						vnode,
+						parent instanceof Element ? parent : null,
+						error,
+						{parent: parent instanceof Element ? parent : undefined, node: dom, oldVnode: vnode, newVnode: newVnode},
+					)
+					// Re-throw to surface the error
+					throw error
+				}
+			}
 		}
 	}
 
