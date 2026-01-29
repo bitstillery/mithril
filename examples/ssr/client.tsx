@@ -2,6 +2,7 @@
 
 import m from '../../index'
 import {deserializeAllStates} from '../../render/ssrState'
+import {logger} from '../../server/logger'
 
 import {routes} from './routes'
 import {initStore, $store} from './store'
@@ -21,8 +22,11 @@ initStore({})
 		try {
 			const serializedState = JSON.parse(ssrStateScript.textContent)
 			deserializeAllStates(serializedState)
+			logger.debug('SSR state deserialized successfully', {
+				stateKeys: Object.keys(serializedState),
+			})
 		} catch (error) {
-			console.error('Error deserializing SSR state:', error)
+			logger.error('Error deserializing SSR state', error)
 		}
 	}
 

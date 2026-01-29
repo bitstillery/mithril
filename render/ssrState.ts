@@ -1,5 +1,6 @@
 import {ComputedSignal} from '../signal'
 import {getRegisteredStates} from '../state'
+import {logger} from '../server/logger'
 
 import type {State} from '../state'
 
@@ -251,7 +252,7 @@ export function serializeAllStates(): Record<string, any> {
 			result[name] = serializeStore(entry.state)
 		} catch(error) {
 			// Log error but continue with other states
-			console.error(`Error serializing state "${name}":`, error)
+			ssrLogger.error(`Error serializing state`, error, {stateName: name})
 		}
 	}
 
@@ -326,7 +327,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 		if (!entry) {
 			// State not registered on client - warn in development
 			if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-				console.warn(`State "${name}" not found in registry. Skipping deserialization.`)
+				logger.warn(`State not found in registry. Skipping deserialization.`, {stateName: name})
 			}
 			continue
 		}
@@ -335,7 +336,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 			deserializeStore(entry.state, serializedState)
 		} catch(error) {
 			// Log error but continue with other states
-			console.error(`Error deserializing state "${name}":`, error)
+			logger.error(`Error deserializing state`, error, {stateName: name})
 		}
 	}
 	
@@ -346,7 +347,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
 			restoreComputedProperties(entry.state, entry.initial)
 		} catch(error) {
 			// Log error but continue with other states
-			console.error(`Error restoring computed properties for state "${name}":`, error)
+			logger.error(`Error restoring computed properties for state`, error, {stateName: name})
 		}
 	}
 }

@@ -94,6 +94,10 @@ export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStat
 export {getSSRContext, runWithContext, runWithContextAsync, cleanupWatchers} from './ssrContext'
 export type {SSRAccessContext} from './ssrContext'
 
+// Export isomorphic logger
+export {logger, Logger} from './server/logger'
+export type {LogContext} from './server/logger'
+
 // Export next_tick utility
 export {next_tick} from './util/next_tick'
 

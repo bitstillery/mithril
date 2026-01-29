@@ -1,5 +1,7 @@
 // SSR and hydration utilities
 
+import {logger} from '../server/logger'
+
 // Development-only hydration debugging
 export const HYDRATION_DEBUG = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production'
 
@@ -267,16 +269,16 @@ export function logHydrationError(
 	hydrationErrorCount++
 	if (hydrationErrorCount > MAX_HYDRATION_ERRORS) {
 		if (hydrationErrorCount === MAX_HYDRATION_ERRORS + 1) {
-			console.warn(`⚠️ Hydration errors throttled: More than ${MAX_HYDRATION_ERRORS} errors detected. Suppressing further logs to improve performance.`)
-			console.warn(`📊 Total hydration mismatches: ${hydrationStats.totalMismatches}`)
 			const topComponents = Array.from(hydrationStats.componentMismatches.entries())
 				.sort((a, b) => b[1] - a[1])
 				.slice(0, 5)
-				.map(([name, count]) => `  - ${name}: ${count}`)
-				.join('\n')
-			if (topComponents) {
-				console.warn('Top components with mismatches:\n' + topComponents)
-			}
+				.map(([name, count]) => `${name}: ${count}`)
+				.join(', ')
+			
+			logger.warn(`Hydration errors throttled: More than ${MAX_HYDRATION_ERRORS} errors detected. Suppressing further logs to improve performance.`, {
+				totalMismatches: hydrationStats.totalMismatches,
+				topComponents: topComponents || 'none',
+			})
 		}
 		return
 	}
@@ -284,67 +286,58 @@ export function logHydrationError(
 	// Build user-friendly component hierarchy
 	const componentHierarchy = formatComponentHierarchy(vnode, context)
 
-	console.group(`🚨 Hydration Error: ${operation}`)
-	console.error('Component Path:', componentHierarchy)
-	console.error('Error:', error.message)
-
-	// Show combined DOM parent chain + VDOM structure as a unified HTML-like tree
-	const vnodeToShow = context?.oldVnode || vnode || context?.newVnode
-	try {
-		const combinedStructure = formatCombinedStructure(context?.parent || null, vnodeToShow, 4)
-		if (combinedStructure) {
-			console.log('Structure:')
-			console.log(combinedStructure)
-		}
-	} catch(_e) {
-		// Fallback: try to show at least the VDOM structure
-		if (vnodeToShow) {
-			try {
-				const vdomTree = formatVDOMTree(vnodeToShow, 4, 0, true)
-				if (vdomTree) {
-					console.log('VDOM Structure:')
-					console.log(vdomTree)
+	// Log hydration error with structured context
+	const logContext: Record<string, any> = {
+		componentPath: componentHierarchy,
+		operation,
+	}
+	
+	if (context?.node) {
+		logContext.affectedNode = context.node.nodeType === 1
+			? `${(context.node as Element).tagName.toLowerCase()}`
+			: 'text'
+	}
+	
+	// Include structure info in debug mode
+	if (HYDRATION_DEBUG) {
+		const vnodeToShow = context?.oldVnode || vnode || context?.newVnode
+		try {
+			const combinedStructure = formatCombinedStructure(context?.parent || null, vnodeToShow, 4)
+			if (combinedStructure) {
+				logContext.structure = combinedStructure
+			}
+		} catch(_e) {
+			// Fallback: try to show at least the VDOM structure
+			if (vnodeToShow) {
+				try {
+					const vdomTree = formatVDOMTree(vnodeToShow, 4, 0, true)
+					if (vdomTree) {
+						logContext.vdomStructure = vdomTree
+					}
+				} catch(_e2) {
+					logContext.component = getComponentName(vnodeToShow)
 				}
-			} catch(_e2) {
-				console.log('Component:', getComponentName(vnodeToShow))
+			}
+		}
+		
+		// Show what's being removed vs what's replacing it (if both exist)
+		if (context?.oldVnode && context?.newVnode) {
+			try {
+				const oldTree = formatVDOMTree(context.oldVnode, 3)
+				const newTree = formatVDOMTree(context.newVnode, 3)
+				if (oldTree) logContext.removing = oldTree
+				if (newTree) logContext.replacingWith = newTree
+			} catch(_e) {
+				// Silently fail if formatting doesn't work
 			}
 		}
 	}
-
-	// Show what's being removed vs what's replacing it (if both exist)
-	if (HYDRATION_DEBUG && context?.oldVnode && context?.newVnode) {
-		try {
-			console.log('\nRemoving:')
-			const oldTree = formatVDOMTree(context.oldVnode, 3)
-			if (oldTree) console.log(oldTree)
-			console.log('\nReplacing with:')
-			const newTree = formatVDOMTree(context.newVnode, 3)
-			if (newTree) console.log(newTree)
-		} catch(_e) {
-			// Silently fail if formatting doesn't work
-		}
-	}
-
-	// Show basic node info
-	if (context?.node) {
-		const nodeInfo = context.node.nodeType === 1
-			? `${(context.node as Element).tagName.toLowerCase()}`
-			: 'text'
-		console.error('Affected Node:', nodeInfo)
-	}
-
-	// Provide recovery suggestions
-	console.log('\n💡 Recovery Suggestions:')
-	console.log('1. Check if component state differs between SSR and client (e.g., async data loading)')
-	console.log('2. Verify conditional rendering logic matches on server and client')
-	console.log('3. Ensure component props/attrs are consistent between SSR and hydration')
-	console.log('4. Check for browser-specific DOM differences (text node normalization, whitespace)')
-	console.log('5. Review component lifecycle hooks - ensure oninit behavior is consistent')
+	
 	if (operation.includes('removeChild') || operation.includes('removeDOM')) {
-		console.log('6. This error was handled gracefully - DOM will be corrected automatically')
+		logContext.handledGracefully = true
 	}
-
-	console.groupEnd()
+	
+	logger.error(`Hydration error: ${operation}`, error, logContext)
 }
 
 // Track hydration statistics for debugging

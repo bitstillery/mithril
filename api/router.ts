@@ -6,6 +6,7 @@ import parsePathname from '../pathname/parse'
 import compileTemplate from '../pathname/compileTemplate'
 import censor from '../util/censor'
 import {getPathname, getSearch, getHash} from '../util/uri'
+import {logger} from '../server/ssrLogger'
 
 import type {ComponentType, Vnode as VnodeType} from '../render/vnode'
 
@@ -487,9 +488,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 						if (isRedirect(payload)) {
 							// Extract redirect target path (handles different REDIRECT symbols)
 							const redirectPath = getRedirectPath(payload)
-							if (globalThis.__SSR_MODE__) {
-								console.log(`[SSR] Redirect: ${pathname} -> ${redirectPath}`)
-							}
+							ssrLogger.info(`Redirecting to ${redirectPath}`, {
+								pathname,
+								route: matchedRoute,
+								redirectPath,
+							})
 							// Update __SSR_URL__ to reflect redirect target for proper URL context
 							// This ensures getCurrentUrl() and other URL-dependent code work correctly
 							const originalSSRUrl = globalThis.__SSR_URL__
@@ -511,11 +514,19 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 								// Recursively resolve redirect target route
 								// This will return SSRResult (string or {html, state})
 								const redirectResult = await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
-								if (globalThis.__SSR_MODE__) {
-									const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
-									if (!redirectHtml || redirectHtml.length === 0) {
-										console.warn(`[SSR] Empty redirect result: ${pathname} -> ${redirectPath}`)
-									}
+								const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
+								if (!redirectHtml || redirectHtml.length === 0) {
+									logger.warn('Empty redirect result', {
+										pathname,
+										redirectPath,
+										route: matchedRoute,
+									})
+								} else {
+									ssrLogger.debug('Redirect resolved', {
+										pathname,
+										redirectPath,
+										htmlSize: redirectHtml.length,
+									})
 								}
 								return redirectResult
 							} finally {
@@ -543,14 +554,19 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 									const renderedVnode = resolver.render(componentVnode)
 									const result = await renderToString(renderedVnode)
 									const html = typeof result === 'string' ? result : result.html
-									if (globalThis.__SSR_MODE__ && html) {
-										console.log(`[SSR] Rendered ${matchedRoute} (${html.length} chars)`)
+									if (html) {
+										logger.info(`Rendered route component`, {
+											pathname,
+											route: matchedRoute,
+											htmlSize: html.length,
+										})
 									}
 									return result
 								} catch(error) {
-									if (globalThis.__SSR_MODE__) {
-										console.error('[SSR] Route render error:', error)
-									}
+									logger.error('Route render failed', error, {
+										pathname,
+										route: matchedRoute,
+									})
 									throw error
 								}
 							}

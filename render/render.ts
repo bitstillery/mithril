@@ -1,5 +1,6 @@
 import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies} from '../signal'
 import {logHydrationError, resetHydrationErrorCount} from '../util/ssr'
+import {logger} from '../server/logger'
 
 import Vnode from './vnode'
 import delayedRemoval from './delayedRemoval'
@@ -1091,7 +1092,10 @@ export default function renderFactory() {
 			// Check if we've exceeded mismatch threshold after processing nodes
 			// If so, clear and re-render from scratch (client VDOM wins)
 			if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
-				console.warn(`⚠️ Hydration mismatch threshold exceeded (${hydrationMismatchCount} mismatches). Clearing parent and re-rendering from client VDOM.`)
+				logger.warn(`Hydration mismatch threshold exceeded. Clearing parent and re-rendering from client VDOM.`, {
+					mismatchCount: hydrationMismatchCount,
+					threshold: MAX_HYDRATION_MISMATCHES,
+				})
 				dom.textContent = ''
 				hydrationMismatchCount = 0
 				// Clear old vnodes and re-render without hydration flag

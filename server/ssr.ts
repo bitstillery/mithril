@@ -4,6 +4,7 @@ import m from '../server'
 import {runWithContextAsync} from '../ssrContext'
 
 import {extractSessionId} from './session'
+import {logger} from './ssrLogger'
 
 import type {SessionStore} from './session'
 import type {SSRAccessContext} from '../ssrContext'
@@ -104,9 +105,18 @@ export async function createSSRResponse(
 			const serializedState = typeof result === 'string' ? {} : result.state
 
 			if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
-				console.warn(`[SSR] Empty/minimal HTML: ${pathname}`)
-			} else if (globalThis.__SSR_MODE__) {
-				console.log(`[SSR] ${pathname} -> ${appHtml.length} chars`)
+				logger.warn('Empty/minimal HTML rendered', {
+					pathname,
+					method: req.method,
+					sessionId: context.sessionId,
+				})
+			} else {
+				logger.info(`Rendered ${appHtml.length} characters`, {
+					pathname,
+					method: req.method,
+					sessionId: context.sessionId,
+					htmlSize: appHtml.length,
+				})
 			}
 
 			let html = await options.getHtmlTemplate()
@@ -136,6 +146,14 @@ export async function createSSRResponse(
 			html = html.replace('</head>', `${stateScript}</head>`)
 
 			const sessionId = context.sessionId ?? ''
+			logger.debug('SSR response created', {
+				pathname,
+				method: req.method,
+				sessionId,
+				htmlSize: html.length,
+				stateSize: JSON.stringify(serializedState).length,
+			})
+			
 			return new Response(html, {
 				headers: {
 					// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -145,7 +163,11 @@ export async function createSSRResponse(
 				},
 			})
 		} catch(error) {
-			console.error('SSR Error:', error)
+			logger.error('SSR request failed', error, {
+				pathname,
+				method: req.method,
+				sessionId: context.sessionId,
+			})
 			return new Response('Internal Server Error', {status: 500})
 		}
 	})
@@ -177,12 +199,20 @@ export function createSessionUpdateHandler(
 			// sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
 			sessionStore.updateSession(sessionId, {session_data: sessionData})
 			
+			logger.debug('Session updated', {
+				method: req.method,
+				sessionId,
+			})
+			
 			return new Response(JSON.stringify({success: true}), {
 				// eslint-disable-next-line @typescript-eslint/naming-convention
 				headers: {'Content-Type': 'application/json'},
 			})
 		} catch(error) {
-			console.error('Error updating session:', error)
+			logger.error('Failed to update session', error, {
+				method: req.method,
+				sessionId,
+			})
 			return new Response('Internal Server Error', {status: 500})
 		}
 	}
