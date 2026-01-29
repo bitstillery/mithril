@@ -1,6 +1,6 @@
 import {ComputedSignal} from '../signal'
 import {getRegisteredStates} from '../state'
-import {logger} from '../server/logger'
+import {logger} from '../server/ssrLogger'
 
 import type {State} from '../state'
 
@@ -252,7 +252,7 @@ export function serializeAllStates(): Record<string, any> {
 			result[name] = serializeStore(entry.state)
 		} catch(error) {
 			// Log error but continue with other states
-			ssrLogger.error(`Error serializing state`, error, {stateName: name})
+			logger.error(`Error serializing state`, error, {stateName: name})
 		}
 	}
 

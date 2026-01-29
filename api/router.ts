@@ -488,7 +488,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 						if (isRedirect(payload)) {
 							// Extract redirect target path (handles different REDIRECT symbols)
 							const redirectPath = getRedirectPath(payload)
-							ssrLogger.info(`Redirecting to ${redirectPath}`, {
+							logger.info(`Redirecting to ${redirectPath}`, {
 								pathname,
 								route: matchedRoute,
 								redirectPath,
@@ -522,7 +522,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 										route: matchedRoute,
 									})
 								} else {
-									ssrLogger.debug('Redirect resolved', {
+									logger.debug('Redirect resolved', {
 										pathname,
 										redirectPath,
 										htmlSize: redirectHtml.length,
