@@ -522,21 +522,17 @@ describe('SSR Routing', () => {
 		test('handles RouteResolver with render but invalid component', async() => {
 			const resolver: RouteResolver = {
 				onmatch: () => undefined, // Returns undefined
-				render: (vnode) => mServer(vnode.tag), // But render expects a component
+				render: (vnode) => mServer(vnode.tag), // vnode.tag is undefined → invalid selector
 			}
 
 			const routes = {
 				'/': resolver,
 			}
 
-			// Should handle gracefully - falls through to component rendering
-			// Since payload is still the resolver and it doesn't have a view method,
-			// it should fall back to rendering a div
-			const result = await mServer.route.resolve('/', routes, mServer.renderToString)
-			const html = typeof result === 'string' ? result : result.html
-
-			// Should render something (fallback div)
-			expect(html).toBeDefined()
+			// hyperscript throws when selector is undefined (not a string or component)
+			await expect(
+				mServer.route.resolve('/', routes, mServer.renderToString),
+			).rejects.toThrow('The selector must be either a string or a component.')
 		})
 	})
 

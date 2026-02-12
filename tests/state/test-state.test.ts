@@ -386,10 +386,10 @@ describe('state', () => {
 		})
 	})
 
-	test('requires name parameter', () => {
-		// State name is required for SSR serialization
-		expect(() => {
-			state({count: 0})
-		}).toThrow('State name is required')
+	test('allows calling state without name (client-only, no SSR hydration)', () => {
+		const s = state({count: 0})
+		expect(s.count).toBe(0)
+		s.count++
+		expect(s.count).toBe(1)
 	})
 })

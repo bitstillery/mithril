@@ -40,16 +40,19 @@ describe('SSR State Serialization', () => {
 			expect(entry?.initial).toEqual({count: 0})
 		})
 
-		test('state creation throws error if name is missing', () => {
-			expect(() => {
-				state({count: 0})
-			}).toThrow('State name is required')
+		test('state without name does not throw and is not registered (client-only usage)', () => {
+			const myState = state({count: 0})
+			expect(myState.count).toBe(0)
+			const registered = getRegisteredStates()
+			expect(registered.has('myState')).toBe(false)
 		})
 
-		test('state creation throws error if name is empty string', () => {
-			expect(() => {
-				state({count: 0}, '')
-			}).toThrow('State name is required')
+		test('state with empty name does not throw and is not registered', () => {
+			const myState = state({count: 0}, '')
+			expect(myState.count).toBe(0)
+			const registered = getRegisteredStates()
+			// Empty string skips registration, so no entry for ''
+			expect(registered.has('')).toBe(false)
 		})
 
 		test('multiple states can be registered with different names', () => {

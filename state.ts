@@ -120,13 +120,9 @@ export function clearStateRegistry(): void {
 /**
  * Deep signal state - wraps objects/arrays with Proxy to make them reactive
  * @param initial - Initial state object
- * @param name - Required name for SSR serialization (must be non-empty string)
+ * @param name - Optional name for SSR serialization/hydration. When omitted, state is not registered (suitable for client-only apps).
  */
-export function state<T extends Record<string, any>>(initial: T, name: string): State<T> {
-	// Validate name parameter
-	if (!name || typeof name !== 'string' || name.trim() === '') {
-		throw new Error('State name is required and must be a non-empty string')
-	}
+export function state<T extends Record<string, any>>(initial: T, name?: string): State<T> {
 	const signalMap = new Map<string, Signal<any> | ComputedSignal<any>>()
 	const stateCache = new WeakMap<object, any>()
 
@@ -836,10 +832,11 @@ export function state<T extends Record<string, any>>(initial: T, name: string): 
 		}
 	}
 	
-	// Register state for SSR serialization
-	// Store original initial state (with computed properties) for restoration after deserialization
-	registerState(name, wrapped, initial)
-	
+	// Register state for SSR serialization when name is provided (required for hydration)
+	if (name && typeof name === 'string' && name.trim() !== '') {
+		registerState(name, wrapped, initial)
+	}
+
 	return wrapped
 }
 
