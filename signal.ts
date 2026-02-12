@@ -238,6 +238,14 @@ export class ComputedSignal<T> extends Signal<T> {
 		}
 	}
 
+	/**
+	 * Mark this computed as dirty so it will recompute on next value access.
+	 * Used by the state layer when opening the deferred-computed gate (allowComputed).
+	 */
+	markDirty(): void {
+		this._markDirty()
+	}
+
 	set value(_newValue: T) {
 		throw new Error('Computed signals are read-only')
 	}

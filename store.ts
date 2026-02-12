@@ -131,7 +131,7 @@ let storeInstanceCounter = 0
  * - saved: localStorage (survives browser restarts)
  * - temporary: not persisted (resets on reload)
  * - tab: sessionStorage (survives page reloads, clears when tab closes)
- * - session: server-side session storage (requires backend, hydrated via SSR)
+ * - session: server-side session storage (optional, off by default; requires backend, hydrated via SSR)
  */
 export class Store<T extends Record<string, any> = Record<string, any>> {
 	private stateInstance: State<T>
@@ -147,10 +147,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 
 	constructor(options: {lookup_ttl?: number} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
 		this.lookup_ttl = options.lookup_ttl || DEFAULT_LOOKUP_TTL
-		// Initialize with empty state, will be loaded later
-		// Generate unique name for each Store instance to avoid collisions
+		// Initialize with empty state, will be loaded later (ADR-0013: defer computeds until ready() is called)
 		const instanceName = `store.instance.${storeInstanceCounter++}`
-		this.stateInstance = state({} as T, instanceName)
+		this.stateInstance = state({} as T, instanceName, { deferComputed: true })
 		
 		if (typeof window !== 'undefined' && !this.lookup_verify_interval) {
 			// Check every 10 seconds for outdated lookup paths. This is
@@ -166,9 +165,20 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 	}
 
 	/**
+	 * Allow evaluation of computed properties (ADR-0013). Call after load() and app setup
+	 * (e.g. after $s, context, or route are ready) so computeds that depend on them can run.
+	 */
+	ready(): void {
+		;(this.stateInstance as any).allowComputed?.()
+	}
+
+	/**
 	 * Merge deep on object `state`, but only the key/values in `blueprint`.
 	 */
 	blueprint(state: T, blueprint: Partial<T>): Partial<T> {
+		if (state == null || typeof state !== 'object') {
+			return {} as Partial<T>
+		}
 		const result: any = {}
 		for (const key of Object.keys(blueprint)) {
 			if (Object.prototype.hasOwnProperty.call(state, key)) {
@@ -340,6 +350,8 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		if (this.computedPropertiesSetup) {
 			this.computedPropertiesSetup()
 		}
+		// ADR-0013: open deferred-computed gate so computeds can run after load
+		this.ready()
 	}
 	
 	/**
@@ -352,6 +364,10 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 		setupFn()
 	}
 
+	/**
+	 * Persist state to storage. When no options are passed, saves to localStorage (saved) and
+	 * sessionStorage (tab). Session (server-side) is off by default; pass { session: true } to persist it.
+	 */
 	async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void> {
 		// Skip saving during SSR (server-side rendering in Bun)
 		// On the server, there's no localStorage/sessionStorage and no need to persist state
@@ -359,10 +375,10 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 			return
 		}
 		
-		// Default to saving all storage types if no options provided
+		// Default to saving saved/tab when no options; session is opt-in (off by default)
 		const saveSaved = options?.saved ?? (options === undefined)
 		const saveTab = options?.tab ?? (options === undefined)
-		const saveSession = options?.session ?? (options === undefined)
+		const saveSession = options?.session === true
 		
 		// Use SSR serialization which properly handles State objects and skips ComputedSignal properties
 		// This is the same mechanism used for SSR, ensuring consistency

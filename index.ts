@@ -82,7 +82,7 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 
 // Export signals API
 export {signal, computed, effect, Signal, ComputedSignal, state, watch, registerState, getRegisteredStates}
-export type {State} from './state'
+export type {State, StateOptions} from './state'
 
 // Export Store class
 export {Store} from './store'

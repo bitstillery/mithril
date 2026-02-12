@@ -27,6 +27,7 @@ Architecture Decision Records are documents that capture important architectural
 | [0010](./0010-isomorphic-redirect-system.md) | Isomorphic Redirect System for Mithril Router | Proposed | 2025-01-28 |
 | [0011](./0011-hydration-mismatch-recovery.md) | Hydration Mismatch Recovery | Accepted | 2025-01-29 |
 | [0012](./0012-mithril-signals-store-ssr-architecture.md) | Mithril Signals, Store, and SSR Architecture Overview | Accepted | 2025-02-02 |
+| [0013](./0013-deferred-computed-evaluation.md) | Deferred Computed Property Evaluation | Proposed | 2025-02-12 |
 
 ## Status Definitions
 

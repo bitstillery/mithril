@@ -392,4 +392,20 @@ describe('state', () => {
 		s.count++
 		expect(s.count).toBe(1)
 	})
+
+	test('deferComputed: computeds return undefined until allowComputed() (ADR-0013)', () => {
+		const s = state(
+			{
+				count: 1,
+				doubled: () => s.count * 2,
+			},
+			'testState.deferComputed',
+			{ deferComputed: true },
+		)
+		expect(s.doubled).toBeUndefined()
+		;(s as any).allowComputed()
+		expect(s.doubled).toBe(2)
+		s.count = 5
+		expect(s.doubled).toBe(10)
+	})
 })
