@@ -14,7 +14,13 @@ export interface Vnode<Attrs = Record<string, any>, State = any> {
 	instance?: any
 }
 
-export type Children = Vnode[] | string | number | boolean | null | undefined
+/** Single child - Vnode/Element, primitives, or null/undefined */
+export type Child = Vnode | string | number | boolean | null | undefined
+/** Children: single child, array of children, or primitives. Arrays may contain false (conditionally hidden). */
+export type Children = Child | Child[]
+
+/** Vnode with dom guaranteed (oncreate/onupdate lifecycle) */
+export type VnodeDOM<Attrs = Record<string, any>, State = any> = ComponentVnode<Attrs, State> & { dom: Element }
 
 /**
  * Vnode passed to component lifecycle methods - attrs is always defined (Mithril passes at least {}).

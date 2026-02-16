@@ -30,7 +30,7 @@ export interface Route {
 	(path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
 	(path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
 	set: (path: string, params?: Record<string, any>, data?: any) => void
-	get: () => string | undefined
+	get: () => string
 	prefix: string
 	link: (vnode: VnodeType) => string
 	param: (key?: string) => any
@@ -318,13 +318,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// In SSR context (no $window), this is a no-op since we're just rendering HTML
 		}
 	}
-	route.get = function() {
+	route.get = function(): string {
 		// If currentPath is not set (e.g., during SSR before route.resolve is called),
 		// fall back to extracting pathname from __SSR_URL__ using the isomorphic URI API
 		if (currentPath === undefined) {
 			return getPathname()
 		}
-		return currentPath
+		return currentPath ?? ''
 	}
 	route.prefix = '#!'
 	route.link = function(vnode: VnodeType) {

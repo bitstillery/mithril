@@ -107,17 +107,21 @@ export {getCurrentUrl, getPathname, getSearch, getHash, getLocation} from './uti
 export type {IsomorphicLocation} from './util/uri'
 
 // Export component and vnode types
-export type {Vnode, ComponentVnode, Children, Component, ComponentFactory, ComponentType, VnodeOf} from './render/vnode'
+export type {Vnode, ComponentVnode, Children, Child, VnodeDOM, Component, ComponentFactory, ComponentType, VnodeOf} from './render/vnode'
 export {MithrilComponent}
 export type {Hyperscript} from './render/hyperscript'
 export type {Route, RouteResolver, RedirectObject} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'
 
-// Namespace merge: enables m.Vnode<Attrs> and m.Children when using import m from '@bitstillery/mithril'
+// Namespace merge: enables m.Vnode<Attrs>, m.Children, m.Route, m.Child when using import m from '@bitstillery/mithril'
 // m.Vnode uses ComponentVnode so vnode.attrs is always defined in component lifecycle methods
 declare namespace m {
 	type Vnode<Attrs = Record<string, any>, State = any> = import('./render/vnode').ComponentVnode<Attrs, State>
+	type VnodeDOM<Attrs = Record<string, any>, State = any> = import('./render/vnode').VnodeDOM<Attrs, State>
 	type Children = import('./render/vnode').Children
+	type Child = import('./render/vnode').Child
+	type ChildArray = import('./render/vnode').Child[]
+	type Route = import('./api/router').Route
 }
 
 export default m

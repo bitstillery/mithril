@@ -267,17 +267,9 @@ async function serializeNode(
 	promiseTracker: PromiseTracker,
 	isServer: boolean,
 ): Promise<string> {
-	if (vnode == null) {
-		if (isServer) {
-			console.log(`[serializeNode] vnode is null, returning empty string`)
-		}
-		return ''
-	}
+	if (vnode == null) return ''
 	
 	const tag = vnode.tag
-	if (isServer && typeof tag !== 'string' && tag !== '#' && tag !== '<' && tag !== '[') {
-		console.log(`[serializeNode] Processing vnode with tag type:`, typeof tag === 'function' ? 'function' : (typeof tag === 'object' ? 'object' : String(tag)))
-	}
 	
 	// Text node
 	if (tag === '#') {
@@ -292,67 +284,21 @@ async function serializeNode(
 	// Fragment
 	if (tag === '[') {
 		const children = vnode.children as (VnodeType | null)[]
-		if (isServer) {
-			console.log(`[serializeNode] Fragment detected, children type: ${Array.isArray(children) ? 'array' : typeof children}, length: ${Array.isArray(children) ? children.length : 'N/A'}`)
-			if (Array.isArray(children)) {
-				console.log(`[serializeNode] Fragment children array:`, children.map((c, i) => 
-					c ? (typeof c.tag === 'string' ? `${i}:${c.tag}` : `${i}:component`) : `${i}:null`
-				).join(', '))
-			}
-		}
-		if (!children) {
-			if (isServer) {
-				console.log(`[serializeNode] Fragment has no children (null/undefined), returning empty string`)
-			}
-			return ''
-		}
-		if (!Array.isArray(children)) {
-			if (isServer) {
-				console.log(`[serializeNode] Fragment children is not an array (type: ${typeof children}), treating as single child`)
-			}
-			// If children is not an array, treat it as a single child
-			const result = await serializeNode(children as VnodeType, options, promiseTracker, isServer)
-			if (isServer) {
-				console.log(`[serializeNode] Fragment single child serialized, length: ${result.length}`)
-			}
-			return result
-		}
+		if (!children) return ''
 		const results = await Promise.all(
-			children.map((child, idx) => {
-				if (isServer) {
-					console.log(`[serializeNode] Fragment child ${idx}:`, child ? (typeof child.tag === 'string' ? `element:${child.tag}` : (typeof child.tag === 'function' ? 'component-function' : 'component-object')) : 'null')
-				}
-				return serializeNode(child, options, promiseTracker, isServer)
-			}),
+			children.map(child => serializeNode(child, options, promiseTracker, isServer)),
 		)
-		const joined = results.join('')
-		if (isServer) {
-			console.log(`[serializeNode] Fragment serialized, ${children.length} children -> ${joined.length} chars`)
-			if (joined.length === 0) {
-				console.log(`[serializeNode] WARNING: Fragment serialized to empty string despite having ${children.length} children!`)
-			}
-		}
-		return joined
+		return results.join('')
 	}
 	
 	// Component
 	if (typeof tag !== 'string') {
-		if (isServer) {
-			console.log(`[serializeNode] Component vnode, tag type:`, typeof tag === 'function' ? 'function' : (typeof tag === 'object' && tag !== null ? 'object' : String(tag)))
-		}
 		return await serializeComponent(vnode, options, promiseTracker, isServer)
 	}
 	
 	// Element
 	const attrs = serializeAttributes(vnode.attrs, options)
 	const children = vnode.children as Children
-	
-	if (isServer) {
-		console.log(`[serializeNode] Element: ${tag}, has children:`, children != null, 
-			Array.isArray(children) ? `array[${children.length}]` : 
-			(typeof children === 'string' ? `string[${children.length}]` : 
-			(typeof children === 'object' ? 'object' : 'null')))
-	}
 	
 	let html = `<${tag}${attrs}`
 	
@@ -369,22 +315,10 @@ async function serializeNode(
 	// Serialize children
 	if (children != null) {
 		if (Array.isArray(children)) {
-			if (isServer) {
-				console.log(`[serializeNode] Element ${tag} has array children, serializing ${children.length} items`)
-			}
 			const results = await Promise.all(
-				children.map((child, idx) => {
-					if (isServer) {
-						console.log(`[serializeNode] Element ${tag} child ${idx}:`, child ? (typeof child === 'string' ? 'string' : (typeof (child as any)?.tag === 'string' ? `element:${(child as any).tag}` : 'component')) : 'null')
-					}
-					return serializeNode(child as VnodeType | null, options, promiseTracker, isServer)
-				}),
+				children.map(child => serializeNode(child as VnodeType | null, options, promiseTracker, isServer)),
 			)
-			const childrenHtml = results.join('')
-			if (isServer) {
-				console.log(`[serializeNode] Element ${tag} children serialized, length: ${childrenHtml.length}`)
-			}
-			html += childrenHtml
+			html += results.join('')
 		} else if (typeof children === 'string' || typeof children === 'number') {
 			html += serializeText(children, options)
 		} else if (children != null) {
@@ -395,10 +329,6 @@ async function serializeNode(
 	// Always close non-void elements
 	if (!isVoid) {
 		html += `</${tag}>`
-	}
-	
-	if (isServer) {
-		console.log(`[serializeNode] Element ${tag} serialized, total length: ${html.length}`)
 	}
 	
 	return html
@@ -461,67 +391,22 @@ async function serializeComponent(
 		}
 	
 		// Call view (bind this to state)
-		const viewResult = view.call(state, vnode)
-		if (isServer) {
-			const componentName = component.name || (component.constructor?.name) || (typeof component === 'function' ? component.name : 'Unknown')
-			console.log(`[renderToString] Component ${componentName} view returned:`, 
-				Array.isArray(viewResult) ? `array[${viewResult.length}]` : 
-				(viewResult?.tag === '[' ? 'fragment' : 
-				(typeof viewResult?.tag === 'string' ? `element:${viewResult.tag}` : 
-				(typeof viewResult?.tag === 'function' ? 'component' : 
-				(typeof viewResult === 'object' && viewResult !== null ? 'object' : String(viewResult))))))
-		}
-		
-		instance = Vnode.normalize(viewResult)
+		instance = Vnode.normalize(view.call(state, vnode))
 		if (instance === vnode) {
 			throw Error('A view cannot return the vnode it received as argument')
-		}
-		
-		// Debug logging for SSR
-		if (isServer) {
-			const componentName = component.name || (component.constructor?.name) || (typeof component === 'function' ? component.name : 'Unknown')
-			const instanceType = Array.isArray(instance) ? 'array (NOT NORMALIZED!)' : (instance?.tag === '[' ? 'fragment' : (typeof instance?.tag === 'string' ? `element:${instance.tag}` : (instance?.tag ? 'component' : 'null')))
-			console.log(`[renderToString] Component ${componentName} normalized, instance type: ${instanceType}`, 
-				Array.isArray(instance) ? `array length: ${instance.length} - WARNING: Array not normalized!` : 
-				(instance?.tag === '[' ? `fragment children: ${(instance.children as any[])?.length || 0}, children type: ${Array.isArray(instance.children) ? 'array' : typeof instance.children}` : 
-				(instance?.tag === '<' ? `trust HTML length: ${(instance.children as string)?.length || 0}` : 
-				(instance?.tag ? `tag: ${instance.tag}` : 'null/undefined'))))
-			
-			// If it's a fragment, log the children details
-			if (instance?.tag === '[' && Array.isArray(instance.children)) {
-				console.log(`[renderToString] Fragment children details:`, instance.children.map((child, idx) => 
-					child ? (typeof child.tag === 'string' ? `${idx}:element:${child.tag}` : `${idx}:component`) : `${idx}:null`
-				).join(', '))
-			}
 		}
 	} finally {
 		// Clear current component after rendering
 		clearCurrentComponent()
 	}
-
+	
 	vnode.instance = instance
-
+	
 	// Serialize the instance
 	if (instance != null) {
-		// Handle arrays (JSX fragments) - normalize them to fragment vnodes
-		let instanceToSerialize = instance
-		if (Array.isArray(instance)) {
-			if (isServer) {
-				console.log(`[renderToString] Instance is array with ${instance.length} children, normalizing to fragment`)
-			}
-			instanceToSerialize = Vnode('[', undefined, undefined, Vnode.normalizeChildren(instance) as Children, undefined, undefined)
-		}
-		
-		const result = await serializeNode(instanceToSerialize, options, promiseTracker, isServer)
-		if (isServer) {
-			console.log(`[renderToString] Serialized component instance, result length: ${result.length}, preview: ${result.substring(0, 200)}`)
-		}
-		return result
+		return serializeNode(instance, options, promiseTracker, isServer)
 	}
 	
-	if (isServer) {
-		console.log(`[renderToString] Component instance is null/undefined, returning empty string`)
-	}
 	return ''
 }
 
@@ -550,14 +435,6 @@ export function renderToStringFactory() {
 			Array.isArray(vnodes) ? vnodes : [vnodes],
 		)
 		
-		console.log('[renderToString] Called with vnodes:', 
-			Array.isArray(vnodes) ? `array[${vnodes.length}]` : 
-			(vnodes?.tag === '[' ? 'fragment' : 
-			(typeof vnodes?.tag === 'string' ? `element:${vnodes.tag}` : 
-			(typeof vnodes?.tag === 'function' ? 'component' : 
-			(typeof vnodes?.tag === 'object' && vnodes?.tag ? 'component-object' : 'null/undefined')))))
-		console.log('[renderToString] Normalized to', normalized.length, 'vnodes')
-		
 		const promiseTracker = new PromiseTracker()
 		
 		// First pass: render and collect promises
@@ -569,8 +446,6 @@ export function renderToStringFactory() {
 			}
 		}
 		html = (await Promise.all(htmlParts)).join('')
-		
-		console.log('[renderToString] First pass complete, html length:', html.length, 'has promises:', promiseTracker.hasPromises())
 		
 		// Wait for all promises
 		if (promiseTracker.hasPromises()) {
@@ -586,13 +461,10 @@ export function renderToStringFactory() {
 				}
 			}
 			html = (await Promise.all(htmlParts2)).join('')
-			console.log('[renderToString] Second pass complete, html length:', html.length)
 		}
 		
 		// Serialize all registered stores
 		const state = serializeAllStates()
-		
-		console.log('[renderToString] Final result, html length:', html.length, 'state size:', JSON.stringify(state).length)
 		
 		return {html, state}
 	}
