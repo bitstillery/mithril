@@ -658,4 +658,40 @@ describe('SSR Routing', () => {
 			expect(html).toContain('Color: red')
 		})
 	})
+
+	/**
+	 * Route key behavior: the router uses attrs.key (not currentPath) as the vnode key.
+	 * When navigating between paths that share the same route pattern (e.g. /list → /list/ENTITY/123),
+	 * the component receives an update rather than a full remount. This preserves component state
+	 * (context panels, collections) when selecting items or using select_next.
+	 */
+	describe('Route key behavior (update vs remount)', () => {
+		test('overlapping routes render same component with different params', async() => {
+			const ListPage: ComponentType<{entity_type?: string; entity_artkey?: string; path?: string[]}> = {
+				view: (vnode) => {
+					const {entity_type, entity_artkey} = vnode.attrs
+					const hasEntity = entity_type && entity_artkey
+					return mServer('div', [
+						mServer('span', 'ListPage'),
+						hasEntity ? mServer('span', `Entity: ${entity_type}/${entity_artkey}`) : null,
+					])
+				},
+			}
+
+			const routes = {
+				'/list': ListPage,
+				'/list/:entity_type/:entity_artkey': ListPage,
+			}
+
+			const resultBase = await mServer.route.resolve('/list', routes, mServer.renderToString)
+			const htmlBase = typeof resultBase === 'string' ? resultBase : resultBase.html
+			expect(htmlBase).toContain('ListPage')
+			expect(htmlBase).not.toContain('Entity:')
+
+			const resultWithEntity = await mServer.route.resolve('/list/OFFER_ITEM/160456', routes, mServer.renderToString)
+			const htmlWithEntity = typeof resultWithEntity === 'string' ? resultWithEntity : resultWithEntity.html
+			expect(htmlWithEntity).toContain('ListPage')
+			expect(htmlWithEntity).toContain('Entity: OFFER_ITEM/160456')
+		})
+	})
 })

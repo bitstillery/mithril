@@ -86,10 +86,11 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 			// Therefore, the following early return is not needed.
 			// if (!hasBeenResolved) return
 
-			// Use currentPath as key to ensure component recreation on route change
-			// Pass currentPath in attrs so RouteResolver.render can use it for routePath
-			const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath, key: currentPath || attrs.key}
-			const vnode = Vnode(component, currentPath || attrs.key, routeAttrs, null, null, null)
+			// Pass currentPath in attrs so RouteResolver.render can use it for routePath.
+			// Use attrs.key (not currentPath) so that route param changes within the same
+			// route pattern update the component instead of causing a full remount.
+			const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath}
+			const vnode = Vnode(component, attrs.key, routeAttrs, null, null, null)
 			if (currentResolver) return currentResolver.render!(vnode as any)
 			// Wrap in a fragment to preserve existing key semantics
 			return [vnode]
