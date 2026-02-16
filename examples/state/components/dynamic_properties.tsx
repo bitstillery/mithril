@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
 // Component demonstrating dynamic property assignment
-export class DynamicProperties extends MithrilTsxComponent {
+export class DynamicProperties extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

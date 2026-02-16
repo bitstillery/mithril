@@ -1,8 +1,8 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$store, store} from '../store'
 
-export class StoreDemo extends MithrilTsxComponent {
+export class StoreDemo extends MithrilComponent {
 	view() {
 		return <div class="store-demo">
 			<h2>Store State Types Demo</h2>

@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode, effect} from '../../../index'
+import {MithrilComponent, Vnode, effect} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
 // Component demonstrating effects
-export class Effects extends MithrilTsxComponent {
+export class Effects extends MithrilComponent {
 	private cleanup?: () => void
 	private effectLog: string[] = []
 	private effectCount = 0

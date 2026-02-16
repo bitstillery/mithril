@@ -22,10 +22,10 @@ Mithril currently has TypeScript type definitions split between `index.d.ts` (de
    - Current type doesn't support `$` prefix access (`store.$property` returns raw signal)
    - Need proper typing for deepsignal-like unwrapping pattern
 
-3. **Missing `MithrilTsxComponent` support**:
+3. **Missing `MithrilComponent` support**:
    - Frontend applications use class-based TSX components
    - No TypeScript support for this pattern
-   - Need to add `MithrilTsxComponent` abstract base class
+   - Need to add `MithrilComponent` abstract base class
 
 4. **Type checking issues**:
    - Some files have type errors that need fixing
@@ -36,7 +36,7 @@ Mithril currently has TypeScript type definitions split between `index.d.ts` (de
 
 - Consolidate types from `index.d.ts` into implementation files
 - Fix `Store<T>` type to support regular access and `$` prefix access
-- Add `MithrilTsxComponent` support for class-based TSX components
+- Add `MithrilComponent` support for class-based TSX components
 - Ensure all type fixes use assertions and inference only - no runtime code changes
 - Maintain backward compatibility with existing code
 
@@ -48,7 +48,7 @@ We will consolidate all TypeScript type definitions into their respective implem
 
 1. **Move types to implementation files**: Each file exports its own types
 2. **Fix `Store<T>` with intersection types**: Use mapped type + index signature pattern (like deepsignal)
-3. **Add `MithrilTsxComponent`**: Abstract base class for class-based TSX components
+3. **Add `MithrilComponent`**: Abstract base class for class-based TSX components
 4. **Type-only fixes**: Use type assertions (`as Type`) and inference, never add runtime checks
 5. **Remove `index.d.ts`**: After consolidation, remove the separate declaration file
 
@@ -68,7 +68,7 @@ We will consolidate all TypeScript type definitions into their respective implem
 3. **DeepSignal pattern**: Need proper typing for deepsignal-like unwrapping
 4. **Type safety**: Proper types prevent runtime errors
 
-### Why Add MithrilTsxComponent
+### Why Add MithrilComponent
 
 1. **Frontend applications use it**: Existing codebase uses class-based TSX components
 2. **Type safety**: Need proper TypeScript support for this pattern
@@ -126,7 +126,7 @@ export type Store<T extends Record<string, any>> = {
 
 **Files to update**:
 
-- **`render/vnode.ts`**: Add `Vnode`, `Children`, `Component`, `ComponentFactory`, `ComponentType`, `MithrilTsxComponent`
+- **`render/vnode.ts`**: Add `Vnode`, `Children`, `Component`, `ComponentFactory`, `ComponentType`, `MithrilComponent`
 - **`render/hyperscript.ts`**: Add `Hyperscript` interface
 - **`api/router.ts`**: Add `Route`, `RouteResolver` interfaces
 - **`api/mount-redraw.ts`**: Add `Render`, `Redraw`, `Mount` interfaces
@@ -138,7 +138,7 @@ export type Store<T extends Record<string, any>> = {
 - Remove `index.d.ts` after consolidation
 - Update `package.json` to remove `"types": "./index.d.ts"` from exports (or point to `index.ts`)
 
-### 3. Add MithrilTsxComponent Support
+### 3. Add MithrilComponent Support
 
 **File**: `render/vnode.ts`
 
@@ -148,7 +148,7 @@ export type Store<T extends Record<string, any>> = {
  * Abstract base class for TSX/JSX class-based components
  * Similar to mithril-tsx-component package
  */
-export abstract class MithrilTsxComponent<Attrs = Record<string, any>> {
+export abstract class MithrilComponent<Attrs = Record<string, any>> {
   oninit?(vnode: Vnode<Attrs>): void
   oncreate?(vnode: Vnode<Attrs>): void
   onbeforeupdate?(vnode: Vnode<Attrs>, old: Vnode<Attrs>): boolean | void
@@ -159,13 +159,13 @@ export abstract class MithrilTsxComponent<Attrs = Record<string, any>> {
 }
 ```
 
-**Update `ComponentType`** to include `MithrilTsxComponent`:
+**Update `ComponentType`** to include `MithrilComponent`:
 ```typescript
 export type ComponentType<Attrs = Record<string, any>, State = any> = 
   | Component<Attrs, State>
   | ComponentFactory<Attrs, State>
   | (() => Component<Attrs, State>)
-  | (new (...args: any[]) => MithrilTsxComponent<Attrs>)
+  | (new (...args: any[]) => MithrilComponent<Attrs>)
 ```
 
 ### 4. Fix Type Imports Throughout Codebase
@@ -225,7 +225,7 @@ export default Vnode as typeof Vnode & {
 - **Easier maintenance**: Changes to implementation can update types in same file
 - **Better IDE support**: Types are co-located with code
 - **Proper Store<T> typing**: Supports both regular access and `$` prefix access
-- **MithrilTsxComponent support**: Enables class-based TSX components
+- **MithrilComponent support**: Enables class-based TSX components
 - **No runtime overhead**: All fixes are type-only
 - **Backward compatible**: No breaking changes to existing code
 
@@ -265,7 +265,7 @@ export default Vnode as typeof Vnode & {
 ## Implementation Order
 
 1. Fix `Store<T>` type in `store.ts` (resolve parsing error first)
-2. Add types to `render/vnode.ts` (including `MithrilTsxComponent`)
+2. Add types to `render/vnode.ts` (including `MithrilComponent`)
 3. Add types to `render/hyperscript.ts`
 4. Add types to `api/router.ts`
 5. Add types to `api/mount-redraw.ts`
@@ -280,7 +280,7 @@ export default Vnode as typeof Vnode & {
 - [ ] `bun run tsgo` passes with no errors
 - [ ] `Store<T>` properly types regular access and `$` prefix access
 - [ ] All types moved from `index.d.ts` to implementation files
-- [ ] `MithrilTsxComponent` exported and usable
+- [ ] `MithrilComponent` exported and usable
 - [ ] No runtime code changes (verify with `bun test`)
 - [ ] All existing tests still pass
 - [ ] Type inference works correctly (no unnecessary explicit types)
@@ -291,7 +291,7 @@ export default Vnode as typeof Vnode & {
 2. **Runtime tests**: Run `bun test` to ensure no functional changes
 3. **Import verification**: Check that all imports resolve correctly
 4. **Store typing**: Test `Store<T>` with various object shapes
-5. **MithrilTsxComponent**: Verify class-based components type correctly
+5. **MithrilComponent**: Verify class-based components type correctly
 
 ## References
 

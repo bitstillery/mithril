@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode, Component} from '../../../index'
+import {MithrilComponent, Vnode, Component} from '../../../index'
 import m from '../../../index'
 import {DocPageComponent} from './doc-page'
 import {loadMarkdownFromDocs} from '../markdown'
@@ -9,7 +9,7 @@ interface DocLoaderAttrs {
 	routePath: string
 }
 
-export class DocLoader extends MithrilTsxComponent<DocLoaderAttrs> {
+export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
 	private page: any = null
 	private navGuides: string = ''
 	private navMethods: string = ''

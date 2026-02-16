@@ -1,3 +1,4 @@
+/// <reference path="./jsx.d.ts" />
 import hyperscript from './render/hyperscript'
 import mountRedrawFactory from './api/mount-redraw'
 import routerFactory from './api/router'
@@ -6,7 +7,7 @@ import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
 import parsePathname from './pathname/parse'
 import buildPathname from './pathname/build'
-import VnodeFactory, {MithrilTsxComponent} from './render/vnode'
+import VnodeFactory, {MithrilComponent} from './render/vnode'
 import censor from './util/censor'
 import next_tick from './util/next_tick'
 import domFor from './render/domFor'
@@ -106,11 +107,17 @@ export {getCurrentUrl, getPathname, getSearch, getHash, getLocation} from './uti
 export type {IsomorphicLocation} from './util/uri'
 
 // Export component and vnode types
-export type {Vnode, Children, Component, ComponentFactory, ComponentType} from './render/vnode'
-// Export MithrilTsxComponent as a value (class) so it can be extended at runtime
-export {MithrilTsxComponent}
+export type {Vnode, ComponentVnode, Children, Component, ComponentFactory, ComponentType, VnodeOf} from './render/vnode'
+export {MithrilComponent}
 export type {Hyperscript} from './render/hyperscript'
 export type {Route, RouteResolver, RedirectObject} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'
+
+// Namespace merge: enables m.Vnode<Attrs> and m.Children when using import m from '@bitstillery/mithril'
+// m.Vnode uses ComponentVnode so vnode.attrs is always defined in component lifecycle methods
+declare namespace m {
+	type Vnode<Attrs = Record<string, any>, State = any> = import('./render/vnode').ComponentVnode<Attrs, State>
+	type Children = import('./render/vnode').Children
+}
 
 export default m

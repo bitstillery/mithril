@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 
 interface LayoutAttrs {
@@ -6,7 +6,7 @@ interface LayoutAttrs {
 	routePath?: string
 }
 
-export class Layout extends MithrilTsxComponent<LayoutAttrs> {
+export class Layout extends MithrilComponent<LayoutAttrs> {
 	view(vnode: Vnode<LayoutAttrs>) {
 		// Use routePath from attrs (passed by router) for SSR compatibility
 		// On server, m.route.get() doesn't work, so we use routePath prop

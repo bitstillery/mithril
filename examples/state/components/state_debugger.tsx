@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
@@ -9,7 +9,7 @@ interface Todo {
 }
 
 // State debugger component - shows current state and updates in real-time
-export class StateDebugger extends MithrilTsxComponent {
+export class StateDebugger extends MithrilComponent {
 	view(vnode: Vnode) {
 		// Access all state properties to track changes (fine-grained reactivity)
 		// This component will automatically re-render when any accessed signal changes

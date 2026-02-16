@@ -8,6 +8,9 @@ declare global {
 			[key: string]: any
 		}
 		interface Element extends Vnode {}
+		interface ElementAttributesProperty {
+			__tsx_attrs: any
+		}
 	}
 }
 

@@ -42,7 +42,7 @@ const $s = state({
 }, 'my.state') // Name required for SSR serialization
 
 // Component only re-renders when $s.count changes
-class Counter extends MithrilTsxComponent {
+class Counter extends MithrilComponent {
   view() {
     return (
       <div>
@@ -106,11 +106,11 @@ bun add @bitstillery/mithril
 ```
 
 ```tsx
-import m, { state, MithrilTsxComponent } from '@bitstillery/mithril'
+import m, { state, MithrilComponent } from '@bitstillery/mithril'
 
 const $s = state({ count: 0 }, 'app.state') // Name required for SSR
 
-class App extends MithrilTsxComponent {
+class App extends MithrilComponent {
   view() {
     return (
       <div>

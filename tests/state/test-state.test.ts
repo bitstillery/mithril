@@ -40,6 +40,20 @@ describe('state', () => {
 		expect(s.items[0]).toBe(10)
 	})
 
+	test('sort().map() returns unwrapped values (not Signals)', () => {
+		const s = state({
+			hidden_country_codes: ['DE', 'NL', 'BE'],
+		}, 'testState.sortMap')
+		const mapped = s.hidden_country_codes.sort().map((cc: string) => cc.toLowerCase())
+		expect(mapped).toEqual(['be', 'de', 'nl'])
+		// Each element in map callback must be unwrapped string, not Signal
+		s.hidden_country_codes.sort().map((cc: unknown) => {
+			expect(typeof cc).toBe('string')
+			expect(typeof (cc as string).toLowerCase).toBe('function')
+			return cc
+		})
+	})
+
 	test('converts function properties to computed signals', () => {
 		const s = state({
 			count: 0,

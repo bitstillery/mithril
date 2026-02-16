@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode, Signal} from '../../../index'
+import {MithrilComponent, Vnode, Signal} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
@@ -7,7 +7,7 @@ interface DisplayValueAttrs {
 }
 
 // Example component that receives a signal as a prop
-class DisplayValue extends MithrilTsxComponent<DisplayValueAttrs> {
+class DisplayValue extends MithrilComponent<DisplayValueAttrs> {
 	view(vnode: Vnode<DisplayValueAttrs>) {
 		// vnode.attrs.signal is a Signal object
 		const signal = vnode.attrs?.signal
@@ -21,7 +21,7 @@ class DisplayValue extends MithrilTsxComponent<DisplayValueAttrs> {
 }
 
 // Component demonstrating $ prefix convention for accessing raw signals
-export class SignalPropExample extends MithrilTsxComponent {
+export class SignalPropExample extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

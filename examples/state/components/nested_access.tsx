@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode, Signal} from '../../../index'
+import {MithrilComponent, Vnode, Signal} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
 // Component demonstrating nested store property access
-export class NestedAccess extends MithrilTsxComponent {
+export class NestedAccess extends MithrilComponent {
 	view(vnode: Vnode) {
 		// Access nested store signals
 		const userNameSignal = $s.user.$name as Signal<string>

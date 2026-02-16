@@ -10,7 +10,7 @@ var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require
 var hasOwn_default = {}.hasOwnProperty;
 
 // ../../render/vnode.ts
-class MithrilTsxComponent {
+class MithrilComponent {
 }
 function Vnode(tag, key, attrs, children, text, dom) {
   return { tag, key: key ?? undefined, attrs: attrs ?? undefined, children: children ?? undefined, text: text ?? undefined, dom: dom ?? undefined, is: undefined, domSize: undefined, state: undefined, events: undefined, instance: undefined };
@@ -2669,7 +2669,7 @@ setSignalRedrawCallback((sig) => {
 var mithril_default = m;
 
 // components/layout.tsx
-class Layout extends MithrilTsxComponent {
+class Layout extends MithrilComponent {
   view(vnode) {
     const isServer = typeof window === "undefined";
     const { page, navGuides = "", navMethods = "", version = "2.3.8" } = vnode.attrs;
@@ -2724,7 +2724,7 @@ class Layout extends MithrilTsxComponent {
 }
 
 // components/doc-page.tsx
-class DocPageComponent extends MithrilTsxComponent {
+class DocPageComponent extends MithrilComponent {
   view(vnode) {
     const isServer = typeof window === "undefined";
     console.log("[DocPageComponent] view called, isServer:", isServer, "has page:", !!vnode.attrs.page);
@@ -5211,7 +5211,7 @@ async function getNavMethods() {
 }
 
 // components/doc-loader.tsx
-class DocLoader extends MithrilTsxComponent {
+class DocLoader extends MithrilComponent {
   page = null;
   navGuides = "";
   navMethods = "";

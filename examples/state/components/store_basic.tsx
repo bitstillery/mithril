@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$store, store} from '../store'
 
 // Component demonstrating basic Store usage with load/save
-export class StoreBasic extends MithrilTsxComponent {
+export class StoreBasic extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

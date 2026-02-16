@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {routes} from '../routes'
 
@@ -6,7 +6,7 @@ interface AppAttrs {
 	initialPath?: string
 }
 
-export class App extends MithrilTsxComponent<AppAttrs> {
+export class App extends MithrilComponent<AppAttrs> {
 	oninit(vnode: Vnode<AppAttrs>) {
 		// Listen for popstate events (back/forward button)
 		if (typeof window !== 'undefined') {

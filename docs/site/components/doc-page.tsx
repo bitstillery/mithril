@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {Layout} from './layout'
 import {DocPage} from '../markdown'
@@ -11,7 +11,7 @@ interface DocPageAttrs {
 	version?: string
 }
 
-export class DocPageComponent extends MithrilTsxComponent<DocPageAttrs> {
+export class DocPageComponent extends MithrilComponent<DocPageAttrs> {
 	view(vnode: Vnode<DocPageAttrs>) {
 		const isServer = typeof window === 'undefined'
 		console.log('[DocPageComponent] view called, isServer:', isServer, 'has page:', !!vnode.attrs.page)

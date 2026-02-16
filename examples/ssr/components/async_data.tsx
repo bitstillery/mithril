@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode, state} from '../../../index'
+import {MithrilComponent, Vnode, state} from '../../../index'
 import m from '../../../index'
 
 // Local state for this component
@@ -7,7 +7,7 @@ const componentState = state({
 	data: undefined as string | undefined,
 }, 'AsyncData.state')
 
-export class AsyncData extends MithrilTsxComponent {
+export class AsyncData extends MithrilComponent {
 	async oninit(vnode: Vnode) {
 		componentState.loading = true
 

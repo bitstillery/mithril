@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$store, store} from '../store'
 
@@ -9,7 +9,7 @@ interface Todo {
 }
 
 // Component demonstrating Store with todos (persistent data)
-export class StoreTodos extends MithrilTsxComponent {
+export class StoreTodos extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

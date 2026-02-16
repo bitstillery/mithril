@@ -348,24 +348,27 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 								} else if (propStr === 'reverse' || propStr === 'sort') {
 									// For reverse/sort, apply to signals array
 									if (propStr === 'reverse') {
-										result = signals.reverse()
+										signals.reverse()
 									} else {
 										// sort needs a comparator function that works on signals
 										const comparator = args[0]
 										if (comparator) {
-											result = signals.sort((a, b) => {
+											signals.sort((a, b) => {
 												const aVal = isSignal(a) ? a.value : a
 												const bVal = isSignal(b) ? b.value : b
 												return comparator(aVal, bVal)
 											})
 										} else {
-											result = signals.sort((a, b) => {
+											signals.sort((a, b) => {
 												const aVal = isSignal(a) ? a.value : a
 												const bVal = isSignal(b) ? b.value : b
 												return aVal < bVal ? -1 : aVal > bVal ? 1 : 0
 											})
 										}
 									}
+									// Return wrapped Proxy (not raw signals array) so chained calls like
+									// .sort().map() receive unwrapped values in the callback
+									result = wrapped
 								} else if (propStr === 'fill') {
 									const fillValue = args[0]
 									const start = args[1] ?? 0
@@ -893,28 +896,35 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 }
 
 /**
+ * Mapped type that adds $prop for each key, returning the Signal for that property.
+ * - Primitives: $prop => Signal<T[K]>
+ * - Nested objects: $prop => Signal<State<T[K]>>
+ * - Functions: $prop => ComputedSignal (computed from getter)
+ */
+type StateSignals<T extends Record<string, any>> = {
+	[K in keyof T as K extends string ? `$${K}` : never]: T[K] extends (...args: any[]) => any
+		? ComputedSignal<any>
+		: T[K] extends object
+			? Signal<State<T[K]>>
+			: Signal<T[K]>
+}
+
+/**
  * State type - reactive object with signal-based properties
- * 
+ *
  * Supports:
  * - Regular access: `state.prop` returns unwrapped value
- * - Signal access: `state.$prop` returns Signal instance (handled at runtime)
+ * - Signal access: `state.$prop` returns Signal instance ($ prefix convention)
  * - Functions become computed signals
- * - Nested objects become State instances
- * 
- * Note: The $ prefix access is handled via Proxy at runtime.
- * TypeScript's type system cannot fully express the $ prefix pattern,
- * but the implementation correctly handles it.
+ * - Nested objects become State instances (recursively)
  */
 export type State<T extends Record<string, any>> = {
 	[K in keyof T]: T[K] extends (...args: any[]) => infer R
-		? R // Function properties return computed value
+		? R
 		: T[K] extends Record<string, any>
-			? State<T[K]> // Nested objects become states
-			: T[K] // Primitive values
-} & {
-	// Index signature for $ prefix access (runtime only, not fully typed)
-	[key: string]: any
-}
+			? State<T[K]>
+			: T[K]
+} & StateSignals<T>
 
 /**
  * Watch a signal for changes

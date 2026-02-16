@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode, Signal} from '../../../index'
+import {MithrilComponent, Vnode, Signal} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
 // Component demonstrating Signal methods: subscribe, watch, peek
-export class SignalMethods extends MithrilTsxComponent {
+export class SignalMethods extends MithrilComponent {
 	private unsubscribeCount?: () => void
 	private unsubscribeWatch?: () => void
 	private logMessages: string[] = []

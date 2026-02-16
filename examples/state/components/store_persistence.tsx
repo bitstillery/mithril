@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$store, store} from '../store'
 
 // Component demonstrating persistent vs volatile vs session state
-export class StorePersistence extends MithrilTsxComponent {
+export class StorePersistence extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

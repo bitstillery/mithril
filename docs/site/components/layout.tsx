@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {DocPage} from '../markdown'
 
@@ -10,7 +10,7 @@ interface LayoutAttrs {
 	version?: string
 }
 
-export class Layout extends MithrilTsxComponent<LayoutAttrs> {
+export class Layout extends MithrilComponent<LayoutAttrs> {
 	view(vnode: Vnode<LayoutAttrs>) {
 		const isServer = typeof window === 'undefined'
 		const {page, navGuides = '', navMethods = '', version = '2.3.8'} = vnode.attrs

@@ -1,9 +1,9 @@
-import {MithrilTsxComponent, Vnode, Signal} from '../../../index'
+import {MithrilComponent, Vnode, Signal} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
 // Component demonstrating array signal access via $ prefix
-export class ArraySignals extends MithrilTsxComponent {
+export class ArraySignals extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

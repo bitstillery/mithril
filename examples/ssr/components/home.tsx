@@ -1,7 +1,7 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 
-export class Home extends MithrilTsxComponent {
+export class Home extends MithrilComponent {
 	view(vnode: Vnode) {
 		return <div>
 			<h2>Welcome to Mithril SSR</h2>

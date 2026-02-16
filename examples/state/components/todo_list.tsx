@@ -1,4 +1,4 @@
-import {MithrilTsxComponent, Vnode} from '../../../index'
+import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {$s} from '../state'
 
@@ -9,7 +9,7 @@ interface Todo {
 }
 
 // Todo list component demonstrating computed properties
-export class TodoList extends MithrilTsxComponent {
+export class TodoList extends MithrilComponent {
 	view(vnode: Vnode) {
 		return (
 			<div style="padding: 20px; border: 1px solid #ccc; margin: 10px;">

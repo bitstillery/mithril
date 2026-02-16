@@ -16,40 +16,53 @@ export interface Vnode<Attrs = Record<string, any>, State = any> {
 
 export type Children = Vnode[] | string | number | boolean | null | undefined
 
+/**
+ * Vnode passed to component lifecycle methods - attrs is always defined (Mithril passes at least {}).
+ * Use this so vnode.attrs is never undefined in view/oninit/oncreate etc.
+ */
+export type ComponentVnode<Attrs = Record<string, any>, State = any> = Omit<Vnode<Attrs, State>, 'attrs'> & {attrs: Attrs}
+
 export interface Component<Attrs = Record<string, any>, State = any> {
-	oninit?: (vnode: Vnode<Attrs, State>) => void
-	oncreate?: (vnode: Vnode<Attrs, State>) => void
-	onbeforeupdate?: (vnode: Vnode<Attrs, State>, old: Vnode<Attrs, State>) => boolean | void
-	onupdate?: (vnode: Vnode<Attrs, State>) => void
-	onbeforeremove?: (vnode: Vnode<Attrs, State>) => Promise<any> | void
-	onremove?: (vnode: Vnode<Attrs, State>) => void
-	view: (vnode: Vnode<Attrs, State>) => Children | Vnode | null
+	oninit?: (vnode: ComponentVnode<Attrs, State>) => void
+	oncreate?: (vnode: ComponentVnode<Attrs, State>) => void
+	onbeforeupdate?: (vnode: ComponentVnode<Attrs, State>, old: ComponentVnode<Attrs, State>) => boolean | void
+	onupdate?: (vnode: ComponentVnode<Attrs, State>) => void
+	onbeforeremove?: (vnode: ComponentVnode<Attrs, State>) => Promise<any> | void
+	onremove?: (vnode: ComponentVnode<Attrs, State>) => void
+	view: (vnode: ComponentVnode<Attrs, State>) => Children | Vnode | null
 }
 
 export interface ComponentFactory<Attrs = Record<string, any>, State = any> {
 	(...args: any[]): Component<Attrs, State>
-	view?: (vnode: Vnode<Attrs, State>) => Children | Vnode | null
+	view?: (vnode: ComponentVnode<Attrs, State>) => Children | Vnode | null
 }
 
 export type ComponentType<Attrs = Record<string, any>, State = any> = 
 	| Component<Attrs, State>
 	| ComponentFactory<Attrs, State>
 	| (() => Component<Attrs, State>)
-	| (new (...args: any[]) => MithrilTsxComponent<Attrs>)
+	| (new (...args: any[]) => MithrilComponent<Attrs>)
 
 /**
- * Abstract base class for TSX/JSX class-based components
- * Similar to mithril-tsx-component package
+ * Abstract base class for TSX/JSX class-based components.
+ * Assign view as a property so TypeScript infers vnode from the template: view = (vnode) => { ... }
  */
-export abstract class MithrilTsxComponent<Attrs = Record<string, any>> {
-	oninit?(vnode: Vnode<Attrs>): void
-	oncreate?(vnode: Vnode<Attrs>): void
-	onbeforeupdate?(vnode: Vnode<Attrs>, old: Vnode<Attrs>): boolean | void
-	onupdate?(vnode: Vnode<Attrs>): void
-	onbeforeremove?(vnode: Vnode<Attrs>): Promise<any> | void
-	onremove?(vnode: Vnode<Attrs>): void
-	abstract view(vnode: Vnode<Attrs>): Children
+export abstract class MithrilComponent<Attrs = Record<string, any>> {
+	/** Required for JSX attribute type-checking - do not use directly */
+	private readonly __tsx_attrs!: Attrs & {key?: string | number}
+
+	oninit?(vnode: ComponentVnode<Attrs>): void
+	oncreate?(vnode: ComponentVnode<Attrs>): void
+	onbeforeupdate?(vnode: ComponentVnode<Attrs>, old: ComponentVnode<Attrs>): boolean | void
+	onupdate?(vnode: ComponentVnode<Attrs>): void
+	onbeforeremove?(vnode: ComponentVnode<Attrs>): Promise<any> | void
+	onremove?(vnode: ComponentVnode<Attrs>): void
+	/** Implement in subclass: view(vnode) { ... } - annotate vnode as m.Vnode<Attrs> */
+	abstract view(vnode: ComponentVnode<Attrs>): Children | Vnode | null
 }
+
+/** Helper type for Vnode of a component - use when this['Vnode'] is not available */
+export type VnodeOf<T> = T extends MithrilComponent<infer A> ? ComponentVnode<A> : never
 
 function Vnode(tag: any, key: string | number | null | undefined, attrs: Record<string, any> | null | undefined, children: Children | null | undefined, text: string | number | null | undefined, dom: Node | null | undefined): Vnode {
 	return {tag: tag, key: key ?? undefined, attrs: attrs ?? undefined, children: children ?? undefined, text: text ?? undefined, dom: dom ?? undefined, is: undefined, domSize: undefined, state: undefined, events: undefined, instance: undefined}
