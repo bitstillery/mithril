@@ -55,7 +55,7 @@ export type ComponentType<Attrs = Record<string, any>, State = any> =
  */
 export abstract class MithrilComponent<Attrs = Record<string, any>> {
 	/** Required for JSX attribute type-checking - do not use directly */
-	private readonly __tsx_attrs!: Attrs & {key?: string | number}
+	private readonly __tsx_attrs!: (unknown extends Attrs ? Record<string, any> : Attrs) & {key?: string | number}
 
 	oninit?(vnode: ComponentVnode<Attrs>): void
 	oncreate?(vnode: ComponentVnode<Attrs>): void
