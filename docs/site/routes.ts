@@ -47,21 +47,15 @@ const routeMap: Record<string, string> = {
 function createRoute(routePath: string, docName: string): RouteResolver {
 	return {
 		render: (vnode: Vnode) => {
-			// Use routePath from router's vnode attrs (passed by route.resolve)
 			const actualRoutePath = vnode.attrs?.routePath || routePath
-			console.log('[createRoute] Rendering route:', routePath, 'docName:', docName, 'actualRoutePath:', actualRoutePath)
-			// Return DocLoader component which will load data in oninit
 			const result = m(DocLoader as unknown as any, {
 				key: actualRoutePath,
 				routePath: actualRoutePath,
 				docName,
 			})
-			// Ensure we always return a valid vnode
 			if (!result || !result.tag) {
-				console.error('[createRoute] Invalid vnode returned for route:', routePath, 'result:', result)
 				return m('div', `Error loading route: ${routePath}`)
 			}
-			console.log('[createRoute] Created vnode for route:', routePath, 'tag type:', typeof result.tag === 'string' ? result.tag : 'component')
 			return result
 		},
 	}
@@ -72,6 +66,10 @@ export function getRoutes(): Record<string, ComponentType | RouteResolver> {
 	
 	for (const [path, docName] of Object.entries(routeMap)) {
 		routes[path] = createRoute(path, docName)
+		// Also support .md URLs so /testing.md works (avoids Bun's built-in markdown viewer)
+		if (path !== '/' && path.endsWith('.html')) {
+			routes[path.replace(/\.html$/, '.md')] = createRoute(path, docName)
+		}
 	}
 	
 	return routes

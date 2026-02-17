@@ -1,20 +1,21 @@
 import {join} from 'path'
 import {readFile} from 'fs/promises'
-
 import {
 	createSSRResponse,
-	getBunProcessedTemplate,
 	shouldHandleBunAssets,
 	MemorySessionStore,
 	extractSessionId,
 } from '../../server'
 
-// Don't import HTML as HTMLBundle - Bun tries to resolve assets as modules
-// Instead, we'll read it as a string and process it ourselves
+// HTML entry for Bun dev server - Bun bundles client.tsx with HMR
+import templateHtml from './index.html'
 import {getRoutes} from './routes'
+import {loadMarkdownFromDocs} from './markdown'
+import {getNavGuides, getNavMethods, getNavGuidesStructure, getNavMethodsStructure} from './nav'
 import type {SSRAccessContext} from '../../ssrContext'
 
 const PORT = 3000
+const isDev = process.env.NODE_ENV !== 'production'
 
 // Create in-memory session store instance
 const sessionStore = new MemorySessionStore()
@@ -38,14 +39,14 @@ function getSessionData(req: Request): {sessionData: Partial<any>; sessionId: st
 	}
 }
 
-// Read HTML template as string (not as HTMLBundle to avoid module resolution issues)
 let htmlTemplateCache: string | null = null
 
 async function getProcessedTemplate(): Promise<string> {
-	if (htmlTemplateCache) {
+	// In dev, don't cache - Bun rebundles on each request for HMR
+	if (htmlTemplateCache && !isDev) {
 		return htmlTemplateCache
 	}
-	
+
 	const templatePath = join(import.meta.dir, 'public', 'index.html')
 	try {
 		// Try to get processed template from Bun's route (for HMR)
@@ -72,25 +73,45 @@ const staticAssetsDir = join(import.meta.dir, 'public')
 const server = Bun.serve({
 	port: PORT,
 	routes: {
-		// Serve static assets
+		// Bun dev: HTML import bundles client.tsx with HMR. SSR fetches this for template.
+		'/__template__': templateHtml,
 		'/style.css': Bun.file(join(staticAssetsDir, 'style.css')),
 		'/logo.svg': Bun.file(join(staticAssetsDir, 'logo.svg')),
-		'/favicon.png': Bun.file(join(staticAssetsDir, 'favicon.png')),
 		'/app.js': Bun.file(join(staticAssetsDir, 'app.js')),
 	},
+	development: isDev,
 	async fetch(req) {
 		const url = new URL(req.url)
 		const pathname = url.pathname
-		
-		// Handle template route for HMR - serve HTML without Bun processing it as HTMLBundle
-		// This avoids Bun trying to resolve assets as modules
-		if (pathname === '/__template__') {
-			const templateFile = Bun.file(join(staticAssetsDir, 'index.html'))
-			return new Response(templateFile, {
-				headers: {
-					'Content-Type': 'text/html',
-				},
-			})
+
+		// API: serve doc content for client-side loading (when SSR data isn't available)
+		const apiDocsMatch = pathname.match(/^\/api\/docs\/([^/]+)$/)
+		if (apiDocsMatch) {
+			const docName = apiDocsMatch[1]
+			try {
+				const [page, navGuides, navMethods, navGuidesStructure, navMethodsStructure] = await Promise.all([
+					loadMarkdownFromDocs(docName),
+					getNavGuides(),
+					getNavMethods(),
+					getNavGuidesStructure(),
+					getNavMethodsStructure(),
+				])
+				if (!page) {
+					return new Response(JSON.stringify({error: 'Page not found'}), {
+						status: 404,
+						headers: {'Content-Type': 'application/json'},
+					})
+				}
+				return new Response(JSON.stringify({page, navGuides, navMethods, navGuidesStructure, navMethodsStructure}), {
+					headers: {'Content-Type': 'application/json'},
+				})
+			} catch (error) {
+				console.error('[Server] API docs error:', error)
+				return new Response(JSON.stringify({error: 'Failed to load doc'}), {
+					status: 500,
+					headers: {'Content-Type': 'application/json'},
+				})
+			}
 		}
 
 		// Handle Bun's internal assets (HMR, etc.)
@@ -98,9 +119,27 @@ const server = Bun.serve({
 			return undefined // Let Bun handle it
 		}
 
-		// Static assets are handled by routes, so they shouldn't reach here
-		// But if they do, let Bun handle them
-		const staticAssets = ['/style.css', '/logo.svg', '/favicon.png', '/app.js']
+		// Serve static files from public/ (chunk-*.js, chunk-*.css, etc from Bun HTML build)
+		if (pathname.startsWith('/') && !pathname.includes('..') && pathname.length > 1) {
+			const staticPath = join(staticAssetsDir, pathname.slice(1))
+			try {
+				const file = Bun.file(staticPath)
+				const stat = await file.stat()
+				if (stat && stat.size > 0) {
+					return new Response(file, {
+						headers: {
+							'Content-Type': pathname.endsWith('.js') ? 'application/javascript' :
+								pathname.endsWith('.css') ? 'text/css' : 'application/octet-stream',
+						},
+					})
+				}
+			} catch {
+				// File doesn't exist, continue
+			}
+		}
+
+		// Static assets (style.css, logo.svg, app.js) are handled by routes
+		const staticAssets = ['/style.css', '/logo.svg', '/app.js']
 		if (staticAssets.includes(pathname)) {
 			return undefined // Let Bun handle via routes
 		}
@@ -108,13 +147,10 @@ const server = Bun.serve({
 		// Handle SSR routes
 		if (pathname === '/' || routes[pathname]) {
 			try {
-				console.log('[Server] Handling SSR route:', pathname)
-				console.log('[Server] Route exists:', !!routes[pathname])
 				const response = await createSSRResponse(pathname, req, {
 					routes,
 					createRequestContext: (req: Request): SSRAccessContext => {
 						const {sessionId, sessionData} = getSessionData(req)
-						console.log('[Server] Creating request context, sessionId:', sessionId)
 						return {
 							sessionId,
 							sessionData,
@@ -123,12 +159,10 @@ const server = Bun.serve({
 						}
 					},
 					initRequestContext: async () => {
-						console.log('[Server] Initializing request context')
 						// No store initialization needed for docs site
 					},
 					getHtmlTemplate: getProcessedTemplate,
 				})
-				console.log('[Server] SSR response created, status:', response.status)
 				return response
 			} catch (error) {
 				console.error('[Server] SSR error:', error)

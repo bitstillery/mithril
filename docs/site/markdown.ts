@@ -41,26 +41,15 @@ export async function loadMarkdownFile(filePath: string): Promise<DocPage> {
 
 export async function loadMarkdownFromDocs(docName: string): Promise<DocPage | null> {
 	// Only load markdown on server (Bun/Node.js), not in browser
-	if (typeof window !== 'undefined' || !import.meta.dir) {
-		// In browser, return null - data should come from SSR
-		console.log('[loadMarkdownFromDocs] Browser context, skipping load')
+	if (typeof window !== 'undefined') {
 		return null
 	}
 	
 	try {
-		// Load from the docs repo
-		// From mithril/docs/site, go up 3 levels to get to /home/jeroen/code
-		const docsPath = join(import.meta.dir, '../../..', 'docs', 'docs', `${docName}.md`)
-		console.log('[loadMarkdownFromDocs] Loading from path:', docsPath)
-		const result = await loadMarkdownFile(docsPath)
-		console.log('[loadMarkdownFromDocs] Successfully loaded:', docName, 'title:', result.title, 'content length:', result.content.length)
-		return result
-	} catch (error) {
-		// Log error for debugging
-		console.error(`[loadMarkdownFromDocs] Failed to load markdown: ${docName}`, error)
-		if (error instanceof Error) {
-			console.error(`[loadMarkdownFromDocs] Error details:`, error.message, error.stack)
-		}
+		// Load from in-repo content (mithril/docs/site/content/)
+		const docsPath = join(import.meta.dir, 'content', `${docName}.md`)
+		return await loadMarkdownFile(docsPath)
+	} catch {
 		return null
 	}
 }

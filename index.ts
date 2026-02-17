@@ -12,7 +12,7 @@ import censor from './util/censor'
 import next_tick from './util/next_tick'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
-import {state, watch, registerState, getRegisteredStates} from './state'
+import {state, watch, registerState, getRegisteredStates, copyGlobalStatesToContext} from './state'
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'

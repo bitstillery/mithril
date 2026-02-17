@@ -289,9 +289,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 			console.log(`[store] failed to parse store/tab: ${err}`)
 		}
 
-		const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store))
+		const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store ?? {}))
 		// override with previous identity for a better version bump experience.
-		if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in restored_state.store) {
+		if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in (restored_state.store as object)) {
 			store_state.identity = (restored_state.store as any).identity
 		}
 		let tab_state

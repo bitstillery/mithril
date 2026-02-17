@@ -13,23 +13,15 @@ interface DocPageAttrs {
 
 export class DocPageComponent extends MithrilComponent<DocPageAttrs> {
 	view(vnode: Vnode<DocPageAttrs>) {
-		const isServer = typeof window === 'undefined'
-		console.log('[DocPageComponent] view called, isServer:', isServer, 'has page:', !!vnode.attrs.page)
-		
 		if (!vnode.attrs.page) {
-			console.log('[DocPageComponent] No page data, rendering error')
 			return m('div', 'No page data')
 		}
-		
-		console.log('[DocPageComponent] Rendering Layout with page title:', vnode.attrs.page.title)
-		const result = m(Layout as any, {
+		return m(Layout as any, {
 			page: vnode.attrs.page,
 			routePath: vnode.attrs.routePath,
 			navGuides: vnode.attrs.navGuides,
 			navMethods: vnode.attrs.navMethods,
 			version: vnode.attrs.version,
 		})
-		console.log('[DocPageComponent] Layout vnode created')
-		return result
 	}
 }

@@ -4,25 +4,22 @@ import {join} from 'path'
 import {build} from 'bun'
 
 const publicDir = join(import.meta.dir, 'public')
+const indexHtml = join(import.meta.dir, 'public', 'index.html')
 
 // Ensure public directory exists
 await mkdir(publicDir, {recursive: true})
 
-// Build client bundle
+// Build from HTML entry point - index.html references client.tsx, Bun bundles it
 const result = await build({
-	entrypoints: ['client.tsx'],
+	entrypoints: [indexHtml],
 	outdir: publicDir,
-	format: 'esm',
 	target: 'browser',
 	jsx: {
 		factory: 'm',
-		fragment: 'm.fragment',
+		fragmentFactory: 'm.Fragment',
 		runtime: 'classic',
 	},
 	minify: false,
-	sourcemap: 'inline',
-	naming: 'app.js',
-	outfile: join(publicDir, 'app.js'),
 })
 
 if (!result.success) {

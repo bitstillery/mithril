@@ -39,6 +39,10 @@ export default function renderFactory() {
 	// takes advantage of the fact the current `vnode` is the first argument in
 	// all lifecycle methods.
 	function callHook(this: any, vnode: any, ...args: any[]) {
+		if (this == null || typeof this.apply !== 'function') {
+			const tagName = typeof vnode?.tag === 'function' ? vnode.tag?.name : vnode?.tag
+			throw new TypeError(`callHook: expected a function with .apply (e.g. component.view), got ${tagName ?? vnode?.tag}. Check that the component has a view.`)
+		}
 		const original = vnode.state
 		try {
 			return this.apply(original, [vnode, ...args])

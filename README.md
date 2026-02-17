@@ -151,14 +151,29 @@ bun test
 
 MIT License - see [LICENSE](LICENSE) file for details.
 
-## So Long, and Thanks for All the Fish
+## Credits
 
-This is a fork of [Mithril.js](https://github.com/MithrilJS/mithril.js), built on the foundation laid by **Leo Horie** and the Mithril.js community. Special thanks to prominent contributors including **Pat Cavit**, **Claudia Meadows**, **Zoli Kahan**, **Alec Embke**, **Barney Carroll**, **Dominic Gannaway**, **Boris Letocha**, and **Joel Richard**.
+Mithril.js was originally written by Leo Horie, but it is where it is today thanks to the hard work and great ideas of many people.
 
-This fork was built through a collaboration between AI and human direction: AI handled the implementation details, while human intent—documented in [Architecture Decision Records](docs/architecture/adr/)—provided general direction and architectural choices. Signals came from good prior experience; SSR emerged naturally as we built. This isn't typical vibe coding—intent and details matter, even if the full impact isn't always clear upfront.
+Special thanks to:
 
-This implementation draws inspiration from:
-- **[Preact Signals](https://preactjs.com/guide/v10/signals/)** - Signal primitive, computed signals, dependency tracking
-- **[DeepSignal](https://github.com/luisherranz/deepsignal)** - Deep reactivity patterns with Proxy
-- **[Mithril PR #3036](https://github.com/MithrilJS/mithril.js/pull/3036)** - Component-level redraw pattern
-- **SolidJS** - Fine-grained reactivity concepts
+- Pat Cavit, who exposed most of the public API for Mithril.js 1.0, brought in test coverage and automated the publishing process
+- Claudia Meadows, who brought in linting, modernized the test suite and has been a strong voice in design discussions
+- Zoli Kahan, who replaced the original Promise implementation with one that actually worked properly
+- Alec Embke, who single-handedly wrote the JSON-P implementation
+- Barney Carroll, who suggested many great ideas and relentlessly pushed Mithril.js to the limit to uncover design issues prior to Mithril.js 1.0
+- Dominic Gannaway, who offered insanely meticulous technical insight into rendering performance
+- Boris Letocha, whose search space reduction algorithm is the basis for Mithril.js' virtual DOM engine
+- Joel Richard, whose monomorphic virtual DOM structure is the basis for Mithril.js' vnode implementation
+- Simon Friis Vindum, whose open source work was an inspiration to many design decisions for Mithril.js 1.0
+- Boris Kaul, for his awesome work on the benchmarking tools used to develop Mithril.js
+- Leon Sorokin, for writing a DOM instrumentation tool that helped improve performance in Mithril.js 1.0
+- Jordan Walke, whose work on React was prior art to the implementation of keys in Mithril.js
+- Pierre-Yves Gérardy, who consistently makes high quality contributions
+- Gyandeep Singh, who contributed significant IE performance improvements
+
+Other people who also deserve recognition:
+
+- Arthur Clemens - creator of [Polythene](https://github.com/ArthurClemens/Polythene) and the [HTML-to-Mithril converter](https://arthurclemens.github.io/mithril-template-converter/index.html)
+- Stephan Hoyer - creator of [mithril-node-render](https://github.com/StephanHoyer/mithril-node-render), [mithril-query](https://github.com/StephanHoyer/mithril-query) and [mithril-source-hint](https://github.com/StephanHoyer/mithril-source-hint)
+- the countless people who have reported and fixed bugs, participated in discussions, and helped promote Mithril.js

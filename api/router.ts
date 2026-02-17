@@ -479,7 +479,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 							if (result instanceof Promise) {
 								payload = await result
 							} else if (result !== undefined) {
-								payload = result
+								payload = result as any
 							}
 							// Note: If onmatch returns undefined, payload remains as the RouteResolver
 						}

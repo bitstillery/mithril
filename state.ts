@@ -143,6 +143,17 @@ export function getRegisteredStates(): Map<string, StateRegistryEntry> {
 }
 
 /**
+ * Copy states from global registry to SSR context.
+ * Used when app modules load at startup (registering to global) but SSR needs
+ * them in the per-request context for serialization.
+ */
+export function copyGlobalStatesToContext(context: {stateRegistry: Map<string, StateRegistryEntry>}): void {
+	for (const [name, entry] of globalStateRegistry.entries()) {
+		context.stateRegistry.set(name, entry)
+	}
+}
+
+/**
  * Clear the state registry (useful for testing or after serialization).
  * Clears the current registry (per-request in SSR, global on client).
  */
