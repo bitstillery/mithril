@@ -1,2 +1,3 @@
-// Version sync with package.json - update when releasing
-export const version = '2.3.8'
+import pkg from './package.json' with { type: 'json' }
+
+export const version: string = pkg.version

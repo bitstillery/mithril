@@ -65,6 +65,7 @@ const bunConfig = createBunSSRConfig({
 // @ts-expect-error Bun types overload requires websocket when development is set
 const server = serve({
     ...bunConfig,
+    hostname: '0.0.0.0',
     routes: {
         ...bunConfig.routes,
         '/style.css': Bun.file(join(import.meta.dir, 'style.css')),

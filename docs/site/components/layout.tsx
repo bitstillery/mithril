@@ -1,5 +1,6 @@
 import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
+import {version as mithrilVersion} from '../../../version'
 import {DocPage} from '../markdown'
 
 import {CodeBlock} from './code-block'
@@ -173,7 +174,7 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
 
     view(vnode: Vnode<LayoutAttrs>) {
         const attrs = (vnode.attrs ?? {}) as LayoutAttrs
-        const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = '3.0.0-AA'} = attrs
+        const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = mithrilVersion} = attrs
 
         if (!page || !page.content) {
             return m('div', 'Loading...')
