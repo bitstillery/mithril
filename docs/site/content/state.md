@@ -17,18 +17,18 @@ Use `signal()` for a single reactive primitive; use `state()` for the object-sha
 ```tsx
 import m, {state, MithrilComponent} from '@bitstillery/mithril'
 
-const $s = state(
-    {
-        count: 0,
-        total: () => $s.count * 2,
-    },
-)
+const $s = state({
+    count: 0,
+    total: () => $s.count * 2,
+})
 
 class Counter extends MithrilComponent {
     view() {
         return (
             <div>
-                <p>Count: {$s.count}, Total: {$s.total}</p>
+                <p>
+                    Count: {$s.count}, Total: {$s.total}
+                </p>
                 <button onclick={() => $s.count++}>Increment</button>
             </div>
         )

@@ -178,81 +178,107 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
             }
         }
 
-        return m('div.docs-sandbox', {
-            oncreate: (ev: {dom: HTMLElement}) => { state.wrapper = ev.dom.parentElement ?? undefined },
-        }, [
-            m('div.docs-sandbox-tabs', [
-                m('button', {
-                    type: 'button',
-                    class: activeTab === 'code' ? 'docs-sandbox-tab active' : 'docs-sandbox-tab',
-                    onclick: () => { state.activeTab = 'code'; redraw() },
-                }, 'Code'),
-                m('button', {
-                    type: 'button',
-                    class: activeTab === 'preview' ? 'docs-sandbox-tab active' : 'docs-sandbox-tab',
-                    onclick: () => { state.activeTab = 'preview'; redraw() },
-                }, 'Preview'),
-            ]),
-            m('div.docs-sandbox-editor', {
-                class: activeTab !== 'code' ? 'docs-sandbox-panel-hidden' : undefined,
-                oncreate: async (ev: {dom: HTMLElement}) => {
-                    if (typeof window === 'undefined') return
-                    const {EditorView, basicSetup} = await import('codemirror')
-                    const {javascript} = await import('@codemirror/lang-javascript')
-                    const {oneDark} = await import('@codemirror/theme-one-dark')
-                    const {EditorState} = await import('@codemirror/state')
-
-                    const scheduleRun = () => {
-                        if (state.debounceTimer) clearTimeout(state.debounceTimer)
-                        state.debounceTimer = setTimeout(() => this.run(vnode), 400)
-                    }
-                    const updateListener = EditorView.updateListener.of((update) => {
-                        if (update.docChanged) scheduleRun()
-                    })
-
-                    state.editorView = new EditorView({
-                        state: EditorState.create({
-                            doc: code,
-                            extensions: [basicSetup, javascript({jsx: lang === 'jsx'}), oneDark, updateListener],
-                        }),
-                        parent: ev.dom,
-                    })
+        return m(
+            'div.docs-sandbox',
+            {
+                oncreate: (ev: {dom: HTMLElement}) => {
+                    state.wrapper = ev.dom.parentElement ?? undefined
                 },
-                onremove: () => {
-                    if (state.debounceTimer) clearTimeout(state.debounceTimer)
-                    state.editorView?.destroy()
-                },
-            }),
-            m('div.docs-sandbox-preview', {
-                class: activeTab !== 'preview' ? 'docs-sandbox-panel-hidden' : undefined,
-            }, activeTab === 'preview' ? [
-                m('iframe.docs-sandbox-iframe', {
-                    sandbox: 'allow-scripts',
-                    src: '/preview.html',
-                    oncreate: (ev: {dom: HTMLIFrameElement}) => {
-                        state.iframeRef = ev.dom
-                        let hasRun = false
-                        const doRun = () => {
-                            if (hasRun) return
-                            hasRun = true
-                            window.removeEventListener('message', onReady)
-                            this.run(vnode)
+            },
+            [
+                m('div.docs-sandbox-tabs', [
+                    m(
+                        'button',
+                        {
+                            type: 'button',
+                            class: activeTab === 'code' ? 'docs-sandbox-tab active' : 'docs-sandbox-tab',
+                            onclick: () => {
+                                state.activeTab = 'code'
+                                redraw()
+                            },
+                        },
+                        'Code',
+                    ),
+                    m(
+                        'button',
+                        {
+                            type: 'button',
+                            class: activeTab === 'preview' ? 'docs-sandbox-tab active' : 'docs-sandbox-tab',
+                            onclick: () => {
+                                state.activeTab = 'preview'
+                                redraw()
+                            },
+                        },
+                        'Preview',
+                    ),
+                ]),
+                m('div.docs-sandbox-editor', {
+                    class: activeTab !== 'code' ? 'docs-sandbox-panel-hidden' : undefined,
+                    oncreate: async (ev: {dom: HTMLElement}) => {
+                        if (typeof window === 'undefined') return
+                        const {EditorView, basicSetup} = await import('codemirror')
+                        const {javascript} = await import('@codemirror/lang-javascript')
+                        const {oneDark} = await import('@codemirror/theme-one-dark')
+                        const {EditorState} = await import('@codemirror/state')
+
+                        const scheduleRun = () => {
+                            if (state.debounceTimer) clearTimeout(state.debounceTimer)
+                            state.debounceTimer = setTimeout(() => this.run(vnode), 400)
                         }
-                        const onReady = (e: MessageEvent) => {
-                            if (e.source === ev.dom.contentWindow && e.data?.type === 'preview-ready') {
-                                doRun()
-                            }
-                        }
-                        window.addEventListener('message', onReady)
-                        ev.dom.addEventListener('load', () => {
-                            setTimeout(doRun, 150)
+                        const updateListener = EditorView.updateListener.of((update) => {
+                            if (update.docChanged) scheduleRun()
+                        })
+
+                        state.editorView = new EditorView({
+                            state: EditorState.create({
+                                doc: code,
+                                extensions: [basicSetup, javascript({jsx: lang === 'jsx'}), oneDark, updateListener],
+                            }),
+                            parent: ev.dom,
                         })
                     },
                     onremove: () => {
-                        state.iframeRef = undefined
+                        if (state.debounceTimer) clearTimeout(state.debounceTimer)
+                        state.editorView?.destroy()
                     },
                 }),
-            ] : []),
-        ])
+                m(
+                    'div.docs-sandbox-preview',
+                    {
+                        class: activeTab !== 'preview' ? 'docs-sandbox-panel-hidden' : undefined,
+                    },
+                    activeTab === 'preview'
+                        ? [
+                              m('iframe.docs-sandbox-iframe', {
+                                  sandbox: 'allow-scripts',
+                                  src: '/preview.html',
+                                  oncreate: (ev: {dom: HTMLIFrameElement}) => {
+                                      state.iframeRef = ev.dom
+                                      let hasRun = false
+                                      const doRun = () => {
+                                          if (hasRun) return
+                                          hasRun = true
+                                          window.removeEventListener('message', onReady)
+                                          this.run(vnode)
+                                      }
+                                      const onReady = (e: MessageEvent) => {
+                                          if (e.source === ev.dom.contentWindow && e.data?.type === 'preview-ready') {
+                                              doRun()
+                                          }
+                                      }
+                                      window.addEventListener('message', onReady)
+                                      ev.dom.addEventListener('load', () => {
+                                          setTimeout(doRun, 150)
+                                      })
+                                  },
+                                  onremove: () => {
+                                      state.iframeRef = undefined
+                                  },
+                              }),
+                          ]
+                        : [],
+                ),
+            ],
+        )
     }
 }

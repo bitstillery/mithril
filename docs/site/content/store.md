@@ -12,14 +12,21 @@ Some state should survive page reloads—user preferences, form drafts, cart con
 import m, {Store, MithrilComponent} from '@bitstillery/mithril'
 
 const store = new Store<{count: number}>()
-store.load({count: 0}, {}, {})  // saved, temporary, tab — count persists to localStorage
+store.load({count: 0}, {}, {}) // saved, temporary, tab — count persists to localStorage
 
 class App extends MithrilComponent {
     view() {
         return (
             <div>
                 <p>Count: {store.state.count} (persists across reloads)</p>
-                <button onclick={() => { store.state.count++; store.save() }}>Increment</button>
+                <button
+                    onclick={() => {
+                        store.state.count++
+                        store.save()
+                    }}
+                >
+                    Increment
+                </button>
             </div>
         )
     }

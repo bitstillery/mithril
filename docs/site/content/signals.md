@@ -4,7 +4,7 @@ Fine-grained reactivity with signals (inspired by Preact Signals)
 
 # Signals
 
-Traditional Mithril re-renders the whole tree when state changes. Signals add *fine-grained reactivity*: only components that actually read a signal re-render when it changes. The implementation was inspired by [Preact Signals](https://preactjs.com/guide/v10/signals).
+Traditional Mithril re-renders the whole tree when state changes. Signals add _fine-grained reactivity_: only components that actually read a signal re-render when it changes. The implementation was inspired by [Preact Signals](https://preactjs.com/guide/v10/signals).
 
 **How it works.** When a component's `view` runs, any signal or state property it accesses is tracked. When that value changes later, only that component (and its subtree) re-renders—not the entire app. Dependencies are automatic; no manual `m.redraw()` needed.
 
@@ -19,7 +19,9 @@ class App extends MithrilComponent {
     view() {
         return (
             <div>
-                <p>Count: {$s.count}, Doubled: {$s.doubled}</p>
+                <p>
+                    Count: {$s.count}, Doubled: {$s.doubled}
+                </p>
                 <button onclick={() => $s.count++}>Increment</button>
             </div>
         )

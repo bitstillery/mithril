@@ -52,8 +52,16 @@ m.route(document.body, '/home', {
 #### m.route.set(path) - [docs](route.md#mrouteset)
 
 ```javascript
-var Home = { view: function () { return m('div', 'Home') } }
-var Page1 = { view: function () { return m('div', 'Page 1') } }
+var Home = {
+    view: function () {
+        return m('div', 'Home')
+    },
+}
+var Page1 = {
+    view: function () {
+        return m('div', 'Page 1')
+    },
+}
 m.route(document.body, '/home', {'/home': Home, '/page1': Page1})
 m.route.set('/page1')
 // Output: Page 1
@@ -62,7 +70,11 @@ m.route.set('/page1')
 #### m.route.get() - [docs](route.md#mrouteget)
 
 ```javascript
-var Home = { view: function () { return m('div', 'Route: ' + m.route.get()) } }
+var Home = {
+    view: function () {
+        return m('div', 'Route: ' + m.route.get())
+    },
+}
 m.route(document.body, '/home', {'/home': Home})
 // Output: Route: /home
 ```
@@ -73,7 +85,11 @@ Invoke this before `m.route()` to change the routing prefix.
 
 ```javascript
 m.route.prefix = '#!'
-var Home = { view: function () { return m('div', 'Prefix: ' + m.route.prefix) } }
+var Home = {
+    view: function () {
+        return m('div', 'Prefix: ' + m.route.prefix)
+    },
+}
 m.route(document.body, '/', {'/': Home})
 // Output: Prefix: #!
 ```

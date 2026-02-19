@@ -55,24 +55,24 @@ function extractTitle(markdown: string): string {
 const h1UlHrPattern = /(<h1[^>]*>[\s\S]*?<\/h1>\s*)(<ul[^>]*>[\s\S]*?<\/ul>)(\s*<hr\/?>)/
 
 function escapeHtml(text: string): string {
-    return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
+    return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
 function buildPageTocFromHeadings(basePath: string): {html: string; headings: TocHeading[]} | undefined {
     const headings = getHeadingList()
     const subHeadings = headings.filter((h) => h.level === 3 || h.level === 4)
     if (subHeadings.length === 0) return undefined
-    const items = subHeadings
-        .map((h) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`)
-        .join('\n')
+    const items = subHeadings.map((h) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`).join('\n')
     return {
         html: `<ul class="docs-sidebar-toc">\n${items}\n</ul>`,
         headings: subHeadings.map((h) => ({id: h.id, raw: h.raw})),
     }
+}
+
+/** Rewrite hash-only hrefs to use full path (fixes <base href> breaking same-page anchors). */
+function rewriteHashOnlyLinks(html: string, basePath: string): string {
+    const path = basePath.startsWith('/') ? basePath : `/${basePath}`
+    return html.replace(/href="#([^"]*)"/g, `href="${path}#$1"`)
 }
 
 export async function loadMarkdownFile(filePath: string, basePath: string): Promise<DocPage> {
@@ -89,6 +89,8 @@ export async function loadMarkdownFile(filePath: string, basePath: string): Prom
     if (match && typeof match.index === 'number') {
         html = html.slice(0, match.index) + match[1] + html.slice(match.index + match[0].length)
     }
+
+    html = rewriteHashOnlyLinks(html, basePath)
 
     return {
         title,

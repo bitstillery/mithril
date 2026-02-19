@@ -43,16 +43,21 @@ h5 {
     margin: 0 auto;
     max-width: 1280px;
     position: relative;
+    padding-top: 80px;
 }
 
 #app .docs-container > header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 2;
     background: var(--od-bg);
 }
 
-header .header-section {
+#app .docs-container > header .header-section {
+    max-width: 1280px;
+    margin: 0 auto;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -65,6 +70,12 @@ header .header-brand {
     display: flex;
     align-items: center;
     gap: 8px;
+}
+
+header .header-brand .logo {
+    height: 1.5em;
+    width: auto;
+    vertical-align: middle;
 }
 
 .docs-body {
@@ -81,15 +92,20 @@ header .header-brand {
     }
 }
 
-.docs-sidebar {
+.docs-sidebar-wrapper {
     flex-shrink: 0;
     width: 260px;
+}
+
+.docs-sidebar {
+    position: fixed;
+    left: max(0px, calc((100vw - 1280px) / 2));
+    top: 80px;
+    width: 260px;
     padding-right: 24px;
-    position: sticky;
-    top: 60px;
-    align-self: flex-start;
-    max-height: calc(100vh - 60px);
+    max-height: calc(100vh - 80px);
     overflow-y: auto;
+    z-index: 1;
 }
 
 .docs-nav-sections {
@@ -142,6 +158,12 @@ header .header-brand {
         color: var(--od-text);
         font-weight: 600;
     }
+}
+
+.docs-nav-link a.docs-nav-link-external::after {
+    content: ' ↗';
+    font-size: 0.85em;
+    opacity: 0.8;
 }
 
 .docs-nav-page-toc .docs-sidebar-toc {
@@ -395,6 +417,21 @@ h1 {
         font-size: 16px;
     }
 
+    .version-aa {
+        color: var(--od-red);
+        font-weight: bold;
+    }
+
+    .version-aa-icon {
+        margin-left: 0.2em;
+        width: 1em;
+        height: 1em;
+        display: inline-block;
+        vertical-align: -0.15em;
+        color: var(--od-red);
+        opacity: 0.9;
+    }
+
     small {
         font-size: 16px;
     }
@@ -551,6 +588,7 @@ h5 {
         margin: 0 0 20px;
     }
 
+    .docs-sidebar-wrapper,
     .docs-sidebar {
         display: none;
     }
@@ -668,6 +706,7 @@ h5 {
 
 @media print {
     nav,
+    .docs-sidebar-wrapper,
     .docs-sidebar {
         display: none;
     }
@@ -822,4 +861,22 @@ h5 {
     border-radius: 4px;
     background: var(--od-bg);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Tippy.js theme for docs (One Dark) */
+.tippy-box[data-theme~='docs-one-dark'] {
+    background: var(--od-bg-highlight);
+    color: var(--od-text);
+    border: 1px solid var(--od-selection);
+}
+
+.tippy-box[data-theme~='docs-one-dark'] > .tippy-arrow::before {
+    border-top-color: var(--od-bg-highlight);
+    border-bottom-color: var(--od-bg-highlight);
+    border-left-color: var(--od-bg-highlight);
+    border-right-color: var(--od-bg-highlight);
+}
+
+.docs-tippy-wrap {
+    cursor: help;
 }

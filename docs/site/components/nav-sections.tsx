@@ -31,7 +31,7 @@ function isLinkActive(linkHref: string, currentPath: string): boolean {
 function renderNavLink(link: {text: string; href: string; external?: boolean}) {
     const path = link.href.startsWith('/') ? link.href : `/${link.href}`
     return link.external ? (
-        <a href={link.href} target='_blank' rel='noreferrer noopener'>
+        <a href={link.href} target='_blank' rel='noreferrer noopener' class='docs-nav-link-external' title='Opens in new tab'>
             {link.text}
         </a>
     ) : (
@@ -57,21 +57,38 @@ export class NavSections extends MithrilComponent<NavSectionsAttrs> {
                                     const href = link.href.startsWith('/') ? link.href : `/${link.href}`
                                     const active = isLinkActive(href, routePath)
                                     const items: Vnode[] = [
-                                        m('div', {
-                                            class: `docs-nav-link${active ? ' docs-nav-link--active' : ''}`,
-                                        }, renderNavLink(link)),
+                                        m(
+                                            'div',
+                                            {
+                                                class: `docs-nav-link${active ? ' docs-nav-link--active' : ''}`,
+                                            },
+                                            renderNavLink(link),
+                                        ),
                                     ]
                                     if (active && (pageToc || pageTocHeadings?.length)) {
-                                        const toc = pageTocHeadings?.length && basePath
-                                            ? m('ul', {class: 'docs-sidebar-toc'}, pageTocHeadings.map((h) =>
-                                                m('li',
-                                                    m('a', {
-                                                        href: `${basePath}#${h.id}`,
-                                                        class: activeAnchorId === h.id ? 'docs-toc-link--active' : '',
-                                                    }, h.raw),
-                                                ),
-                                            ))
-                                            : pageToc ? m('div', {class: 'docs-nav-page-toc'}, m.trust(pageToc)) : null
+                                        const toc =
+                                            pageTocHeadings?.length && basePath
+                                                ? m(
+                                                      'ul',
+                                                      {class: 'docs-sidebar-toc'},
+                                                      pageTocHeadings.map((h) =>
+                                                          m(
+                                                              'li',
+                                                              m(
+                                                                  'a',
+                                                                  {
+                                                                      href: `${basePath}#${h.id}`,
+                                                                      class:
+                                                                          activeAnchorId === h.id ? 'docs-toc-link--active' : '',
+                                                                  },
+                                                                  h.raw,
+                                                              ),
+                                                          ),
+                                                      ),
+                                                  )
+                                                : pageToc
+                                                  ? m('div', {class: 'docs-nav-page-toc'}, m.trust(pageToc))
+                                                  : null
                                         if (toc) items.push(m('div', {class: 'docs-nav-page-toc'}, toc))
                                     }
                                     return items

@@ -23,11 +23,15 @@ export class DocsSidebar extends MithrilComponent<DocsSidebarAttrs> {
         const {sections = [], pageToc, pageTocHeadings, routePath, activeAnchorId} = vnode.attrs ?? {}
         const hasContent = sections?.length
         if (!hasContent) return null
-        const basePath = routePath ? (routePath.split('#')[0] || '/') : '/'
+        const basePath = routePath ? routePath.split('#')[0] || '/' : '/'
         return m(
-            'aside',
-            {class: 'docs-sidebar'},
-            m(NavSections as any, {sections, routePath, pageToc, pageTocHeadings, activeAnchorId, basePath}),
+            'div',
+            {class: 'docs-sidebar-wrapper'},
+            m(
+                'aside',
+                {class: 'docs-sidebar'},
+                m(NavSections as any, {sections, routePath, pageToc, pageTocHeadings, activeAnchorId, basePath}),
+            ),
         )
     }
 }

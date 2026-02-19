@@ -48,12 +48,12 @@ You can also use [TSX or htm](jsx.md) for an HTML-like syntax. This is equivalen
 
 `vnode = m(selector, attrs, children)`
 
-| Argument    | Type                                  | Required | Description                                                                 |
-| ----------- | ------------------------------------- | -------- | --------------------------------------------------------------------------- |
-| `selector`  | `String` &#124; `Object` &#124; `Function` | Yes      | A CSS selector or a [component](components.md)                               |
-| `attrs`     | `Object`                              | No       | HTML attributes or element properties                                       |
+| Argument    | Type                                                            | Required | Description                                                                                    |
+| ----------- | --------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
+| `selector`  | `String` &#124; `Object` &#124; `Function`                      | Yes      | A CSS selector or a [component](components.md)                                                 |
+| `attrs`     | `Object`                                                        | No       | HTML attributes or element properties                                                          |
 | `children`  | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
-| **returns** | `Vnode`                               |          | A [vnode](vnodes.md#structure)                                              |
+| **returns** | `Vnode`                                                         |          | A [vnode](vnodes.md#structure)                                                                 |
 
 [How to read signatures](signatures.md)
 
@@ -283,10 +283,7 @@ function doSomething(e) {
 
 m.mount(document.body, {
     view: function () {
-        return m('div', [
-            m('div', {onclick: doSomething}, 'Click me'),
-            output ? m('p', output) : null,
-        ])
+        return m('div', [m('div', {onclick: doSomething}, 'Click me'), output ? m('p', output) : null])
     },
 })
 // Output (after click): Clicked: click
@@ -304,10 +301,7 @@ var clickListener = {
 
 m.mount(document.body, {
     view: function () {
-        return m('div', [
-            m('div', {onclick: clickListener}, 'Click me'),
-            output ? m('p', output) : null,
-        ])
+        return m('div', [m('div', {onclick: clickListener}, 'Click me'), output ? m('p', output) : null])
     },
 })
 // Output (after click): Event: click
@@ -320,12 +314,16 @@ var clickCount = 0
 m.mount(document.body, {
     view: function () {
         return m('div', [
-            m('div', {
-                onclick: function (e) {
-                    clickCount++
-                    e.redraw = false
+            m(
+                'div',
+                {
+                    onclick: function (e) {
+                        clickCount++
+                        e.redraw = false
+                    },
                 },
-            }, 'Click me (no auto-redraw)'),
+                'Click me (no auto-redraw)',
+            ),
             m('p', 'Clicks: ' + clickCount),
         ])
     },
@@ -391,10 +389,7 @@ function initialize(vnode) {
 
 m.mount(document.body, {
     view: function () {
-        return m('div', {oninit: initialize}, [
-            m('span', 'Hello'),
-            output ? m('p', output) : null,
-        ])
+        return m('div', {oninit: initialize}, [m('span', 'Hello'), output ? m('p', output) : null])
     },
 })
 // Output: Initialized: div

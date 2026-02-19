@@ -4,7 +4,9 @@ import {DocPage} from '../markdown'
 
 import {CodeBlock} from './code-block'
 import {DocsSidebar} from './docs-sidebar'
+import {Icon} from './icon'
 import {Sandbox} from './sandbox'
+import {Tippy} from './tippy'
 
 import type {NavSection} from '../store'
 
@@ -39,7 +41,12 @@ const BodyContentWrapper = {
             <div class={`body ${extraClass}`} key={path}>
                 {m.trust(page?.content ?? '')}
                 <div class='footer'>
-                    <div>License: MIT. © Mithril Contributors. <a href='https://www.npmjs.com/package/@bitstillery/mithril'><img src='https://img.shields.io/npm/v/@bitstillery/mithril' alt='npm' /></a></div>
+                    <div>
+                        License: MIT. © Mithril Contributors.{' '}
+                        <a href='https://www.npmjs.com/package/@bitstillery/mithril'>
+                            <img src='https://img.shields.io/npm/v/@bitstillery/mithril' alt='npm' />
+                        </a>
+                    </div>
                     <div>
                         <a
                             href={`https://github.com/bitstillery/mithril/edit/main/docs/site/content/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
@@ -73,6 +80,8 @@ const apiPagePatterns = [
 ]
 
 const HASH_NAV_DEBOUNCE_MS = 500
+
+const VERSION_AA_TOOLTIP = 'AA = AI-Augmented — this software was developed with AI-assisted coding tools'
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
     activeAnchorId: string | null = null
@@ -215,29 +224,59 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                                 ≡
                             </a>
                             <h1>
-                                <img src='/logo.svg' alt='Mithril' />
-                                Mithril <span class='version'>v{version}</span>
+                                <img src='/logo.svg' alt='Mithril' class='logo' />
+                                Mithril{' '}
+                                <span class='version'>
+                                    {version.endsWith('-AA')
+                                        ? [
+                                              'v',
+                                              version.slice(0, -3),
+                                              m(Tippy as any, {content: VERSION_AA_TOOLTIP, id: 'version-aa-tippy'}, [
+                                                  m('span', {class: 'version-aa'}, ' AA'),
+                                                  m(Icon as any, {name: 'info', class: 'version-aa-icon'}),
+                                              ]),
+                                          ]
+                                        : `v${version}`}
+                                </span>
                             </h1>
                         </div>
                         <nav>
-                            {m(m.route.Link, {
-                                href: '/',
-                                class: !isApiPage && currentPath !== '/support' ? 'active' : undefined,
-                            }, 'Guide')}
-                            {m(m.route.Link, {
-                                href: '/api',
-                                class: isApiPage ? 'active' : undefined,
-                            }, 'API')}
-                            {m(m.route.Link, {
-                                href: '/support',
-                                class: currentPath === '/support' ? 'active' : undefined,
-                            }, 'Support')}
+                            {m(
+                                m.route.Link,
+                                {
+                                    href: '/',
+                                    class: !isApiPage && currentPath !== '/support' ? 'active' : undefined,
+                                },
+                                'Guide',
+                            )}
+                            {m(
+                                m.route.Link,
+                                {
+                                    href: '/api',
+                                    class: isApiPage ? 'active' : undefined,
+                                },
+                                'API',
+                            )}
+                            {m(
+                                m.route.Link,
+                                {
+                                    href: '/support',
+                                    class: currentPath === '/support' ? 'active' : undefined,
+                                },
+                                'Support',
+                            )}
                             <a href='https://github.com/bitstillery/mithril'>GitHub</a>
                         </nav>
                     </section>
                 </header>
                 <div class='docs-body'>
-                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} pageTocHeadings={displayPage.pageTocHeadings} routePath={currentPath} activeAnchorId={this.activeAnchorId} />
+                    <DocsSidebar
+                        sections={navSections}
+                        pageToc={displayPage.pageToc}
+                        pageTocHeadings={displayPage.pageTocHeadings}
+                        routePath={currentPath}
+                        activeAnchorId={this.activeAnchorId ?? undefined}
+                    />
                     <main>{mainContent}</main>
                 </div>
             </div>
@@ -269,7 +308,8 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
             const staticBlocks = body.querySelectorAll('pre code[class*="language-"]')
             ;[].forEach.call(staticBlocks, (codeEl: HTMLElement) => {
                 if (codeEl.closest('.docs-sandbox') || codeEl.closest('.docs-code-block')) return
-                const isJs = codeEl.classList.contains('language-js') ||
+                const isJs =
+                    codeEl.classList.contains('language-js') ||
                     codeEl.classList.contains('language-javascript') ||
                     codeEl.classList.contains('language-jsx') ||
                     codeEl.classList.contains('language-tsx')

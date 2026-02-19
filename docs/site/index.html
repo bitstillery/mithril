@@ -28,6 +28,10 @@
                         if (currentPath.endsWith('/')) currentPath = currentPath.slice(0, -1) || '/'
                         if (path.endsWith('/')) path = path.slice(0, -1) || '/'
                         if (isAnchor && (path === '' || path === currentPath)) return
+                        window.scrollTo(0, 0)
+                        if (path === currentPath && window.location.hash) {
+                            history.replaceState(null, '', window.location.pathname + window.location.search)
+                        }
                     }
                     document.body.className = ''
                 }

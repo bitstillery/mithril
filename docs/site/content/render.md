@@ -28,12 +28,12 @@ m.render(document.body, 'hello')
 
 `m.render(element, vnodes, redraw)`
 
-| Argument    | Type          | Required | Description                                                             |
-| ----------- | ------------- | -------- | ----------------------------------------------------------------------- |
-| `element`   | `Element`     | Yes      | A DOM element that will be the parent node to the subtree               |
-| `vnodes`    | `Array<Vnode>` &#124; `Vnode` | Yes | The [vnodes](vnodes.md) to be rendered |
-| `redraw`    | `() -> any`   | No       | A callback invoked each time an event handler in the subtree is invoked |
-| **returns** |               |          | Returns `undefined`                                                     |
+| Argument    | Type                          | Required | Description                                                             |
+| ----------- | ----------------------------- | -------- | ----------------------------------------------------------------------- |
+| `element`   | `Element`                     | Yes      | A DOM element that will be the parent node to the subtree               |
+| `vnodes`    | `Array<Vnode>` &#124; `Vnode` | Yes      | The [vnodes](vnodes.md) to be rendered                                  |
+| `redraw`    | `() -> any`                   | No       | A callback invoked each time an event handler in the subtree is invoked |
+| **returns** |                               |          | Returns `undefined`                                                     |
 
 [How to read signatures](signatures.md)
 

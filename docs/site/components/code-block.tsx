@@ -43,12 +43,7 @@ export class CodeBlock extends MithrilComponent<CodeBlockAttrs> {
                 state.editorView = new EditorView({
                     state: EditorState.create({
                         doc: code,
-                        extensions: [
-                            EditorState.readOnly.of(true),
-                            EditorView.editable.of(false),
-                            langExtension,
-                            oneDark,
-                        ],
+                        extensions: [EditorState.readOnly.of(true), EditorView.editable.of(false), langExtension, oneDark],
                     }),
                     parent: ev.dom,
                 })

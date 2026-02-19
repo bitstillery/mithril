@@ -13,10 +13,7 @@ Mithril views can be written in three ways:
 Plain JavaScript — no build step. Use `m(tag, attrs, children)`:
 
 ```js
-m('div', {class: 'card'}, [
-    m('h1', 'Title'),
-    m('button', {onclick: () => alert('hi')}, 'Click'),
-])
+m('div', {class: 'card'}, [m('h1', 'Title'), m('button', {onclick: () => alert('hi')}, 'Click')])
 ```
 
 ---
@@ -26,7 +23,7 @@ m('div', {class: 'card'}, [
 JSX with Bun — set `jsxFactory: "m"` in `tsconfig.json`. See [Setup](setup.md).
 
 ```tsx
-<div class="card">
+<div class='card'>
     <h1>Title</h1>
     <button onclick={() => alert('hi')}>Click</button>
 </div>

@@ -14,12 +14,24 @@ Use CSS animations for enter effects. Use `onbeforeremove` to animate before rem
     animation: slide-out 0.4s ease-in;
 }
 @keyframes slide-in {
-    from { opacity: 0; transform: translateY(-12px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 @keyframes slide-out {
-    from { opacity: 1; transform: translateY(0); }
-    to { opacity: 0; transform: translateY(-12px); }
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
 }
 ```
 
@@ -36,7 +48,11 @@ class Box extends MithrilComponent {
         })
     }
     view() {
-        return <div class="animate-in" style="padding:12px;background:#2c313c;border-radius:4px;">Hello</div>
+        return (
+            <div class='animate-in' style='padding:12px;background:#2c313c;border-radius:4px;'>
+                Hello
+            </div>
+        )
     }
 }
 

@@ -39,6 +39,10 @@ export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
                 $docs.loading = false
             }
         } else {
+            // Scroll to top when navigating to a new page (unless URL has hash - let browser scroll to anchor)
+            if (!window.location.hash) {
+                window.scrollTo(0, 0)
+            }
             // Skip fetch if we already have SSR data for this route (hydration)
             if ($docs.routePath === attrs.routePath && $docs.page && !$docs.loading) {
                 return

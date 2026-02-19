@@ -28,7 +28,7 @@ Architecture Decision Records are documents that capture important architectural
 | [0011](./0011-hydration-mismatch-recovery.md)               | Hydration Mismatch Recovery                                             | Accepted | 2025-01-29 |
 | [0012](./0012-mithril-signals-store-ssr-architecture.md)    | Mithril Signals, Store, and SSR Architecture Overview                   | Accepted | 2025-02-02 |
 | [0013](./0013-deferred-computed-evaluation.md)              | Deferred Computed Property Evaluation                                   | Proposed | 2025-02-12 |
-| [0014](./0014-documentation-modernization.md)               | Documentation Modernization for Bitstillery Mithril Fork                 | Proposed | 2025-02-19 |
+| [0014](./0014-documentation-modernization.md)               | Documentation Modernization for Bitstillery Mithril Fork                | Proposed | 2025-02-19 |
 
 ## Status Definitions
 

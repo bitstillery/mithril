@@ -8,12 +8,12 @@ Signature sections typically look like this:
 
 `vnode = m(selector, attributes, children)`
 
-| Argument     | Type                                      | Required | Description                                                                 |
-| ------------ | ----------------------------------------- | -------- | --------------------------------------------------------------------------- |
-| `selector`   | `String` &#124; `Object`                    | Yes      | A CSS selector or a component                                               |
-| `attributes` | `Object`                                  | No       | HTML attributes or element properties                                       |
+| Argument     | Type                                                            | Required | Description                                                                          |
+| ------------ | --------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------ |
+| `selector`   | `String` &#124; `Object`                                        | Yes      | A CSS selector or a component                                                        |
+| `attributes` | `Object`                                                        | No       | HTML attributes or element properties                                                |
 | `children`   | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md). Can be written as [splat arguments](signatures.md#splats) |
-| **returns**  | `Vnode`                                   |          | A [vnode](vnodes.md)                                                        |
+| **returns**  | `Vnode`                                                         |          | A [vnode](vnodes.md)                                                                 |
 
 The signature line above the table indicates the general syntax of the method, showing the name of the method, the order of its arguments and a suggested variable name for its return value.
 
@@ -65,14 +65,14 @@ Components are denoted via calls to `m`, but with the initial selector argument 
 
 `vnode = m(m.route.Link, attributes, children)`
 
-| Argument              | Type                                            | Required | Description                                                                                    |
-| --------------------- | ----------------------------------------------- | -------- | ---------------------------------------------------------------------------------------------- |
-| `attributes.href`     | `Object`                                        | Yes      | The target route to navigate to.                                                              |
-| `attributes.selector` | `String` &#124; `Object` &#124; `Function`       | No       | This sets the tag name to use. Must be a valid selector for [`m`](hyperscript.md) if given, defaults to `"a"`. |
-| `attributes.options`  | `Object`                                        | No       | This sets the options passed to [`m.route.set`](#mrouteset).                                   |
-| `attributes`          | `Object`                                        | No       | Other attributes to apply to the returned vnode may be passed.                                |
-| `children`            | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md) for this link.                                                       |
-| **returns**           | `Vnode`                                         |          | A [vnode](vnodes.md).                                                                          |
+| Argument              | Type                                                            | Required | Description                                                                                                    |
+| --------------------- | --------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------- |
+| `attributes.href`     | `Object`                                                        | Yes      | The target route to navigate to.                                                                               |
+| `attributes.selector` | `String` &#124; `Object` &#124; `Function`                      | No       | This sets the tag name to use. Must be a valid selector for [`m`](hyperscript.md) if given, defaults to `"a"`. |
+| `attributes.options`  | `Object`                                                        | No       | This sets the options passed to [`m.route.set`](#mrouteset).                                                   |
+| `attributes`          | `Object`                                                        | No       | Other attributes to apply to the returned vnode may be passed.                                                 |
+| `children`            | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md) for this link.                                                                       |
+| **returns**           | `Vnode`                                                         |          | A [vnode](vnodes.md).                                                                                          |
 
 Children here, if specified, are assumed to be able to be written as [splat arguments](#splats), unless otherwise specified in prose.
 

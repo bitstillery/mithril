@@ -21,10 +21,7 @@ describe('Counter', () => {
     })
 
     test('computed values track dependencies', () => {
-        const s = state(
-            {count: 0, doubled: () => s.count * 2},
-            'test.computed',
-        )
+        const s = state({count: 0, doubled: () => s.count * 2}, 'test.computed')
         expect(s.doubled).toBe(0)
         s.count = 3
         expect(s.doubled).toBe(6)
