@@ -62,6 +62,7 @@ const bunConfig = createBunSSRConfig({
 })
 
 // Match bun_example: "/*": index as catch-all so Bun serves client.tsx with HMR
+// @ts-expect-error Bun types overload requires websocket when development is set
 const server = serve({
     ...bunConfig,
     routes: {
@@ -70,10 +71,7 @@ const server = serve({
         '/logo.svg': Bun.file(join(staticAssetsDir, 'logo.svg')),
         '/app.js': Bun.file(join(staticAssetsDir, 'app.js')),
     },
-    development: isDev && {
-        hmr: true,
-        console: true,
-    },
+    ...(isDev && {development: {hmr: true, console: true}}),
     async fetch(req) {
         const url = new URL(req.url)
         const pathname = url.pathname

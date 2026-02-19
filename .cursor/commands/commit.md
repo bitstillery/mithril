@@ -13,9 +13,9 @@ Create a conventional commit and push. Use `/commit` to run.
 4. **Commit message**: Conventional format `type(scope): subject`. Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`, `perf`, `ci`, `build`. Scope from path: `api`, `render`, `docs`, `examples`, `server`, or `core`. Subject: imperative, lowercase, no period.
 
 5. **Commit & push**:
-   ```bash
-   .cursor/scripts/commit.sh "type(scope): subject"
-   ```
+    ```bash
+    .cursor/scripts/commit.sh "type(scope): subject"
+    ```
 
 ## Note
 

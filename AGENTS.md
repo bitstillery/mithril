@@ -356,9 +356,9 @@ This command runs the test suite. The `AGENT=1` environment variable can be used
 
 **Run linting commands for code quality:**
 
-- **Style linting**: `bun run lint:ts:format` - Checks code style and formatting
-- **Syntax linting**: `bun run lint:ts:syntax` - Checks TypeScript syntax errors
-- **Type linting**: `bun run lint:ts:types` - Checks TypeScript type errors
+- **Style linting**: `bun run lint:ts-format` - Checks code style and formatting
+- **Syntax linting**: `bun run lint:ts-syntax` - Checks TypeScript syntax errors
+- **Type linting**: `bun run lint:ts-types` - Checks TypeScript type errors
 
 Always run these linting commands before submitting code changes to ensure code quality and consistency.
 

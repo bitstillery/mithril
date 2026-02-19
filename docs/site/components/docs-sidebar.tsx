@@ -1,5 +1,6 @@
 import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
+
 import {NavSections} from './nav-sections'
 
 import type {NavSection} from '../store'

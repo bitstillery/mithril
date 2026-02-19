@@ -34,7 +34,7 @@ const apiPagePatterns = [
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
     view(vnode: Vnode<LayoutAttrs>) {
-        const attrs = vnode.attrs ?? {}
+        const attrs = (vnode.attrs ?? {}) as LayoutAttrs
         const {page, navGuides = [], navMethods = [], version = '2.3.8'} = attrs
 
         if (!page || !page.content) {
@@ -50,8 +50,7 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
             }
         }
 
-        globalThis.m = m
-        console.log('M', m)
+        ;(globalThis as any).m = m
 
         const isApiPage = currentPath.startsWith('/api') || apiPagePatterns.some((p) => currentPath.includes(p))
         const navSections = isApiPage ? navMethods : navGuides

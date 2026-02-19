@@ -13,15 +13,16 @@ interface DocPageAttrs {
 
 export class DocPageComponent extends MithrilComponent<DocPageAttrs> {
     view(vnode: Vnode<DocPageAttrs>) {
-        if (!vnode.attrs.page) {
+        const attrs = (vnode.attrs ?? {}) as DocPageAttrs
+        if (!attrs.page) {
             return m('div', 'No page data')
         }
         return m(Layout as any, {
-            page: vnode.attrs.page,
-            routePath: vnode.attrs.routePath,
-            navGuides: vnode.attrs.navGuides,
-            navMethods: vnode.attrs.navMethods,
-            version: vnode.attrs.version,
+            page: attrs.page,
+            routePath: attrs.routePath,
+            navGuides: attrs.navGuides,
+            navMethods: attrs.navMethods,
+            version: attrs.version,
         })
     }
 }
