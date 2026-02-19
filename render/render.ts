@@ -879,7 +879,17 @@ export default function renderFactory() {
 		let val: any
 		if (old != null) {
 			if (old === attrs && !cachedAttrsIsStaticMap.has(attrs!)) {
-				console.warn('Don\'t reuse attrs object, use new object for every redraw, this will throw in next major')
+				// Diagnostic: log element tag and attrs to identify the source
+				console.warn(
+					'Don\'t reuse attrs object, use new object for every redraw, this will throw in next major',
+					'element:',
+					vnode.tag,
+					'attrs keys:',
+					attrs != null ? Object.keys(attrs) : [],
+					'dom:',
+					vnode.dom,
+				)
+				console.trace()
 			}
 			for (const key in old) {
 				if (((val = old[key]) != null) && (attrs == null || attrs[key] == null)) {
@@ -1096,7 +1106,7 @@ export default function renderFactory() {
 			// Check if we've exceeded mismatch threshold after processing nodes
 			// If so, clear and re-render from scratch (client VDOM wins)
 			if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
-				logger.warn(`Hydration mismatch threshold exceeded. Clearing parent and re-rendering from client VDOM.`, {
+				logger.warn('Hydration mismatch threshold exceeded. Clearing parent and re-rendering from client VDOM.', {
 					mismatchCount: hydrationMismatchCount,
 					threshold: MAX_HYDRATION_MISMATCHES,
 				})

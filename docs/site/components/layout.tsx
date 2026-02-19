@@ -46,13 +46,13 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
 							<img src="/logo.svg" alt="Mithril" />
 							Mithril <span class="version">v{version}</span>
 						</h1>
+						{navSections?.length ? m(NavSections as any, {sections: navSections}) : null}
 						<nav>
 							{m(m.route.Link, {href: '/'}, 'Guide')}
 							{m(m.route.Link, {href: '/api.html'}, 'API')}
 							<a href="https://mithril.zulipchat.com/">Chat</a>
 							<a href="https://github.com/MithrilJS/mithril.js">GitHub</a>
 						</nav>
-						{navSections?.length ? m(NavSections as any, {sections: navSections}) : null}
 					</section>
 				</header>
 				<main>
@@ -68,21 +68,18 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
 		)
 	}
 	
-	oncreate(_vnode: Vnode<LayoutAttrs>) {
-		// Setup hamburger menu
-		const hamburger = document.querySelector('.hamburger')
-		if (hamburger) {
-			hamburger.addEventListener('click', () => {
-				document.body.className = document.body.className === 'navigating' ? '' : 'navigating'
-			})
-		}
-		
-		// Setup nav menu close on click
-		const navList = document.querySelector('h1 + ul')
-		if (navList) {
-			navList.addEventListener('click', () => {
-				document.body.className = ''
-			})
+	oncreate(vnode: Vnode<LayoutAttrs>) {
+		this.highlightCode()
+	}
+
+	onupdate(vnode: Vnode<LayoutAttrs>) {
+		this.highlightCode()
+	}
+
+	highlightCode() {
+		if (typeof (globalThis as any).Prism !== 'undefined') {
+			const body = document.querySelector('.body')
+			if (body) (globalThis as any).Prism.highlightAllUnder(body)
 		}
 	}
 }

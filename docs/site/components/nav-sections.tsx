@@ -28,7 +28,7 @@ export class NavSections extends MithrilComponent<NavSectionsAttrs> {
 					return m('li', navLink(section.links[0]))
 				}
 				return m('li', [
-					section.title,
+					m('strong', section.title),
 					m('ul', section.links.map((link) => m('li', navLink(link)))),
 				])
 			}),
