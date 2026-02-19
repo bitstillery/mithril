@@ -889,7 +889,6 @@ export default function renderFactory() {
 					'dom:',
 					vnode.dom,
 				)
-				console.trace()
 			}
 			for (const key in old) {
 				if (((val = old[key]) != null) && (attrs == null || attrs[key] == null)) {

@@ -1,5 +1,7 @@
 /// <reference path="./jsx.d.ts" />
 import hyperscript from './render/hyperscript'
+import {logger} from './server/logger'
+import {version} from './version'
 import mountRedrawFactory from './api/mount-redraw'
 import routerFactory from './api/router'
 import renderFactory from './render/render'
@@ -18,6 +20,8 @@ import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
 import type {Route, RouteResolver, RedirectObject} from './api/router'
 import type {Render, Redraw, Mount} from './api/mount-redraw'
+
+logger.info(`[Mithril] initializing version ${version}`)
 
 export interface MithrilStatic {
 	m: Hyperscript

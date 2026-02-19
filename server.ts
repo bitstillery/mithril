@@ -1,5 +1,8 @@
 import hyperscript from './render/hyperscript'
+import {logger} from './server/logger'
+import {version} from './version'
 import {renderToStringFactory} from './render/renderToString'
+
 import routerFactory from './api/router'
 import parseQueryString from './querystring/parse'
 import buildQueryString from './querystring/build'
@@ -10,6 +13,8 @@ import censor from './util/censor'
 
 import type {MithrilStatic, Hyperscript} from './index'
 import type {Redraw} from './api/mount-redraw'
+
+logger.info(`[Mithril] server initializing version ${version}`)
 
 // Create server-side renderer
 const {renderToString, renderToStringSync} = renderToStringFactory()
