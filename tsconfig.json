@@ -7,6 +7,7 @@
         "jsxFragmentFactory": "m.Fragment",
         "lib": ["ES2023", "DOM"],
         "moduleResolution": "bundler",
+        "allowImportingTsExtensions": true,
         "allowJs": true,
         "checkJs": false,
         "strict": true,

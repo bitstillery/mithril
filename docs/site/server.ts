@@ -76,6 +76,65 @@ const server = serve({
         const url = new URL(req.url)
         const pathname = url.pathname
 
+        // API: transpile JSX to JS for sandbox preview
+        if (pathname === '/api/transpile' && req.method === 'POST') {
+            try {
+                const MAX_SIZE = 50_000
+                const body = await req.text()
+                if (body.length > MAX_SIZE) {
+                    return new Response(JSON.stringify({error: 'Code too large'}), {
+                        status: 400,
+                        headers: {'Content-Type': 'application/json'},
+                    })
+                }
+                const {code} = JSON.parse(body) as {code?: string}
+                if (typeof code !== 'string') {
+                    return new Response(JSON.stringify({error: 'Invalid request'}), {
+                        status: 400,
+                        headers: {'Content-Type': 'application/json'},
+                    })
+                }
+                const transpiler = new Bun.Transpiler({
+                    loader: 'jsx',
+                    tsconfig: {
+                        compilerOptions: {
+                            jsx: 'react',
+                            jsxFactory: 'm',
+                            jsxFragmentFactory: 'm.Fragment',
+                        },
+                    },
+                })
+                // Strip leading comments (Bun returns empty for // comment + bare JSX)
+                const stripped = code.replace(/^(\s*\/\/[^\n]*\n?)+/, '').trim()
+                // Bare JSX expressions return empty; wrap so they parse
+                const isBareJsx = /^\s*</.test(stripped)
+                const toTransform = isBareJsx ? `var __ = ${stripped}` : code
+                let js = transpiler.transformSync(toTransform, 'jsx')
+                if (!js && isBareJsx) {
+                    js = transpiler.transformSync(`var __ = ${stripped}`, 'jsx')
+                }
+                if (js && isBareJsx) {
+                    js = js + '\nm.render(document.getElementById("preview-root"), __)'
+                }
+                // Component-only: no m.render/m.mount — inject m.mount with PascalCase component
+                if (js && !/m\.(render|mount)\s*\(/.test(js)) {
+                    const names = [...js.matchAll(/function\s+([A-Z][a-zA-Z0-9]*)\s*\(/g)].map((m) => m[1])
+                    if (names.length > 0) {
+                        js = js + `\nm.mount(document.getElementById("preview-root"), ${names.at(-1)}())`
+                    }
+                }
+                return new Response(JSON.stringify({code: js}), {
+                    headers: {'Content-Type': 'application/json'},
+                })
+            } catch (err) {
+                const msg = err instanceof Error ? err.message : 'Transpile failed'
+                return new Response(JSON.stringify({error: msg}), {
+                    status: 400,
+                    headers: {'Content-Type': 'application/json'},
+                })
+            }
+        }
+
         // API: serve doc content for client-side loading (when SSR data isn't available)
         const apiDocsMatch = pathname.match(/^\/api\/docs\/([^/]+)$/)
         if (apiDocsMatch) {
@@ -118,15 +177,20 @@ const server = serve({
                 const file = Bun.file(staticPath)
                 const stat = await file.stat()
                 if (stat && stat.size > 0) {
-                    return new Response(file, {
-                        headers: {
-                            'Content-Type': pathname.endsWith('.js')
-                                ? 'application/javascript'
-                                : pathname.endsWith('.css')
-                                  ? 'text/css'
-                                  : 'application/octet-stream',
-                        },
-                    })
+                    const headers: Record<string, string> = {
+                        'Content-Type': pathname.endsWith('.js')
+                            ? 'application/javascript'
+                            : pathname.endsWith('.css')
+                              ? 'text/css'
+                              : pathname.endsWith('.html')
+                                ? 'text/html; charset=utf-8'
+                                : 'application/octet-stream',
+                    }
+                    // Sandboxed preview iframe has opaque origin; needs CORS for module script
+                    if (pathname === '/preview.html' || pathname === '/preview-bundle.js') {
+                        headers['Access-Control-Allow-Origin'] = '*'
+                    }
+                    return new Response(file, {headers})
                 }
             } catch {
                 // File doesn't exist, continue

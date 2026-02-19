@@ -604,7 +604,55 @@ h5 {
     color: #e90;
 }
 
-/* Sandbox wrapper for JS code blocks (live preview to be added later) */
+/* Sandbox: CodeMirror editor with live preview */
 .docs-sandbox {
     margin: 20px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.docs-sandbox-toolbar {
+    padding: 8px 12px;
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+}
+
+.docs-sandbox-run {
+    padding: 4px 12px;
+    font-size: 13px;
+    background: #0e639c;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.docs-sandbox-run:hover {
+    background: #1177bb;
+}
+
+.docs-sandbox-editor {
+    min-height: 180px;
+}
+
+.docs-sandbox-editor .cm-editor {
+    min-height: 180px;
+}
+
+.docs-sandbox-editor .cm-scroller {
+    min-height: 180px;
+}
+
+.docs-sandbox-preview {
+    min-height: 120px;
+    border-top: 1px solid #ddd;
+    background: #fff;
+}
+
+.docs-sandbox-iframe {
+    display: block;
+    width: 100%;
+    min-height: 120px;
+    border: none;
 }

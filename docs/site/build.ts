@@ -28,4 +28,24 @@ if (!result.success) {
     process.exit(1)
 }
 
+// Build preview bundle for sandbox iframe (m + html exposed to global)
+const previewRunner = join(import.meta.dir, 'preview-runner.ts')
+const previewResult = await build({
+    entrypoints: [previewRunner],
+    outdir: publicDir,
+    naming: {entry: 'preview-bundle.[ext]'},
+    target: 'browser',
+    jsx: {
+        factory: 'm',
+        fragment: 'm.Fragment',
+        runtime: 'classic',
+    },
+    minify: false,
+})
+
+if (!previewResult.success) {
+    console.error('Preview build failed:', previewResult.logs)
+    process.exit(1)
+}
+
 console.log('Build complete! Output:', publicDir)

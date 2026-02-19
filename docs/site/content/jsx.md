@@ -5,6 +5,7 @@ Explanation, examples, and build notes on how to use JSX in your Mithril.js-base
 # JSX
 
 - [Description](#description)
+- [htm (no build step)](#htm-no-build-step)
 - [Setup for JavaScript](#setup-for-javascript)
 - [Production build](#production-build)
 - [Using Babel with Webpack](#using-babel-with-webpack)
@@ -57,6 +58,43 @@ m.render(document.body, <MyComponent />)
 <m.route.Link href="/home">Go home</m.route.Link>
 // equivalent to m(m.route.Link, {href: "/home"}, "Go home")
 ```
+
+---
+
+### htm (no build step)
+
+[htm](https://github.com/developit/htm) (Hyperscript Tagged Markup) provides JSX-like syntax using standard JavaScript tagged template literals. It works directly in the browser without any transpiler, so you can run Mithril code with no build step.
+
+To use htm with Mithril, import the `html` tagged template from the `mithril/htm` subpath:
+
+```javascript
+import m from '@bitstillery/mithril'
+import {html} from '@bitstillery/mithril/htm'
+
+const App = {
+    view: () => html`
+        <main>
+            <h1 class="title">My first app</h1>
+            <button onclick=${() => console.log('clicked')}>Click me</button>
+        </main>
+    `,
+}
+
+m.mount(document.body, App)
+```
+
+**Attribute naming**: Use HTML-style attribute names (`class`, `onclick`, `for`) rather than React's `className` or `onClick`, as these match Mithril's conventions.
+
+**Components**: Use the component reference syntax. For Mithril components and built-ins like `m.route.Link`:
+
+```javascript
+html`<${MyComponent} foo="bar" />`
+html`<${m.route.Link} href="/">Go home<//>`
+```
+
+**Multiple roots (fragments)**: When your template has multiple elements at the root level, htm returns an array. Mithril's `m.render` and `m.mount` accept arrays, so no extra wrapping is needed.
+
+For CDN usage without a build tool, use an import map or load the modules from unpkg or similar. The `htm` package is included as a dependency when you install Mithril.
 
 ---
 

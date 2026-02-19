@@ -85,8 +85,6 @@ m.mount(root, {
 })
 ```
 
-> _[Click here to open the sample on flems.io](https://flems.io/mithril@[version]#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvEAXwvW10QICsEqdBk2J4s+LLQCuDABQATWtSk4G+AEa15ATwoACYAB00e03oBuEGAHdEesDOrEI9WQEoDxs970AnGMRSviZYsgDkhACMYfphACq+2no4etLEYW5eZqzGrG6UIHAwsE4uaAg8ACyIAExsHCCYOHj41HACNPSMzDxsALqsQA)_
-
 ---
 
 ### Hello world
@@ -151,7 +149,7 @@ var root = document.body
 m.render(root, [m('main', [m('h1', {class: 'title'}, 'My first app'), m('button', 'A button')])])
 ```
 
-Note: If you prefer `<html>` syntax, [it's possible to use it via a Babel plugin](jsx.md).
+Note: If you prefer HTML-like syntax without a build step, use [htm](jsx.md#htm-no-build-step). With a build step, [JSX via Babel](jsx.md) is also available.
 
 ```jsx
 // HTML syntax via Babel's JSX plugin

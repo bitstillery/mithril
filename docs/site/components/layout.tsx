@@ -17,6 +17,41 @@ interface LayoutAttrs {
     version?: string
 }
 
+/** Wraps body content and prevents re-patching when path and content are unchanged.
+ * This preserves Sandbox DOM (including user edits and preview iframes) during redraws. */
+const BodyContentWrapper = {
+    onbeforeupdate(
+        vnode: Vnode<{page: DocPage; path: string; extraClass: string}>,
+        old: Vnode<{page: DocPage; path: string; extraClass: string}>,
+    ) {
+        const oa = old?.attrs
+        if (!oa) return true
+        const {path, page} = vnode.attrs ?? {}
+        const {path: oldPath, page: oldPage} = oa
+        if (path !== oldPath) return true
+        if (page?.content !== oldPage?.content) return true
+        return false
+    },
+    view(vnode: Vnode<{page: DocPage; path: string; extraClass: string}>) {
+        const {page = {} as DocPage, path = '', extraClass = ''} = vnode.attrs ?? {}
+        return (
+            <div class={`body ${extraClass}`} key={path}>
+                {m.trust(page?.content ?? '')}
+                <div class='footer'>
+                    <div>License: MIT. © Mithril Contributors.</div>
+                    <div>
+                        <a
+                            href={`https://github.com/MithrilJS/docs/edit/main/docs/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
+                        >
+                            Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        )
+    },
+}
+
 const apiPagePatterns = [
     'hyperscript',
     'render',
@@ -59,19 +94,8 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
         const displayPage = pendingPage ?? page
         const isCrossfade = !!pendingPage
 
-        const bodyContent = (p: DocPage, path: string, extraClass: string) => (
-            <div class={`body ${extraClass}`} key={path}>
-                {m.trust(p.content)}
-                <div class='footer'>
-                    <div>License: MIT. © Mithril Contributors.</div>
-                    <div>
-                        <a href={`https://github.com/MithrilJS/docs/edit/main/docs/${path === '/' ? 'index' : path.slice(1)}.md`}>
-                            Edit
-                        </a>
-                    </div>
-                </div>
-            </div>
-        )
+        const bodyContent = (p: DocPage, path: string, extraClass: string) =>
+            m(BodyContentWrapper as any, {page: p, path, extraClass})
 
         const mainContent = isCrossfade ? (
             <div
@@ -120,14 +144,14 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
     }
 
     oncreate(vnode: Vnode<LayoutAttrs>) {
-        this.highlightCode()
+        this.highlightCode(vnode)
     }
 
     onupdate(vnode: Vnode<LayoutAttrs>) {
-        this.highlightCode()
+        this.highlightCode(vnode)
     }
 
-    highlightCode() {
+    highlightCode(vnode: Vnode<LayoutAttrs>) {
         if (typeof window === 'undefined') return
         const bodies = document.querySelectorAll('.body')
         bodies.forEach((body) => {
@@ -135,16 +159,17 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                 ;(globalThis as any).Prism.highlightAllUnder(body)
             }
 
-            // Wrap JS code blocks in Sandbox component (live preview to be added later)
-            const blocks = body.querySelectorAll('pre code.language-js, pre code.language-javascript')
+            const blocks = body.querySelectorAll('pre code.language-js, pre code.language-javascript, pre code.language-jsx')
             ;[].forEach.call(blocks, (codeEl: HTMLElement) => {
+                if (codeEl.closest('.docs-sandbox')) return
                 const pre = codeEl.parentElement
                 if (!pre) return
-                const html = pre.outerHTML
+                const code = codeEl.textContent ?? ''
+                const lang = codeEl.classList.contains('language-jsx') ? ('jsx' as const) : ('js' as const)
                 const wrapper = document.createElement('div')
                 pre.parentNode!.insertBefore(wrapper, pre)
                 pre.remove()
-                m.render(wrapper, m(Sandbox as any, {content: html}))
+                m.render(wrapper, m(Sandbox as any, {code, lang}))
             })
         })
     }
