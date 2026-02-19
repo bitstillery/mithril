@@ -53,10 +53,10 @@ describe('state', () => {
             },
             'testState.sortMap',
         )
-        const mapped = s.hidden_country_codes.sort().map((cc: string) => cc.toLowerCase())
+        const mapped = [...s.hidden_country_codes].toSorted().map((cc: string) => cc.toLowerCase())
         expect(mapped).toEqual(['be', 'de', 'nl'])
         // Each element in map callback must be unwrapped string, not Signal
-        s.hidden_country_codes.sort().map((cc: unknown) => {
+        ;[...s.hidden_country_codes].toSorted().map((cc: unknown) => {
             expect(typeof cc).toBe('string')
             expect(typeof (cc as string).toLowerCase).toBe('function')
             return cc

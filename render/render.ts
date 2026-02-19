@@ -538,7 +538,7 @@ export default function renderFactory() {
                     const originalNextSibling = nextSibling
                     let pos = 2147483647,
                         matched = 0
-                    const oldIndices = new Array(end - start + 1).fill(-1)
+                    const oldIndices = Array.from({length: end - start + 1}, () => -1)
                     const map: Record<string, number> = Object.create(null)
                     for (let i = start; i <= end; i++) {
                         if (vnodes[i] != null) map[vnodes[i]!.key!] = i
@@ -1198,17 +1198,17 @@ export default function renderFactory() {
         if (typeof source.onupdate === 'function') hooks.push(callHook.bind(source.onupdate, vnode))
     }
     function shouldNotUpdate(vnode: any, old: any): boolean {
-        do {
+        updateCheck: {
             if (vnode.attrs != null && typeof vnode.attrs.onbeforeupdate === 'function') {
                 const force = callHook.call(vnode.attrs.onbeforeupdate, vnode, old)
-                if (force !== undefined && !force) break
+                if (force !== undefined && !force) break updateCheck
             }
             if (typeof vnode.tag !== 'string' && typeof vnode.state.onbeforeupdate === 'function') {
                 const force = callHook.call(vnode.state.onbeforeupdate, vnode, old)
-                if (force !== undefined && !force) break
+                if (force !== undefined && !force) break updateCheck
             }
             return false
-        } while (false)
+        }
         vnode.dom = old.dom
         vnode.domSize = old.domSize
         vnode.instance = old.instance

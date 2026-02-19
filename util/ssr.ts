@@ -279,9 +279,9 @@ export function logHydrationError(
     if (hydrationErrorCount > MAX_HYDRATION_ERRORS) {
         if (hydrationErrorCount === MAX_HYDRATION_ERRORS + 1) {
             const topComponents = Array.from(hydrationStats.componentMismatches.entries())
-                .sort((a, b) => b[1] - a[1])
+                .toSorted((a: [string, number], b: [string, number]) => b[1] - a[1])
                 .slice(0, 5)
-                .map(([name, count]) => `${name}: ${count}`)
+                .map(([name, count]: [string, number]) => `${name}: ${count}`)
                 .join(', ')
 
             logger.warn(

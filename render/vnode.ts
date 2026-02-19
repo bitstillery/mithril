@@ -102,7 +102,7 @@ const normalize = function (node: any): Vnode | null {
 const normalizeChildren = function (input: any[]): (Vnode | null)[] {
     // Preallocate the array length (initially holey) and fill every index immediately in order.
     // Benchmarking shows better performance on V8.
-    const children = new Array(input.length)
+    const children = Array.from({length: input.length}) as (Vnode | null)[]
     // Count the number of keyed normalized vnodes for consistency check.
     // Note: this is a perf-sensitive check.
     // Fun fact: merging the loop like this is somehow faster than splitting

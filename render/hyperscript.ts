@@ -19,7 +19,7 @@ export interface Hyperscript {
     Fragment: string
 }
 
-const selectorParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
+const selectorParser = /(?:(^|#|\.)([^#.[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
 const selectorCache: Record<string, {tag: string; attrs: Record<string, any>; is?: string}> = Object.create(null)
 
 function isEmpty(object: Record<string, any>): boolean {

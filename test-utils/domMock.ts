@@ -266,7 +266,7 @@ export default function domMock(options?: DomMockOptions) {
         let depth = 0,
             stack = [root]
         value.replace(
-            /<([a-z0-9\-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9\-]+?)>|([^<]+)/g,
+            /<([a-z0-9-]+?)((?:\s+?[^=]+?=(?:"[^"]*?"|'[^']*?'|[^\s>]*))*?)(\s*\/)?>|<\/([a-z0-9-]+?)>|([^<]+)/g,
             function (_match, startTag, attrs, selfClosed, endTag, text) {
                 if (startTag) {
                     const element =

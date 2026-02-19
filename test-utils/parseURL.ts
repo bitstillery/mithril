@@ -49,7 +49,7 @@ export default function parseURL(url: string, root: ParsedURL): ParsedURL {
                 .slice(0, pathnameEnd)
                 .replace(/^\.$/, root.pathname.slice(slashIndex + 1))
                 .replace(/^\.\//, '')
-            const dotdot = /\/[^\/]+?\/\.{2}/g
+            const dotdot = /\/[^/]+?\/\.{2}/g
             let pathname = path + normalized
             pathname = path + normalized
             while (dotdot.test(pathname)) {

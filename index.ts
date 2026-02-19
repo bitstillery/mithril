@@ -1,4 +1,3 @@
-/// <reference path="./jsx.d.ts" />
 import hyperscript from './render/hyperscript'
 import {logger} from './server/logger'
 import {version} from './version'

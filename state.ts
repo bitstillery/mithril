@@ -217,7 +217,17 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
             })
 
             // List of mutating array methods that should trigger the parent signal
-            const mutatingMethods = ['splice', 'push', 'pop', 'shift', 'unshift', 'reverse', 'sort', 'fill', 'copyWithin']
+            const mutatingMethods = new Set([
+                'splice',
+                'push',
+                'pop',
+                'shift',
+                'unshift',
+                'reverse',
+                'sort',
+                'fill',
+                'copyWithin',
+            ])
 
             // Wrap the signals array directly (not a copy) so mutations stay in sync
             // Store parent signal reference directly on the Proxy for reliable lookup
@@ -298,7 +308,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     }
 
                     // Intercept mutating methods to trigger parent signal
-                    if (typeof value === 'function' && mutatingMethods.includes(propStr)) {
+                    if (typeof value === 'function' && mutatingMethods.has(propStr)) {
                         return function (...args: any[]) {
                             // For splice, we need to handle it specially to convert new items to signals
                             if (propStr === 'splice') {

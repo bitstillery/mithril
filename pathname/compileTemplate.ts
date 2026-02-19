@@ -20,7 +20,7 @@ export default function compileTemplate(template: string): CompiledTemplate {
                 // `:lang-:locale` in routes. This is all merged into one pass so I
                 // don't also accidentally escape `-` and make it harder to detect it to
                 // ban it from template parameters.
-                /:([^\/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|\[\]{}]/g,
+                /:([^/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|[\]{}]/g,
                 function (m, key, extra) {
                     if (key == null) return '\\' + m
                     keys.push({k: key, r: extra === '...'})

@@ -1,5 +1,3 @@
-/// <reference path="./jsx.d.ts" />
-
 import m from '../../index'
 import {deserializeAllStates} from '../../render/ssrState'
 import {logger} from '../../server/logger'

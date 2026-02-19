@@ -2,7 +2,7 @@ import buildQueryString from '../querystring/build'
 
 // Returns `path` from `template` + `params`
 export default function buildPathname(template: string, params: Record<string, any>): string {
-    if (/:([^\/\.-]+)(\.{3})?:/.test(template)) {
+    if (/:([^/.-]+)(\.{3})?:/.test(template)) {
         throw new SyntaxError("Template parameter names must be separated by either a '/', '-', or '.'.")
     }
     if (params == null) return template
@@ -15,7 +15,7 @@ export default function buildPathname(template: string, params: Record<string, a
 
     Object.assign(query, params)
 
-    const resolved = path.replace(/:([^\/\.-]+)(\.{3})?/g, function (m, key, variadic) {
+    const resolved = path.replace(/:([^/.-]+)(\.{3})?/g, function (m, key, variadic) {
         delete query[key]
         // If no such parameter exists, don't interpolate it.
         if (params[key] == null) return m

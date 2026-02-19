@@ -1,11 +1,11 @@
 {
     "compilerOptions": {
-        "target": "ES2020",
+        "target": "ES2023",
         "module": "ESNext",
         "jsx": "react",
         "jsxFactory": "m",
         "jsxFragmentFactory": "m.Fragment",
-        "lib": ["ES2020", "DOM"],
+        "lib": ["ES2023", "DOM"],
         "moduleResolution": "bundler",
         "allowJs": true,
         "checkJs": false,
@@ -24,5 +24,5 @@
         "skipDefaultLibCheck": true
     },
     "include": ["**/*.ts", "**/*.tsx"],
-    "exclude": ["node_modules", "dist", "*.min.js", "mithril.js", "examples"]
+    "exclude": ["node_modules", "dist", "*.min.js", "mithril.js", "examples", "eslint.config.ts"]
 }

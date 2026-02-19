@@ -1,13 +1,54 @@
 {
-    "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/src/schemas/configuration_schema.json",
+    "$schema": "./node_modules/oxlint/configuration_schema.json",
     "categories": {
-        "correctness": "off",
-        "suspicious": "off",
-        "perf": "off",
+        "correctness": "error",
+        "suspicious": "error",
+        "perf": "error",
         "pedantic": "off",
         "style": "off",
         "restriction": "off",
         "nursery": "off"
     },
-    "ignorePatterns": ["node_modules", "**/.build-*", "**/*.js", "**/mithril.js", "**/mithril.min.js", "store.ts", "index.d.ts"]
+    "rules": {
+        "no-await-in-loop": "off",
+        "eslint/no-console": "off",
+        "typescript/consistent-type-imports": "off",
+        "eslint/no-extend-native": "off",
+        "typescript-eslint/no-extraneous-class": "off",
+        "oxc/no-this-in-exported-function": "off",
+        "typescript-eslint/no-duplicate-enum-values": "off",
+        "eslint-plugin-unicorn/prefer-add-event-listener": "off",
+        "eslint/no-unused-expressions": "off",
+        "eslint/no-unneeded-ternary": "off",
+        "typescript-eslint/no-unnecessary-type-constraint": "off",
+        "typescript-eslint/no-this-alias": "off",
+        "eslint/no-shadow": "off",
+        "eslint/no-unused-vars": "off",
+        "oxc/const-comparisons": "off",
+        "eslint/no-useless-concat": "off",
+        "no-extraneous-class": "off",
+        "eslint-plugin-unicorn/consistent-function-scoping": "off",
+        "no-duplicate-enum-values": "off",
+        "no-this-alias": "off",
+        "no-unnecessary-type-constraint": "off",
+        "typescript/require-array-sort-compare": "off"
+    },
+    "ignorePatterns": [
+        "node_modules",
+        "**/.build-*",
+        "**/*.js",
+        "**/index.d.ts",
+        "**/mithril.js",
+        "**/mithril.min.js",
+        "store.ts"
+    ],
+    "env": {
+        "browser": true,
+        "node": true,
+        "es2022": true
+    },
+    "globals": {
+        "Bun": "readonly",
+        "globalThis": "readonly"
+    }
 }

@@ -274,7 +274,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 
         compiled = Object.keys(routes).map(function (routePath) {
             if (routePath[0] !== '/') throw new SyntaxError("Routes must start with a '/'.")
-            if (/:([^\/\.-]+)(\.{3})?:/.test(routePath)) {
+            if (/:([^/.-]+)(\.{3})?:/.test(routePath)) {
                 throw new SyntaxError("Route parameter names must be separated with either '/', '.', or '-'.")
             }
             return {
@@ -461,7 +461,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             // Compile routes (same logic as in route() function)
             const compiled = Object.keys(routes).map(function (routePath) {
                 if (routePath[0] !== '/') throw new SyntaxError("Routes must start with a '/'.")
-                if (/:([^\/\.-]+)(\.{3})?:/.test(routePath)) {
+                if (/:([^/.-]+)(\.{3})?:/.test(routePath)) {
                     throw new SyntaxError("Route parameter names must be separated with either '/', '.', or '-'.")
                 }
                 // Handle both formats: direct component/resolver or {component: ...}
