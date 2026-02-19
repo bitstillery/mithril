@@ -507,7 +507,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         if (isRedirect(payload)) {
                             // Extract redirect target path (handles different REDIRECT symbols)
                             const redirectPath = getRedirectPath(payload)
-                            logger.info(`Redirecting to ${redirectPath}`, {
+                            logger.info(`redirecting to ${redirectPath}`, {
                                 pathname,
                                 route: matchedRoute,
                                 redirectPath,
@@ -541,13 +541,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                 )
                                 const redirectHtml = typeof redirectResult === 'string' ? redirectResult : redirectResult.html
                                 if (!redirectHtml || redirectHtml.length === 0) {
-                                    logger.warn('Empty redirect result', {
+                                    logger.warn('empty redirect result', {
                                         pathname,
                                         redirectPath,
                                         route: matchedRoute,
                                     })
                                 } else {
-                                    logger.debug('Redirect resolved', {
+                                    logger.debug('redirect resolved', {
                                         pathname,
                                         redirectPath,
                                         htmlSize: redirectHtml.length,
@@ -583,7 +583,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                     const result = await renderToString(renderedVnode)
                                     const html = typeof result === 'string' ? result : result.html
                                     if (html) {
-                                        logger.info(`Rendered route component`, {
+                                        logger.info(`rendered route component`, {
                                             pathname,
                                             route: matchedRoute,
                                             htmlSize: html.length,
@@ -591,7 +591,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                     }
                                     return result
                                 } catch (error) {
-                                    logger.error('Route render failed', error, {
+                                    logger.error('route render failed', error, {
                                         pathname,
                                         route: matchedRoute,
                                     })
@@ -604,10 +604,6 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                             // This allows render-only resolvers to work
                             if (!resolver.onmatch || payload === resolver) {
                                 try {
-                                    logger.debug('Calling render-only resolver', {
-                                        pathname,
-                                        route: matchedRoute,
-                                    })
                                     // Create a vnode with the resolver as tag and routePath in attrs
                                     // Use Vnode() directly since resolver is not a component
                                     const resolverVnode = Vnode(
@@ -623,17 +619,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                     )
                                     const renderedVnode = resolver.render(resolverVnode)
                                     const result = await renderToString(renderedVnode)
-                                    const html = typeof result === 'string' ? result : result.html
-                                    if (html) {
-                                        logger.info(`Rendered route with render-only resolver`, {
-                                            pathname,
-                                            route: matchedRoute,
-                                            htmlSize: html.length,
-                                        })
-                                    }
                                     return result
                                 } catch (error) {
-                                    logger.error('Route render-only resolver failed', error, {
+                                    logger.error('route render-only resolver failed', error, {
                                         pathname,
                                         route: matchedRoute,
                                     })

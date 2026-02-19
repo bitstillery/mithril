@@ -34,9 +34,10 @@ const colors = {
     bgWhite: '\x1b[47m',
 }
 
-// Check if colors should be enabled (server only, default: true, can be disabled with NO_COLOR env var)
+// ANSI colors for server/terminal. In browser we use %c for proper DevTools styling.
 const enableColors =
-    !isBrowser && typeof process !== 'undefined' && process.env && process.env.NO_COLOR !== '1' && process.env.NO_COLOR !== 'true'
+    !isBrowser &&
+    (typeof process === 'undefined' || !process?.env || (process.env.NO_COLOR !== '1' && process.env.NO_COLOR !== 'true'))
 
 function colorize(text: string, color: string): string {
     return enableColors ? `${color}${text}${colors.reset}` : text
@@ -53,10 +54,10 @@ function getTimestamp(): string {
 
 function formatLevel(level: 'info' | 'debug' | 'warn' | 'error'): string {
     const levelMap = {
-        info: colorize('INFO', colors.bright + colors.cyan),
-        debug: colorize('DEBUG', colors.bright + colors.blue),
-        warn: colorize('WARN', colors.bright + colors.yellow),
-        error: colorize('ERROR', colors.bright + colors.red),
+        info: colorize('info', colors.bright + colors.cyan),
+        debug: colorize('debug', colors.bright + colors.blue),
+        warn: colorize('warn', colors.bright + colors.yellow),
+        error: colorize('error', colors.bright + colors.red),
     }
     return levelMap[level]
 }
@@ -71,11 +72,11 @@ export interface LogContext {
 }
 
 class Logger {
-    // Default prefix: [SSR] for server infrastructure, [APP] for application code
-    private prefix: string = '[SSR]'
+    // Default prefix: [ssr] for server infrastructure, [app] for application code
+    private prefix: string = '[ssr]'
 
     /**
-     * Set the log prefix (default: '[SSR]' for infrastructure, '[APP]' for application code)
+     * Set the log prefix (default: '[ssr]' for infrastructure, '[app]' for application code)
      */
     setPrefix(prefix: string): void {
         this.prefix = prefix
@@ -85,10 +86,10 @@ class Logger {
         const timestamp = colorize(getTimestamp(), colors.dim + colors.white)
         const levelStr = formatLevel(level)
 
-        // Always use the set prefix (e.g., [APP] or [SSR])
+        // Always use the set prefix (e.g., [app] or [ssr])
         const prefixStr = colorize(
             this.prefix,
-            this.prefix === '[SSR]' ? colors.bright + colors.magenta : colors.bright + colors.cyan,
+            this.prefix === '[ssr]' ? colors.bright + colors.magenta : colors.bright + colors.cyan,
         )
 
         // Include module in message if provided
@@ -130,80 +131,62 @@ class Logger {
 
     private formatContextForBrowser(context?: LogContext): string[] {
         if (!context) return []
-
         const parts: string[] = []
         if (context.method) parts.push(`Method: ${context.method}`)
         if (context.pathname) parts.push(`Path: ${context.pathname}`)
         if (context.route) parts.push(`Route: ${context.route}`)
         if (context.sessionId) parts.push(`Session: ${context.sessionId.slice(0, 8)}...`)
-
-        // Add any additional context fields (excluding module which is used as prefix)
         for (const [key, value] of Object.entries(context)) {
             if (!['method', 'pathname', 'route', 'sessionId', 'module'].includes(key)) {
                 parts.push(`${key}: ${value}`)
             }
         }
-
         return parts
     }
 
-    private getDisplayPrefix(context?: LogContext): string {
-        // Always use the set prefix (e.g., [client] or [SSR])
-        return this.prefix
-    }
-
-    private getDisplayMessage(message: string, context?: LogContext): string {
-        // Include module in message if provided
-        if (context?.module) {
-            return `[${context.module}] ${message}`
+    private logBrowser(
+        level: 'info' | 'debug' | 'warn' | 'error',
+        message: string,
+        context?: LogContext,
+        error?: Error | unknown,
+    ): void {
+        const displayMessage = context?.module ? `[${context.module}] ${message}` : message
+        const prefixStyle = this.prefix === '[ssr]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
+        const levelStyles: Record<string, string> = {
+            info: 'color: #22d3ee; font-weight: bold',
+            debug: 'color: #4ade80; font-weight: bold',
+            warn: 'color: #fbbf24; font-weight: bold',
+            error: 'color: #ef4444; font-weight: bold',
         }
-        return message
+        const logFn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
+        const contextParts = this.formatContextForBrowser(context)
+        if (contextParts.length > 0 || error) {
+            console.group(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], 'color: inherit')
+            contextParts.forEach((part) => logFn(`  ${part}`))
+            if (error instanceof Error && error.stack) {
+                console.error('Stack trace:', error.stack)
+            }
+            console.groupEnd()
+        } else {
+            logFn(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], 'color: inherit')
+        }
     }
 
     info(message: string, context?: LogContext): void {
         if (isBrowser) {
-            const contextParts = this.formatContextForBrowser(context)
-            const displayPrefix = this.getDisplayPrefix(context)
-            const displayMessage = this.getDisplayMessage(message, context)
-            // Use multiple %c for different colored parts: prefix, level, message
-            const prefixStyle =
-                displayPrefix === '[SSR]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
-            const levelStyle = 'color: #22d3ee; font-weight: bold'
-
-            if (contextParts.length > 0) {
-                console.group(`%c${displayPrefix}%c INFO%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-                contextParts.forEach((part) => console.log(`  ${part}`))
-                console.groupEnd()
-            } else {
-                console.log(`%c${displayPrefix}%c INFO%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-            }
+            this.logBrowser('info', message, context)
         } else {
             console.log(this.formatMessage('info', message, context))
         }
     }
 
     debug(message: string, context?: LogContext): void {
-        // Only log debug messages in SSR mode or browser dev mode
         const shouldLog =
             globalThis.__SSR_MODE__ || (isBrowser && typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production')
-
         if (!shouldLog) return
 
         if (isBrowser) {
-            const contextParts = this.formatContextForBrowser(context)
-            const displayPrefix = this.getDisplayPrefix(context)
-            const displayMessage = this.getDisplayMessage(message, context)
-            const prefixStyle =
-                displayPrefix === '[SSR]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
-            const levelStyle = 'color: #4ade80; font-weight: bold'
-
-            if (contextParts.length > 0) {
-                console.group(`%c${displayPrefix}%c DEBUG%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-                contextParts.forEach((part) => console.log(`  ${part}`))
-                console.groupEnd()
-            } else {
-                console.log(`%c${displayPrefix}%c DEBUG%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-            }
+            this.logBrowser('debug', message, context)
         } else {
             console.log(this.formatMessage('debug', message, context))
         }
@@ -211,20 +194,7 @@ class Logger {
 
     warn(message: string, context?: LogContext): void {
         if (isBrowser) {
-            const contextParts = this.formatContextForBrowser(context)
-            const displayPrefix = this.getDisplayPrefix(context)
-            const displayMessage = this.getDisplayMessage(message, context)
-            const prefixStyle =
-                displayPrefix === '[SSR]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
-            const levelStyle = 'color: #fbbf24; font-weight: bold'
-
-            if (contextParts.length > 0) {
-                console.group(`%c${displayPrefix}%c WARN%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-                contextParts.forEach((part) => console.warn(`  ${part}`))
-                console.groupEnd()
-            } else {
-                console.warn(`%c${displayPrefix}%c WARN%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-            }
+            this.logBrowser('warn', message, context)
         } else {
             console.warn(this.formatMessage('warn', message, context))
         }
@@ -233,27 +203,9 @@ class Logger {
     error(message: string, error?: Error | unknown, context?: LogContext): void {
         const errorMessage = error instanceof Error ? error.message : String(error)
         const baseMessage = error ? `${message}: ${errorMessage}` : message
-        const displayMessage = this.getDisplayMessage(baseMessage, context)
 
         if (isBrowser) {
-            const contextParts = this.formatContextForBrowser(context)
-            const displayPrefix = this.getDisplayPrefix(context)
-            const prefixStyle =
-                displayPrefix === '[SSR]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
-            const levelStyle = 'color: #ef4444; font-weight: bold'
-
-            if (contextParts.length > 0 || error) {
-                console.group(`%c${displayPrefix}%c ERROR%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-                if (contextParts.length > 0) {
-                    contextParts.forEach((part) => console.error(`  ${part}`))
-                }
-                if (error instanceof Error && error.stack) {
-                    console.error('Stack trace:', error.stack)
-                }
-                console.groupEnd()
-            } else {
-                console.error(`%c${displayPrefix}%c ERROR%c ${displayMessage}`, prefixStyle, levelStyle, 'color: inherit')
-            }
+            this.logBrowser('error', baseMessage, context, error)
         } else {
             console.error(this.formatMessage('error', baseMessage, context))
             if (error instanceof Error && error.stack) {
@@ -264,7 +216,7 @@ class Logger {
     }
 }
 
-// Default logger instance for application code (will be set to [APP] by app initialization)
+// Default logger instance for application code (will be set to [app] by app initialization)
 export const logger = new Logger()
 
 // Export Logger class for creating custom instances

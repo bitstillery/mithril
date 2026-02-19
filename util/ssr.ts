@@ -285,7 +285,7 @@ export function logHydrationError(
                 .join(', ')
 
             logger.warn(
-                `Hydration errors throttled: More than ${MAX_HYDRATION_ERRORS} errors detected. Suppressing further logs to improve performance.`,
+                `hydration errors throttled: more than ${MAX_HYDRATION_ERRORS} errors detected. suppressing further logs to improve performance.`,
                 {
                     totalMismatches: hydrationStats.totalMismatches,
                     topComponents: topComponents || 'none',
@@ -347,7 +347,7 @@ export function logHydrationError(
         logContext.handledGracefully = true
     }
 
-    logger.error(`Hydration error: ${operation}`, error, logContext)
+    logger.error(`hydration error: ${operation}`, error, logContext)
 }
 
 // Track hydration statistics for debugging

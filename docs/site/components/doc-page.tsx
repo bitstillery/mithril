@@ -5,6 +5,8 @@ import {DocPage} from '../markdown'
 
 interface DocPageAttrs {
     page: DocPage
+    pendingPage?: DocPage
+    onTransitionEnd?: () => void
     routePath?: string
     navGuides?: string
     navMethods?: string
@@ -19,6 +21,8 @@ export class DocPageComponent extends MithrilComponent<DocPageAttrs> {
         }
         return m(Layout as any, {
             page: attrs.page,
+            pendingPage: attrs.pendingPage,
+            onTransitionEnd: attrs.onTransitionEnd,
             routePath: attrs.routePath,
             navGuides: attrs.navGuides,
             navMethods: attrs.navMethods,

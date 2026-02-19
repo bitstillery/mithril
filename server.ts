@@ -14,7 +14,7 @@ import censor from './util/censor'
 import type {MithrilStatic, Hyperscript} from './index'
 import type {Redraw} from './api/mount-redraw'
 
-logger.info(`[Mithril] server initializing version ${version}`)
+logger.debug(`mithril ssr v${version}`)
 
 // Create server-side renderer
 const {renderToString, renderToStringSync} = renderToStringFactory()

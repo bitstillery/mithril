@@ -49,16 +49,17 @@ export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
                 const res = await fetch(`/api/docs/${attrs.docName}`)
                 if (!res.ok) {
                     $docs.error = `Page "${attrs.routePath}" not found`
+                    $docs.loading = false
                 } else {
                     const {page, navGuidesStructure, navMethodsStructure} = await res.json()
-                    $docs.page = page
-                    ;($docs as any).navGuides = navGuidesStructure ?? []
-                    ;($docs as any).navMethods = navMethodsStructure ?? []
+                    ;($docs as any).pendingPage = page
+                    ;($docs as any).pendingNavGuides = navGuidesStructure ?? []
+                    ;($docs as any).pendingNavMethods = navMethodsStructure ?? []
                     $docs.routePath = attrs.routePath
+                    m.redraw()
                 }
             } catch (err) {
                 $docs.error = err instanceof Error ? err.message : 'Unknown error'
-            } finally {
                 $docs.loading = false
                 m.redraw()
             }
@@ -66,20 +67,42 @@ export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
     }
 
     view() {
-        if ($docs.loading) {
-            return m('div', 'Loading...')
-        }
-        if ($docs.error || !$docs.page) {
-            return m('div', [
-                m('h1', '404 - Page Not Found'),
-                m('p', $docs.error || `The page "${$docs.routePath}" could not be found.`),
-            ])
-        }
+        const page =
+            $docs.loading && $docs.page
+                ? $docs.page // Keep previous page visible while loading new one
+                : $docs.loading
+                  ? {title: '', content: '<p>Loading...</p>', metaDescription: '', pageToc: ''}
+                  : $docs.error || !$docs.page
+                    ? {
+                          title: 'Not Found',
+                          content: `<h1>404 - Page Not Found</h1><p>${$docs.error || `The page "${$docs.routePath}" could not be found.`}</p>`,
+                          metaDescription: '',
+                          pageToc: '',
+                      }
+                    : $docs.page
+        const pendingPage = $docs.pendingPage
+        const navGuides = pendingPage ? $docs.pendingNavGuides : $docs.navGuides
+        const navMethods = pendingPage ? $docs.pendingNavMethods : $docs.navMethods
+        const onTransitionEnd =
+            typeof window !== 'undefined' && pendingPage
+                ? () => {
+                      $docs.page = $docs.pendingPage
+                      ;($docs as any).navGuides = $docs.pendingNavGuides
+                      ;($docs as any).navMethods = $docs.pendingNavMethods
+                      ;($docs as any).pendingPage = null
+                      ;($docs as any).pendingNavGuides = []
+                      ;($docs as any).pendingNavMethods = []
+                      $docs.loading = false
+                      m.redraw()
+                  }
+                : undefined
         return m(DocPageComponent as any, {
-            page: $docs.page,
+            page,
+            pendingPage: pendingPage ?? undefined,
+            onTransitionEnd,
             routePath: $docs.routePath,
-            navGuides: $docs.navGuides,
-            navMethods: $docs.navMethods,
+            navGuides,
+            navMethods,
         })
     }
 }

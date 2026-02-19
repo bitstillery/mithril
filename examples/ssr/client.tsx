@@ -20,11 +20,11 @@ if (ssrStateScript && ssrStateScript.textContent) {
     try {
         const serializedState = JSON.parse(ssrStateScript.textContent)
         deserializeAllStates(serializedState)
-        logger.debug('SSR state deserialized successfully', {
+        logger.debug('ssr state deserialized successfully', {
             stateKeys: Object.keys(serializedState),
         })
     } catch (error) {
-        logger.error('Error deserializing SSR state', error)
+        logger.error('error deserializing ssr state', error)
     }
 }
 

@@ -600,7 +600,9 @@ export default function renderFactory() {
     ) {
         const oldTag = old.tag,
             tag = vnode.tag
-        if (oldTag === tag && old.is === vnode.is) {
+        // Key change: different keys mean different logical nodes → remove old, create new.
+        // Critical when a component returns a single keyed child (e.g. router resolving to DocLoader).
+        if (oldTag === tag && old.is === vnode.is && old.key === vnode.key) {
             vnode.state = old.state
             vnode.events = old.events
             if (shouldNotUpdate(vnode, old)) return
@@ -1269,7 +1271,7 @@ export default function renderFactory() {
             // Check if we've exceeded mismatch threshold after processing nodes
             // If so, clear and re-render from scratch (client VDOM wins)
             if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
-                logger.warn('Hydration mismatch threshold exceeded. Clearing parent and re-rendering from client VDOM.', {
+                logger.warn('hydration mismatch threshold exceeded. clearing parent and re-rendering from client vdom.', {
                     mismatchCount: hydrationMismatchCount,
                     threshold: MAX_HYDRATION_MISMATCHES,
                 })

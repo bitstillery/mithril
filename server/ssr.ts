@@ -95,40 +95,21 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 
             globalThis.__SSR_URL__ = req.url
 
-            logger.debug('Resolving route', {
-                pathname,
-                routesAvailable: Object.keys(options.routes),
-                routeExists: !!options.routes[pathname],
-            })
+            const routeCount = Object.keys(options.routes).length
+            logger.debug('resolving route', {pathname, routeCount, routeExists: !!options.routes[pathname]})
 
             const result = await m.route.resolve(pathname, options.routes, m.renderToString)
 
             const appHtml = typeof result === 'string' ? result : result.html
             const serializedState = typeof result === 'string' ? {} : result.state
+            const htmlLength = appHtml?.length || 0
 
-            logger.debug('Route resolution result', {
-                pathname,
-                resultType: typeof result === 'string' ? 'string' : 'object',
-                htmlLength: appHtml?.length || 0,
-                htmlPreview: appHtml?.substring(0, 200) || 'empty',
-                stateSize: JSON.stringify(serializedState).length,
-            })
+            logger.debug('route resolved', {pathname, htmlLength, resultType: typeof result === 'string' ? 'string' : 'object'})
 
             if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
-                logger.warn('Empty/minimal HTML rendered', {
-                    pathname,
-                    method: req.method,
-                    sessionId: context.sessionId,
-                    htmlPreview: appHtml?.substring(0, 100) || 'null/undefined',
-                })
+                logger.warn('empty html rendered', {pathname})
             } else {
-                logger.info(`Rendered ${appHtml.length} characters`, {
-                    pathname,
-                    method: req.method,
-                    sessionId: context.sessionId,
-                    htmlSize: appHtml.length,
-                    htmlPreview: appHtml.substring(0, 300),
-                })
+                logger.info(`get ${pathname} → ${htmlLength} chars`)
             }
 
             let html = await options.getHtmlTemplate()
@@ -158,13 +139,6 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             html = html.replace('</head>', `${stateScript}</head>`)
 
             const sessionId = context.sessionId ?? ''
-            logger.debug('SSR response created', {
-                pathname,
-                method: req.method,
-                sessionId,
-                htmlSize: html.length,
-                stateSize: JSON.stringify(serializedState).length,
-            })
 
             return new Response(html, {
                 headers: {
@@ -175,7 +149,7 @@ export async function createSSRResponse(pathname: string, req: Request, options:
                 },
             })
         } catch (error) {
-            logger.error('SSR request failed', error, {
+            logger.error('ssr request failed', error, {
                 pathname,
                 method: req.method,
                 sessionId: context.sessionId,
@@ -211,7 +185,7 @@ export function createSessionUpdateHandler(
             // sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
             sessionStore.updateSession(sessionId, {session_data: sessionData})
 
-            logger.debug('Session updated', {
+            logger.debug('session updated', {
                 method: req.method,
                 sessionId,
             })
@@ -221,7 +195,7 @@ export function createSessionUpdateHandler(
                 headers: {'Content-Type': 'application/json'},
             })
         } catch (error) {
-            logger.error('Failed to update session', error, {
+            logger.error('failed to update session', error, {
                 method: req.method,
                 sessionId,
             })

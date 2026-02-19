@@ -9,6 +9,8 @@ import type {NavSection} from '../store'
 
 interface LayoutAttrs {
     page: DocPage
+    pendingPage?: DocPage
+    onTransitionEnd?: () => void
     routePath?: string
     navGuides?: NavSection[]
     navMethods?: NavSection[]
@@ -35,7 +37,7 @@ const apiPagePatterns = [
 export class Layout extends MithrilComponent<LayoutAttrs> {
     view(vnode: Vnode<LayoutAttrs>) {
         const attrs = (vnode.attrs ?? {}) as LayoutAttrs
-        const {page, navGuides = [], navMethods = [], version = '2.3.8'} = attrs
+        const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = '2.3.8'} = attrs
 
         if (!page || !page.content) {
             return m('div', 'Loading...')
@@ -54,6 +56,39 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
 
         const isApiPage = currentPath.startsWith('/api') || apiPagePatterns.some((p) => currentPath.includes(p))
         const navSections = isApiPage ? navMethods : navGuides
+        const displayPage = pendingPage ?? page
+        const isCrossfade = !!pendingPage
+
+        const bodyContent = (p: DocPage, path: string, extraClass: string) => (
+            <div class={`body ${extraClass}`} key={path}>
+                {m.trust(p.content)}
+                <div class='footer'>
+                    <div>License: MIT. © Mithril Contributors.</div>
+                    <div>
+                        <a href={`https://github.com/MithrilJS/docs/edit/main/docs/${path === '/' ? 'index' : path.slice(1)}.md`}>
+                            Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+        )
+
+        const mainContent = isCrossfade ? (
+            <div
+                class='body-crossfade'
+                oncreate={(vnode: any) => {
+                    const el = vnode.dom.querySelector('.body-next')
+                    if (el && onTransitionEnd) {
+                        el.addEventListener('animationend', onTransitionEnd, {once: true})
+                    }
+                }}
+            >
+                {bodyContent(page, currentPath, 'body-current')}
+                {bodyContent(pendingPage!, currentPath, 'body-next')}
+            </div>
+        ) : (
+            bodyContent(page, currentPath, '')
+        )
 
         return (
             <div class='docs-container'>
@@ -77,22 +112,8 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                     </section>
                 </header>
                 <div class='docs-body'>
-                    {m(DocsSidebar as any, {sections: navSections, pageToc: page.pageToc})}
-                    <main>
-                        <div class='body'>
-                            {m.trust(page.content)}
-                            <div class='footer'>
-                                <div>License: MIT. © Mithril Contributors.</div>
-                                <div>
-                                    <a
-                                        href={`https://github.com/MithrilJS/docs/edit/main/docs/${currentPath === '/' ? 'index' : currentPath.slice(1)}.md`}
-                                    >
-                                        Edit
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    </main>
+                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} />
+                    <main>{mainContent}</main>
                 </div>
             </div>
         )
@@ -108,23 +129,23 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
 
     highlightCode() {
         if (typeof window === 'undefined') return
-        const body = document.querySelector('.body')
-        if (!body) return
+        const bodies = document.querySelectorAll('.body')
+        bodies.forEach((body) => {
+            if (typeof (globalThis as any).Prism !== 'undefined') {
+                ;(globalThis as any).Prism.highlightAllUnder(body)
+            }
 
-        if (typeof (globalThis as any).Prism !== 'undefined') {
-            ;(globalThis as any).Prism.highlightAllUnder(body)
-        }
-
-        // Wrap JS code blocks in Sandbox component (live preview to be added later)
-        const blocks = body.querySelectorAll('pre code.language-js, pre code.language-javascript')
-        ;[].forEach.call(blocks, (codeEl: HTMLElement) => {
-            const pre = codeEl.parentElement
-            if (!pre) return
-            const html = pre.outerHTML
-            const wrapper = document.createElement('div')
-            pre.parentNode!.insertBefore(wrapper, pre)
-            pre.remove()
-            m.render(wrapper, m(Sandbox as any, {content: html}))
+            // Wrap JS code blocks in Sandbox component (live preview to be added later)
+            const blocks = body.querySelectorAll('pre code.language-js, pre code.language-javascript')
+            ;[].forEach.call(blocks, (codeEl: HTMLElement) => {
+                const pre = codeEl.parentElement
+                if (!pre) return
+                const html = pre.outerHTML
+                const wrapper = document.createElement('div')
+                pre.parentNode!.insertBefore(wrapper, pre)
+                pre.remove()
+                m.render(wrapper, m(Sandbox as any, {content: html}))
+            })
         })
     }
 }

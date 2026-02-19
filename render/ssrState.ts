@@ -265,7 +265,7 @@ export function serializeAllStates(): Record<string, any> {
             result[name] = serializeStore(entry.state)
         } catch (error) {
             // Log error but continue with other states
-            logger.error(`Error serializing state`, error, {stateName: name})
+            logger.error(`error serializing state`, error, {stateName: name})
         }
     }
 
@@ -340,7 +340,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
         if (!entry) {
             // State not registered on client - warn in development
             if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
-                logger.warn(`State not found in registry. Skipping deserialization.`, {stateName: name})
+                logger.warn(`state not found in registry. skipping deserialization.`, {stateName: name})
             }
             continue
         }
@@ -349,7 +349,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
             deserializeStore(entry.state, serializedState)
         } catch (error) {
             // Log error but continue with other states
-            logger.error(`Error deserializing state`, error, {stateName: name})
+            logger.error(`error deserializing state`, error, {stateName: name})
         }
     }
 
@@ -360,7 +360,7 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
             restoreComputedProperties(entry.state, entry.initial)
         } catch (error) {
             // Log error but continue with other states
-            logger.error(`Error restoring computed properties for state`, error, {stateName: name})
+            logger.error(`error restoring computed properties for state`, error, {stateName: name})
         }
     }
 }

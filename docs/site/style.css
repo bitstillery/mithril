@@ -155,6 +155,38 @@ main {
     margin-left: 270px;
 }
 
+.body-crossfade {
+    position: relative;
+}
+
+.body-crossfade .body-current {
+    animation: body-fade-out 0.2s ease-out forwards;
+}
+
+.body-crossfade .body-next {
+    position: absolute;
+    inset: 0;
+    animation: body-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes body-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes body-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 p {
     margin: 0 0 15px;
 }

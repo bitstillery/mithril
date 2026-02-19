@@ -108,7 +108,7 @@ const server = serve({
 
         // Handle Bun's internal assets (HMR, etc.)
         if (shouldHandleBunAssets(pathname)) {
-            return undefined // Let Bun handle it
+            return undefined // Let Bun handle internally
         }
 
         // Serve static files from public/ (chunk-*.js, chunk-*.css, etc from Bun HTML build)
@@ -168,8 +168,8 @@ const server = serve({
             }
         }
 
-        // For other routes, return undefined to let Bun handle them
-        return undefined
+        // Unmatched routes
+        return new Response('Not Found', {status: 404})
     },
 })
 

@@ -9,8 +9,11 @@ export interface NavSection {
 export const $docs = state(
     {
         page: null as DocPage | null,
+        pendingPage: null as DocPage | null,
         navGuides: [] as NavSection[],
         navMethods: [] as NavSection[],
+        pendingNavGuides: [] as NavSection[],
+        pendingNavMethods: [] as NavSection[],
         loading: true,
         error: null as string | null,
         routePath: '/',
