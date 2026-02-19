@@ -33,9 +33,9 @@ The **Required** column indicates whether an argument is required or optional. I
 
 ### Optional arguments
 
-Function arguments surrounded by square brackets `[ ]` are optional. In the example below, `url` is an optional argument:
+Function arguments surrounded by square brackets `[ ]` are optional. In the example below, `params` is an optional argument:
 
-`m.request([url,] options)`
+`m.buildPathname(pattern [, params])`
 
 ---
 

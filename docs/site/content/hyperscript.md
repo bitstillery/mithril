@@ -276,34 +276,61 @@ Mithril.js does not attempt to add units to number values. It simply stringifies
 Mithril.js supports event handler binding for all DOM events, including events whose specs do not define an `on${event}` property, such as `touchstart`
 
 ```javascript
+var output = ''
 function doSomething(e) {
-    console.log(e)
+    output = 'Clicked: ' + e.type
 }
 
-m('div', {onclick: doSomething})
+m.mount(document.body, {
+    view: function () {
+        return m('div', [
+            m('div', {onclick: doSomething}, 'Click me'),
+            output ? m('p', output) : null,
+        ])
+    },
+})
+// Output (after click): Clicked: click
 ```
 
 Mithril.js accepts functions and [EventListener](https://developer.mozilla.org/en-US/docs/Web/API/EventListener) objects. So this will also work:
 
 ```javascript
+var output = ''
 var clickListener = {
     handleEvent: function (e) {
-        console.log(e)
+        output = 'Event: ' + e.type
     },
 }
 
-m('div', {onclick: clickListener})
+m.mount(document.body, {
+    view: function () {
+        return m('div', [
+            m('div', {onclick: clickListener}, 'Click me'),
+            output ? m('p', output) : null,
+        ])
+    },
+})
+// Output (after click): Event: click
 ```
 
 By default, when an event attached with hyperscript fires, this will trigger Mithril.js' auto-redraw after your event callback returns (assuming you are using `m.mount` or `m.route` instead of `m.render` directly). You can disable auto-redraw specifically for a single event by setting `e.redraw = false` on it:
 
 ```javascript
-m('div', {
-    onclick: function (e) {
-        // Prevent auto-redraw
-        e.redraw = false
+var clickCount = 0
+m.mount(document.body, {
+    view: function () {
+        return m('div', [
+            m('div', {
+                onclick: function (e) {
+                    clickCount++
+                    e.redraw = false
+                },
+            }, 'Click me (no auto-redraw)'),
+            m('p', 'Clicks: ' + clickCount),
+        ])
     },
 })
+// Output: Clicks stays 0 until m.redraw() is called
 ```
 
 ---
@@ -313,7 +340,15 @@ m('div', {
 Mithril.js supports DOM functionality that is accessible via properties such as `<select>`'s `selectedIndex` and `value` properties.
 
 ```javascript
-m('select', {selectedIndex: 0}, [m('option', 'Option A'), m('option', 'Option B')])
+m.mount(document.body, {
+    view: function () {
+        return m('div', [
+            m('select', {selectedIndex: 0}, [m('option', 'Option A'), m('option', 'Option B')]),
+            m('p', 'Output: Option A selected'),
+        ])
+    },
+})
+// Output: Option A selected
 ```
 
 ---
@@ -333,10 +368,8 @@ var Greeter = {
 }
 
 // consume it
-m(Greeter, {style: 'color:red;'}, 'world')
-
-// renders to this HTML:
-// <div style="color:red;">Hello world</div>
+m.render(document.body, m(Greeter, {style: 'color:red;'}, 'world'))
+// Output: <div style="color:red;">Hello world</div>
 ```
 
 To learn more about components, [see the components page](components.md).
@@ -350,11 +383,21 @@ Vnodes and components can have lifecycle methods (also known as _hooks_), which 
 Lifecycle methods are defined in the same way as DOM event handlers, but receive the vnode as an argument, instead of an Event object:
 
 ```javascript
+var output = ''
 function initialize(vnode) {
-    console.log(vnode)
+    output = 'Initialized: ' + vnode.tag
+    m.redraw()
 }
 
-m('div', {oninit: initialize})
+m.mount(document.body, {
+    view: function () {
+        return m('div', {oninit: initialize}, [
+            m('span', 'Hello'),
+            output ? m('p', output) : null,
+        ])
+    },
+})
+// Output: Initialized: div
 ```
 
 | Hook                         | Description                                                                                                                                                                                                                                                                       |
@@ -418,7 +461,8 @@ Since nested vnodes are just plain JavaScript expressions, you can simply use Ja
 ```javascript
 var user = {name: 'John'}
 
-m('.name', user.name) // <div class="name">John</div>
+m.render(document.body, m('.name', user.name))
+// Output: <div class="name">John</div>
 ```
 
 #### Loops
@@ -428,19 +472,19 @@ Use `Array` methods such as [`map`](https://developer.mozilla.org/en-US/docs/Web
 ```javascript
 var users = [{name: 'John'}, {name: 'Mary'}]
 
-m(
-    'ul',
-    users.map(function (u) {
-        // <ul>
-        return m('li', u.name) //   <li>John</li>
-        //   <li>Mary</li>
-    }),
-) // </ul>
+m.render(
+    document.body,
+    m(
+        'ul',
+        users.map(function (u) {
+            return m('li', u.name)
+        }),
+    ),
+)
+// Output: <ul><li>John</li><li>Mary</li></ul>
 
 // ES6+:
-// m("ul", users.map(u =>
-//   m("li", u.name)
-// ))
+// m.render(document.body, m("ul", users.map(u => m("li", u.name))))
 ```
 
 #### Conditionals
@@ -450,7 +494,8 @@ Use the ternary operator to conditionally set content on a view
 ```javascript
 var isError = false
 
-m('div', isError ? 'An error occurred' : 'Saved') // <div>Saved</div>
+m.render(document.body, m('div', isError ? 'An error occurred' : 'Saved'))
+// Output: <div>Saved</div>
 ```
 
 You cannot use JavaScript statements such as `if` or `for` within JavaScript expressions. It's preferable to avoid using those statements altogether and instead, use the constructs above exclusively in order to keep the structure of the templates linear and declarative.

@@ -117,7 +117,7 @@ In contrast, traversing a JavaScript data structure has a much more predictable 
 
 ### Differences from m.render
 
-A component rendered via `m.mount` [automatically redraws](autoredraw.md) in response to view events, `m.redraw()` calls or `m.request()` calls. Vnodes rendered via `m.render()` do not.
+A component rendered via `m.mount` [automatically redraws](autoredraw.md) in response to view events and `m.redraw()` calls. Vnodes rendered via `m.render()` do not.
 
 `m.mount()` is suitable for application developers integrating Mithril.js widgets into existing codebases where routing is handled by another library or framework, while still enjoying Mithril.js' auto-redrawing facilities.
 

@@ -37,7 +37,7 @@ var pathname = m.buildPathname('/path/:id', {id: 'user', a: '1', b: '2'})
 
 ### How it works
 
-The `m.buildPathname` creates a [path name](paths.md) from a path template and a parameters object. It's useful for building URLs, and it's what [`m.route`](route.md) and [`m.request`](request.md) use internally to interpolate paths. It uses [`m.buildQueryString`](buildQueryString.md) to generate the query parameters to append to the path name.
+The `m.buildPathname` creates a [path name](paths.md) from a path template and a parameters object. It's useful for building URLs for `fetch()` or other HTTP calls, and [`m.route`](route.md) uses it internally to interpolate paths. It uses [`m.buildQueryString`](buildQueryString.md) to generate the query parameters to append to the path name.
 
 ```javascript
 var pathname = m.buildPathname('/path/:id', {id: 'user', a: 1, b: 2})

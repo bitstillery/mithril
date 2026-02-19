@@ -8,7 +8,7 @@
 
 ## Context
 
-The Bitstillery Mithril fork has diverged from upstream Mithril.js: Stream and `m.request` were removed; Signals, Store, SSR, and htm were added. The codebase is TypeScript-first and uses Bun. The current docs target the original Mithril.js—npm, Node, ospec, Stream, `m.request`, framework comparisons—and do not reflect the fork's features or tooling.
+The Bitstillery Mithril fork has diverged from upstream Mithril.js: Stream and the built-in request API were removed; Signals, Store, SSR, and htm were added. The codebase is TypeScript-first and uses Bun. The current docs target the original Mithril.js—npm, Node, ospec, Stream, framework comparisons—and do not reflect the fork's features or tooling.
 
 We need a plan to modernize the docs so they accurately describe this fork. At the same time, we want to signal clearly to the Mithril community: this is not an attempt to replace Mithril, but an experiment by Bitstillery to add functionality we would like to see. We will discuss with the community whether these changes can be contributed upstream.
 
@@ -35,7 +35,7 @@ We will modernize the documentation according to the following principles and ch
 ### Removals
 
 - **Stream** (`content/stream.md`): Remove page, nav entry, route
-- **m.request** (`content/request.md`): Remove page; replace usages with `fetch()` in examples
+- **Request API**: Removed; replaced usages with `fetch()` in examples
 - **ospec**: Rewrite testing docs for `bun test`
 - **Framework comparison**: Remove page and charts
 - **ES6+ on legacy browsers** (`content/es6.md`): Remove—obsolete with Bun
@@ -77,7 +77,7 @@ We will modernize the documentation according to the following principles and ch
 ## Alternatives Considered
 
 - **Keep upstream docs with patches**: Would require maintaining a patch set; harder to keep in sync.
-- **Minimal fork-specific overlay**: Would leave outdated content (Stream, m.request) visible; confusing.
+- **Minimal fork-specific overlay**: Would leave outdated content (Stream, request API) visible; confusing.
 - **Full rewrite from scratch**: Chosen—cleaner than patching, and the plan provides structure.
 
 ## Implementation Details
@@ -85,7 +85,7 @@ We will modernize the documentation according to the following principles and ch
 The detailed plan lives in [docs/DOCS_MODERNIZATION_PLAN.md](../../DOCS_MODERNIZATION_PLAN.md). Phases:
 
 1. Branding, links, version suffix
-2. Remove Stream, m.request, framework comparisons
+2. Remove Stream, request API page, framework comparisons
 3. Update nav, routes, layout
 4. Rewrite index, installation, testing
 5. Update route, simple-application, jsx, contributing

@@ -30,8 +30,6 @@ If you are migrating, consider using the [mithril-codemods](https://www.npmjs.co
 - [Building/Parsing query strings](#buildingparsing-query-strings)
 - [Preventing unmounting](#preventing-unmounting)
 - [Run code on component removal](#run-code-on-component-removal)
-- [`m.request`](#mrequest)
-- [Default `responseType` for `m.request`](#default-responsetype-for-mrequest)
 - [`m.deferred` removed](#mdeferred-removed)
 - [`m.sync` removed](#msync-removed)
 - [`xlink` namespace required](#xlink-namespace-required)
@@ -183,7 +181,7 @@ Mithril.js' rendering engine still operates on the basis of semi-automated globa
 
 ### No more redraw locks
 
-In v0.2.x, Mithril.js allowed 'redraw locks' which temporarily prevented blocked draw logic: by default, `m.request` would lock the draw loop on execution and unlock when all pending requests had resolved - the same behaviour could be invoked manually using `m.startComputation()` and `m.endComputation()`. The latter APIs and the associated behaviour has been removed in v2.x without replacement. Redraw locking can lead to buggy UIs: the concerns of one part of the application should not be allowed to prevent other parts of the view from updating to reflect change.
+In v0.2.x, Mithril.js allowed 'redraw locks' which temporarily prevented blocked draw logic: by default, HTTP requests would lock the draw loop on execution and unlock when all pending requests had resolved - the same behaviour could be invoked manually using `m.startComputation()` and `m.endComputation()`. The latter APIs and the associated behaviour has been removed in v2.x without replacement. Redraw locking can lead to buggy UIs: the concerns of one part of the application should not be allowed to prevent other parts of the view from updating to reflect change.
 
 ### Cancelling redraw from event handlers
 
@@ -586,17 +584,15 @@ In v1.x, there were three separate path template syntaxes that, although they we
 
 Concretely, here's how it affects each method:
 
-### `m.request` URLs
+### `m.buildPathname` and `m.route.set` paths
 
-Path components in v2.x are escaped automatically when interpolated and they read their values from `params`. In v0.2.x, `m.request({url: "/user/:name/photos/:id", data: {name: "a/b", id: "c/d"}})` would send its request with the URL set to `/user/a%2Fb/photos/c/d`. In v2.x, the corresponding `m.request({url: "/user/:name/photos/:id", params: {name: "a/b", id: "c/d"}})` would send its request to `/user/a%2Fb/photos/c%2Fd`. If you deliberately _want_ to interpolate a key unescaped, use `:key...` instead.
+Path components in v2.x are escaped automatically when interpolated and they read their values from `params`. Use `m.buildPathname(path, params)` to build URLs for `fetch()`. If you deliberately _want_ to interpolate a key unescaped, use `:key...` instead.
 
 Interpolations in inline query strings, like in `/api/search?q=:query`, are not performed in v2.x. Pass those via `params` with appropriate key names instead, without specifying it in the query string.
 
-Do note that this applies to `m.jsonp` as well. When migrating from `m.request` + `dataType: "jsonp"` to `m.jsonp`, you also need to be aware of this.
-
 ### `m.route(route, params, shouldReplaceHistoryEntry)` paths
 
-These permit interpolations now, and they work identically to that of `m.request`.
+These permit interpolations now, and they work identically to that of `m.buildPathname`.
 
 ### `m.route` route patterns
 
@@ -690,7 +686,7 @@ var qs = m.buildQueryString({a: 1})
 var obj = m.parseQueryString('a=1')
 ```
 
-Also, in v2.x, `{key: undefined}` is serialized as `key=undefined` by `m.buildQueryString` and methods that use it like `m.request`. In v0.2.x, the key was omitted and this carried over to `m.request`. If you were previously relying on this, change your code to omit the keys from the object entirely. It may be worth using a simple utility to strip all keys from an object whose values are `undefined` if you can't easily do that and you need to retain v0.2.x behavior.
+Also, in v2.x, `{key: undefined}` is serialized as `key=undefined` by `m.buildQueryString` and methods that use it like `m.buildPathname`. In v0.2.x, the key was omitted and this carried over to URL-building methods. If you were previously relying on this, change your code to omit the keys from the object entirely. It may be worth using a simple utility to strip all keys from an object whose values are `undefined` if you can't easily do that and you need to retain v0.2.x behavior.
 
 ```javascript
 // Call whenever you need to omit `undefined` parameters from an object.
@@ -785,94 +781,9 @@ var Component = {
 
 ---
 
-## `m.request`
-
-Promises returned by [m.request](request.md) are no longer `m.prop` getter-setters. In addition, `initialValue`, `unwrapSuccess` and `unwrapError` are no longer supported options.
-
-In addition, requests no longer have `m.startComputation`/`m.endComputation` semantics. Instead, redraws are always triggered when a request promise chain completes (unless `background: true` is set).
-
-The `data` parameter has now been split into `params`, query parameters interpolated into the URL and appended to the request, and `body`, the body to send in the underlying XHR.
-
-In v0.2.x, you would use a `dataType: "jsonp"` to initiate a JSONP request. In v2.x, you now use [`m.jsonp`](jsonp.md), which carries mostly the same API as `m.request` without the XHR-related parts.
-
-### v0.2.x
-
-```javascript
-var data = m.request({
-    method: 'GET',
-    url: 'https://api.github.com/',
-    initialValue: [],
-})
-
-setTimeout(function () {
-    console.log(data())
-}, 1000)
-
-m.request({
-    method: 'POST',
-    url: 'https://api.github.com/',
-    data: someJson,
-})
-```
-
-### v2.x
-
-```javascript
-var data = []
-m.request({
-    method: 'GET',
-    url: 'https://api.github.com/',
-}).then(function (responseBody) {
-    data = responseBody
-})
-
-setTimeout(function () {
-    console.log(data) // note: not a getter-setter
-}, 1000)
-
-m.request({
-    method: 'POST',
-    url: 'https://api.github.com/',
-    body: someJson,
-})
-
-// OR
-
-var data = []
-m.request('https://api.github.com/').then(function (responseBody) {
-    data = responseBody
-})
-
-setTimeout(function () {
-    console.log(data) // note: not a getter-setter
-}, 1000)
-
-m.request('https://api.github.com/', {
-    method: 'POST',
-    body: someJson,
-})
-```
-
-Additionally, if the `extract` option is passed to `m.request` the return value of the provided function will be used directly to resolve the request promise, and the `deserialize` callback is ignored.
-
----
-
-## `m.request` headers
-
-In v0.2.x, Mithril.js didn't set any headers on requests by default. Now, it sets up to 2 headers:
-
-- `Content-Type: application/json; charset=utf-8` for requests with JSON bodies that are `!= null`
-- `Accept: application/json, text/*` for requests expecting JSON responses
-
-The first of the two headers, `Content-Type`, will trigger a CORS prefetch as it [is not a CORS-safelisted request header](https://fetch.spec.whatwg.org/#cors-safelisted-request-header) due to the specified content type, and that could introduce new errors depending on how CORS is configured on your server. If you run into issues with this, you may need to override that header in question by passing `headers: {"Content-Type": "text/plain"}`. (The `Accept` header doesn't trigger anything, so you don't need to override that.)
-
-_The only content types that the Fetch spec lets avoid CORS prefetch checks are `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain`. It doesn't allow anything else, and it intentionally disallows JSON._
-
----
-
 ## `m.deferred` removed
 
-v0.2.x used its own custom asynchronous contract object, exposed as `m.deferred`, which was used as the basis for `m.request`. v2.x uses Promises instead, and implements a [polyfill](promise.md) in non-supporting environments. In situations where you would have used `m.deferred`, you should use Promises instead.
+v0.2.x used its own custom asynchronous contract object, exposed as `m.deferred`,  v2.x uses Promises instead, and implements a [polyfill](promise.md) in non-supporting environments. In situations where you would have used `m.deferred`, you should use Promises instead.
 
 ### v0.2.x
 
@@ -924,8 +835,8 @@ Since v2.x uses standards-compliant Promises, `m.sync` is redundant. Use `Promis
 
 ```javascript
 m.sync([
-    m.request({method: 'GET', url: 'https://api.github.com/users/lhorie'}),
-    m.request({method: 'GET', url: 'https://api.github.com/users/dead-claudia'}),
+    fetch('https://api.github.com/users/lhorie').then(function (r) { return r.json() }),
+    fetch('https://api.github.com/users/dead-claudia').then(function (r) { return r.json() }),
 ]).then(function (users) {
     console.log('Contributors:', users[0].name, 'and', users[1].name)
 })
@@ -935,8 +846,8 @@ m.sync([
 
 ```javascript
 Promise.all([
-    m.request({method: 'GET', url: 'https://api.github.com/users/lhorie'}),
-    m.request({method: 'GET', url: 'https://api.github.com/users/dead-claudia'}),
+    fetch('https://api.github.com/users/lhorie').then(function (r) { return r.json() }),
+    fetch('https://api.github.com/users/dead-claudia').then(function (r) { return r.json() }),
 ]).then(function (users) {
     console.log('Contributors:', users[0].name, 'and', users[1].name)
 })

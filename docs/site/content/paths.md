@@ -4,7 +4,7 @@ Documentation on how to work with paths in Mithril.js
 
 # Path Handling
 
-[`m.route`](route.md) and [`m.request`](request.md) each have a concept called a path. This is used to generate the URL you route to or fetch from.
+[`m.route`](route.md) uses paths to generate the URLs you navigate to. Paths are also useful with [`m.buildPathname`](buildPathname.md) when constructing URLs for `fetch()` or other HTTP calls.
 
 ### Path types
 
@@ -13,7 +13,7 @@ There are two general types of paths: raw paths and parameterized paths.
 - Raw paths are simply strings used directly as URLs. Nothing is substituted or even split. It's just normalized with all the parameters appended to the end.
 - Parameterized paths let you insert values into paths, escaped by default for convenience and safety against URL injection.
 
-For [`m.request`](request.md) these can be pretty much any URL, but for [routes](route.md), these can only be absolute URL path names without schemes or domains.
+For [routes](route.md), paths can only be absolute URL path names without schemes or domains.
 
 ### Path parameters
 
@@ -22,7 +22,7 @@ Path parameters are themselves pretty simple. They come in two forms:
 - `:foo` - This injects a simple `params.foo` into the URL, escaping its value first.
 - `:foo...` - This injects a raw `params.foo` path into the URL without escaping anything.
 
-You're probably wondering what that `params` object is supposed to be. It's pretty simple: it's the `params` in either [`m.route.set(path, params)`](route.md#mrouteset), [`m.request({url, params})`](request.md#signature).
+You're probably wondering what that `params` object is supposed to be. It's the `params` in [`m.route.set(path, params)`](route.md#mrouteset) or [`m.buildPathname(path, params)`](buildPathname.md) for building URLs.
 
 When receiving routes via [`m.route(root, defaultRoute, routes)`](route.md#signature), you can use these parameters to _extract_ values from routes. They work basically the same way as generating the paths, just in the opposite direction.
 
@@ -54,39 +54,33 @@ Path parameters are greedy: given a declared route `"/edit/:name.:ext"`, if you 
 
 ### Parameter normalization
 
-Path parameters that are interpolated into path names are omitted from the query string, for convenience and to keep the path name reasonably readable. For example, this sends a server request of `GET /api/user/1/connections?sort=name-asc`, omitting the duplicate `id=1` in the URL string.
+Path parameters that are interpolated into path names are omitted from the query string, for convenience and to keep the path name reasonably readable. For example, `m.buildPathname` produces `https://example.com/api/user/1/connections?sort=name-asc`, omitting the duplicate `id=1` in the URL string:
 
 ```javascript
-m.request({
-    url: 'https://example.com/api/user/:userID/connections',
-    params: {
-        userID: 1,
-        sort: 'name-asc',
-    },
+var url = m.buildPathname('https://example.com/api/user/:userID/connections', {
+    userID: 1,
+    sort: 'name-asc',
 })
+fetch(url)
 ```
 
-You can also specify parameters explicitly in the query string itself, such as in this, which is equivalent to the above:
+You can also specify parameters explicitly in the path template. This is equivalent:
 
 ```javascript
-m.request({
-    url: 'https://example.com/api/user/:userID/connections?sort=name-asc',
-    params: {
-        userID: 1,
-    },
+var url = m.buildPathname('https://example.com/api/user/:userID/connections?sort=name-asc', {
+    userID: 1,
 })
+fetch(url)
 ```
 
-And of course, you can mix and match. This fires a request to `GET /api/user/1/connections?sort=name-asc&first=10`.
+You can mix path and query parameters. This produces `GET /api/user/1/connections?sort=name-asc&first=10`:
 
 ```javascript
-m.request({
-    url: 'https://example.com/api/user/:userID/connections?sort=name-asc',
-    params: {
-        userID: 1,
-        first: 10,
-    },
+var url = m.buildPathname('https://example.com/api/user/:userID/connections?sort=name-asc', {
+    userID: 1,
+    first: 10,
 })
+fetch(url)
 ```
 
 This even extends to route matching: you can match against a route _with_ explicit query strings. It retains the matched parameter for convenience, so you can still access them via vnode parameters or via [`m.route.param`](route.md#mrouteparam). Note that although this _is_ possible, it's not generally recommended, since you should prefer paths for pages. It could sometimes useful if you need to generate a somewhat different view just for a particular file type, but it still logically is a query-like parameter, not a whole separate page.
@@ -126,4 +120,4 @@ There are some characters that, if you want to use them literally, you need to e
 - `?` = `%3F` (required only in paths)
 - `#` = `%23`
 
-Of course, there's others you have to escape per the URL spec, like spaces. But as already noted, `encodeURIComponent` does that for you, and Mithril.js uses that implicitly when you substitute parameters. So you only really need to care if you're specifying parameters explicitly like in `m.request("https://example.com/api/user/User%20Name/:field", {params: {field: ...}})`.
+Of course, there's others you have to escape per the URL spec, like spaces. But as already noted, `encodeURIComponent` does that for you, and Mithril.js uses that implicitly when you substitute parameters. So you only really need to care if you're specifying parameters explicitly like in `m.buildPathname("https://example.com/api/user/User%20Name/:field", {field: ...})`.

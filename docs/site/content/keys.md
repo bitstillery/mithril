@@ -370,16 +370,21 @@ function Person(vnode) {
     var state = 'pending'
     var person, error
 
-    m.request('/api/person/:id', {params: {id: personId}}).then(
-        function (p) {
-            person = p
-            state = 'ready'
-        },
-        function (e) {
-            error = e
-            state = 'error'
-        },
-    )
+    fetch(m.buildPathname('/api/person/:id', {id: personId}))
+        .then(function (r) {
+            if (!r.ok) throw {code: r.status}
+            return r.json()
+        })
+        .then(
+            function (p) {
+                person = p
+                state = 'ready'
+            },
+            function (e) {
+                error = e
+                state = 'error'
+            },
+        )
 
     return {
         view: function () {

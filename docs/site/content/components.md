@@ -116,7 +116,7 @@ NOTE: Lifecycle methods can also be defined in the `attrs` object, so you should
 
 Like all virtual DOM nodes, component vnodes can have state. Component state is useful for supporting object-oriented architectures, for encapsulation and for separation of concerns.
 
-Note that unlike many other frameworks, mutating component state does _not_ trigger [redraws](autoredraw.md) or DOM updates. Instead, redraws are performed when event handlers fire, when HTTP requests made by [m.request](request.md) complete or when the browser navigates to different routes. Mithril.js' component state mechanisms simply exist as a convenience for applications.
+Note that unlike many other frameworks, mutating component state does _not_ trigger [redraws](autoredraw.md) or DOM updates. Instead, redraws are performed when event handlers fire, when HTTP requests made by `fetch()` complete or when the browser navigates to different routes. Mithril.js' component state mechanisms simply exist as a convenience for applications.
 
 If a state change occurs that is not as a result of any of the above conditions (e.g. after a `setTimeout`), then you can use `m.redraw()` to trigger a redraw manually.
 

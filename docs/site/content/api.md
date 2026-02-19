@@ -54,13 +54,19 @@ m.route(document.body, '/home', {
 #### m.route.set(path) - [docs](route.md#mrouteset)
 
 ```javascript
-m.route.set('/home')
+var Home = { view: function () { return m('div', 'Home') } }
+var Page1 = { view: function () { return m('div', 'Page 1') } }
+m.route(document.body, '/home', {'/home': Home, '/page1': Page1})
+m.route.set('/page1')
+// Output: Page 1
 ```
 
 #### m.route.get() - [docs](route.md#mrouteget)
 
 ```javascript
-var currentRoute = m.route.get()
+var Home = { view: function () { return m('div', 'Route: ' + m.route.get()) } }
+m.route(document.body, '/home', {'/home': Home})
+// Output: Route: /home
 ```
 
 #### m.route.prefix = prefix - [docs](route.md#mrouteprefix)
@@ -69,26 +75,21 @@ Invoke this before `m.route()` to change the routing prefix.
 
 ```javascript
 m.route.prefix = '#!'
+var Home = { view: function () { return m('div', 'Prefix: ' + m.route.prefix) } }
+m.route(document.body, '/', {'/': Home})
+// Output: Prefix: #!
 ```
 
 #### m(m.route.Link, ...) - [docs](route.md#mroutelink)
 
 ```javascript
-m(m.route.Link, {href: '/Home'}, 'Go to home page')
-```
-
----
-
-#### m.request(options) - [docs](request.md)
-
-```javascript
-m.request({
-    method: 'PUT',
-    url: '/api/v1/users/:id',
-    params: {id: 1, name: 'test'},
-}).then(function (result) {
-    console.log(result)
-})
+var Home = {
+    view: function () {
+        return m('div', m(m.route.Link, {href: '/home'}, 'Go to home page'))
+    },
+}
+m.route(document.body, '/home', {'/home': Home})
+// Output: clickable link "Go to home page"
 ```
 
 ---
@@ -97,7 +98,8 @@ m.request({
 
 ```javascript
 var object = m.parseQueryString('a=1&b=2')
-// {a: "1", b: "2"}
+m.render(document.body, m('pre', JSON.stringify(object)))
+// Output: {"a":"1","b":"2"}
 ```
 
 ---
@@ -106,7 +108,8 @@ var object = m.parseQueryString('a=1&b=2')
 
 ```javascript
 var querystring = m.buildQueryString({a: '1', b: '2'})
-// "a=1&b=2"
+m.render(document.body, m('pre', querystring))
+// Output: a=1&b=2
 ```
 
 ---

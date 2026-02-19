@@ -8,6 +8,7 @@ import type {NavSection} from '../store'
 interface DocsSidebarAttrs {
     sections: NavSection[]
     pageToc?: string
+    routePath?: string
 }
 
 /**
@@ -17,13 +18,13 @@ interface DocsSidebarAttrs {
  */
 export class DocsSidebar extends MithrilComponent<DocsSidebarAttrs> {
     view(vnode: Vnode<DocsSidebarAttrs>) {
-        const {sections = [], pageToc} = vnode.attrs ?? {}
+        const {sections = [], pageToc, routePath} = vnode.attrs ?? {}
         const hasContent = sections?.length || pageToc
         if (!hasContent) return null
         return m(
             'aside',
             {class: 'docs-sidebar'},
-            sections?.length ? m(NavSections as any, {sections}) : null,
+            sections?.length ? m(NavSections as any, {sections, routePath}) : null,
             pageToc ? m.trust(pageToc) : null,
         )
     }

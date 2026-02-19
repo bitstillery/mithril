@@ -45,24 +45,6 @@ function doSomething(e) {
 m.mount(document.body, MyComponent)
 ```
 
-### After m.request
-
-Mithril.js automatically redraws after [`m.request`](request.md) completes:
-
-```javascript
-m.request('/api/v1/users').then(function () {
-    // a redraw happens after this function runs
-})
-```
-
-You can disable an auto-redraw for a specific request by setting the `background` option to true:
-
-```javascript
-m.request('/api/v1/users', {background: true}).then(function () {
-    // does not trigger a redraw
-})
-```
-
 ### After route changes
 
 Mithril.js automatically redraws after [`m.route.set()`](route.md#mrouteset) calls and after route changes via links using [`m.route.Link`](route.md#mroutelink).
@@ -113,7 +95,7 @@ function StableComponent() {
 }
 ```
 
-Mithril.js does not auto-redraw vnode trees that are rendered via `m.render`. This means redraws do not occur after event changes and `m.request` calls for templates that were rendered via `m.render`. Thus, if your architecture requires manual control over when rendering occurs (as can sometimes be the case when using libraries like Redux), you should use `m.render` instead of `m.mount`.
+Mithril.js does not auto-redraw vnode trees that are rendered via `m.render`. This means redraws do not occur after event changes or asynchronous operations (e.g. `fetch()` completion) for templates that were rendered via `m.render`. Thus, if your architecture requires manual control over when rendering occurs (as can sometimes be the case when using libraries like Redux), you should use `m.render` instead of `m.mount`.
 
 Remember that `m.render` expects a vnode tree, and `m.mount` expects a component:
 

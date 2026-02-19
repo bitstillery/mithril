@@ -131,15 +131,24 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                             </h1>
                         </div>
                         <nav>
-                            {m(m.route.Link, {href: '/'}, 'Guide')}
-                            {m(m.route.Link, {href: '/api'}, 'API')}
-                            {m(m.route.Link, {href: '/support'}, 'Support')}
+                            {m(m.route.Link, {
+                                href: '/',
+                                class: !isApiPage && currentPath !== '/support' ? 'active' : undefined,
+                            }, 'Guide')}
+                            {m(m.route.Link, {
+                                href: '/api',
+                                class: isApiPage ? 'active' : undefined,
+                            }, 'API')}
+                            {m(m.route.Link, {
+                                href: '/support',
+                                class: currentPath === '/support' ? 'active' : undefined,
+                            }, 'Support')}
                             <a href='https://github.com/bitstillery/mithril'>GitHub</a>
                         </nav>
                     </section>
                 </header>
                 <div class='docs-body'>
-                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} />
+                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} routePath={currentPath} />
                     <main>{mainContent}</main>
                 </div>
             </div>
