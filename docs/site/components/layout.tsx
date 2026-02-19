@@ -72,7 +72,97 @@ const apiPagePatterns = [
     'ssr',
 ]
 
+const HASH_NAV_DEBOUNCE_MS = 400
+
 export class Layout extends MithrilComponent<LayoutAttrs> {
+    activeAnchorId: string | null = null
+    private scrollSpyRaf = 0
+    private scrollSpyBound: () => void = () => {}
+    private lastHashChangeAt = 0
+
+    oncreate(vnode: Vnode<LayoutAttrs>) {
+        this.setupScrollSpy()
+        this.highlightCode(vnode)
+    }
+
+    onupdate(vnode: Vnode<LayoutAttrs>) {
+        this.setupScrollSpy()
+        this.highlightCode(vnode)
+    }
+
+    onremove() {
+        const main = document.querySelector('main')
+        if (main) main.removeEventListener('scroll', this.scrollSpyBound)
+        window.removeEventListener('hashchange', this.hashChangeBound)
+    }
+
+    scrollToHash = (hashId: string) => {
+        if (!hashId) return
+        const el = document.getElementById(hashId)
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    hashChangeBound = () => {
+        this.lastHashChangeAt = Date.now()
+        const hashId = window.location.hash.slice(1)
+        if (this.activeAnchorId !== hashId) {
+            this.activeAnchorId = hashId || null
+            m.redraw()
+        }
+        this.scrollToHash(hashId)
+    }
+
+    setupScrollSpy() {
+        if (typeof window === 'undefined') return
+        const main = document.querySelector('main')
+        if (main) {
+            main.removeEventListener('scroll', this.scrollSpyBound)
+        }
+        window.removeEventListener('hashchange', this.hashChangeBound)
+        this.scrollSpyBound = () => {
+            if (this.scrollSpyRaf) return
+            this.scrollSpyRaf = requestAnimationFrame(() => {
+                this.scrollSpyRaf = 0
+                if (Date.now() - this.lastHashChangeAt < HASH_NAV_DEBOUNCE_MS) return
+                const mainEl = document.querySelector('main')
+                if (!mainEl) return
+                const headings = mainEl.querySelectorAll('.body h2[id], .body h3[id], .body h4[id]')
+                if (headings.length === 0) return
+                const viewportTop = 120
+                let active: string | null = null
+                for (let i = headings.length - 1; i >= 0; i--) {
+                    const el = headings[i] as HTMLElement
+                    if (el.getBoundingClientRect().top <= viewportTop) {
+                        active = el.id
+                        break
+                    }
+                }
+                if (!active && headings.length > 0) {
+                    active = (headings[0] as HTMLElement).id
+                }
+                if (this.activeAnchorId !== active) {
+                    this.activeAnchorId = active
+                    m.redraw()
+                }
+            })
+        }
+        if (main) {
+            main.addEventListener('scroll', this.scrollSpyBound)
+        }
+        window.addEventListener('hashchange', this.hashChangeBound)
+        const hashId = window.location.hash.slice(1)
+        if (hashId) {
+            this.lastHashChangeAt = Date.now()
+            this.activeAnchorId = hashId
+            m.redraw()
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => this.scrollToHash(hashId))
+            })
+        }
+        this.scrollSpyBound()
+        setTimeout(() => this.scrollSpyBound(), 150)
+    }
+
     view(vnode: Vnode<LayoutAttrs>) {
         const attrs = (vnode.attrs ?? {}) as LayoutAttrs
         const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = '3.0.0-AA'} = attrs
@@ -148,19 +238,11 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                     </section>
                 </header>
                 <div class='docs-body'>
-                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} routePath={currentPath} />
+                    <DocsSidebar sections={navSections} pageToc={displayPage.pageToc} pageTocHeadings={displayPage.pageTocHeadings} routePath={currentPath} activeAnchorId={this.activeAnchorId} />
                     <main>{mainContent}</main>
                 </div>
             </div>
         )
-    }
-
-    oncreate(vnode: Vnode<LayoutAttrs>) {
-        this.highlightCode(vnode)
-    }
-
-    onupdate(vnode: Vnode<LayoutAttrs>) {
-        this.highlightCode(vnode)
     }
 
     highlightCode(vnode: Vnode<LayoutAttrs>) {

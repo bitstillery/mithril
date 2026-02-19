@@ -14,6 +14,12 @@
     --od-cyan: #56b6c2;
 }
 
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     background: var(--od-bg);
     color: var(--od-text);
@@ -24,6 +30,11 @@ body {
         margin: auto;
         max-width: 1280px;
     }
+}
+
+#app {
+    height: 100%;
+    overflow: hidden;
 }
 
 body,
@@ -39,6 +50,14 @@ h5 {
     margin: 0 auto;
     max-width: 1280px;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+#app .docs-container > header {
+    flex-shrink: 0;
 }
 
 header .header-section {
@@ -59,10 +78,15 @@ header .header-brand {
 .docs-body {
     display: flex;
     margin-top: 0;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 
     main {
         flex: 1;
         min-width: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .body {
@@ -74,6 +98,8 @@ header .header-brand {
     flex-shrink: 0;
     width: 280px;
     padding-right: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .docs-nav-sections {
@@ -174,6 +200,11 @@ header .header-brand {
         display: inline;
         overflow-wrap: break-word;
         word-wrap: break-word;
+    }
+
+    a.docs-toc-link--active {
+        color: var(--od-text);
+        font-weight: 600;
     }
 }
 

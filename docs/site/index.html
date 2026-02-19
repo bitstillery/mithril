@@ -19,6 +19,16 @@
                     document.body.className = document.body.className === 'navigating' ? '' : 'navigating'
                 }
                 if (e.target.closest('.docs-sidebar')) {
+                    var link = e.target.closest('a[href]')
+                    if (link) {
+                        var href = link.getAttribute('href') || ''
+                        var isAnchor = href.indexOf('#') >= 0
+                        var path = href.split('#')[0] || '/'
+                        var currentPath = window.location.pathname || '/'
+                        if (currentPath.endsWith('/')) currentPath = currentPath.slice(0, -1) || '/'
+                        if (path.endsWith('/')) path = path.slice(0, -1) || '/'
+                        if (isAnchor && (path === '' || path === currentPath)) return
+                    }
                     document.body.className = ''
                 }
             })

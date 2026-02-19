@@ -25,12 +25,19 @@ marked.use({
     },
 })
 
+export interface TocHeading {
+    id: string
+    raw: string
+}
+
 export interface DocPage {
     title: string
     content: string
     metaDescription: string
     /** Table of contents for sidebar - generated from headings */
     pageToc?: string
+    /** Headings for TOC with scroll-spy active state */
+    pageTocHeadings?: TocHeading[]
 }
 
 const metaDescriptionRegex = /<!--meta-description\n([\s\S]+?)\n-->/m
@@ -55,23 +62,28 @@ function escapeHtml(text: string): string {
         .replace(/"/g, '&quot;')
 }
 
-function buildPageTocFromHeadings(): string | undefined {
+function buildPageTocFromHeadings(basePath: string): {html: string; headings: TocHeading[]} | undefined {
     const headings = getHeadingList()
     const subHeadings = headings.filter((h) => h.level === 3)
     if (subHeadings.length === 0) return undefined
     const items = subHeadings
-        .map((h) => `<li><a href="#${h.id}">${escapeHtml(h.raw)}</a></li>`)
+        .map((h) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`)
         .join('\n')
-    return `<ul class="docs-sidebar-toc">\n${items}\n</ul>`
+    return {
+        html: `<ul class="docs-sidebar-toc">\n${items}\n</ul>`,
+        headings: subHeadings.map((h) => ({id: h.id, raw: h.raw})),
+    }
 }
 
-export async function loadMarkdownFile(filePath: string): Promise<DocPage> {
+export async function loadMarkdownFile(filePath: string, basePath: string): Promise<DocPage> {
     const markdown = await readFile(filePath, 'utf-8')
     let html = marked.parse(markdown) as string
     const title = extractTitle(markdown)
     const metaDescription = extractMetaDescription(markdown)
 
-    const pageToc = buildPageTocFromHeadings()
+    const toc = buildPageTocFromHeadings(basePath)
+    const pageToc = toc?.html
+    const pageTocHeadings = toc?.headings
 
     const match = html.match(h1UlHrPattern)
     if (match && typeof match.index === 'number') {
@@ -83,10 +95,11 @@ export async function loadMarkdownFile(filePath: string): Promise<DocPage> {
         content: html,
         metaDescription,
         pageToc,
+        pageTocHeadings,
     }
 }
 
-export async function loadMarkdownFromDocs(docName: string): Promise<DocPage | null> {
+export async function loadMarkdownFromDocs(docName: string, basePath?: string): Promise<DocPage | null> {
     // Only load markdown on server (Bun/Node.js), not in browser
     if (typeof window !== 'undefined') {
         return null
@@ -95,7 +108,8 @@ export async function loadMarkdownFromDocs(docName: string): Promise<DocPage | n
     try {
         // Load from in-repo content (mithril/docs/site/content/)
         const docsPath = join(import.meta.dir, 'content', `${docName}.md`)
-        return await loadMarkdownFile(docsPath)
+        const path = basePath ?? (docName === 'index' ? '/' : `/${docName}`)
+        return await loadMarkdownFile(docsPath, path)
     } catch {
         return null
     }

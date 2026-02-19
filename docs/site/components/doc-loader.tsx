@@ -19,7 +19,7 @@ export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
             const {getNavGuides, getNavMethods, getNavGuidesStructure, getNavMethodsStructure} = await import('../nav')
             try {
                 const [page, , , navGuidesStructure, navMethodsStructure] = await Promise.all([
-                    loadMarkdownFromDocs(attrs.docName),
+                    loadMarkdownFromDocs(attrs.docName, attrs.routePath),
                     getNavGuides(),
                     getNavMethods(),
                     getNavGuidesStructure(),

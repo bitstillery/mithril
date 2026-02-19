@@ -2,17 +2,22 @@ import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 
 import type {NavSection} from '../store'
+import type {TocHeading} from '../markdown'
 
 interface NavSectionsAttrs {
     sections: NavSection[]
     routePath?: string
     pageToc?: string
+    pageTocHeadings?: TocHeading[]
+    activeAnchorId?: string
+    basePath?: string
 }
 
 const RouteLink = m.route.Link as any
 
 function normalizePath(p: string): string {
-    return (p || '/').replace(/\/$/, '') || '/'
+    const path = (p || '/').split('#')[0]
+    return path.replace(/\/$/, '') || '/'
 }
 
 function isLinkActive(linkHref: string, currentPath: string): boolean {
@@ -36,7 +41,7 @@ function renderNavLink(link: {text: string; href: string; external?: boolean}) {
 
 export class NavSections extends MithrilComponent<NavSectionsAttrs> {
     view(vnode: Vnode<NavSectionsAttrs>) {
-        const {sections = [], routePath = '', pageToc} = vnode.attrs ?? {}
+        const {sections = [], routePath = '', pageToc, pageTocHeadings, activeAnchorId, basePath} = vnode.attrs ?? {}
         if (!sections?.length) return null
         return (
             <div class='docs-nav-sections'>
@@ -56,8 +61,18 @@ export class NavSections extends MithrilComponent<NavSectionsAttrs> {
                                             class: `docs-nav-link${active ? ' docs-nav-link--active' : ''}`,
                                         }, renderNavLink(link)),
                                     ]
-                                    if (active && pageToc) {
-                                        items.push(m('div', {class: 'docs-nav-page-toc'}, m.trust(pageToc)))
+                                    if (active && (pageToc || pageTocHeadings?.length)) {
+                                        const toc = pageTocHeadings?.length && basePath
+                                            ? m('ul', {class: 'docs-sidebar-toc'}, pageTocHeadings.map((h) =>
+                                                m('li',
+                                                    m('a', {
+                                                        href: `${basePath}#${h.id}`,
+                                                        class: activeAnchorId === h.id ? 'docs-toc-link--active' : '',
+                                                    }, h.raw),
+                                                ),
+                                            ))
+                                            : pageToc ? m('div', {class: 'docs-nav-page-toc'}, m.trust(pageToc)) : null
+                                        if (toc) items.push(m('div', {class: 'docs-nav-page-toc'}, toc))
                                     }
                                     return items
                                 })}

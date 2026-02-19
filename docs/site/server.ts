@@ -141,7 +141,7 @@ const server = serve({
             const docName = apiDocsMatch[1]
             try {
                 const [page, navGuides, navMethods, navGuidesStructure, navMethodsStructure] = await Promise.all([
-                    loadMarkdownFromDocs(docName),
+                    loadMarkdownFromDocs(docName, docName === 'index' ? '/' : `/${docName}`),
                     getNavGuides(),
                     getNavMethods(),
                     getNavGuidesStructure(),
