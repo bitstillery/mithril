@@ -30,8 +30,9 @@ body,
 table,
 h5 {
     font-weight: normal;
-    font-size: 16px;
+    font-size: 17px;
     font-family: 'Open Sans', sans-serif;
+    line-height: 1.6;
 }
 
 #app .docs-container {
@@ -217,7 +218,7 @@ pre,
 code {
     background: var(--od-bg-dark);
     font-family: monospace;
-    font-size: 14px;
+    font-size: 15px;
 }
 
 pre {

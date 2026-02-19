@@ -146,7 +146,7 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
             }),
             m('div.docs-sandbox-preview', [
                 m('iframe.docs-sandbox-iframe', {
-                    sandbox: 'allow-scripts',
+                    sandbox: 'allow-scripts allow-same-origin',
                     src: '/preview.html',
                     oncreate: (ev: {dom: HTMLIFrameElement}) => {
                         state.iframeRef = ev.dom

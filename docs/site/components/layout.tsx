@@ -133,7 +133,7 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                         <nav>
                             {m(m.route.Link, {href: '/'}, 'Guide')}
                             {m(m.route.Link, {href: '/api'}, 'API')}
-                            <a href='https://mithril.zulipchat.com/'>Chat</a>
+                            {m(m.route.Link, {href: '/support'}, 'Support')}
                             <a href='https://github.com/bitstillery/mithril'>GitHub</a>
                         </nav>
                     </section>

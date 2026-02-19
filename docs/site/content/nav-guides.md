@@ -4,7 +4,7 @@
     - [Examples](https://github.com/bitstillery/mithril/tree/main/examples)
     - [Animation](/animation)
     - [Testing](/testing)
-    - [Getting Help](/support)
+    - [Support](/support)
 - New features
     - [Signals](/signals)
     - [State](/state)

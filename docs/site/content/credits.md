@@ -25,6 +25,7 @@ Special thanks to:
 
 Other people who also deserve recognition:
 
+- Luis Herranz - creator of [DeepSignal](https://github.com/luisherranz/deepsignal), which inspired this fork's `state()` API for proxy-based reactive state
 - Arthur Clemens - creator of [Polythene](https://github.com/ArthurClemens/Polythene) and the [HTML-to-Mithril converter](https://arthurclemens.github.io/mithril-template-converter/index.html)
 - Stephan Hoyer - creator of [mithril-node-render](https://github.com/StephanHoyer/mithril-node-render), [mithril-query](https://github.com/StephanHoyer/mithril-query) and [mithril-source-hint](https://github.com/StephanHoyer/mithril-source-hint)
 - the countless people who have reported and fixed bugs, participated in discussions, and helped promote Mithril.js

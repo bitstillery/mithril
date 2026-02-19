@@ -1,12 +1,16 @@
 /**
- * Preview iframe entry point. Exposes m, html, state, MithrilComponent to global, listens for code to run.
+ * Preview iframe entry point. Exposes m, html, state, signal, computed, effect, Store, MithrilComponent to global.
  */
-import m, {state, MithrilComponent} from '../../index'
+import m, {state, signal, computed, effect, Store, MithrilComponent} from '../../index'
 import {html} from '../../htm'
 
 ;(globalThis as any).m = m
 ;(globalThis as any).html = html
 ;(globalThis as any).state = state
+;(globalThis as any).signal = signal
+;(globalThis as any).computed = computed
+;(globalThis as any).effect = effect
+;(globalThis as any).Store = Store
 ;(globalThis as any).MithrilComponent = MithrilComponent
 
 // Use m.mount for m.render so both go through the same code path (fixes standalone m.render)

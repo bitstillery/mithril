@@ -1,26 +1,37 @@
 <!--meta-description
-Fine-grained reactivity with signal(), computed(), and effect()
+Fine-grained reactivity with signals (inspired by Preact Signals)
 -->
 
 # Signals
 
-Signals provide fine-grained reactivity: only components that read a signal re-render when it changes.
+Traditional Mithril re-renders the whole tree when state changes. Signals add *fine-grained reactivity*: only components that actually read a signal re-render when it changes. The implementation was inspired by [Preact Signals](https://preactjs.com/guide/v10/signals).
+
+**How it works.** When a component's `view` runs, any signal or state property it accesses is tracked. When that value changes later, only that component (and its subtree) re-renders—not the entire app. Dependencies are automatic; no manual `m.redraw()` needed.
+
+For component state, **`state()`** is the preferred API: define a reactive object, access properties directly, and function properties become computed values. For single values or use outside components, use the low-level primitives: **`signal()`** (reactive value), **`computed()`** (derived value), and **`effect()`** (side effects when dependencies change).
 
 ```tsx
-import m, {signal, computed, effect} from '@bitstillery/mithril'
+import m, {state, MithrilComponent} from '@bitstillery/mithril'
 
-const count = signal(0)
-const doubled = computed(() => count() * 2)
+const $s = state({count: 0, doubled: () => $s.count * 2}, 'app.state')
 
-effect(() => {
-    console.log(`Count: ${count()}, Doubled: ${doubled()}`)
-})
+class App extends MithrilComponent {
+    view() {
+        return (
+            <div>
+                <p>Count: {$s.count}, Doubled: {$s.doubled}</p>
+                <button onclick={() => $s.count++}>Increment</button>
+            </div>
+        )
+    }
+}
 
-count(5) // Logs: Count: 5, Doubled: 10
+m.mount(document.getElementById('app'), App)
 ```
 
-- `signal(initial)`: creates a reactive value; call as `signal()` to read, `signal(value)` to write
-- `computed(fn)`: derives a value from other signals; re-evaluates when dependencies change
-- `effect(fn)`: runs side effects when dependencies change
+- **`state(initial, name)`** — reactive object; access properties directly in components, no `.value`
+- **`signal(initial)`** — low-level primitive; use `.value` for read/write outside components
+- **`computed(fn)`** — derives a value from other signals; re-evaluates when dependencies change
+- **`effect(fn)`** — runs side effects when dependencies change
 
-Components that read signals during render automatically re-render when those signals change. No manual `m.redraw()` needed.
+See [State](state.md) for structured component state; use `signal()` when you need a single reactive primitive.
