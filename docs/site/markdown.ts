@@ -64,7 +64,7 @@ function escapeHtml(text: string): string {
 
 function buildPageTocFromHeadings(basePath: string): {html: string; headings: TocHeading[]} | undefined {
     const headings = getHeadingList()
-    const subHeadings = headings.filter((h) => h.level === 3)
+    const subHeadings = headings.filter((h) => h.level === 3 || h.level === 4)
     if (subHeadings.length === 0) return undefined
     const items = subHeadings
         .map((h) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`)

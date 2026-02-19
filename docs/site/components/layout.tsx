@@ -72,7 +72,7 @@ const apiPagePatterns = [
     'ssr',
 ]
 
-const HASH_NAV_DEBOUNCE_MS = 200
+const HASH_NAV_DEBOUNCE_MS = 500
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
     activeAnchorId: string | null = null
