@@ -25,10 +25,10 @@ Always try to use an [alternative method](#avoid-trusting-html) first, before co
 
 `vnode = m.trust(html)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`html`      | `String`             | Yes      | A string containing HTML or SVG text
-**returns** | `Vnode`              |          | A trusted HTML [vnode](vnodes.md) that represents the input string
+| Argument    | Type     | Required | Description                                                        |
+| ----------- | -------- | -------- | ------------------------------------------------------------------ |
+| `html`      | `String` | Yes      | A string containing HTML or SVG text                               |
+| **returns** | `Vnode`  |          | A trusted HTML [vnode](vnodes.md) that represents the input string |
 
 [How to read signatures](signatures.md)
 
@@ -40,7 +40,7 @@ By default, Mithril.js escapes all values in order to prevent a class of securit
 
 ```javascript
 var userContent = "<script>alert('evil')</script>"
-var view = m("div", userContent)
+var view = m('div', userContent)
 
 m.render(document.body, view)
 
@@ -51,9 +51,7 @@ m.render(document.body, view)
 However, sometimes it is desirable to render rich text and formatting markup. To fill that need, `m.trust` creates trusted HTML [vnodes](vnodes.md) which are rendered as HTML.
 
 ```javascript
-var view = m("div", [
-	m.trust("<h1>Here's some <em>HTML</em></h1>")
-])
+var view = m('div', [m.trust("<h1>Here's some <em>HTML</em></h1>")])
 
 m.render(document.body, view)
 
@@ -75,7 +73,7 @@ There are many ways in which an HTML string may contain executable code. The mos
 var data = {}
 
 // Sample vulnerable HTML string
-var description = "<img alt='" + data.title + "'> <span>" + data.description + "</span>"
+var description = "<img alt='" + data.title + "'> <span>" + data.description + '</span>'
 
 // An attack using JavaScript-related attributes
 data.description = "<img onload='alert(1)'>"
@@ -113,10 +111,10 @@ As a general rule of thumb, you should avoid using `m.trust` unless you are expl
 
 ```javascript
 // AVOID
-m("div", m.trust("hello world"))
+m('div', m.trust('hello world'))
 
 // PREFER
-m("div", "hello world")
+m('div', 'hello world')
 ```
 
 #### Avoid blind copying and pasting
@@ -128,42 +126,51 @@ Here's the example snippet for the [Facebook Like button](https://developers.fac
 ```html
 <!-- Load Facebook SDK for JavaScript -->
 <div id="fb-root"></div>
-<script>(function(d, s, id) {
-  var js, fjs = d.getElementsByTagName(s)[0];
-  if (d.getElementById(id)) return;
-  js = d.createElement(s); js.id = id;
-  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1";
-  fjs.parentNode.insertBefore(js, fjs);
-}(document, 'script', 'facebook-jssdk'));</script>
+<script>
+    ;(function (d, s, id) {
+        var js,
+            fjs = d.getElementsByTagName(s)[0]
+        if (d.getElementById(id)) return
+        js = d.createElement(s)
+        js.id = id
+        js.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1'
+        fjs.parentNode.insertBefore(js, fjs)
+    })(document, 'script', 'facebook-jssdk')
+</script>
 
 <!-- Your like button code -->
-<div class="fb-like"
-	data-href="https://www.your-domain.com/your-page.html"
-	data-layout="standard"
-	data-action="like"
-	data-show-faces="true">
-</div>
+<div
+    class="fb-like"
+    data-href="https://www.your-domain.com/your-page.html"
+    data-layout="standard"
+    data-action="like"
+    data-show-faces="true"
+></div>
 ```
 
 And here's how to refactor into a Mithril.js component in a way that avoids `m.trust`:
 
 ```javascript
 var FacebookLikeButton = {
-	oncreate: function() {
-		(function(d, s, id) {
-		  var js, fjs = d.getElementsByTagName(s)[0];
-		  if (d.getElementById(id)) return;
-		  js = d.createElement(s); js.id = id;
-		  js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1";
-		  fjs.parentNode.insertBefore(js, fjs);
-		}(document, 'script', 'facebook-jssdk'));
-	},
-	view: function() {
-		return [
-			m("#fb-root"),
-			m("#fb-like[data-href=https://www.your-domain.com/your-page.html][data-layout=standard][data-action=like][data-show-faces=true]")
-		]
-	}
+    oncreate: function () {
+        ;(function (d, s, id) {
+            var js,
+                fjs = d.getElementsByTagName(s)[0]
+            if (d.getElementById(id)) return
+            js = d.createElement(s)
+            js.id = id
+            js.src = '//connect.facebook.net/en_US/sdk.js#xfbml=1'
+            fjs.parentNode.insertBefore(js, fjs)
+        })(document, 'script', 'facebook-jssdk')
+    },
+    view: function () {
+        return [
+            m('#fb-root'),
+            m(
+                '#fb-like[data-href=https://www.your-domain.com/your-page.html][data-layout=standard][data-action=like][data-show-faces=true]',
+            ),
+        ]
+    },
 }
 ```
 
@@ -175,10 +182,10 @@ A common way to misuse `m.trust` is to use it for HTML entities. A better approa
 
 ```javascript
 // AVOID
-m("h1", "Coca-Cola", m.trust("&trade;"))
+m('h1', 'Coca-Cola', m.trust('&trade;'))
 
 // PREFER
-m("h1", "Coca-Cola™")
+m('h1', 'Coca-Cola™')
 ```
 
 Unicode characters for accented characters can be typed using a keyboard layout for an applicable language, and one may also choose to memorize keyboard shortcuts to produce commonly used symbols (e.g. `Alt+0153` in Windows, or `Option+2` on Mac for the ™ symbol). Another simple method to produce them is to simply copy and paste the desired character from a [unicode character table](https://en.wikipedia.org/wiki/List_of_XML_and_HTML_character_entity_references). Yet another related method is to type an escaped unicode codepoint (e.g. `"\u2122"` for the ™ symbol).

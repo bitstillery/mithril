@@ -2,7 +2,8 @@
 
 **Status**: Accepted  
 **Date**: 2025-02-02  
-**Related ADRs**: 
+**Related ADRs**:
+
 - [ADR-0001](./0001-ssr-hydration.md) (SSR Hydration Support)
 - [ADR-0002](./0002-signals-implementation.md) (Custom Signals Implementation)
 - [ADR-0004](./0004-ssr-state-serialization-signal-stores.md) (SSR State Serialization)
@@ -16,6 +17,7 @@ Mithril.js has been extended with signal-based state management, a Store class f
 ### Previous Architecture
 
 **Proxy-based State**:
+
 - Proxy objects with manual `m.redraw()` calls
 - Global redraws: All components re-render on any change
 - Manual dependency tracking
@@ -25,6 +27,7 @@ Mithril.js has been extended with signal-based state management, a Store class f
 ### Current Architecture
 
 **Signal-based State**:
+
 - Signal state with automatic component-level redraws
 - Fine-grained reactivity: Only affected components re-render
 - Automatic dependency tracking during render
@@ -52,6 +55,7 @@ We have implemented a complete signal-based architecture for Mithril with:
 ### Why State Naming Requirement
 
 All states must have names for SSR serialization:
+
 - **SSR State Matching**: Names match server-serialized state with client instances
 - **State Registry**: Names used as keys for serialization/deserialization
 - **Fail-Fast Design**: Error at state creation prevents silent SSR failures
@@ -63,6 +67,7 @@ All states must have names for SSR serialization:
 **New**: `model={refObject.$key}` - Direct signal access
 
 Benefits:
+
 - Cleaner API: Direct access instead of array format
 - No adapter needed: Signal accessed directly
 - Type-safe: Better TypeScript support
@@ -73,17 +78,20 @@ Benefits:
 ### Pros
 
 **Performance**:
+
 - Fine-grained reactivity: Only update what changed
 - Component-level redraws: Much more efficient than global redraw
 - SSR: Faster initial page load, better SEO
 
 **Developer Experience**:
+
 - Automatic dependency tracking: No manual redraw management
 - Type-safe: Full TypeScript support
 - SSR-aware: Works seamlessly in SSR and client contexts
 - Cleaner API: Direct signal access vs array format
 
 **State Management**:
+
 - Persistent state: localStorage, sessionStorage, session support
 - Computed properties: Automatic derived state
 - SSR hydration: State preserved from server to client
@@ -91,11 +99,13 @@ Benefits:
 ### Cons
 
 **Migration Effort**:
+
 - Existing code uses Proxy pattern - requires migration
 - Model references need updating: `[ref, 'key']` → `ref.$key`
 - State naming required (new requirement)
 
 **Complexity**:
+
 - Signal system adds complexity vs simple Proxy
 - SSR serialization/deserialization adds overhead
 - Per-request isolation requires careful state management
@@ -103,11 +113,13 @@ Benefits:
 ### Risks
 
 **Backward Compatibility**:
+
 - Old Proxy code still works but won't benefit from signals
 - Gradual migration path needed
 - `watch()` API unchanged (mitigates migration risk)
 
 **State Naming**:
+
 - Missing names cause errors (fail-fast design)
 - Name collisions possible (mitigated by explicit naming requirement)
 
@@ -116,12 +128,14 @@ Benefits:
 ### Signal Architecture
 
 **Core Components**:
+
 - `Signal<T>`: Reactive primitive tracking subscribers
 - `ComputedSignal<T>`: Automatically recomputes when dependencies change
 - `effect()`: Runs side effects when dependencies change
 - `state()`: Deep signal state with Proxy wrapper
 
 **Component Integration**:
+
 - Component-to-signal dependency tracking via WeakMaps
 - Automatic component redraws when signals change
 - SSR-aware (watchers run in SSR context)
@@ -129,12 +143,14 @@ Benefits:
 ### Store Class
 
 **Persistence Types**:
+
 - **saved**: localStorage (survives browser restarts)
 - **temporary**: Not persisted (resets on reload)
 - **tab**: sessionStorage (survives page reloads)
 - **session**: Server-side session storage (hydrated via SSR)
 
 **Key Features**:
+
 - Deep merging of templates with persisted state
 - Computed properties preserved (functions reinitialized after load)
 - Session state sync via `/api/session` endpoint
@@ -143,34 +159,41 @@ Benefits:
 ### SSR Architecture
 
 **SSR Context** (`ssrContext.ts`):
+
 - Uses `AsyncLocalStorage` (Node/Bun) for request-scoped context
 - Per-request state registry, store, session data, EventEmitter
 - Automatic watcher cleanup at end of request
 
 **State Serialization** (`render/ssrState.ts`):
+
 - Extracts signal values from state
 - Skips `ComputedSignal` instances (functions recreated on client)
 - Handles nested states and circular references
 - Injects state into HTML: `<script id="__SSR_STATE__">`
 
 **SSR Flow**:
+
 1. Server: Create per-request context → Render → Serialize states → Inject into HTML
 2. Client: Read `__SSR_STATE__` → Deserialize states → Restore computed properties → Hydrate
 
 ### API Comparison
 
 **State Management**:
+
 - Old: Proxy with manual `m.redraw()` → Global redraws
 - New: Signals with automatic component-level redraws
 
 **Watch API**:
+
 - Same: `watch()` API unchanged - works with both Proxy and Signals
 
 **Model References**:
+
 - Old: `model={[refObject, 'key']}` - Array format
 - New: `model={refObject.$key}` - Direct signal access
 
 **Redraw Behavior**:
+
 - Old: `m.redraw()` - redraws entire application
 - New: `m.redraw(component)` - redraws only affected components (automatic via signals)
 
@@ -179,11 +202,13 @@ Benefits:
 The Portal application demonstrates real-world usage:
 
 **Server Setup**:
+
 - Per-request store creation: `new Store()` per request
 - Session management via `MemorySessionStore`
 - Route-based SSR (only specific routes are SSR'd)
 
 **Client Setup**:
+
 - `prepareAppState()` handles three modes: `'ssr'`, `'hydration'`, `'spa'`
 - Unified state preparation for all modes
 - State registered with name `'portalStore'`
@@ -191,12 +216,14 @@ The Portal application demonstrates real-world usage:
 ## Migration Path
 
 **Gradual Migration**:
+
 1. New code uses signals/Store
 2. Existing Proxy code continues to work
 3. Migrate model references: `[ref, 'key']` → `ref.$key`
 4. Migrate components to use signals for fine-grained reactivity
 
 **Backward Compatibility**:
+
 - `watch()` API unchanged
 - Proxy code still works (just doesn't get signal benefits)
 - Can migrate incrementally

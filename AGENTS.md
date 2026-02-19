@@ -5,6 +5,7 @@ This file provides guidance for AI assistants working on the Mithril project, pa
 ## Purpose
 
 This document helps AI assistants:
+
 - Understand how to analyze and reference architectural decisions
 - Maintain consistency with existing architectural patterns
 - Make informed recommendations that align with project direction
@@ -15,6 +16,7 @@ This document helps AI assistants:
 ### Location
 
 ADRs are located in `docs/architecture/adr/`:
+
 - Individual ADRs: `docs/architecture/adr/XXXX-topic.md` (e.g., `0001-ssr-hydration.md`)
 - ADR Index: `docs/architecture/adr/index.md` - Lists all ADRs with status
 
@@ -31,6 +33,7 @@ When analyzing a decision:
 ### ADR Format
 
 Each ADR contains:
+
 - **Context**: Background and problem statement
 - **Decision**: What was decided
 - **Rationale**: Why this decision was made
@@ -51,6 +54,7 @@ Each ADR contains:
 - Check if your proposal conflicts with existing decisions
 
 **Example:**
+
 ```
 Before proposing a new state management approach:
 1. Read ADR-0001 (SSR Hydration Support)
@@ -82,6 +86,7 @@ Before proposing a new state management approach:
 ### When to Create an ADR
 
 **Create an ADR for:**
+
 - Significant architectural decisions
 - Technology choices (frameworks, libraries, tools)
 - Design patterns that affect multiple parts of the system
@@ -89,6 +94,7 @@ Before proposing a new state management approach:
 - Decisions that affect long-term maintainability
 
 **Don't create an ADR for:**
+
 - Implementation details within existing patterns
 - Bug fixes without architectural changes
 - Routine dependency updates
@@ -111,6 +117,7 @@ Before proposing a new state management approach:
 11. **References**: External resources, PRs, issues
 
 **Example structure:**
+
 ```markdown
 # ADR-0003: [Decision Title]
 
@@ -119,24 +126,31 @@ Before proposing a new state management approach:
 **Related ADRs**: [ADR-0001](./0001-ssr-hydration.md), [ADR-0002](./0002-signals-implementation.md)
 
 ## Context
+
 [Background and problem statement]
 
 ## Decision
+
 [What was decided]
 
 ## Rationale
+
 [Why this decision was made]
 
 ## Consequences
+
 [Pros, cons, risks, trade-offs]
 
 ## Alternatives Considered
+
 [Other options evaluated]
 
 ## Implementation Details
+
 [Technical approach]
 
 ## References
+
 [External resources, PRs, issues]
 ```
 
@@ -156,13 +170,13 @@ Before proposing a new state management approach:
 **Search strategies:**
 
 1. **Keyword search**: Search for terms related to your topic
-   - State management → ADR-0002
-   - SSR, hydration → ADR-0001
-   - Performance, reactivity → ADR-0002
+    - State management → ADR-0002
+    - SSR, hydration → ADR-0001
+    - Performance, reactivity → ADR-0002
 
 2. **Read the ADR index**: `docs/architecture/adr/index.md`
-   - Lists all ADRs with brief descriptions
-   - Shows status (Proposed, Accepted, etc.)
+    - Lists all ADRs with brief descriptions
+    - Shows status (Proposed, Accepted, etc.)
 
 3. **Follow related ADR links**: ADRs link to related decisions
 
@@ -187,6 +201,7 @@ Before proposing a new state management approach:
 5. **Feedback**: Has there been feedback or issues with the decision?
 
 **Example:**
+
 ```
 ADR-0002 (Signals Implementation) is Proposed:
 - Status: Proposed (not yet implemented)
@@ -207,6 +222,7 @@ ADR-0002 (Signals Implementation) is Proposed:
 6. **Update the ADR index**: Update status in the index
 
 **Example:**
+
 ```markdown
 # ADR-0003: New Approach
 
@@ -214,9 +230,11 @@ ADR-0002 (Signals Implementation) is Proposed:
 **Related ADRs**: [ADR-0002](./0002-signals-implementation.md) (Supersedes)
 
 ## Context
+
 ADR-0002 proposed a custom signals implementation. After evaluation, we've decided on a different approach...
 
 ## Decision
+
 [New decision that supersedes ADR-0002]
 ```
 
@@ -232,11 +250,13 @@ ADR-0002 proposed a custom signals implementation. After evaluation, we've decid
 This proposal builds on ADR-0001 (SSR Hydration Support) by adding...
 
 **Compatibility:**
+
 - Compatible with ADR-0001's state serialization approach
 - Works with ADR-0002's signals implementation (when implemented)
 - Maintains backward compatibility
 
 **References:**
+
 - ADR-0001: SSR Hydration Support
 - ADR-0002: Custom Signals Implementation
 ```
@@ -249,11 +269,13 @@ This proposal builds on ADR-0001 (SSR Hydration Support) by adding...
 ## Analysis: ADR-0002 Signals Implementation
 
 **Status Check:**
+
 - Current status: Proposed
 - Implementation: Not yet started
 - Related ADRs: ADR-0001 (Accepted, implemented)
 
 **Context Review:**
+
 - Original problem: Need fine-grained reactivity
 - Current context: Still relevant, performance is important
 - Related decisions: ADR-0001 provides SSR foundation
@@ -274,20 +296,25 @@ Decision is still valid. Implementation should proceed as planned.
 **Related ADRs**: [ADR-0002](./0002-signals-implementation.md) (Required for signals)
 
 ## Context
+
 ADR-0002 (Signals Implementation) requires component-level redraws for fine-grained reactivity...
 
 ## Decision
+
 We will implement a component-level redraw API similar to PR #3036...
 
 ## Rationale
+
 - Required for ADR-0002's fine-grained reactivity
 - Improves performance (only update what changed)
 - Maintains backward compatibility with existing `m.redraw()`
 
 ## Consequences
+
 [Pros, cons, risks]
 
 ## References
+
 - ADR-0002: Custom Signals Implementation
 - PR #3036: Component-Level Redraws
 ```
@@ -307,6 +334,7 @@ We will implement a component-level redraw API similar to PR #3036...
 ### Runtime Environment
 
 **Always use "Bun" instead of "Node.js" in documentation and code comments:**
+
 - This project uses Bun as the JavaScript runtime
 - When referring to server-side execution, use "Bun" or "server-side"
 - When referring to browser APIs not available on the server, mention "Bun" (not "Node.js")
@@ -317,6 +345,7 @@ We will implement a component-level redraw API similar to PR #3036...
 ### Running Tests
 
 **Run tests:**
+
 ```bash
 AGENT=1 bun run test
 ```
@@ -327,7 +356,7 @@ This command runs the test suite. The `AGENT=1` environment variable can be used
 
 **Run linting commands for code quality:**
 
-- **Style linting**: `bun run lint:ts:style` - Checks code style and formatting
+- **Style linting**: `bun run lint:ts:format` - Checks code style and formatting
 - **Syntax linting**: `bun run lint:ts:syntax` - Checks TypeScript syntax errors
 - **Type linting**: `bun run lint:ts:types` - Checks TypeScript type errors
 
@@ -343,6 +372,7 @@ Always run these linting commands before submitting code changes to ensure code 
 ## Questions?
 
 If you're unsure about:
+
 - Whether to create an ADR: Err on the side of creating one
 - How to reference an ADR: Link to it and explain the relationship
 - If a decision is still valid: Read the ADR, check status, review context

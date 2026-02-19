@@ -29,13 +29,12 @@ Makes XHR (aka AJAX) requests, and returns a promise
 
 ```javascript
 m.request({
-	method: "PUT",
-	url: "/api/v1/users/:id",
-	params: {id: 1},
-	body: {name: "test"}
-})
-.then(function(result) {
-	console.log(result)
+    method: 'PUT',
+    url: '/api/v1/users/:id',
+    params: {id: 1},
+    body: {name: 'test'},
+}).then(function (result) {
+    console.log(result)
 })
 ```
 
@@ -45,35 +44,35 @@ m.request({
 
 `promise = m.request(options)`
 
-Argument                  | Type                              | Required | Description
-------------------------- | --------------------------------- | -------- | ---
-`options`                 | `Object`                          | Yes      | The request options to pass.
-`options.method`          | `String`                          | No       | The HTTP method to use. This value should be one of the following: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` or `OPTIONS`. Defaults to `GET`.
-`options.url`             | `String`                          | Yes      | The [path name](paths.md) to send the request to, optionally interpolated with values from `options.params`.
-`options.params`            | `Object`                        | No       | The data to be interpolated into the URL and/or serialized into the query string.
-`options.body`            | `Object`                          | No       | The data to be serialized into the body (for other types of requests).
-`options.async`           | `Boolean`                         | No       | Whether the request should be asynchronous. Defaults to `true`.
-`options.user`            | `String`                          | No       | A username for HTTP authorization. Defaults to `undefined`.
-`options.password`        | `String`                          | No       | A password for HTTP authorization. Defaults to `undefined`. This option is provided for `XMLHttpRequest` compatibility, but you should avoid using it because it sends the password in plain text over the network.
-`options.withCredentials` | `Boolean`                         | No       | Whether to send cookies to 3rd party domains. Defaults to `false`
-`options.timeout`         | `Number`                          | No       | The amount of milliseconds a request can take before automatically being [terminated](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout).  Defaults to `undefined`.
-`options.responseType`    | `String`                          | No       | The expected [type](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType) of the response. Defaults to `""` if `extract` is defined, `"json"` if missing. If `responseType: "json"`, it internally performs `JSON.parse(responseText)`.
-`options.config`          | `xhr = Function(xhr)`             | No       | Exposes the underlying XMLHttpRequest object for low-level configuration and optional replacement (by returning a new XHR).
-`options.headers`         | `Object`                          | No       | Headers to append to the request before sending it (applied right before `options.config`).
-`options.type`            | `any = Function(any)`             | No       | A constructor to be applied to each object in the response. Defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function).
-`options.serialize`       | `string = Function(any)`          | No       | A serialization method to be applied to `body`. Defaults to `JSON.stringify`, or if `options.body` is an instance of [`FormData`](https://developer.mozilla.org/en/docs/Web/API/FormData) or [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams), defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function) (i.e. `function(value) {return value}`).
-`options.deserialize`     | `any = Function(any)`          | No       | A deserialization method to be applied to the `xhr.response` or normalized `xhr.responseText`. Defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function). If `extract` is defined, `deserialize` will be skipped.
-`options.extract`         | `any = Function(xhr, options)`    | No       | A hook to specify how the XMLHttpRequest response should be read. Useful for processing response data, reading headers and cookies. By default this is a function that returns `options.deserialize(parsedResponse)`, throwing an exception when the server response status code indicates an error or when the response is syntactically invalid. If a custom `extract` callback is provided, the `xhr` parameter is the XMLHttpRequest instance used for the request, and `options` is the object that was passed to the `m.request` call. Additionally, `deserialize` will be skipped and the value returned from the extract callback will be left as-is when the promise resolves.
-`options.background`      | `Boolean`                         | No       | If `false`, redraws mounted components upon completion of the request. If `true`, it does not. Defaults to `false`.
-**returns**               | `Promise`                         |          | A promise that resolves to the response data, after it has been piped through the `extract`, `deserialize` and `type` methods. If the response status code indicates an error, the promise rejects, but this can be prevented by setting the `extract` option. 
+| Argument                  | Type                           | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------- | ------------------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `options`                 | `Object`                       | Yes      | The request options to pass.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `options.method`          | `String`                       | No       | The HTTP method to use. This value should be one of the following: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD` or `OPTIONS`. Defaults to `GET`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `options.url`             | `String`                       | Yes      | The [path name](paths.md) to send the request to, optionally interpolated with values from `options.params`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `options.params`          | `Object`                       | No       | The data to be interpolated into the URL and/or serialized into the query string.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `options.body`            | `Object`                       | No       | The data to be serialized into the body (for other types of requests).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `options.async`           | `Boolean`                      | No       | Whether the request should be asynchronous. Defaults to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `options.user`            | `String`                       | No       | A username for HTTP authorization. Defaults to `undefined`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `options.password`        | `String`                       | No       | A password for HTTP authorization. Defaults to `undefined`. This option is provided for `XMLHttpRequest` compatibility, but you should avoid using it because it sends the password in plain text over the network.                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `options.withCredentials` | `Boolean`                      | No       | Whether to send cookies to 3rd party domains. Defaults to `false`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `options.timeout`         | `Number`                       | No       | The amount of milliseconds a request can take before automatically being [terminated](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/timeout). Defaults to `undefined`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `options.responseType`    | `String`                       | No       | The expected [type](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType) of the response. Defaults to `""` if `extract` is defined, `"json"` if missing. If `responseType: "json"`, it internally performs `JSON.parse(responseText)`.                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `options.config`          | `xhr = Function(xhr)`          | No       | Exposes the underlying XMLHttpRequest object for low-level configuration and optional replacement (by returning a new XHR).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `options.headers`         | `Object`                       | No       | Headers to append to the request before sending it (applied right before `options.config`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `options.type`            | `any = Function(any)`          | No       | A constructor to be applied to each object in the response. Defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `options.serialize`       | `string = Function(any)`       | No       | A serialization method to be applied to `body`. Defaults to `JSON.stringify`, or if `options.body` is an instance of [`FormData`](https://developer.mozilla.org/en/docs/Web/API/FormData) or [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams), defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function) (i.e. `function(value) {return value}`).                                                                                                                                                                                                                                                                       |
+| `options.deserialize`     | `any = Function(any)`          | No       | A deserialization method to be applied to the `xhr.response` or normalized `xhr.responseText`. Defaults to the [identity function](https://en.wikipedia.org/wiki/Identity_function). If `extract` is defined, `deserialize` will be skipped.                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `options.extract`         | `any = Function(xhr, options)` | No       | A hook to specify how the XMLHttpRequest response should be read. Useful for processing response data, reading headers and cookies. By default this is a function that returns `options.deserialize(parsedResponse)`, throwing an exception when the server response status code indicates an error or when the response is syntactically invalid. If a custom `extract` callback is provided, the `xhr` parameter is the XMLHttpRequest instance used for the request, and `options` is the object that was passed to the `m.request` call. Additionally, `deserialize` will be skipped and the value returned from the extract callback will be left as-is when the promise resolves. |
+| `options.background`      | `Boolean`                      | No       | If `false`, redraws mounted components upon completion of the request. If `true`, it does not. Defaults to `false`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| **returns**               | `Promise`                      |          | A promise that resolves to the response data, after it has been piped through the `extract`, `deserialize` and `type` methods. If the response status code indicates an error, the promise rejects, but this can be prevented by setting the `extract` option.                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 `promise = m.request(url, options)`
 
-Argument    | Type      | Required | Description
------------ | --------- | -------- | ---
-`url`       | `String`  | Yes      | The [path name](paths.md) to send the request to. `options.url` overrides this when present.
-`options`   | `Object`  | No       | The request options to pass.
-**returns** | `Promise` |          | A promise that resolves to the response data, after it has been piped through the `extract`, `deserialize` and `type` methods
+| Argument    | Type      | Required | Description                                                                                                                   |
+| ----------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `url`       | `String`  | Yes      | The [path name](paths.md) to send the request to. `options.url` overrides this when present.                                  |
+| `options`   | `Object`  | No       | The request options to pass.                                                                                                  |
+| **returns** | `Promise` |          | A promise that resolves to the response data, after it has been piped through the `extract`, `deserialize` and `type` methods |
 
 This second form is mostly equivalent to `m.request(Object.assign({url: url}, options))`, just it does not depend on the ES6 global `Object.assign` internally.
 
@@ -87,11 +86,10 @@ The `m.request` utility is a thin wrapper around [`XMLHttpRequest`](https://deve
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/api/v1/users",
-})
-.then(function(users) {
-	console.log(users)
+    method: 'GET',
+    url: '/api/v1/users',
+}).then(function (users) {
+    console.log(users)
 })
 ```
 
@@ -109,31 +107,30 @@ Here's an illustrative example of a component that uses `m.request` to retrieve 
 
 ```javascript
 var Data = {
-	todos: {
-		list: [],
-		fetch: function() {
-			m.request({
-				method: "GET",
-				url: "/api/v1/todos",
-			})
-			.then(function(items) {
-				Data.todos.list = items
-			})
-		}
-	}
+    todos: {
+        list: [],
+        fetch: function () {
+            m.request({
+                method: 'GET',
+                url: '/api/v1/todos',
+            }).then(function (items) {
+                Data.todos.list = items
+            })
+        },
+    },
 }
 
 var Todos = {
-	oninit: Data.todos.fetch,
-	view: function(vnode) {
-		return Data.todos.list.map(function(item) {
-			return m("div", item.title)
-		})
-	}
+    oninit: Data.todos.fetch,
+    view: function (vnode) {
+        return Data.todos.list.map(function (item) {
+            return m('div', item.title)
+        })
+    },
 }
 
-m.route(document.body, "/", {
-	"/": Todos
+m.route(document.body, '/', {
+    '/': Todos,
 })
 ```
 
@@ -161,39 +158,41 @@ Here's an expanded version of the example above that implements a loading indica
 
 ```javascript
 var Data = {
-	todos: {
-		list: null,
-		error: "",
-		fetch: function() {
-			m.request({
-				method: "GET",
-				url: "/api/v1/todos",
-			})
-			.then(function(items) {
-				Data.todos.list = items
-			})
-			.catch(function(e) {
-				Data.todos.error = e.message
-			})
-		}
-	}
+    todos: {
+        list: null,
+        error: '',
+        fetch: function () {
+            m.request({
+                method: 'GET',
+                url: '/api/v1/todos',
+            })
+                .then(function (items) {
+                    Data.todos.list = items
+                })
+                .catch(function (e) {
+                    Data.todos.error = e.message
+                })
+        },
+    },
 }
 
 var Todos = {
-	oninit: Data.todos.fetch,
-	view: function(vnode) {
-		return Data.todos.error ? [
-			m(".error", Data.todos.error)
-		] : Data.todos.list ? [
-			Data.todos.list.map(function(item) {
-				return m("div", item.title)
-			})
-		] : m(".loading-icon")
-	}
+    oninit: Data.todos.fetch,
+    view: function (vnode) {
+        return Data.todos.error
+            ? [m('.error', Data.todos.error)]
+            : Data.todos.list
+              ? [
+                    Data.todos.list.map(function (item) {
+                        return m('div', item.title)
+                    }),
+                ]
+              : m('.loading-icon')
+    },
 }
 
-m.route(document.body, "/", {
-	"/": Todos
+m.route(document.body, '/', {
+    '/': Todos,
 })
 ```
 
@@ -207,11 +206,11 @@ Request URLs may contain interpolations:
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/api/v1/users/:id",
-	params: {id: 123},
-}).then(function(user) {
-	console.log(user.id) // logs 123
+    method: 'GET',
+    url: '/api/v1/users/:id',
+    params: {id: 123},
+}).then(function (user) {
+    console.log(user.id) // logs 123
 })
 ```
 
@@ -221,9 +220,9 @@ Interpolations are ignored if no matching data exists in the `params` property.
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/api/v1/users/foo:bar",
-	params: {id: 123},
+    method: 'GET',
+    url: '/api/v1/users/foo:bar',
+    params: {id: 123},
 })
 ```
 
@@ -240,18 +239,20 @@ Sometimes, it is desirable to abort a request. For example, in an autocompleter/
 ```javascript
 var searchXHR = null
 function search() {
-	abortPreviousSearch()
+    abortPreviousSearch()
 
-	m.request({
-		method: "GET",
-		url: "/api/v1/users",
-		params: {search: query},
-		config: function(xhr) {searchXHR = xhr}
-	})
+    m.request({
+        method: 'GET',
+        url: '/api/v1/users',
+        params: {search: query},
+        config: function (xhr) {
+            searchXHR = xhr
+        },
+    })
 }
 function abortPreviousSearch() {
-	if (searchXHR !== null) searchXHR.abort()
-	searchXHR = null
+    if (searchXHR !== null) searchXHR.abort()
+    searchXHR = null
 }
 ```
 
@@ -262,12 +263,10 @@ function abortPreviousSearch() {
 To upload files, first you need to get a reference to a [`File`](https://developer.mozilla.org/en/docs/Web/API/File) object. The easiest way to do that is from a `<input type="file">`.
 
 ```javascript
-m.render(document.body, [
-	m("input[type=file]", {onchange: upload})
-])
+m.render(document.body, [m('input[type=file]', {onchange: upload})])
 
 function upload(e) {
-	var file = e.target.files[0]
+    var file = e.target.files[0]
 }
 ```
 
@@ -277,10 +276,10 @@ Next, you need to create a [`FormData`](https://developer.mozilla.org/en/docs/We
 
 ```javascript
 function upload(e) {
-	var file = e.target.files[0]
+    var file = e.target.files[0]
 
-	var body = new FormData()
-	body.append("myfile", file)
+    var body = new FormData()
+    body.append('myfile', file)
 }
 ```
 
@@ -288,16 +287,16 @@ Next, you need to call `m.request` and set `options.method` to an HTTP method th
 
 ```javascript
 function upload(e) {
-	var file = e.target.files[0]
+    var file = e.target.files[0]
 
-	var body = new FormData()
-	body.append("myfile", file)
+    var body = new FormData()
+    body.append('myfile', file)
 
-	m.request({
-		method: "POST",
-		url: "/api/v1/upload",
-		body: body,
-	})
+    m.request({
+        method: 'POST',
+        url: '/api/v1/upload',
+        body: body,
+    })
 }
 ```
 
@@ -310,23 +309,21 @@ It's possible to upload multiple files in one request. Doing so will make the ba
 To upload multiple files, simply append them all to the `FormData` object. When using a file input, you can get a list of files by adding the `multiple` attribute to the input:
 
 ```javascript
-m.render(document.body, [
-	m("input[type=file][multiple]", {onchange: upload})
-])
+m.render(document.body, [m('input[type=file][multiple]', {onchange: upload})])
 
 function upload(e) {
-	var files = e.target.files
+    var files = e.target.files
 
-	var body = new FormData()
-	for (var i = 0; i < files.length; i++) {
-		body.append("file" + i, files[i])
-	}
+    var body = new FormData()
+    for (var i = 0; i < files.length; i++) {
+        body.append('file' + i, files[i])
+    }
 
-	m.request({
-		method: "POST",
-		url: "/api/v1/upload",
-		body: body,
-	})
+    m.request({
+        method: 'POST',
+        url: '/api/v1/upload',
+        body: body,
+    })
 }
 ```
 
@@ -342,32 +339,29 @@ Sometimes, if a request is inherently slow (e.g. a large file upload), it's desi
 var progress = 0
 
 m.mount(document.body, {
-	view: function() {
-		return [
-			m("input[type=file]", {onchange: upload}),
-			progress + "% completed"
-		]
-	}
+    view: function () {
+        return [m('input[type=file]', {onchange: upload}), progress + '% completed']
+    },
 })
 
 function upload(e) {
-	var file = e.target.files[0]
+    var file = e.target.files[0]
 
-	var body = new FormData()
-	body.append("myfile", file)
+    var body = new FormData()
+    body.append('myfile', file)
 
-	m.request({
-		method: "POST",
-		url: "/api/v1/upload",
-		body: body,
-		config: function(xhr) {
-			xhr.upload.addEventListener("progress", function(e) {
-				progress = e.loaded / e.total
+    m.request({
+        method: 'POST',
+        url: '/api/v1/upload',
+        body: body,
+        config: function (xhr) {
+            xhr.upload.addEventListener('progress', function (e) {
+                progress = e.loaded / e.total
 
-				m.redraw() // tell Mithril.js that data changed and a re-render is needed
-			})
-		}
-	})
+                m.redraw() // tell Mithril.js that data changed and a re-render is needed
+            })
+        },
+    })
 }
 ```
 
@@ -383,16 +377,15 @@ You can pass a constructor as the `options.type` parameter and Mithril.js will i
 
 ```javascript
 function User(data) {
-	this.name = data.firstName + " " + data.lastName
+    this.name = data.firstName + ' ' + data.lastName
 }
 
 m.request({
-	method: "GET",
-	url: "/api/v1/users",
-	type: User
-})
-.then(function(users) {
-	console.log(users[0].name) // logs a name
+    method: 'GET',
+    url: '/api/v1/users',
+    type: User,
+}).then(function (users) {
+    console.log(users[0].name) // logs a name
 })
 ```
 
@@ -406,12 +399,13 @@ Sometimes a server endpoint does not return a JSON response: for example, you ma
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/files/icon.svg",
-	deserialize: function(value) {return value}
-})
-.then(function(svg) {
-	m.render(document.body, m.trust(svg))
+    method: 'GET',
+    url: '/files/icon.svg',
+    deserialize: function (value) {
+        return value
+    },
+}).then(function (svg) {
+    m.render(document.body, m.trust(svg))
 })
 ```
 
@@ -421,19 +415,18 @@ Of course, a `deserialize` function may be more elaborate:
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/files/data.csv",
-	deserialize: parseCSV
-})
-.then(function(data) {
-	console.log(data)
+    method: 'GET',
+    url: '/files/data.csv',
+    deserialize: parseCSV,
+}).then(function (data) {
+    console.log(data)
 })
 
 function parseCSV(data) {
-	// naive implementation for the sake of keeping example simple
-	return data.split("\n").map(function(row) {
-		return row.split(",")
-	})
+    // naive implementation for the sake of keeping example simple
+    return data.split('\n').map(function (row) {
+        return row.split(',')
+    })
 }
 ```
 
@@ -443,18 +436,19 @@ Custom headers may also be helpful in this regard. For example, if you're reques
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/files/image.svg",
-	headers: {
-		"Content-Type": "image/svg+xml; charset=utf-8",
-		"Accept": "image/svg, text/*"
-	},
-	deserialize: function(value) {return value}
+    method: 'GET',
+    url: '/files/image.svg',
+    headers: {
+        'Content-Type': 'image/svg+xml; charset=utf-8',
+        Accept: 'image/svg, text/*',
+    },
+    deserialize: function (value) {
+        return value
+    },
 })
 ```
 
 ---
-
 
 ### Retrieving response details
 
@@ -462,12 +456,13 @@ By default Mithril.js attempts to parse `xhr.responseText` as JSON and returns t
 
 ```javascript
 m.request({
-	method: "GET",
-	url: "/api/v1/users",
-	extract: function(xhr) {return {status: xhr.status, body: xhr.responseText}}
-})
-.then(function(response) {
-	console.log(response.status, response.body)
+    method: 'GET',
+    url: '/api/v1/users',
+    extract: function (xhr) {
+        return {status: xhr.status, body: xhr.responseText}
+    },
+}).then(function (response) {
+    console.log(response.status, response.body)
 })
 ```
 
@@ -481,7 +476,7 @@ Due to the (very simplistic) way parameters are detected in URLs, IPv6 address s
 
 ```javascript
 // This doesn't work
-m.request("http://[2001:db8::990a:cd27:4d9e:79]:8080/some/path", {
+m.request('http://[2001:db8::990a:cd27:4d9e:79]:8080/some/path', {
     // ...
 })
 ```
@@ -489,8 +484,8 @@ m.request("http://[2001:db8::990a:cd27:4d9e:79]:8080/some/path", {
 To work around this, you should pass the IPv6 address + port pair as a parameter instead.
 
 ```javascript
-m.request("http://:host/some/path", {
-    params: {host: "[2001:db8::990a:cd27:4d9e:79]:8080"},
+m.request('http://:host/some/path', {
+    params: {host: '[2001:db8::990a:cd27:4d9e:79]:8080'},
     // ...
 })
 ```
@@ -499,7 +494,7 @@ This is not an issue with IPv4 addresses, and you can use those normally.
 
 ```javascript
 // This will work as you expect
-m.request("http://192.0.2.15:8080/some/path", {
+m.request('http://192.0.2.15:8080/some/path', {
     // ...
 })
 ```
@@ -554,12 +549,12 @@ The `m.request` method returns a `Promise`, not the response data itself. It can
 
 ```javascript
 // AVOID
-var users = m.request("/api/v1/users")
-console.log("list of users:", users)
+var users = m.request('/api/v1/users')
+console.log('list of users:', users)
 // `users` is NOT a list of users, it's a promise
 
 // PREFER
-m.request("/api/v1/users").then(function(users) {
-	console.log("list of users:", users)
+m.request('/api/v1/users').then(function (users) {
+    console.log('list of users:', users)
 })
 ```

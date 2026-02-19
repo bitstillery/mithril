@@ -13,6 +13,7 @@ The old changelog up to and including v2.0.4 can be found [here](changelog.md).
 Changes from v2.1.0 to v2.2.2 can be found [here](recent-changes.md)
 
 <!-- IMPORTANT: if you ever add more things to `archive/`, update this list. -->
+
 ## v0.1
 
 - [v0.1.3](archive/v0.1.3/index.html)

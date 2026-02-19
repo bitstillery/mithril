@@ -7,11 +7,13 @@
 ## Context
 
 ADR-0007 introduced server-side session state as a fourth state type in the Store API. Session state is:
+
 - Server-side storage tied to session ID/cookie
 - Hydrated via SSR (comes from server during initial render)
 - Not stored in localStorage (unlike `saved` and `tab` state)
 
 However, ADR-0007 didn't specify how client-side updates to session state are persisted back to the server. This is needed for:
+
 - User preferences that should persist across page reloads
 - Session-scoped data that should survive page navigation
 - State that should clear on server restart (unlike localStorage)
@@ -139,24 +141,24 @@ const sessionData = blueprint(store.state, sessionTemplate)
 ```typescript
 // In server.ts
 async function handleSessionUpdate(req: Request): Promise<Response> {
-  const cookies = req.headers.get('cookie') || ''
-  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
-  const sessionId = sessionIdMatch ? sessionIdMatch[1] : null
-  
-  if (!sessionId) {
-    return new Response('No session ID', { status: 401 })
-  }
-  
-  const body = await req.json()
-  const sessionData = body.session || {}  // Structure matches session template
-  
-  // Update session store with new session state
-  // Server stores under 'session' key in sessionStore.data
-  sessionStore.updateSession(sessionId, { session: sessionData })
-  
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json' }
-  })
+    const cookies = req.headers.get('cookie') || ''
+    const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
+    const sessionId = sessionIdMatch ? sessionIdMatch[1] : null
+
+    if (!sessionId) {
+        return new Response('No session ID', {status: 401})
+    }
+
+    const body = await req.json()
+    const sessionData = body.session || {} // Structure matches session template
+
+    // Update session store with new session state
+    // Server stores under 'session' key in sessionStore.data
+    sessionStore.updateSession(sessionId, {session: sessionData})
+
+    return new Response(JSON.stringify({success: true}), {
+        headers: {'Content-Type': 'application/json'},
+    })
 }
 ```
 
@@ -165,50 +167,50 @@ async function handleSessionUpdate(req: Request): Promise<Response> {
 ```typescript
 // Store.save() with options to specify storage types - async by default
 class Store {
-  async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void> {
-    // Default to saving all storage types if no options provided
-    const saveSaved = options?.saved ?? (options === undefined)
-    const saveTab = options?.tab ?? (options === undefined)
-    const saveSession = options?.session ?? (options === undefined)
-    
-    // Save to localStorage (saved state) - wrapped in Promise for consistency
-    if (saveSaved && this.templates.saved) {
-      const statePlain = serializeStore(this.stateInstance)
-      const savedData = this.blueprint(statePlain, copy_object(this.templates.saved))
-      this.set('store', savedData)
-      // localStorage is sync, but wrapped in Promise.resolve() for consistent async API
+    async save(options?: {saved?: boolean; tab?: boolean; session?: boolean}): Promise<void> {
+        // Default to saving all storage types if no options provided
+        const saveSaved = options?.saved ?? options === undefined
+        const saveTab = options?.tab ?? options === undefined
+        const saveSession = options?.session ?? options === undefined
+
+        // Save to localStorage (saved state) - wrapped in Promise for consistency
+        if (saveSaved && this.templates.saved) {
+            const statePlain = serializeStore(this.stateInstance)
+            const savedData = this.blueprint(statePlain, copy_object(this.templates.saved))
+            this.set('store', savedData)
+            // localStorage is sync, but wrapped in Promise.resolve() for consistent async API
+        }
+
+        // Save to sessionStorage (tab state) - wrapped in Promise for consistency
+        if (saveTab && this.templates.tab) {
+            const tabState = (this.stateInstance as any).tab
+            if (tabState) {
+                const tabPlain = isState(tabState) ? serializeStore(tabState) : tabState
+                const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+                const tabData = this.blueprint(tabPlain, copy_object(tabTemplate))
+                this.set_tab('store', tabData)
+                // sessionStorage is sync, but wrapped in Promise.resolve() for consistent async API
+            }
+        }
+
+        // Save to session API (session state) - async by nature
+        if (saveSession && this.templates.session) {
+            const statePlain = serializeStore(this.stateInstance)
+            const sessionData = this.blueprint(statePlain, copy_object(this.templates.session))
+
+            // Call API endpoint with batched session updates
+            // Note: sessionData structure matches template (e.g., { session_data: {...} })
+            const response = await fetch('/api/session', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(sessionData), // e.g., { session_data: {...} }
+            })
+
+            if (!response.ok) {
+                throw new Error(`Failed to save session state: ${response.statusText}`)
+            }
+        }
     }
-    
-    // Save to sessionStorage (tab state) - wrapped in Promise for consistency
-    if (saveTab && this.templates.tab) {
-      const tabState = (this.stateInstance as any).tab
-      if (tabState) {
-        const tabPlain = isState(tabState) ? serializeStore(tabState) : tabState
-        const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
-        const tabData = this.blueprint(tabPlain, copy_object(tabTemplate))
-        this.set_tab('store', tabData)
-        // sessionStorage is sync, but wrapped in Promise.resolve() for consistent async API
-      }
-    }
-    
-    // Save to session API (session state) - async by nature
-    if (saveSession && this.templates.session) {
-      const statePlain = serializeStore(this.stateInstance)
-      const sessionData = this.blueprint(statePlain, copy_object(this.templates.session))
-      
-      // Call API endpoint with batched session updates
-      // Note: sessionData structure matches template (e.g., { session_data: {...} })
-      const response = await fetch('/api/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sessionData)  // e.g., { session_data: {...} }
-      })
-      
-      if (!response.ok) {
-        throw new Error(`Failed to save session state: ${response.statusText}`)
-      }
-    }
-  }
 }
 ```
 
@@ -322,37 +324,37 @@ class Store {
 ### Server-Side Changes
 
 1. **Add API endpoint** (`examples/ssr/server.ts`):
-   - `POST /api/session` - Accept session state updates (RESTful endpoint)
-   - Extract session ID from cookie
-   - Update `sessionStore` with new session data
-   - Return success response
+    - `POST /api/session` - Accept session state updates (RESTful endpoint)
+    - Extract session ID from cookie
+    - Update `sessionStore` with new session data
+    - Return success response
 
 2. **Update `getSessionData()`** (`examples/ssr/server.ts`):
-   - Read session state from `sessionStore.data.session_data` if it exists
-   - Merge with default session data
-   - Return merged session state for SSR hydration
+    - Read session state from `sessionStore.data.session_data` if it exists
+    - Merge with default session data
+    - Return merged session state for SSR hydration
 
 3. **Update `sessionStore.updateSession()`** (`examples/ssr/sessionStore.ts`):
-   - Handle nested `session_data` data structure
-   - Merge updates with existing session data
-   - Preserve other session data (userId, createdAt, etc.)
+    - Handle nested `session_data` data structure
+    - Merge updates with existing session data
+    - Preserve other session data (userId, createdAt, etc.)
 
 ### Client-Side Changes
 
 1. **Update Store.save() method** (`store.ts`):
-   - Make method async: `async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void>`
-   - Add options parameter to specify which storage types to save
-   - Default to saving all storage types if no options provided
-   - Wrap localStorage/sessionStorage saves in Promise.resolve() for consistency (even though they're sync)
-   - Extract session properties using blueprint when `session: true` (or default)
-   - Batch multiple session updates into single API call
-   - Call API endpoint `/api/session` with batched session updates (await the fetch)
-   - Throw errors for failed API calls (can be caught with try/catch)
+    - Make method async: `async save(options?: {saved?: boolean, tab?: boolean, session?: boolean}): Promise<void>`
+    - Add options parameter to specify which storage types to save
+    - Default to saving all storage types if no options provided
+    - Wrap localStorage/sessionStorage saves in Promise.resolve() for consistency (even though they're sync)
+    - Extract session properties using blueprint when `session: true` (or default)
+    - Batch multiple session updates into single API call
+    - Call API endpoint `/api/session` with batched session updates (await the fetch)
+    - Throw errors for failed API calls (can be caught with try/catch)
 
 2. **Add UI controls** (`examples/ssr/components/store_demo.tsx`):
-   - Input field for `serverData`
-   - Button to save session state: `store.save({session: true})` or `store.save()`
-   - Show loading/error states if needed
+    - Input field for `serverData`
+    - Button to save session state: `store.save({session: true})` or `store.save()`
+    - Show loading/error states if needed
 
 ### Integration Points
 
@@ -369,7 +371,7 @@ class Store {
 ```typescript
 // Update session state (unified state model - all properties coexist)
 // Structure depends on session template - using 'session_data' to avoid confusion with storage type:
-store.state.session_data.serverData = "Updated server data"
+store.state.session_data.serverData = 'Updated server data'
 
 // Save session state explicitly (async)
 await store.save({session: true})
@@ -386,8 +388,8 @@ await store.save({saved: true, session: true})
 
 // Example: Multiple updates batched together
 merge_deep(store.state, {
-  session_data: { serverData: "new value", user: { name: "John" } },
-  saved: { username: "user123" }
+    session_data: {serverData: 'new value', user: {name: 'John'}},
+    saved: {username: 'user123'},
 })
 // Save all changes with single async call
 await store.save()
@@ -396,9 +398,9 @@ await store.save()
 
 // Error handling
 try {
-  await store.save({session: true})
+    await store.save({session: true})
 } catch (error) {
-  console.error('Failed to save session state:', error)
+    console.error('Failed to save session state:', error)
 }
 
 // On next page reload, updated session state is hydrated via SSR into unified store.state
@@ -408,47 +410,51 @@ try {
 
 ```tsx
 <div>
-  {/* Using 'session_data' property name to avoid confusion with 'session' storage type: */}
-  <input
-    value={store.state.session_data.serverData}
-    oninput={(e) => {
-      store.state.session_data.serverData = e.target.value
-      // Updates unified store.state - blueprint determines this is session-bound
-    }}
-  />
-  <button onclick={async () => {
-    // Save session state explicitly (async)
-    // Note: State changes already triggered redraw via signals, save() only persists data
-    try {
-      await store.save({session: true})
-      // Extracts session properties using blueprint and calls API
-    } catch (error) {
-      console.error('Failed to save:', error)
-    }
-  }}>
-    Save Session State
-  </button>
-  
-  {/* Multiple updates batched when save() is called */}
-  <button onclick={async () => {
-    // Multiple session updates batched into single API call
-    merge_deep(store.state, {
-      session_data: {
-        serverData: "Updated",
-        user: { name: "John" }
-      },
-      saved: { username: "user123" }
-    })
-    // State changes automatically trigger redraw via signals
-    // Save all changes - batches session updates into single API call
-    try {
-      await store.save()
-    } catch (error) {
-      console.error('Failed to save:', error)
-    }
-  }}>
-    Update Multiple Properties
-  </button>
+    {/* Using 'session_data' property name to avoid confusion with 'session' storage type: */}
+    <input
+        value={store.state.session_data.serverData}
+        oninput={(e) => {
+            store.state.session_data.serverData = e.target.value
+            // Updates unified store.state - blueprint determines this is session-bound
+        }}
+    />
+    <button
+        onclick={async () => {
+            // Save session state explicitly (async)
+            // Note: State changes already triggered redraw via signals, save() only persists data
+            try {
+                await store.save({session: true})
+                // Extracts session properties using blueprint and calls API
+            } catch (error) {
+                console.error('Failed to save:', error)
+            }
+        }}
+    >
+        Save Session State
+    </button>
+
+    {/* Multiple updates batched when save() is called */}
+    <button
+        onclick={async () => {
+            // Multiple session updates batched into single API call
+            merge_deep(store.state, {
+                session_data: {
+                    serverData: 'Updated',
+                    user: {name: 'John'},
+                },
+                saved: {username: 'user123'},
+            })
+            // State changes automatically trigger redraw via signals
+            // Save all changes - batches session updates into single API call
+            try {
+                await store.save()
+            } catch (error) {
+                console.error('Failed to save:', error)
+            }
+        }}
+    >
+        Update Multiple Properties
+    </button>
 </div>
 ```
 
@@ -457,14 +463,14 @@ try {
 ```typescript
 // POST /api/session
 async function handleSessionUpdate(req: Request): Promise<Response> {
-  const sessionId = extractSessionId(req)
-  const { session_data } = await req.json()  // Property name avoids confusion with storage type
-  
-  sessionStore.updateSession(sessionId, { session_data })
-  
-  return new Response(JSON.stringify({ success: true }), {
-    headers: { 'Content-Type': 'application/json' }
-  })
+    const sessionId = extractSessionId(req)
+    const {session_data} = await req.json() // Property name avoids confusion with storage type
+
+    sessionStore.updateSession(sessionId, {session_data})
+
+    return new Response(JSON.stringify({success: true}), {
+        headers: {'Content-Type': 'application/json'},
+    })
 }
 ```
 

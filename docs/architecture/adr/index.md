@@ -13,21 +13,21 @@ Architecture Decision Records are documents that capture important architectural
 
 ## ADR Index
 
-| ADR | Title | Status | Date |
-|-----|-------|--------|------|
-| [0001](./0001-ssr-hydration.md) | SSR Hydration Support | Accepted | 2025-01-XX |
-| [0002](./0002-signals-implementation.md) | Custom Signals Implementation | Proposed | 2025-01-XX |
-| [0003](./0003-typescript-typing-consolidation.md) | TypeScript Typing Consolidation | Proposed | 2025-01-XX |
-| [0004](./0004-ssr-state-serialization-signal-stores.md) | SSR State Serialization for Signal Stores | Proposed | 2025-01-23 |
-| [0005](./0005-state-naming-and-store-persistence.md) | State Naming and Store Persistence | Proposed | 2025-01-23 |
+| ADR                                                         | Title                                                                   | Status   | Date       |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------- | -------- | ---------- |
+| [0001](./0001-ssr-hydration.md)                             | SSR Hydration Support                                                   | Accepted | 2025-01-XX |
+| [0002](./0002-signals-implementation.md)                    | Custom Signals Implementation                                           | Proposed | 2025-01-XX |
+| [0003](./0003-typescript-typing-consolidation.md)           | TypeScript Typing Consolidation                                         | Proposed | 2025-01-XX |
+| [0004](./0004-ssr-state-serialization-signal-stores.md)     | SSR State Serialization for Signal Stores                               | Proposed | 2025-01-23 |
+| [0005](./0005-state-naming-and-store-persistence.md)        | State Naming and Store Persistence                                      | Proposed | 2025-01-23 |
 | [0006](./0006-unified-serialization-computed-properties.md) | Unified Serialization/Deserialization and Computed Property Restoration | Proposed | 2025-01-23 |
-| [0007](./0007-store-ssr-persistence-strategy.md) | Store SSR and Persistence Strategy | Proposed | 2025-01-23 |
-| [0008](./0008-session-state-update-api.md) | Session State Update API | Proposed | 2025-01-23 |
-| [0009](./0009-ssr-server-abstraction.md) | SSR Server Component Abstraction | Proposed | 2025-01-23 |
-| [0010](./0010-isomorphic-redirect-system.md) | Isomorphic Redirect System for Mithril Router | Proposed | 2025-01-28 |
-| [0011](./0011-hydration-mismatch-recovery.md) | Hydration Mismatch Recovery | Accepted | 2025-01-29 |
-| [0012](./0012-mithril-signals-store-ssr-architecture.md) | Mithril Signals, Store, and SSR Architecture Overview | Accepted | 2025-02-02 |
-| [0013](./0013-deferred-computed-evaluation.md) | Deferred Computed Property Evaluation | Proposed | 2025-02-12 |
+| [0007](./0007-store-ssr-persistence-strategy.md)            | Store SSR and Persistence Strategy                                      | Proposed | 2025-01-23 |
+| [0008](./0008-session-state-update-api.md)                  | Session State Update API                                                | Proposed | 2025-01-23 |
+| [0009](./0009-ssr-server-abstraction.md)                    | SSR Server Component Abstraction                                        | Proposed | 2025-01-23 |
+| [0010](./0010-isomorphic-redirect-system.md)                | Isomorphic Redirect System for Mithril Router                           | Proposed | 2025-01-28 |
+| [0011](./0011-hydration-mismatch-recovery.md)               | Hydration Mismatch Recovery                                             | Accepted | 2025-01-29 |
+| [0012](./0012-mithril-signals-store-ssr-architecture.md)    | Mithril Signals, Store, and SSR Architecture Overview                   | Accepted | 2025-02-02 |
+| [0013](./0013-deferred-computed-evaluation.md)              | Deferred Computed Property Evaluation                                   | Proposed | 2025-02-12 |
 
 ## Status Definitions
 

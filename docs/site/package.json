@@ -1,15 +1,15 @@
 {
-  "name": "mithril-docs-site",
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "build": "bun run build.ts",
-    "dev": "NODE_ENV=development bun --hot server.ts",
-    "start": "NODE_ENV=production bun run server.ts"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "@types/bun": "latest",
-    "marked": "^14.0.0"
-  }
+    "name": "mithril-docs-site",
+    "version": "1.0.0",
+    "type": "module",
+    "scripts": {
+        "build": "bun run build.ts",
+        "dev": "bun --hot server.ts",
+        "start": "NODE_ENV=production bun server.ts"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@types/bun": "latest",
+        "marked": "^14.0.0"
+    }
 }

@@ -6,21 +6,21 @@
  * In the browser, getSSRContext() returns undefined and runWithContext just runs fn.
  */
 type StorageLike = {
-	getStore(): SSRAccessContext | undefined
-	run<T>(context: SSRAccessContext, fn: () => T): T
+    getStore(): SSRAccessContext | undefined
+    run<T>(context: SSRAccessContext, fn: () => T): T
 }
 
 let ssrStorage: StorageLike
 
 try {
-	const {AsyncLocalStorage} = require('node:async_hooks') as {AsyncLocalStorage: new () => StorageLike}
-	ssrStorage = new AsyncLocalStorage()
+    const {AsyncLocalStorage} = require('node:async_hooks') as {AsyncLocalStorage: new () => StorageLike}
+    ssrStorage = new AsyncLocalStorage()
 } catch {
-	// Browser or environment without node:async_hooks; no request context
-	ssrStorage = {
-		getStore: () => undefined,
-		run: (_context, fn) => fn(),
-	}
+    // Browser or environment without node:async_hooks; no request context
+    ssrStorage = {
+        getStore: () => undefined,
+        run: (_context, fn) => fn(),
+    }
 }
 
 /**
@@ -28,15 +28,15 @@ try {
  * that runs inside the same runWithContext() call.
  */
 export interface SSRAccessContext {
-	store?: any
-	/** Per-request state registry for serialization; fresh Map per request. */
-	stateRegistry: Map<string, {state: any; initial: any}>
-	sessionId?: string
-	sessionData?: any
-	/** Per-request EventEmitter; prevents event listeners from persisting between requests. */
-	events?: any
-	/** Per-request watcher cleanup functions; prevents watchers from persisting between requests. */
-	watchers?: Array<() => void>
+    store?: any
+    /** Per-request state registry for serialization; fresh Map per request. */
+    stateRegistry: Map<string, {state: any; initial: any}>
+    sessionId?: string
+    sessionData?: any
+    /** Per-request EventEmitter; prevents event listeners from persisting between requests. */
+    events?: any
+    /** Per-request watcher cleanup functions; prevents watchers from persisting between requests. */
+    watchers?: Array<() => void>
 }
 
 /**
@@ -44,7 +44,7 @@ export interface SSRAccessContext {
  * a runWithContext() call (e.g. on the client or outside SSR).
  */
 export function getSSRContext(): SSRAccessContext | undefined {
-	return ssrStorage.getStore()
+    return ssrStorage.getStore()
 }
 
 /**
@@ -52,7 +52,7 @@ export function getSSRContext(): SSRAccessContext | undefined {
  * getSSRContext() returns this request's context for the duration of fn.
  */
 export function runWithContext<T>(context: SSRAccessContext, fn: () => T): T {
-	return ssrStorage.run(context, fn)
+    return ssrStorage.run(context, fn)
 }
 
 /**
@@ -60,31 +60,28 @@ export function runWithContext<T>(context: SSRAccessContext, fn: () => T): T {
  * Called automatically at the end of runWithContextAsync, but can be called manually if needed.
  */
 export function cleanupWatchers(context?: SSRAccessContext): void {
-	const ctx = context || getSSRContext()
-	if (ctx && ctx.watchers && ctx.watchers.length > 0) {
-		ctx.watchers.forEach(unwatch => {
-			try {
-				unwatch()
-			} catch(e) {
-				console.error('Error cleaning up watcher:', e)
-			}
-		})
-		ctx.watchers.length = 0
-	}
+    const ctx = context || getSSRContext()
+    if (ctx && ctx.watchers && ctx.watchers.length > 0) {
+        ctx.watchers.forEach((unwatch) => {
+            try {
+                unwatch()
+            } catch (e) {
+                console.error('Error cleaning up watcher:', e)
+            }
+        })
+        ctx.watchers.length = 0
+    }
 }
 
 /**
  * Same as runWithContext but for async functions.
  * Automatically cleans up watchers at the end of the request.
  */
-export async function runWithContextAsync<T>(
-	context: SSRAccessContext,
-	fn: () => Promise<T>,
-): Promise<T> {
-	try {
-		return await ssrStorage.run(context, fn)
-	} finally {
-		// Clean up watchers at the end of SSR request
-		cleanupWatchers(context)
-	}
+export async function runWithContextAsync<T>(context: SSRAccessContext, fn: () => Promise<T>): Promise<T> {
+    try {
+        return await ssrStorage.run(context, fn)
+    } finally {
+        // Clean up watchers at the end of SSR request
+        cleanupWatchers(context)
+    }
 }

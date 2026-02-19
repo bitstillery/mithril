@@ -28,9 +28,9 @@ Visit http://localhost:3000 to see the SSR in action.
 - `server.ts` - Bun HTTP server with SSR
 - `index.tsx` - Document component that renders the full HTML structure
 - `components/` - Mithril components
-  - `App.tsx` - Main app component (shared between server and client)
-  - `Home.tsx` - Home page component
-  - `AsyncData.tsx` - Async data fetching example component
+    - `App.tsx` - Main app component (shared between server and client)
+    - `Home.tsx` - Home page component
+    - `AsyncData.tsx` - Async data fetching example component
 - `routes.ts` - Route definitions
 
 ## Testing SSR
@@ -43,6 +43,7 @@ Visit http://localhost:3000 to see the SSR in action.
 ## Async Data Fetching
 
 Visit http://localhost:3000/async to see async data fetching:
+
 - Component uses `waitFor` in `oninit`
 - Server waits for promise before rendering
 - HTML includes fetched data

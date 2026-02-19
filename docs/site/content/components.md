@@ -8,10 +8,10 @@ Documentation on the structure, lifecycle methods, state management, and syntact
 - [Lifecycle methods](#lifecycle-methods)
 - [Passing data to components](#passing-data-to-components)
 - [State](#state)
-	- [Closure component state](#closure-component-state)
-	- [POJO component state](#pojo-component-state)
+    - [Closure component state](#closure-component-state)
+    - [POJO component state](#pojo-component-state)
 - [Classes](#classes)
-	- [Class component state](#class-component-state)
+    - [Class component state](#class-component-state)
 - [Special attributes](#special-attributes)
 - [Avoid anti-patterns](#avoid-anti-patterns)
 
@@ -24,9 +24,9 @@ Any JavaScript object that has a `view` method is a Mithril.js component. Compon
 ```javascript
 // define your component
 var Example = {
-	view: function(vnode) {
-		return m("div", "Hello")
-	}
+    view: function (vnode) {
+        return m('div', 'Hello')
+    },
 }
 
 // consume your component
@@ -44,31 +44,31 @@ Components can have the same [lifecycle methods](lifecycle-methods.md) as virtua
 
 ```javascript
 var ComponentWithHooks = {
-	oninit: function(vnode) {
-		console.log("initialized")
-	},
-	oncreate: function(vnode) {
-		console.log("DOM created")
-	},
-	onbeforeupdate: function(newVnode, oldVnode) {
-		return true
-	},
-	onupdate: function(vnode) {
-		console.log("DOM updated")
-	},
-	onbeforeremove: function(vnode) {
-		console.log("exit animation can start")
-		return new Promise(function(resolve) {
-			// call after animation completes
-			resolve()
-		})
-	},
-	onremove: function(vnode) {
-		console.log("removing DOM element")
-	},
-	view: function(vnode) {
-		return "hello"
-	}
+    oninit: function (vnode) {
+        console.log('initialized')
+    },
+    oncreate: function (vnode) {
+        console.log('DOM created')
+    },
+    onbeforeupdate: function (newVnode, oldVnode) {
+        return true
+    },
+    onupdate: function (vnode) {
+        console.log('DOM updated')
+    },
+    onbeforeremove: function (vnode) {
+        console.log('exit animation can start')
+        return new Promise(function (resolve) {
+            // call after animation completes
+            resolve()
+        })
+    },
+    onremove: function (vnode) {
+        console.log('removing DOM element')
+    },
+    view: function (vnode) {
+        return 'hello'
+    },
 }
 ```
 
@@ -76,7 +76,7 @@ Like other types of virtual DOM nodes, components may have additional lifecycle 
 
 ```javascript
 function initialize(vnode) {
-	console.log("initialized as vnode")
+    console.log('initialized as vnode')
 }
 
 m(ComponentWithHooks, {oninit: initialize})
@@ -95,16 +95,16 @@ To learn more about lifecycle methods, [see the lifecycle methods page](lifecycl
 Data can be passed to component instances by passing an `attrs` object as the second parameter in the hyperscript function:
 
 ```javascript
-m(Example, {name: "Floyd"})
+m(Example, {name: 'Floyd'})
 ```
 
 This data can be accessed in the component's view or lifecycle methods via the `vnode.attrs`:
 
 ```javascript
 var Example = {
-	view: function (vnode) {
-		return m("div", "Hello, " + vnode.attrs.name)
-	}
+    view: function (vnode) {
+        return m('div', 'Hello, ' + vnode.attrs.name)
+    },
 }
 ```
 
@@ -116,38 +116,43 @@ NOTE: Lifecycle methods can also be defined in the `attrs` object, so you should
 
 Like all virtual DOM nodes, component vnodes can have state. Component state is useful for supporting object-oriented architectures, for encapsulation and for separation of concerns.
 
-Note that unlike many other frameworks, mutating component state does *not* trigger [redraws](autoredraw.md) or DOM updates. Instead, redraws are performed when event handlers fire, when HTTP requests made by [m.request](request.md) complete or when the browser navigates to different routes. Mithril.js' component state mechanisms simply exist as a convenience for applications.
+Note that unlike many other frameworks, mutating component state does _not_ trigger [redraws](autoredraw.md) or DOM updates. Instead, redraws are performed when event handlers fire, when HTTP requests made by [m.request](request.md) complete or when the browser navigates to different routes. Mithril.js' component state mechanisms simply exist as a convenience for applications.
 
 If a state change occurs that is not as a result of any of the above conditions (e.g. after a `setTimeout`), then you can use `m.redraw()` to trigger a redraw manually.
 
 #### Closure component state
 
-In the above examples, each component is defined as a POJO (Plain Old JavaScript Object), which is used by Mithril.js internally as the prototype for that component's instances. It's possible to use component state with a POJO (as we'll discuss below), but it's not the cleanest or simplest approach. For that we'll use a  **_closure component_**, which is simply a wrapper function which _returns_ a POJO component instance, which in turn carries its own, closed-over scope.
+In the above examples, each component is defined as a POJO (Plain Old JavaScript Object), which is used by Mithril.js internally as the prototype for that component's instances. It's possible to use component state with a POJO (as we'll discuss below), but it's not the cleanest or simplest approach. For that we'll use a **_closure component_**, which is simply a wrapper function which _returns_ a POJO component instance, which in turn carries its own, closed-over scope.
 
 With a closure component, state can simply be maintained by variables that are declared within the outer function:
 
 ```javascript
 function ComponentWithState(initialVnode) {
-	// Component state variable, unique to each instance
-	var count = 0
+    // Component state variable, unique to each instance
+    var count = 0
 
-	// POJO component instance: any object with a
-	// view function which returns a vnode
-	return {
-		oninit: function(vnode){
-			console.log("init a closure component")
-		},
-		view: function(vnode) {
-			return m("div",
-				m("p", "Count: " + count),
-				m("button", {
-					onclick: function() {
-						count += 1
-					}
-				}, "Increment count")
-			)
-		}
-	}
+    // POJO component instance: any object with a
+    // view function which returns a vnode
+    return {
+        oninit: function (vnode) {
+            console.log('init a closure component')
+        },
+        view: function (vnode) {
+            return m(
+                'div',
+                m('p', 'Count: ' + count),
+                m(
+                    'button',
+                    {
+                        onclick: function () {
+                            count += 1
+                        },
+                    },
+                    'Increment count',
+                ),
+            )
+        },
+    }
 }
 ```
 
@@ -155,36 +160,44 @@ Any functions declared within the closure also have access to its state variable
 
 ```javascript
 function ComponentWithState(initialVnode) {
-	var count = 0
+    var count = 0
 
-	function increment() {
-		count += 1
-	}
+    function increment() {
+        count += 1
+    }
 
-	function decrement() {
-		count -= 1
-	}
+    function decrement() {
+        count -= 1
+    }
 
-	return {
-		view: function(vnode) {
-			return m("div",
-				m("p", "Count: " + count),
-				m("button", {
-					onclick: increment
-				}, "Increment"),
-				m("button", {
-					onclick: decrement
-				}, "Decrement")
-			)
-		}
-	}
+    return {
+        view: function (vnode) {
+            return m(
+                'div',
+                m('p', 'Count: ' + count),
+                m(
+                    'button',
+                    {
+                        onclick: increment,
+                    },
+                    'Increment',
+                ),
+                m(
+                    'button',
+                    {
+                        onclick: decrement,
+                    },
+                    'Decrement',
+                ),
+            )
+        },
+    }
 }
 ```
 
 Closure components are consumed in the same way as POJOs, e.g. `m(ComponentWithState, { passedData: ... })`.
 
 A big advantage of closure components is that we don't need to worry about binding `this` when attaching event handler callbacks. In fact `this` is never used at all and we never have to think about `this` context ambiguities.
-
 
 ---
 
@@ -200,10 +213,10 @@ In the example below, `data` becomes a property of the `ComponentWithInitialStat
 
 ```javascript
 var ComponentWithInitialState = {
-	data: "Initial content",
-	view: function(vnode) {
-		return m("div", vnode.state.data)
-	}
+    data: 'Initial content',
+    view: function (vnode) {
+        return m('div', vnode.state.data)
+    },
 }
 
 m(ComponentWithInitialState)
@@ -218,15 +231,15 @@ As you can see, state can also be accessed via the `vnode.state` property, which
 
 ```javascript
 var ComponentWithDynamicState = {
-	oninit: function(vnode) {
-		vnode.state.data = vnode.attrs.text
-	},
-	view: function(vnode) {
-		return m("div", vnode.state.data)
-	}
+    oninit: function (vnode) {
+        vnode.state.data = vnode.attrs.text
+    },
+    view: function (vnode) {
+        return m('div', vnode.state.data)
+    },
 }
 
-m(ComponentWithDynamicState, {text: "Hello"})
+m(ComponentWithDynamicState, {text: 'Hello'})
 
 // Equivalent HTML
 // <div>Hello</div>
@@ -238,15 +251,15 @@ State can also be accessed via the `this` keyword, which is available to all lif
 
 ```javascript
 var ComponentUsingThis = {
-	oninit: function(vnode) {
-		this.data = vnode.attrs.text
-	},
-	view: function(vnode) {
-		return m("div", this.data)
-	}
+    oninit: function (vnode) {
+        this.data = vnode.attrs.text
+    },
+    view: function (vnode) {
+        return m('div', this.data)
+    },
 }
 
-m(ComponentUsingThis, {text: "Hello"})
+m(ComponentUsingThis, {text: 'Hello'})
 
 // Equivalent HTML
 // <div>Hello</div>
@@ -262,15 +275,15 @@ If it suits your needs (like in object-oriented projects), components can also b
 
 ```javascript
 class ClassComponent {
-	constructor(vnode) {
-		this.kind = "class component"
-	}
-	view() {
-		return m("div", `Hello from a ${this.kind}`)
-	}
-	oncreate() {
-		console.log(`A ${this.kind} was created`)
-	}
+    constructor(vnode) {
+        this.kind = 'class component'
+    }
+    view() {
+        return m('div', `Hello from a ${this.kind}`)
+    }
+    oncreate() {
+        console.log(`A ${this.kind} was created`)
+    }
 }
 ```
 
@@ -286,17 +299,15 @@ m.render(document.body, m(ClassComponent))
 m.mount(document.body, ClassComponent)
 
 // EXAMPLE: via m.route
-m.route(document.body, "/", {
-	"/": ClassComponent
+m.route(document.body, '/', {
+    '/': ClassComponent,
 })
 
 // EXAMPLE: component composition
 class AnotherClassComponent {
-	view() {
-		return m("main", [
-			m(ClassComponent)
-		])
-	}
+    view() {
+        return m('main', [m(ClassComponent)])
+    }
 }
 ```
 
@@ -306,26 +317,39 @@ With classes, state can be managed by class instance properties and methods, and
 
 ```javascript
 class ComponentWithState {
-	constructor(vnode) {
-		this.count = 0
-	}
-	increment() {
-		this.count += 1
-	}
-	decrement() {
-		this.count -= 1
-	}
-	view() {
-		return m("div",
-			m("p", "Count: ", this.count),
-			m("button", {
-				onclick: () => {this.increment()}
-			}, "Increment"),
-			m("button", {
-				onclick: () => {this.decrement()}
-			}, "Decrement")
-		)
-	}
+    constructor(vnode) {
+        this.count = 0
+    }
+    increment() {
+        this.count += 1
+    }
+    decrement() {
+        this.count -= 1
+    }
+    view() {
+        return m(
+            'div',
+            m('p', 'Count: ', this.count),
+            m(
+                'button',
+                {
+                    onclick: () => {
+                        this.increment()
+                    },
+                },
+                'Increment',
+            ),
+            m(
+                'button',
+                {
+                    onclick: () => {
+                        this.decrement()
+                    },
+                },
+                'Decrement',
+            ),
+        )
+    }
 }
 ```
 
@@ -365,31 +389,37 @@ Consider this fat component:
 // views/Login.js
 // AVOID
 var Login = {
-	username: "",
-	password: "",
-	setUsername: function(value) {
-		this.username = value
-	},
-	setPassword: function(value) {
-		this.password = value
-	},
-	canSubmit: function() {
-		return this.username !== "" && this.password !== ""
-	},
-	login: function() {/*...*/},
-	view: function() {
-		return m(".login", [
-			m("input[type=text]", {
-				oninput: function (e) { this.setUsername(e.target.value) },
-				value: this.username,
-			}),
-			m("input[type=password]", {
-				oninput: function (e) { this.setPassword(e.target.value) },
-				value: this.password,
-			}),
-			m("button", {disabled: !this.canSubmit(), onclick: this.login}, "Login"),
-		])
-	}
+    username: '',
+    password: '',
+    setUsername: function (value) {
+        this.username = value
+    },
+    setPassword: function (value) {
+        this.password = value
+    },
+    canSubmit: function () {
+        return this.username !== '' && this.password !== ''
+    },
+    login: function () {
+        /*...*/
+    },
+    view: function () {
+        return m('.login', [
+            m('input[type=text]', {
+                oninput: function (e) {
+                    this.setUsername(e.target.value)
+                },
+                value: this.username,
+            }),
+            m('input[type=password]', {
+                oninput: function (e) {
+                    this.setPassword(e.target.value)
+                },
+                value: this.password,
+            }),
+            m('button', {disabled: !this.canSubmit(), onclick: this.login}, 'Login'),
+        ])
+    },
 }
 ```
 
@@ -403,18 +433,20 @@ It makes more sense to refactor this component and pull the state code out of th
 // models/Auth.js
 // PREFER
 var Auth = {
-	username: "",
-	password: "",
-	setUsername: function(value) {
-		Auth.username = value
-	},
-	setPassword: function(value) {
-		Auth.password = value
-	},
-	canSubmit: function() {
-		return Auth.username !== "" && Auth.password !== ""
-	},
-	login: function() {/*...*/},
+    username: '',
+    password: '',
+    setUsername: function (value) {
+        Auth.username = value
+    },
+    setPassword: function (value) {
+        Auth.password = value
+    },
+    canSubmit: function () {
+        return Auth.username !== '' && Auth.password !== ''
+    },
+    login: function () {
+        /*...*/
+    },
 }
 
 module.exports = Auth
@@ -425,25 +457,33 @@ Then, we can clean up the component:
 ```javascript
 // views/Login.js
 // PREFER
-var Auth = require("../models/Auth")
+var Auth = require('../models/Auth')
 
 var Login = {
-	view: function() {
-		return m(".login", [
-			m("input[type=text]", {
-				oninput: function (e) { Auth.setUsername(e.target.value) },
-				value: Auth.username
-			}),
-			m("input[type=password]", {
-				oninput: function (e) { Auth.setPassword(e.target.value) },
-				value: Auth.password
-			}),
-			m("button", {
-				disabled: !Auth.canSubmit(),
-				onclick: Auth.login
-			}, "Login")
-		])
-	}
+    view: function () {
+        return m('.login', [
+            m('input[type=text]', {
+                oninput: function (e) {
+                    Auth.setUsername(e.target.value)
+                },
+                value: Auth.username,
+            }),
+            m('input[type=password]', {
+                oninput: function (e) {
+                    Auth.setPassword(e.target.value)
+                },
+                value: Auth.password,
+            }),
+            m(
+                'button',
+                {
+                    disabled: !Auth.canSubmit(),
+                    onclick: Auth.login,
+                },
+                'Login',
+            ),
+        ])
+    },
 }
 ```
 
@@ -458,13 +498,13 @@ Sometimes, you might want to keep an interface flexible and your implementation 
 ```javascript
 // AVOID
 var Modal = {
-	// ...
-	view: function(vnode) {
-		return m(".modal[tabindex=-1][role=dialog]", vnode.attrs, [
-			//         forwarding `vnode.attrs` here ^
-			// ...
-		])
-	}
+    // ...
+    view: function (vnode) {
+        return m('.modal[tabindex=-1][role=dialog]', vnode.attrs, [
+            //         forwarding `vnode.attrs` here ^
+            // ...
+        ])
+    },
 }
 ```
 
@@ -472,16 +512,20 @@ If you do it like above, you could run into issues when using it:
 
 ```javascript
 var MyModal = {
-	view: function() {
-		return m(Modal, {
-			// This toggles it twice, so it doesn't show
-			onupdate: function(vnode) {
-				if (toggle) $(vnode.dom).modal("toggle")
-			}
-		}, [
-			// ...
-		])
-	}
+    view: function () {
+        return m(
+            Modal,
+            {
+                // This toggles it twice, so it doesn't show
+                onupdate: function (vnode) {
+                    if (toggle) $(vnode.dom).modal('toggle')
+                },
+            },
+            [
+                // ...
+            ],
+        )
+    },
 }
 ```
 
@@ -490,40 +534,41 @@ You could also run into errors if the element you're forwarding it to is in a fr
 ```javascript
 // AVOID
 var TaskItem = {
-	// ...
-	view: function(vnode) {
-		return [
-			m(".TaskList__TaskItem.Layout__Container", vnode.attrs, [
-				//       forwarding `vnode.attrs` here ^
-				// ...
-			]),
-			m(".TaskList__TaskButtons.Layout__Container", [
-				// ...
-			]),
-		]
-	}
+    // ...
+    view: function (vnode) {
+        return [
+            m('.TaskList__TaskItem.Layout__Container', vnode.attrs, [
+                //       forwarding `vnode.attrs` here ^
+                // ...
+            ]),
+            m('.TaskList__TaskButtons.Layout__Container', [
+                // ...
+            ]),
+        ]
+    },
 }
 
 var MyList = {
-	view: function() {
-		return m("div.TaskList__Container",
-			Model.taskItems().map(function(item) {
-				return m(TaskItem, {
-					// This attribute gets forwarded to the
-					// first element returned by `TaskItem`.
-					// This makes the element keyed, and thus
-					// causes the fragment it's in to have a
-					// mix of keyed and unkeyed elements.
-					//
-					// Mithril checks for such mixed keys in
-					// its vnode factories, and so you'd see
-					// an error thrown.
-					key: item.id,
-					// ...
-				})
-			})
-		)
-	}
+    view: function () {
+        return m(
+            'div.TaskList__Container',
+            Model.taskItems().map(function (item) {
+                return m(TaskItem, {
+                    // This attribute gets forwarded to the
+                    // first element returned by `TaskItem`.
+                    // This makes the element keyed, and thus
+                    // causes the fragment it's in to have a
+                    // mix of keyed and unkeyed elements.
+                    //
+                    // Mithril checks for such mixed keys in
+                    // its vnode factories, and so you'd see
+                    // an error thrown.
+                    key: item.id,
+                    // ...
+                })
+            }),
+        )
+    },
 }
 ```
 
@@ -532,29 +577,29 @@ Instead, you should use [`m.censor`](censor.md) to remove all the problem lifecy
 ```javascript
 // PREFER
 var Modal = {
-	// ...
-	view: function(vnode) {
-		return m(".modal[tabindex=-1][role=dialog]", m.censor(vnode.attrs), [
-			//                  forwarding `vnode.attrs` here ^
-			// ...
-		])
-	}
+    // ...
+    view: function (vnode) {
+        return m('.modal[tabindex=-1][role=dialog]', m.censor(vnode.attrs), [
+            //                  forwarding `vnode.attrs` here ^
+            // ...
+        ])
+    },
 }
 
 // PREFER
 var TaskItem = {
-	// ...
-	view: function(vnode) {
-		return [
-			m(".TaskList__TaskItem.Layout__Container", m.censor(vnode.attrs), [
-				//                forwarding `vnode.attrs` here ^
-				// ...
-			]),
-			m(".TaskList__TaskButtons.Layout__Container", [
-				// ...
-			]),
-		]
-	}
+    // ...
+    view: function (vnode) {
+        return [
+            m('.TaskList__TaskItem.Layout__Container', m.censor(vnode.attrs), [
+                //                forwarding `vnode.attrs` here ^
+                // ...
+            ]),
+            m('.TaskList__TaskButtons.Layout__Container', [
+                // ...
+            ]),
+        ]
+    },
 }
 ```
 
@@ -563,28 +608,28 @@ Also, consider using a single attribute instead of forwarding them directly. It 
 ```javascript
 // PREFER
 var Modal = {
-	// ...
-	view: function(vnode) {
-		return m(".modal[tabindex=-1][role=dialog]", vnode.attrs.attrs, [
-			//              forwarding `attrs:` here ^
-			// ...
-		])
-	}
+    // ...
+    view: function (vnode) {
+        return m('.modal[tabindex=-1][role=dialog]', vnode.attrs.attrs, [
+            //              forwarding `attrs:` here ^
+            // ...
+        ])
+    },
 }
 
 // Example
 var MyModal = {
-	view: function() {
-		return m(Modal, {
-			attrs: {
-				// This toggles it once
-				onupdate: function(vnode) {
-					if (toggle) $(vnode.dom).modal("toggle")
-				}
-			},
-			// ...
-		})
-	}
+    view: function () {
+        return m(Modal, {
+            attrs: {
+                // This toggles it once
+                onupdate: function (vnode) {
+                    if (toggle) $(vnode.dom).modal('toggle')
+                },
+            },
+            // ...
+        })
+    },
 }
 ```
 
@@ -599,27 +644,15 @@ Avoid destructuring the `children` property for this purpose.
 ```javascript
 // AVOID
 var Header = {
-	view: function(vnode) {
-		return m(".section", [
-			m(".header", vnode.children[0]),
-			m(".tagline", vnode.children[1]),
-		])
-	}
+    view: function (vnode) {
+        return m('.section', [m('.header', vnode.children[0]), m('.tagline', vnode.children[1])])
+    },
 }
 
-m(Header, [
-	m("h1", "My title"),
-	m("h2", "Lorem ipsum"),
-])
+m(Header, [m('h1', 'My title'), m('h2', 'Lorem ipsum')])
 
 // awkward consumption use case
-m(Header, [
-	[
-		m("h1", "My title"),
-		m("small", "A small note"),
-	],
-	m("h2", "Lorem ipsum"),
-])
+m(Header, [[m('h1', 'My title'), m('small', 'A small note')], m('h2', 'Lorem ipsum')])
 ```
 
 The component above breaks the assumption that children will be output in the same contiguous format as they are received. It's difficult to understand the component without reading its implementation. Instead, use attributes as named parameters and reserve `children` for uniform child content:
@@ -627,26 +660,20 @@ The component above breaks the assumption that children will be output in the sa
 ```javascript
 // PREFER
 var BetterHeader = {
-	view: function(vnode) {
-		return m(".section", [
-			m(".header", vnode.attrs.title),
-			m(".tagline", vnode.attrs.tagline),
-		])
-	}
+    view: function (vnode) {
+        return m('.section', [m('.header', vnode.attrs.title), m('.tagline', vnode.attrs.tagline)])
+    },
 }
 
 m(BetterHeader, {
-	title: m("h1", "My title"),
-	tagline: m("h2", "Lorem ipsum"),
+    title: m('h1', 'My title'),
+    tagline: m('h2', 'Lorem ipsum'),
 })
 
 // clearer consumption use case
 m(BetterHeader, {
-	title: [
-		m("h1", "My title"),
-		m("small", "A small note"),
-	],
-	tagline: m("h2", "Lorem ipsum"),
+    title: [m('h1', 'My title'), m('small', 'A small note')],
+    tagline: m('h2', 'Lorem ipsum'),
 })
 ```
 
@@ -660,27 +687,27 @@ For that reason you should avoid recreating components. Instead, consume compone
 
 ```javascript
 // AVOID
-var ComponentFactory = function(greeting) {
-	// creates a new component on every call
-	return {
-		view: function() {
-			return m("div", greeting)
-		}
-	}
+var ComponentFactory = function (greeting) {
+    // creates a new component on every call
+    return {
+        view: function () {
+            return m('div', greeting)
+        },
+    }
 }
-m.render(document.body, m(ComponentFactory("hello")))
+m.render(document.body, m(ComponentFactory('hello')))
 // calling a second time recreates div from scratch rather than doing nothing
-m.render(document.body, m(ComponentFactory("hello")))
+m.render(document.body, m(ComponentFactory('hello')))
 
 // PREFER
 var Component = {
-	view: function(vnode) {
-		return m("div", vnode.attrs.greeting)
-	}
+    view: function (vnode) {
+        return m('div', vnode.attrs.greeting)
+    },
 }
-m.render(document.body, m(Component, {greeting: "hello"}))
+m.render(document.body, m(Component, {greeting: 'hello'}))
 // calling a second time does not modify DOM
-m.render(document.body, m(Component, {greeting: "hello"}))
+m.render(document.body, m(Component, {greeting: 'hello'}))
 ```
 
 ##### Avoid creating component instances outside views
@@ -690,29 +717,31 @@ Conversely, for similar reasons, if a component instance is created outside of a
 ```javascript
 // AVOID
 var Counter = {
-	count: 0,
-	view: function(vnode) {
-		return m("div",
-			m("p", "Count: " + vnode.state.count ),
+    count: 0,
+    view: function (vnode) {
+        return m(
+            'div',
+            m('p', 'Count: ' + vnode.state.count),
 
-			m("button", {
-				onclick: function() {
-					vnode.state.count++
-				}
-			}, "Increase count")
-		)
-	}
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state.count++
+                    },
+                },
+                'Increase count',
+            ),
+        )
+    },
 }
 
 var counter = m(Counter)
 
 m.mount(document.body, {
-	view: function(vnode) {
-		return [
-			m("h1", "My app"),
-			counter
-		]
-	}
+    view: function (vnode) {
+        return [m('h1', 'My app'), counter]
+    },
 })
 ```
 
@@ -721,26 +750,28 @@ In the example above, clicking the counter component button will increase its st
 ```javascript
 // PREFER
 var Counter = {
-	count: 0,
-	view: function(vnode) {
-		return m("div",
-			m("p", "Count: " + vnode.state.count ),
+    count: 0,
+    view: function (vnode) {
+        return m(
+            'div',
+            m('p', 'Count: ' + vnode.state.count),
 
-			m("button", {
-				onclick: function() {
-					vnode.state.count++
-				}
-			}, "Increase count")
-		)
-	}
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state.count++
+                    },
+                },
+                'Increase count',
+            ),
+        )
+    },
 }
 
 m.mount(document.body, {
-	view: function(vnode) {
-		return [
-			m("h1", "My app"),
-			m(Counter)
-		]
-	}
+    view: function (vnode) {
+        return [m('h1', 'My app'), m(Counter)]
+    },
 })
 ```

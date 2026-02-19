@@ -1,6 +1,7 @@
 <!--meta-description
 Legacy change log for Mithril.js
 -->
+
 # Legacy changelog
 
 Newer versions' change logs, starting with v2.2.0, can be found [here](https://github.com/MithrilJS/mithril.js/releases).
@@ -20,25 +21,29 @@ Newer versions' change logs, starting with v2.2.0, can be found [here](https://g
 ---
 
 ### v2.0.4
+
 _2019-08-18_
 
 - Fix double-rendering of trusted content within `contenteditable` elements ([#2516](https://github.com/MithrilJS/mithril.js/pull/2516) [@dead-claudia](https://github.com/dead-claudia))
 - Fix error on `m.trust` updating ([#2516](https://github.com/MithrilJS/mithril.js/pull/2516) [@dead-claudia](https://github.com/dead-claudia))
 
 ### v2.0.3
+
 _2019-07-28_
 
 - Ensure vnodes are removed correctly in the face of `onbeforeremove` resolving after new nodes are added ([#2492](https://github.com/MithrilJS/mithril.js/pull/2492) [@dead-claudia](https://github.com/dead-claudia))
 - Fix prototype pollution vulnerability in `m.parseQueryString` ([#2494](https://github.com/MithrilJS/mithril.js/pull/2494) [@dead-claudia](https://github.com/dead-claudia))
 
-*v2.0.2 was skipped as it had a critical flaw and was immediately unpublished.*
+_v2.0.2 was skipped as it had a critical flaw and was immediately unpublished._
 
 ### v2.0.1
+
 _2019-07-24_
 
 Same as v2.0.0, but with a publish that didn't have a botched upload.
 
 ### v2.0.0
+
 _2019-07-24_
 
 #### Breaking changes
@@ -56,7 +61,7 @@ _2019-07-24_
 - API: `m.withAttr` removed. ([#2317](https://github.com/MithrilJS/mithril.js/pull/2317))
 - request: `data` has now been split to `params` and `body` and `useBody` has been removed in favor of just using `body`. ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361))
 - route, request: Interpolated arguments are URL-escaped (and for declared routes, URL-unescaped) automatically. If you want to use a raw route parameter, use a variadic parameter like in `/asset/:path.../view`. This was previously only available in `m.route` route definitions, but it's now usable in both that and where paths are accepted. ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361))
-- route, request: Interpolated arguments are *not* appended to the query string. This means `m.request({url: "/api/user/:id/get", params: {id: user.id}})` would result in a request like `GET /api/user/1/get`, not one like `GET /api/user/1/get?id=1`. If you really need it in both places, pass the same value via two separate parameters with the non-query-string parameter renamed, like in `m.request({url: "/api/user/:urlID/get", params: {id: user.id, urlID: user.id}})`. ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361))
+- route, request: Interpolated arguments are _not_ appended to the query string. This means `m.request({url: "/api/user/:id/get", params: {id: user.id}})` would result in a request like `GET /api/user/1/get`, not one like `GET /api/user/1/get?id=1`. If you really need it in both places, pass the same value via two separate parameters with the non-query-string parameter renamed, like in `m.request({url: "/api/user/:urlID/get", params: {id: user.id, urlID: user.id}})`. ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361))
 - route, request: `m.route.set`, `m.request`, and `m.jsonp` all use the same path template syntax now, and vary only in how they receive their parameters. Furthermore, declared routes in `m.route` shares the same syntax and semantics, but acts in reverse as if via pattern matching. ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361))
 - request: `options.responseType` now defaults to `"json"` if `extract` is absent, and `deserialize` receives the parsed response, not the raw string. If you want the old behavior, [use `responseType: "text"`](https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/responseType). ([#2335](https://github.com/MithrilJS/mithril.js/pull/2335))
 - request: set `Content-Type: application/json; charset=utf-8` for all XHR methods by default, provided they have a body that's `!= null` ([#2361](https://github.com/MithrilJS/mithril.js/pull/2361), [#2421](https://github.com/MithrilJS/mithril.js/pull/2421))
@@ -71,7 +76,7 @@ _2019-07-24_
 - vnodes: normalize boolean children to `null`/`undefined` at the vnode level, always stringify non-object children that aren't holes ([#2452](https://github.com/MithrilJS/mithril.js/pull/2452) [@dead-claudia](https://github.com/dead-claudia))
     - Previously, `true` was equivalent to `"true"` and `false` was equivalent to `""`.
     - Previously, numeric children weren't coerced. Now, they are.
-    - Unlikely to break most components, but it *could* break some users.
+    - Unlikely to break most components, but it _could_ break some users.
     - This increases consistency with how booleans are handled with children, so it should be more intuitive.
 - route: `key` parameter for routes now only works globally for components ([#2458](https://github.com/MithrilJS/mithril.js/pull/2458) [@dead-claudia](https://github.com/dead-claudia))
     - Previously, it worked for route resolvers, too.
@@ -114,7 +119,7 @@ _2019-07-24_
 - route: Use `m.mount(root, null)` to unsubscribe and clean up after a `m.route(root, ...)` call. ([#2453](https://github.com/MithrilJS/mithril.js/pull/2453))
 - render: new `redraw` parameter exposed any time a child event handler is used ([#2458](https://github.com/MithrilJS/mithril.js/pull/2458) [@dead-claudia](https://github.com/dead-claudia))
 - route: `m.route.SKIP` can be returned from route resolvers to skip to the next route ([#2469](https://github.com/MithrilJS/mithril.js/pull/2469) [@dead-claudia](https://github.com/dead-claudia))
-- API: Full DOM no longer required to execute `require("mithril")`. You just need to set the necessary globals to *something*, even if `null` or `undefined`, so they can be properly used. ([#2469](https://github.com/MithrilJS/mithril.js/pull/2469) [@dead-claudia](https://github.com/dead-claudia))
+- API: Full DOM no longer required to execute `require("mithril")`. You just need to set the necessary globals to _something_, even if `null` or `undefined`, so they can be properly used. ([#2469](https://github.com/MithrilJS/mithril.js/pull/2469) [@dead-claudia](https://github.com/dead-claudia))
     - This enables isomorphic use of `m.route.Link` and `m.route.prefix`.
     - This enables isomorphic use of `m.request`, provided the `background: true` option is set and that an `XMLHttpRequest` polyfill is included as necessary.
     - Note that methods requiring DOM operations will still throw errors, such as `m.render(...)`, `m.redraw()`, and `m.route(...)`.
@@ -143,9 +148,9 @@ _2019-07-24_
 - render: simplify component removal ([#2214](https://github.com/MithrilJS/mithril.js/pull/2214))
 - render: remove some redundancy within the component initialization code ([#2213](https://github.com/MithrilJS/mithril.js/pull/2213))
 - API: `mithril` loads `mithril/index.js`, not the bundle, so users of `mithril/hyperscript`, `mithril/render`, and similar see the same Mithril instance as those just using `mithril` itself.
-    - `https://unpkg.com/mithril` is configured to receive the *minified* bundle, not the development bundle.
-    - The raw bundle itself remains accessible at `mithril.js`, and is *not* browser-wrapped.
-    - Note: this *will* increase overhead with bundlers like Webpack, Rollup, and Browserify.
+    - `https://unpkg.com/mithril` is configured to receive the _minified_ bundle, not the development bundle.
+    - The raw bundle itself remains accessible at `mithril.js`, and is _not_ browser-wrapped.
+    - Note: this _will_ increase overhead with bundlers like Webpack, Rollup, and Browserify.
 - request: autoredraw support fixed for `async`/`await` in Chrome ([#2428](https://github.com/MithrilJS/mithril.js/pull/2428) [@dead-claudia](https://github.com/dead-claudia))
 - render: fix when attrs change with `onbeforeupdate` returning false, then remaining the same on next redraw ([#2447](https://github.com/MithrilJS/mithril.js/pull/2447) [@dead-claudia](https://github.com/dead-claudia))
 - render: fix internal error when `onbeforeupdate` returns false and then true with new child tree ([#2447](https://github.com/MithrilJS/mithril.js/pull/2447) [@dead-claudia](https://github.com/dead-claudia))
@@ -161,6 +166,7 @@ _2019-07-24_
 Formerly, `mithril/stream` was available standalone as the package `mithril-stream`, but this package has been deprecated and is no longer updated. The changelog for that package prior to being merged back into Mithril.js proper is below.
 
 ### 2.0.0
+
 _2019-02-07_
 
 - when a stream conditionally returns HALT, dependant stream will also end ([#2200](https://github.com/MithrilJS/mithril.js/pull/2200), [#2369](https://github.com/MithrilJS/mithril.js/pull/2369))
@@ -171,6 +177,7 @@ _2019-02-07_
 - fixed `stream.end` propagation ([#2369](https://github.com/MithrilJS/mithril.js/pull/2369))
 
 ### 1.1.0
+
 _2017-07-13_
 
 - Move the "use strict" directive inside the IIFE [#1831](https://github.com/MithrilJS/mithril.js/issues/1831) ([#1893](https://github.com/MithrilJS/mithril.js/pull/1893))

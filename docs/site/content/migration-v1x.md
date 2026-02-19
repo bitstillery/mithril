@@ -29,14 +29,32 @@ In v1.x, you could manipulate `vnode.state` and assign anything you wanted. In v
 
 ```javascript
 var Counter = {
-    oninit: function(vnode) { vnode.state = 0 },
-    view: function(vnode) {
-        return m(".counter", [
-            m("button", {onclick: function() { vnode.state-- }}, "-"),
+    oninit: function (vnode) {
+        vnode.state = 0
+    },
+    view: function (vnode) {
+        return m('.counter', [
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state--
+                    },
+                },
+                '-',
+            ),
             vnode.state,
-            m("button", {onclick: function() { vnode.state++ }}, "+")
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state++
+                    },
+                },
+                '+',
+            ),
         ])
-    }
+    },
 }
 ```
 
@@ -44,18 +62,36 @@ var Counter = {
 
 ```javascript
 var Counter = {
-    oninit: function(vnode) { vnode.state.count = 0 },
-    view: function(vnode) {
-        return m(".counter", [
-            m("button", {onclick: function() { vnode.state.count-- }}, "-"),
+    oninit: function (vnode) {
+        vnode.state.count = 0
+    },
+    view: function (vnode) {
+        return m('.counter', [
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state.count--
+                    },
+                },
+                '-',
+            ),
             vnode.state.count,
-            m("button", {onclick: function() { vnode.state.count++ }}, "+")
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        vnode.state.count++
+                    },
+                },
+                '+',
+            ),
         ])
-    }
+    },
 }
 ```
 
-*When v1.0 first released, class and closure components didn't exist, so it just pulled what it needed from `vnode.tag`. This implementation detail is what allowed you to do it, and some began to rely on it. It was also implied as possible in some places within the docs. Now, things are different, and this makes it a little easier to manage from an implementation standpoint as there's only one reference to state, not two.*
+_When v1.0 first released, class and closure components didn't exist, so it just pulled what it needed from `vnode.tag`. This implementation detail is what allowed you to do it, and some began to rely on it. It was also implied as possible in some places within the docs. Now, things are different, and this makes it a little easier to manage from an implementation standpoint as there's only one reference to state, not two._
 
 ---
 
@@ -66,17 +102,17 @@ In v1.x, you previously used `oncreate: m.route.link` and, if the link could cha
 ### v1.x
 
 ```javascript
-m("a", {
-    href: "/path",
+m('a', {
+    href: '/path',
     oncreate: m.route.link,
 })
 
-m("button", {
-    href: "/path",
+m('button', {
+    href: '/path',
     oncreate: m.route.link,
 })
 
-m("button.btn[href=/path]", {
+m('button.btn[href=/path]', {
     oncreate: m.route.link,
 })
 ```
@@ -85,16 +121,16 @@ m("button.btn[href=/path]", {
 
 ```javascript
 m(m.route.Link, {
-    href: "/path",
+    href: '/path',
 })
 
 m(m.route.Link, {
-    selector: "button",
-    href: "/path",
+    selector: 'button',
+    href: '/path',
 })
 
 m(m.route.Link, {
-    selector: "button.btn[href=/path]",
+    selector: 'button.btn[href=/path]',
 })
 ```
 
@@ -110,49 +146,55 @@ In v2.x, the response is assigned to a `response` property on the result instead
 
 ## `m.withAttr` removed
 
-In v1.x, event listeners could use `oninput: m.withAttr("value", func)` and similar. In v2.x, just read them directly from the event's target. It synergized well with streams, but since the idiom of `m.withAttr("value", stream)` was not *nearly* as common as `m.withAttr("value", prop)`, `m.withAttr` lost most of its usefulness and so it was removed.
+In v1.x, event listeners could use `oninput: m.withAttr("value", func)` and similar. In v2.x, just read them directly from the event's target. It synergized well with streams, but since the idiom of `m.withAttr("value", stream)` was not _nearly_ as common as `m.withAttr("value", prop)`, `m.withAttr` lost most of its usefulness and so it was removed.
 
 ### v1.x
 
 ```javascript
-var value = ""
+var value = ''
 
 // In your view
-m("input[type=text]", {
+m('input[type=text]', {
     value: value(),
-    oninput: m.withAttr("value", function(v) { value = v }),
+    oninput: m.withAttr('value', function (v) {
+        value = v
+    }),
 })
 
 // OR
 
-var value = m.stream("")
+var value = m.stream('')
 
 // In your view
-m("input[type=text]", {
+m('input[type=text]', {
     value: value(),
-    oninput: m.withAttr("value", value),
+    oninput: m.withAttr('value', value),
 })
 ```
 
 ### v2.x
 
 ```javascript
-var value = ""
+var value = ''
 
 // In your view
-m("input[type=text]", {
+m('input[type=text]', {
     value: value,
-    oninput: function (ev) { value = ev.target.value },
+    oninput: function (ev) {
+        value = ev.target.value
+    },
 })
 
 // OR
 
-var value = m.stream("")
+var value = m.stream('')
 
 // In your view
-m("input[type=text]", {
+m('input[type=text]', {
     value: value(),
-    oninput: function (ev) { value(ev.target.value) },
+    oninput: function (ev) {
+        value(ev.target.value)
+    },
 })
 ```
 
@@ -165,13 +207,13 @@ In v1.x, `m.route.prefix` was a function called via `m.route.prefix(prefix)`. It
 ### v1.x
 
 ```javascript
-m.route.prefix("/root")
+m.route.prefix('/root')
 ```
 
 ### v2.x
 
 ```javascript
-m.route.prefix = "/root"
+m.route.prefix = '/root'
 ```
 
 ---
@@ -185,28 +227,28 @@ The `data` and `useBody` were refactored into `params`, query parameters interpo
 ### v1.x
 
 ```javascript
-m.request("https://example.com/api/user/:id", {
-	method: "GET",
-    data: {id: user.id}
+m.request('https://example.com/api/user/:id', {
+    method: 'GET',
+    data: {id: user.id},
 })
 
-m.request("https://example.com/api/user/create", {
-	method: "POST",
-    data: userData
+m.request('https://example.com/api/user/create', {
+    method: 'POST',
+    data: userData,
 })
 ```
 
 ### v2.x
 
 ```javascript
-m.request("https://example.com/api/user/:id", {
-	method: "GET",
-    params: {id: user.id}
+m.request('https://example.com/api/user/:id', {
+    method: 'GET',
+    params: {id: user.id},
 })
 
-m.request("https://example.com/api/user/create", {
-	method: "POST",
-    body: userData
+m.request('https://example.com/api/user/create', {
+    method: 'POST',
+    body: userData,
 })
 ```
 
@@ -220,7 +262,7 @@ Concretely, here's how it affects each method:
 
 ### `m.request` and `m.jsonp` URLs, `m.route.set` paths
 
-Path components in v2.x are escaped automatically when interpolated. Suppose you invoke `m.route.set("/user/:name/photos/:id", {name: user.name, id: user.id})`. Previously, if `user` was `{name: "a/b", id: "c/d"}`, this would set the route to `/user/a%2Fb/photos/c/d`, but it will now set it to `/user/a%2Fb/photos/c%2Fd`. If you deliberately *want* to interpolate a key unescaped, use `:key...` instead.
+Path components in v2.x are escaped automatically when interpolated. Suppose you invoke `m.route.set("/user/:name/photos/:id", {name: user.name, id: user.id})`. Previously, if `user` was `{name: "a/b", id: "c/d"}`, this would set the route to `/user/a%2Fb/photos/c/d`, but it will now set it to `/user/a%2Fb/photos/c%2Fd`. If you deliberately _want_ to interpolate a key unescaped, use `:key...` instead.
 
 Keys in v2.x cannot contain any instances of `.` or `-`. In v1.x, they could contain anything other than `/`.
 
@@ -236,28 +278,28 @@ Previously, stuff like `:key.md` were erroneously accepted, with the resulting p
 
 ## Lifecycle call order
 
-In v1.x, attribute lifecycle hooks on component vnodes were called *before* the component's own lifecycle hooks in all cases. In v2.x, this is the case only for `onbeforeupdate`. So you may need to adjust your code accordingly.
+In v1.x, attribute lifecycle hooks on component vnodes were called _before_ the component's own lifecycle hooks in all cases. In v2.x, this is the case only for `onbeforeupdate`. So you may need to adjust your code accordingly.
 
 ### v1.x
 
 ```javascript
 var Comp = {
-    oncreate: function() {
-        console.log("Component oncreate")
+    oncreate: function () {
+        console.log('Component oncreate')
     },
-    view: function() {
-        return m("div")
+    view: function () {
+        return m('div')
     },
 }
 
 m.mount(document.body, {
-    view: function() {
+    view: function () {
         return m(Comp, {
-            oncreate: function() {
-                console.log("Attrs oncreate")
+            oncreate: function () {
+                console.log('Attrs oncreate')
             },
         })
-    }
+    },
 })
 
 // Logs:
@@ -269,22 +311,22 @@ m.mount(document.body, {
 
 ```javascript
 var Comp = {
-    oncreate: function() {
-        console.log("Component oncreate")
+    oncreate: function () {
+        console.log('Component oncreate')
     },
-    view: function() {
-        return m("div")
+    view: function () {
+        return m('div')
     },
 }
 
 m.mount(document.body, {
-    view: function() {
+    view: function () {
         return m(Comp, {
-            oncreate: function() {
-                console.log("Attrs oncreate")
+            oncreate: function () {
+                console.log('Attrs oncreate')
             },
         })
-    }
+    },
 })
 
 // Logs:
@@ -327,7 +369,7 @@ In v2.x, Mithril.js sets the first for all requests with JSON bodies that are `!
 
 The first of the two headers, `Content-Type`, will trigger a CORS prefetch as it [is not a CORS-safelisted request header](https://fetch.spec.whatwg.org/#cors-safelisted-request-header) due to the specified content type, and that could introduce new errors depending on how CORS is configured on your server. If you run into issues with this, you may need to override that header in question by passing `headers: {"Content-Type": "text/plain"}`. (The `Accept` header doesn't trigger anything, so you don't need to override that.)
 
-*The only content types that the Fetch spec lets avoid CORS prefetch checks are `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain`. It doesn't allow anything else, and it intentionally disallows JSON.*
+_The only content types that the Fetch spec lets avoid CORS prefetch checks are `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain`. It doesn't allow anything else, and it intentionally disallows JSON._
 
 ---
 

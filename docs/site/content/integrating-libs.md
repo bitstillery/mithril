@@ -11,58 +11,62 @@ Integration with third party libraries or vanilla JavaScript code can be achieve
 ```javascript
 /** NoUiSlider wrapper component */
 function Slider() {
-	var slider
+    var slider
 
-	return {
-		oncreate: function(vnode) {
-			// Initialize 3rd party lib here
-			slider = noUiSlider.create(vnode.dom, {
-				start: 0,
-				range: {min: 0, max: 100}
-			})
-			slider.on('update', function(values) {
-				vnode.attrs.onChange(values[0])
-				m.redraw()
-			})
-		},
-		onremove: function() {
-			// Cleanup 3rd party lib on removal
-			slider.destroy()
-		},
-		view: function() {
-			return m('div')
-		}
-	}
+    return {
+        oncreate: function (vnode) {
+            // Initialize 3rd party lib here
+            slider = noUiSlider.create(vnode.dom, {
+                start: 0,
+                range: {min: 0, max: 100},
+            })
+            slider.on('update', function (values) {
+                vnode.attrs.onChange(values[0])
+                m.redraw()
+            })
+        },
+        onremove: function () {
+            // Cleanup 3rd party lib on removal
+            slider.destroy()
+        },
+        view: function () {
+            return m('div')
+        },
+    }
 }
 
 /** Demo app component */
 function Demo() {
-	var showSlider = false
-	var value = 0
+    var showSlider = false
+    var value = 0
 
-	return {
-		view: function() {
-			return m('.app',
-				m('p',
-					m('button',
-						{
-							type: 'button',
-							onclick: function() {
-								showSlider = !showSlider
-							}
-						},
-						showSlider ? "Destroy Slider" : "Create Slider"
-					)
-				),
-				showSlider && m(Slider, {
-					onChange: function(v) {
-						value = v
-					}
-				}),
-				m('p', value)
-			)
-		}
-	}
+    return {
+        view: function () {
+            return m(
+                '.app',
+                m(
+                    'p',
+                    m(
+                        'button',
+                        {
+                            type: 'button',
+                            onclick: function () {
+                                showSlider = !showSlider
+                            },
+                        },
+                        showSlider ? 'Destroy Slider' : 'Create Slider',
+                    ),
+                ),
+                showSlider &&
+                    m(Slider, {
+                        onChange: function (v) {
+                            value = v
+                        },
+                    }),
+                m('p', value),
+            )
+        },
+    }
 }
 
 m.mount(document.body, Demo)
@@ -75,51 +79,59 @@ m.mount(document.body, Demo)
 ```javascript
 /** FullCalendar wrapper component */
 var FullCalendar = {
-	oncreate: function (vnode) {
-		console.log('FullCalendar::oncreate')
-		$(vnode.dom).fullCalendar({
-			// put your initial options and callbacks here
-		})
-	},
-	onremove: function (vnode) {
-		// Run any destroy / cleanup methods here.
-		$(vnode.dom).fullCalendar('destroy')
-	},
-	view: function (vnode) {
-		return m('div')
-	}
+    oncreate: function (vnode) {
+        console.log('FullCalendar::oncreate')
+        $(vnode.dom).fullCalendar({
+            // put your initial options and callbacks here
+        })
+    },
+    onremove: function (vnode) {
+        // Run any destroy / cleanup methods here.
+        $(vnode.dom).fullCalendar('destroy')
+    },
+    view: function (vnode) {
+        return m('div')
+    },
 }
 
 /** Demo app component */
 function Demo() {
-	var fullCalendarEl
+    var fullCalendarEl
 
-	function next() {
-		$(fullCalendarEl).fullCalendar('next')
-	}
+    function next() {
+        $(fullCalendarEl).fullCalendar('next')
+    }
 
-	function prev() {
-		$(fullCalendarEl).fullCalendar('prev')
-	}
+    function prev() {
+        $(fullCalendarEl).fullCalendar('prev')
+    }
 
-	return {
-		view: function (vnode) {
-			return [
-				m('h1', 'Calendar'),
-				m(FullCalendar, {
-					oncreate: function(vnode) {
-						fullCalendarEl = vnode.dom
-					}
-				}),
-				m('button', {
-					onclick: prev
-				}, 'Mithril.js Button -'),
-				m('button', {
-					onclick: next
-				}, 'Mithril.js Button +')
-			]
-		}
-	}
+    return {
+        view: function (vnode) {
+            return [
+                m('h1', 'Calendar'),
+                m(FullCalendar, {
+                    oncreate: function (vnode) {
+                        fullCalendarEl = vnode.dom
+                    },
+                }),
+                m(
+                    'button',
+                    {
+                        onclick: prev,
+                    },
+                    'Mithril.js Button -',
+                ),
+                m(
+                    'button',
+                    {
+                        onclick: next,
+                    },
+                    'Mithril.js Button +',
+                ),
+            ]
+        },
+    }
 }
 
 m.mount(document.body, Demo)

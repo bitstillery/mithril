@@ -19,16 +19,19 @@ Mithril's router supports both browser and SSR (Server-Side Rendering) environme
 ### Current Behavior
 
 **Browser:**
+
 - `require_auth` calls `m.route.set('/login')` and returns `undefined`
 - Router skips rendering current route
 - New route resolution handles `/login`
 
 **SSR:**
+
 - `require_auth` returns `undefined`
 - Router detects `undefined` and hardcodes redirect to `/login`
 - Recursively resolves `/login` route
 
 **Issues:**
+
 - No way to specify custom redirect targets
 - Redirect objects can leak into component rendering
 - Type system can't validate redirects
@@ -54,14 +57,14 @@ Add redirect symbol and helper function to router API:
 
 ```typescript
 // In mithril/api/router.ts
-const REDIRECT = route.REDIRECT = Symbol('REDIRECT')
+const REDIRECT = (route.REDIRECT = Symbol('REDIRECT'))
 
-route.redirect = function(path: string): RedirectObject {
-  return {[REDIRECT]: path} as RedirectObject
+route.redirect = function (path: string): RedirectObject {
+    return {[REDIRECT]: path} as RedirectObject
 }
 
 function isRedirect(value: any): value is RedirectObject {
-  return value != null && typeof value === 'object' && REDIRECT in value
+    return value != null && typeof value === 'object' && REDIRECT in value
 }
 ```
 
@@ -73,12 +76,12 @@ Update `RouteResolver` interface:
 export type RedirectObject = {[key: symbol]: string}
 
 export interface RouteResolver<Attrs = Record<string, any>, State = any> {
-  onmatch?: (
-    args: Attrs,
-    requestedPath: string,
-    route: string,
-  ) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | RedirectObject | Promise<RedirectObject> | void
-  render?: (vnode: VnodeType<Attrs, State>) => VnodeType
+    onmatch?: (
+        args: Attrs,
+        requestedPath: string,
+        route: string,
+    ) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | RedirectObject | Promise<RedirectObject> | void
+    render?: (vnode: VnodeType<Attrs, State>) => VnodeType
 }
 ```
 
@@ -88,9 +91,9 @@ Update browser router `update()` function to detect redirects:
 
 ```typescript
 if (isRedirect(comp)) {
-  const redirectPath = comp[REDIRECT]
-  route.set(redirectPath, null)
-  return // Skip rendering - new route resolution handles redirect
+    const redirectPath = comp[REDIRECT]
+    route.set(redirectPath, null)
+    return // Skip rendering - new route resolution handles redirect
 }
 ```
 
@@ -101,9 +104,9 @@ Update SSR router `route.resolve()` to handle redirects:
 ```typescript
 // After onmatch returns
 if (isRedirect(payload)) {
-  const redirectPath = payload[REDIRECT]
-  // Recursively resolve redirect target with depth tracking
-  return await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
+    const redirectPath = payload[REDIRECT]
+    // Recursively resolve redirect target with depth tracking
+    return await route.resolve(redirectPath, routes, renderToString, prefix, redirectDepth + 1)
 }
 ```
 
@@ -115,15 +118,15 @@ Update authentication helpers to return redirect objects:
 
 ```typescript
 export function require_auth(component) {
-  if (!$s.identity.token && !$s.identity.user.artkey) {
-    const redirect_to = encodeURIComponent(getCurrentUrl())
-    if (!redirect_to.includes('dashboard')) {
-      return m.route.redirect(`/login?redirect=${redirect_to}`)
-    } else {
-      return m.route.redirect('/login')
+    if (!$s.identity.token && !$s.identity.user.artkey) {
+        const redirect_to = encodeURIComponent(getCurrentUrl())
+        if (!redirect_to.includes('dashboard')) {
+            return m.route.redirect(`/login?redirect=${redirect_to}`)
+        } else {
+            return m.route.redirect('/login')
+        }
     }
-  }
-  return component
+    return component
 }
 ```
 
@@ -134,11 +137,11 @@ Add validation in `serializeComponent` to detect RouteResolver objects:
 ```typescript
 // Validate component before processing
 if (component != null && typeof component === 'object' && !Array.isArray(component)) {
-  if ('onmatch' in component && 'render' in component && !('view' in component)) {
-    // RouteResolver object, not a component
-    console.error('RouteResolver object passed as component')
-    return ''
-  }
+    if ('onmatch' in component && 'render' in component && !('view' in component)) {
+        // RouteResolver object, not a component
+        console.error('RouteResolver object passed as component')
+        return ''
+    }
 }
 ```
 
@@ -203,6 +206,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 **Approach**: Return HTTP redirect response in SSR, let browser handle navigation
 
 **Rejected because**:
+
 - Doesn't work for browser-side redirects
 - Loses SSR benefits (no pre-rendered content)
 - Requires different handling for browser vs SSR
@@ -212,6 +216,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 **Approach**: Create a `RedirectComponent` that triggers redirects
 
 **Rejected because**:
+
 - Components are for rendering, not navigation
 - Would still need special handling in router
 - Less explicit than redirect objects
@@ -221,6 +226,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 **Approach**: Throw special redirect exceptions, catch in router
 
 **Rejected because**:
+
 - Exceptions are for errors, not control flow
 - Performance overhead
 - Harder to debug
@@ -230,6 +236,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 **Approach**: Improve `undefined` detection and handling
 
 **Rejected because**:
+
 - Still ambiguous (could mean skip route)
 - No type safety
 - Hardcoded redirect targets still needed
@@ -249,6 +256,7 @@ if (component != null && typeof component === 'object' && !Array.isArray(compone
 - ✅ Comprehensive test suite added (`tests/render/test-ssr-routing.test.ts`)
 
 **Test Coverage**:
+
 - Basic component routing
 - RouteResolver with onmatch
 - RouteResolver with render

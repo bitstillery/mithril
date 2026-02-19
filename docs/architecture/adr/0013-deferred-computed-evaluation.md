@@ -28,8 +28,8 @@ We will support **deferred computed evaluation** via an optional state-level gat
 2. **Gated evaluation**: For state created with `deferComputed: true`, each computed is wrapped so that until the gate is opened, reading the property returns `undefined` and does not execute the real compute (so no dependency tracking and no access to unready globals).
 
 3. **Explicit readiness**: The state proxy exposes a method (e.g. `allowComputed()` or `ready()`) that:
-   - Sets the "computed allowed" flag on that state and any nested state.
-   - Marks all computeds in that state tree as dirty so the next property access runs the real compute.
+    - Sets the "computed allowed" flag on that state and any nested state.
+    - Marks all computeds in that state tree as dirty so the next property access runs the real compute.
 
 4. **Signal API**: `ComputedSignal` gains a public way to be marked dirty (e.g. `markDirty()`) so the state layer can invalidate deferred computeds when the gate is opened.
 
@@ -72,10 +72,10 @@ Applications that need deferred computeds will:
 
 - **signal.ts**: Add a public method on `ComputedSignal` (e.g. `markDirty()`) that invokes the existing dirty-marking logic so the state layer can invalidate computeds when opening the gate.
 - **state.ts**:
-  - Add optional third parameter `options?: { deferComputed?: boolean }` to `state()`.
-  - Store a flag on the state proxy (e.g. `__computedAllowed`), defaulting to `true` when not deferred, `false` when `deferComputed: true`.
-  - When creating a computed for a deferred state, wrap the compute: if the flag is false, return `undefined` without running the real compute; otherwise run the real compute.
-  - Implement `allowComputed()` on the state proxy: set the flag to `true` on this state and nested states, then walk all signal maps and call `markDirty()` on every `ComputedSignal`.
+    - Add optional third parameter `options?: { deferComputed?: boolean }` to `state()`.
+    - Store a flag on the state proxy (e.g. `__computedAllowed`), defaulting to `true` when not deferred, `false` when `deferComputed: true`.
+    - When creating a computed for a deferred state, wrap the compute: if the flag is false, return `undefined` without running the real compute; otherwise run the real compute.
+    - Implement `allowComputed()` on the state proxy: set the flag to `true` on this state and nested states, then walk all signal maps and call `markDirty()` on every `ComputedSignal`.
 - **store.ts** (optional): Add `ready()` that calls `this.state.allowComputed()` so apps can do `store.load(...); store.ready();`.
 
 ## References

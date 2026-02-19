@@ -70,18 +70,22 @@ This approach was chosen because:
 ### Alternatives Considered
 
 **Option 1: Suppress All Errors**
+
 - Just catch and ignore all removal errors
 - **Rejected**: Hides real issues, doesn't fix root cause
 
 **Option 2: Always Clear and Re-render**
+
 - Never try to match, always clear parent on hydration
 - **Rejected**: Loses benefits of hydration (preserving DOM state, scroll position, etc.)
 
 **Option 3: Strict Matching Only**
+
 - Fail fast on any mismatch, require perfect alignment
 - **Rejected**: Too brittle, breaks on legitimate differences (whitespace, browser differences)
 
 **Option 4: Component-Level Recovery**
+
 - Require components to handle their own hydration mismatches
 - **Rejected**: Too much burden on developers, error-prone
 
@@ -92,22 +96,24 @@ This approach was chosen because:
 **File**: `render/render.ts` - `removeDOM` function
 
 **Changes**:
+
 - Check if node exists in parent before attempting removal using `parent.contains(node)`
 - If node doesn't exist, skip removal silently (already removed)
 - If removal fails for other reasons, log error but continue execution
 
 **Code Pattern**:
+
 ```typescript
 if (parent.contains && parent.contains(node)) {
-  try {
-    parent.removeChild(node)
-  } catch(e) {
-    // Check if node was already removed
-    if (!parent.contains || !parent.contains(node)) {
-      return // Skip silently
+    try {
+        parent.removeChild(node)
+    } catch (e) {
+        // Check if node was already removed
+        if (!parent.contains || !parent.contains(node)) {
+            return // Skip silently
+        }
+        // Log error but continue
     }
-    // Log error but continue
-  }
 }
 ```
 
@@ -116,19 +122,21 @@ if (parent.contains && parent.contains(node)) {
 **File**: `render/render.ts` - `createElement` function
 
 **Changes**:
+
 - Verify nodes are still children before attempting removal
 - Track hydration mismatches during cleanup
 - Increment mismatch counter when removals fail
 
 **Implementation**:
+
 ```typescript
 if (element.contains && element.contains(node)) {
-  try {
-    element.removeChild(node)
-    hydrationMismatchCount++
-  } catch(e) {
-    // Handle gracefully, track mismatch
-  }
+    try {
+        element.removeChild(node)
+        hydrationMismatchCount++
+    } catch (e) {
+        // Handle gracefully, track mismatch
+    }
 }
 ```
 
@@ -137,11 +145,13 @@ if (element.contains && element.contains(node)) {
 **File**: `render/render.ts` - `render` function
 
 **Changes**:
+
 - Track mismatch count during hydration
 - If mismatches exceed threshold (5), switch to override mode
 - Override mode clears parent and re-renders from client VDOM
 
 **Implementation**:
+
 ```typescript
 let hydrationMismatchCount = 0
 const MAX_HYDRATION_MISMATCHES = 5
@@ -149,9 +159,9 @@ const MAX_HYDRATION_MISMATCHES = 5
 // During hydration, increment counter on mismatches
 // After processing nodes, check threshold
 if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
-  // Clear and re-render from client VDOM
-  dom.textContent = ''
-  updateNodes(dom, null, normalized, hooks, null, ns, false)
+    // Clear and re-render from client VDOM
+    dom.textContent = ''
+    updateNodes(dom, null, normalized, hooks, null, ns, false)
 }
 ```
 
@@ -160,25 +170,27 @@ if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
 **File**: `render/render.ts` - `createText` and `createElement` functions
 
 **Changes**:
+
 - Text node matching handles whitespace differences (trimmed comparison)
 - Element matching is case-insensitive
 - Better handling of text nodes and comments during matching
 
 **Text Node Matching**:
+
 ```typescript
 // Normalize text for comparison (trim whitespace differences)
 const expectedText = String(vnode.children || '').trim()
-if (candidateValue === String(vnode.children) || 
-    (expectedText && candidateValue.trim() === expectedText)) {
-  // Match found, reuse node
+if (candidateValue === String(vnode.children) || (expectedText && candidateValue.trim() === expectedText)) {
+    // Match found, reuse node
 }
 ```
 
 **Element Matching**:
+
 ```typescript
 // Case-insensitive tag matching
 if (candidateEl.tagName.toLowerCase() === tag.toLowerCase()) {
-  // Match found, reuse element
+    // Match found, reuse element
 }
 ```
 
@@ -187,18 +199,21 @@ if (candidateEl.tagName.toLowerCase() === tag.toLowerCase()) {
 **File**: `util/ssr.ts` - `logHydrationError` function
 
 **Changes**:
+
 - Add recovery suggestions to error messages
 - Track hydration statistics (total mismatches, per-component counts)
 - Export `getHydrationStats()` and `resetHydrationStats()` for debugging
 - Show top components with mismatches when errors are throttled
 
 **New Functions**:
+
 ```typescript
 export function getHydrationStats(): HydrationStats
 export function resetHydrationStats(): void
 ```
 
 **Statistics Tracking**:
+
 - Total mismatches across all renders
 - Per-component mismatch counts
 - Last mismatch timestamp
@@ -231,16 +246,19 @@ export function resetHydrationStats(): void
 ## Migration Path
 
 **Phase 1: Core Resilience** (Completed)
+
 1. ✅ Implement resilient node removal
 2. ✅ Improve child cleanup logic
 3. ✅ Add mismatch counter
 
 **Phase 2: Recovery Mechanisms** (Completed)
+
 1. ✅ Implement override mode
 2. ✅ Enhance node matching logic
 3. ✅ Improve error logging
 
 **Phase 3: Monitoring and Tuning** (Future)
+
 1. Monitor mismatch statistics in production
 2. Tune threshold based on real-world data
 3. Add optional strict mode for development
@@ -248,19 +266,19 @@ export function resetHydrationStats(): void
 ## Testing Strategy
 
 1. **Unit Tests**:
-   - Test `removeDOM` with nodes already removed
-   - Test hydration with mismatched DOM structures
-   - Test override mode activation
+    - Test `removeDOM` with nodes already removed
+    - Test hydration with mismatched DOM structures
+    - Test override mode activation
 
 2. **Integration Tests**:
-   - Test full hydration cycle with mismatches
-   - Test recovery from various mismatch scenarios
-   - Test that client VDOM correctly overrides server DOM
+    - Test full hydration cycle with mismatches
+    - Test recovery from various mismatch scenarios
+    - Test that client VDOM correctly overrides server DOM
 
 3. **Manual Testing**:
-   - Test with real components (e.g., `DashboardOffersWidget`)
-   - Verify no console errors during hydration
-   - Verify DOM ends up in correct state
+    - Test with real components (e.g., `DashboardOffersWidget`)
+    - Verify no console errors during hydration
+    - Verify DOM ends up in correct state
 
 ## Success Criteria
 

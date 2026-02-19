@@ -1,25 +1,25 @@
 import m from '../../index'
 
 interface DocumentAttrs {
-	title?: string
-	appHtml: string
+    title?: string
+    appHtml: string
 }
 
 import type {Vnode, Component} from '../../index'
 
 export const Document: Component<DocumentAttrs> = {
-	view: (vnode: Vnode<DocumentAttrs>) => {
-		const attrs = vnode.attrs || {}
-		const title = attrs.title || 'Mithril SSR Test'
+    view: (vnode: Vnode<DocumentAttrs>) => {
+        const attrs = vnode.attrs || {}
+        const title = attrs.title || 'Mithril SSR Test'
 
-		return (
-			<html lang="en">
-				<head>
-					<meta charset="UTF-8" />
-					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-					<title>{title}</title>
-					<style>
-						{`
+        return (
+            <html lang='en'>
+                <head>
+                    <meta charset='UTF-8' />
+                    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+                    <title>{title}</title>
+                    <style>
+                        {`
 						body { font-family: system-ui, sans-serif; margin: 2rem; }
 						.container { max-width: 800px; margin: 0 auto; }
 						nav { margin: 1rem 0; }
@@ -27,13 +27,13 @@ export const Document: Component<DocumentAttrs> = {
 						nav a:hover { text-decoration: underline; }
 						nav a.active { font-weight: bold; text-decoration: underline; }
 						`}
-					</style>
-				</head>
-				<body>
-					<div id="app">{m.trust(attrs.appHtml)}</div>
-					<script type="module" src="/app.js"></script>
-				</body>
-			</html>
-		)
-	},
+                    </style>
+                </head>
+                <body>
+                    <div id='app'>{m.trust(attrs.appHtml)}</div>
+                    <script type='module' src='/app.js'></script>
+                </body>
+            </html>
+        )
+    },
 }

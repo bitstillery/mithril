@@ -18,22 +18,22 @@ Documentation on Mithril.js' lifecycle methods, also known as lifecycle "hooks"
 
 ### Usage
 
-[Components](components.md) and [virtual DOM nodes](vnodes.md) can have lifecycle methods, also known as *hooks*, which are called at various points during the lifetime of a DOM element.
+[Components](components.md) and [virtual DOM nodes](vnodes.md) can have lifecycle methods, also known as _hooks_, which are called at various points during the lifetime of a DOM element.
 
 ```javascript
 // Sample hook in component
 var ComponentWithHook = {
-	oninit: function(vnode) {
-		console.log("initialize component")
-	},
-	view: function() {
-		return "hello"
-	}
+    oninit: function (vnode) {
+        console.log('initialize component')
+    },
+    view: function () {
+        return 'hello'
+    },
 }
 
 // Sample hook in vnode
 function initializeVnode() {
-	console.log("initialize vnode")
+    console.log('initialize vnode')
 }
 
 m(ComponentWithHook, {oninit: initializeVnode})
@@ -49,7 +49,7 @@ Lifecycle methods are only called as a side effect of a [`m.render()`](render.md
 
 A DOM element is typically created and appended to the document. It may then have attributes or child nodes updated when a UI event is triggered and data is changed; and the element may alternatively be removed from the document.
 
-After an element is removed, it may be temporarily retained in a memory pool. The pooled element may be reused in a subsequent update (in a process called *DOM recycling*). Recycling an element avoids incurring the performance cost of recreating a copy of an element that existed recently.
+After an element is removed, it may be temporarily retained in a memory pool. The pooled element may be reused in a subsequent update (in a process called _DOM recycling_). Recycling an element avoids incurring the performance cost of recreating a copy of an element that existed recently.
 
 ---
 
@@ -65,23 +65,23 @@ The `oninit` hook is useful for initializing component state based on arguments 
 
 ```javascript
 function ComponentWithState() {
-	var initialData
-	return {
-		oninit: function(vnode) {
-			initialData = vnode.attrs.data
-		},
-		view: function(vnode) {
-			return [
-				// displays data from initialization time:
-				m("div", "Initial: " + initialData),
-				// displays current data:
-				m("div", "Current: " + vnode.attrs.data)
-			]
-		}
-	}
+    var initialData
+    return {
+        oninit: function (vnode) {
+            initialData = vnode.attrs.data
+        },
+        view: function (vnode) {
+            return [
+                // displays data from initialization time:
+                m('div', 'Initial: ' + initialData),
+                // displays current data:
+                m('div', 'Current: ' + vnode.attrs.data),
+            ]
+        },
+    }
 }
 
-m(ComponentWithState, {data: "Hello"})
+m(ComponentWithState, {data: 'Hello'})
 ```
 
 You should not modify model data synchronously from this method. Since `oninit` makes no guarantees regarding the status of other elements, model changes created from this method may not be reflected in all parts of the UI until the next render cycle.
@@ -100,13 +100,13 @@ The `oncreate` hook is useful for reading layout values that may trigger a repai
 
 ```javascript
 var HeightReporter = {
-	oncreate: function(vnode) {
-		console.log("Initialized with height of: ", vnode.dom.offsetHeight)
-	},
-	view: function() {}
+    oncreate: function (vnode) {
+        console.log('Initialized with height of: ', vnode.dom.offsetHeight)
+    },
+    view: function () {},
 }
 
-m(HeightReporter, {data: "Hello"})
+m(HeightReporter, {data: 'Hello'})
 ```
 
 You should not modify model data synchronously from this method. Since `oncreate` is run at the end of the render cycle, model changes created from this method will not be reflected in the UI until the next render cycle.
@@ -125,16 +125,16 @@ The `onupdate` hook is useful for reading layout values that may trigger a repai
 
 ```javascript
 function RedrawReporter() {
-	var count = 0
-	return {
-		onupdate: function() {
-			console.log("Redraws so far: ", ++count)
-		},
-		view: function() {}
-	}
+    var count = 0
+    return {
+        onupdate: function () {
+            console.log('Redraws so far: ', ++count)
+        },
+        view: function () {},
+    }
 }
 
-m(RedrawReporter, {data: "Hello"})
+m(RedrawReporter, {data: 'Hello'})
 ```
 
 ---
@@ -149,15 +149,15 @@ Like in other hooks, the `this` keyword in the `onbeforeremove` callback points 
 
 ```javascript
 var Fader = {
-	onbeforeremove: function(vnode) {
-		vnode.dom.classList.add("fade-out")
-		return new Promise(function(resolve) {
-			setTimeout(resolve, 1000)
-		})
-	},
-	view: function() {
-		return m("div", "Bye")
-	},
+    onbeforeremove: function (vnode) {
+        vnode.dom.classList.add('fade-out')
+        return new Promise(function (resolve) {
+            setTimeout(resolve, 1000)
+        })
+    },
+    view: function () {
+        return m('div', 'Bye')
+    },
 }
 ```
 
@@ -175,16 +175,16 @@ The `onremove` hook is useful for running clean up tasks.
 
 ```javascript
 function Timer() {
-	var timeout = setTimeout(function() {
-		console.log("timed out")
-	}, 1000)
+    var timeout = setTimeout(function () {
+        console.log('timed out')
+    }, 1000)
 
-	return {
-		onremove: function() {
-			clearTimeout(timeout)
-		},
-		view: function() {}
-	}
+    return {
+        onremove: function () {
+            clearTimeout(timeout)
+        },
+        view: function () {},
+    }
 }
 ```
 

@@ -36,22 +36,25 @@ Then open `index.html` in your browser.
 ## State Setup
 
 The state (`state.ts`) demonstrates:
+
 - **Required name parameter**: `state(initial, 'state.example')` - name is required for SSR serialization support
 - Primitive values (`count`)
 - Nested objects (`user`) - automatically becomes nested state
 - Arrays (`todos`) - array elements become states
 - Computed properties:
-  - Function properties: `totalTodos: () => ...` (automatically computed)
-  - `_` prefix: `_incompleteTodos: () => ...` (backward compatibility)
+    - Function properties: `totalTodos: () => ...` (automatically computed)
+    - `_` prefix: `_incompleteTodos: () => ...` (backward compatibility)
 
 ## Components
 
 ### Basic Usage
+
 - **Counter**: Simple counter demonstrating basic signal updates
 - **TodoList**: Todo list with computed properties showing totals
 - **UserProfile**: User profile with nested signal updates
 
 ### Advanced Features
+
 - **NestedAccess**: Demonstrates accessing nested state properties and their signals
 - **ArraySignals**: Shows how to access signals for array elements via `$` prefix
 - **DynamicProperties**: Demonstrates adding properties dynamically at runtime
@@ -63,12 +66,14 @@ The state (`state.ts`) demonstrates:
 ## Key Concepts
 
 ### Fine-Grained Reactivity
+
 - Signals provide fine-grained reactivity
 - Components automatically track signal dependencies
 - Only components using changed signals re-render
 - No unnecessary re-renders
 
 ### Store Features
+
 - **Required naming**: All stores must have a name (enables SSR serialization)
 - **Auto-registration**: Stores register themselves automatically
 - **Nested reactivity**: Nested stores maintain independent reactivity
@@ -76,12 +81,14 @@ The state (`state.ts`) demonstrates:
 - **Signal access**: Use `$` prefix to access raw Signal instances
 
 ### Signal API
+
 - **subscribe()**: Subscribe to changes (returns unsubscribe function)
 - **watch()**: Watch with old/new value tracking
 - **peek()**: Access value without creating subscription
 - **effect()**: Create reactive side effects
 
 ### Important Notes
+
 - State name is required for SSR support (but SSR is optional)
 - Nested states get their own `signalMap` (prevents cross-contamination)
 - Computed signals are skipped during SSR serialization (recreated on client)

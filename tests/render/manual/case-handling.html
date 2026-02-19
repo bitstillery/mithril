@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
     <head>
-        <meta charset="utf-8">
+        <meta charset="utf-8" />
     </head>
     <body>
         <p>This is a test for special case-handling of attribute and style properties. (#2988).</p>
@@ -14,27 +14,41 @@
             </ul>
             <li>Check the logs displayed in the console.</li>
             <ul>
-                <li>If the attribute has been updated correctly, you should see the following message: "If you see this message, the update process is correct."</li>
+                <li>
+                    If the attribute has been updated correctly, you should see the following message: "If you see this message,
+                    the update process is correct."
+                </li>
                 <li>If "null" is displayed, the attribute has not been updated properly.</li>
             </ul>
         </ol>
 
-        <div id="root" style="background-color: red;"></div>
+        <div id="root" style="background-color: red"></div>
         <script src="../../../mithril.js"></script>
         <script>
             // data-*** is NOT case-sensitive
             // style properties have two cases (camelCase and dash-case)
-            var a = m("div#a", {"data-sampleId": "If you see this message, something is wrong.", style: {backgroundColor: "yellow"}}, "foo")
-            var b = m("div#a", {"data-sampleid": "If you see this message, the update process is correct.", style: {"background-color": "lightgreen"}}, "foo")
+            var a = m(
+                'div#a',
+                {'data-sampleId': 'If you see this message, something is wrong.', style: {backgroundColor: 'yellow'}},
+                'foo',
+            )
+            var b = m(
+                'div#a',
+                {
+                    'data-sampleid': 'If you see this message, the update process is correct.',
+                    style: {'background-color': 'lightgreen'},
+                },
+                'foo',
+            )
 
             // background color is yellow
-            m.render(document.getElementById("root"), a)
+            m.render(document.getElementById('root'), a)
 
             // background color is lightgreen?
-            m.render(document.getElementById("root"), b)
+            m.render(document.getElementById('root'), b)
 
             // data-sampleid is "If you see this message, the update process is correct."?
-            console.log(document.querySelector("#a").getAttribute("data-sampleid"))
+            console.log(document.querySelector('#a').getAttribute('data-sampleid'))
         </script>
     </body>
 </html>

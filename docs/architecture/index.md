@@ -16,16 +16,16 @@ Mithril is a modern JavaScript framework for building web applications. This doc
 ### SSR and Hydration
 
 - **[ADR-0001](./adr/0001-ssr-hydration.md)**: SSR Hydration Support
-  - Generic state serialization approach
-  - Hydration detection and state restoration
-  - Works with proxy-based state system
+    - Generic state serialization approach
+    - Hydration detection and state restoration
+    - Works with proxy-based state system
 
 ### State Management
 
 - **[ADR-0002](./adr/0002-signals-implementation.md)**: Custom Signals Implementation
-  - Fine-grained reactivity system
-  - Component-level redraws
-  - Builds on SSR hydration support
+    - Fine-grained reactivity system
+    - Component-level redraws
+    - Builds on SSR hydration support
 
 ## Architectural Principles
 

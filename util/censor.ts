@@ -26,21 +26,21 @@ import hasOwn from './hasOwn'
 const magic = /^(?:key|oninit|oncreate|onbeforeupdate|onupdate|onbeforeremove|onremove)$/
 
 export default function censor(attrs: Record<string, any>, extras?: string[]): Record<string, any> {
-	const result: Record<string, any> = {}
+    const result: Record<string, any> = {}
 
-	if (extras != null) {
-		for (const key in attrs) {
-			if (hasOwn.call(attrs, key) && !magic.test(key) && extras.indexOf(key) < 0) {
-				result[key] = attrs[key]
-			}
-		}
-	} else {
-		for (const key in attrs) {
-			if (hasOwn.call(attrs, key) && !magic.test(key)) {
-				result[key] = attrs[key]
-			}
-		}
-	}
+    if (extras != null) {
+        for (const key in attrs) {
+            if (hasOwn.call(attrs, key) && !magic.test(key) && extras.indexOf(key) < 0) {
+                result[key] = attrs[key]
+            }
+        }
+    } else {
+        for (const key in attrs) {
+            if (hasOwn.call(attrs, key) && !magic.test(key)) {
+                result[key] = attrs[key]
+            }
+        }
+    }
 
-	return result
+    return result
 }

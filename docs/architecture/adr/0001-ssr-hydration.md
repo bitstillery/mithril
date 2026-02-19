@@ -13,21 +13,22 @@ Mithril supports Server-Side Rendering (SSR) via `m.renderToString()`, which ren
 **Current Behavior:**
 
 1. **Server-side rendering (SSR)**:
-   - `renderToString` calls `oninit` with `waitFor` parameter
-   - Promises are tracked and awaited before final render
-   - Server renders HTML with loaded data
-   - HTML sent to client includes the rendered data
+    - `renderToString` calls `oninit` with `waitFor` parameter
+    - Promises are tracked and awaited before final render
+    - Server renders HTML with loaded data
+    - HTML sent to client includes the rendered data
 
 2. **Client-side hydration**:
-   - `m.mount()` calls `render()` which calls `initComponent()`
-   - `initComponent()` calls `initLifecycle()` which calls `oninit` again
-   - `oninit` is called WITHOUT `waitFor` parameter on client
-   - Component state is reinitialized, losing SSR data
-   - Component shows "Loading..." even though DOM already has the data
+    - `m.mount()` calls `render()` which calls `initComponent()`
+    - `initComponent()` calls `initLifecycle()` which calls `oninit` again
+    - `oninit` is called WITHOUT `waitFor` parameter on client
+    - Component state is reinitialized, losing SSR data
+    - Component shows "Loading..." even though DOM already has the data
 
 **Root Cause:**
 
 The issue is in `render.ts`: when mounting to an element, if `dom.vnodes == null`, it clears `textContent`. However, there's no hydration detection mechanism. During hydration:
+
 - DOM already contains SSR-rendered HTML
 - `oninit` is called again, resetting component state
 - Component re-renders with initial state, overwriting SSR content
@@ -35,6 +36,7 @@ The issue is in `render.ts`: when mounting to an element, if `dom.vnodes == null
 ### Expected Behavior
 
 During hydration, components should:
+
 1. **Preserve SSR state**: If data was loaded on server, don't refetch on client
 2. **Detect hydration**: Skip or modify `oninit` behavior when DOM already has content
 3. **Only refetch on navigation**: Only reload data when user navigates to the route
@@ -46,6 +48,7 @@ We will implement a **generic state serialization approach** with hydration dete
 ### Architecture Overview
 
 The solution uses a **state serialization registry** that works generically with:
+
 - Global state (`$s` - single unified store)
 - Component-level proxy state (`this.data = proxy({...})`)
 - CollectionProxy instances (`CollectionProxy.state`)
@@ -72,14 +75,17 @@ This approach was chosen because:
 ### Alternatives Considered
 
 **Option 1: Component-Level Solution**
+
 - Modify components to detect hydration themselves
 - **Rejected**: Requires changes to every component, error-prone
 
 **Option 2: State Serialization Only**
+
 - Serialize state but still call `oninit`
 - **Rejected**: Components would still refetch data unnecessarily
 
 **Option 3: New `onhydrate` Hook**
+
 - Add separate lifecycle hook for hydration
 - **Rejected**: Adds complexity, most components don't need special hydration logic
 
@@ -96,6 +102,7 @@ This approach was chosen because:
 - **Skips computed properties**: Properties starting with `_` are excluded from serialization (functions reinitialized on client)
 
 **Integration points:**
+
 - `renderToString`: Call `serializeState()` after rendering
 - `server.ts`: Inject serialized state into HTML template
 - `mount.ts`: Call `deserializeState()` before mounting
@@ -115,12 +122,13 @@ This approach was chosen because:
 
 ```typescript
 export function registerComponentState(component: any, stateKey: string, state: any) {
-  // Register component state for SSR serialization
-  // Automatically called when component uses proxy()
+    // Register component state for SSR serialization
+    // Automatically called when component uses proxy()
 }
 ```
 
 **Automatic registration:**
+
 - Wrap `proxy()` function to auto-register on server
 - Or provide `ssrProxy()` wrapper that registers state
 - Components opt-in by using `ssrProxy()` instead of `proxy()`
@@ -148,14 +156,14 @@ Components continue to work as-is:
 
 ```typescript
 export class MyComponent {
-  data = proxy({ loading: true, items: [] })
-  
-  async oninit() {
-    // This will be skipped during hydration
-    // State already restored from SSR
-    this.data.items = await fetchItems()
-    this.data.loading = false
-  }
+    data = proxy({loading: true, items: []})
+
+    async oninit() {
+        // This will be skipped during hydration
+        // State already restored from SSR
+        this.data.items = await fetchItems()
+        this.data.loading = false
+    }
 }
 ```
 
@@ -165,8 +173,8 @@ export class MyComponent {
 import {ssrProxy} from '@bitstillery/common/lib/ssr'
 
 export class MyComponent {
-  data = ssrProxy('my-component', { loading: true, items: [] })
-  // Automatically registered for SSR serialization
+    data = ssrProxy('my-component', {loading: true, items: []})
+    // Automatically registered for SSR serialization
 }
 ```
 
@@ -193,28 +201,29 @@ registerState('$s', $s)
 **Computed properties** (properties starting with `_`) are handled specially:
 
 1. **Excluded from serialization**:
-   - Properties like `_total`, `_filteredItems`, `_computed` are functions
-   - These are not serialized (functions can't be JSON serialized anyway)
-   - They're reinitialized on client when first accessed
+    - Properties like `_total`, `_filteredItems`, `_computed` are functions
+    - These are not serialized (functions can't be JSON serialized anyway)
+    - They're reinitialized on client when first accessed
 
 2. **How it works**:
-   ```typescript
-   const state = proxy({
-     items: [1, 2, 3],           // Serialized ✅
-     loading: false,             // Serialized ✅
-     _total: () => items.length,  // Excluded ❌ (computed function)
-   })
-   
-   // On server: serialize { items: [1,2,3], loading: false }
-   // On client: restore { items: [1,2,3], loading: false }
-   // _total() reinitialized when accessed (via proxy's computed cache)
-   ```
+
+    ```typescript
+    const state = proxy({
+        items: [1, 2, 3], // Serialized ✅
+        loading: false, // Serialized ✅
+        _total: () => items.length, // Excluded ❌ (computed function)
+    })
+
+    // On server: serialize { items: [1,2,3], loading: false }
+    // On client: restore { items: [1,2,3], loading: false }
+    // _total() reinitialized when accessed (via proxy's computed cache)
+    ```
 
 3. **Implementation**:
-   - Serialization function checks property names
-   - If property starts with `_`, skip it
-   - On deserialization, computed properties remain undefined until accessed
-   - Proxy's computed cache handles reinitialization automatically
+    - Serialization function checks property names
+    - If property starts with `_`, skip it
+    - On deserialization, computed properties remain undefined until accessed
+    - Proxy's computed cache handles reinitialization automatically
 
 ### Special Considerations for CollectionProxy
 
@@ -225,6 +234,7 @@ state: CollectionState = proxy({ loading: true, items: [], ... })
 ```
 
 **Handling:**
+
 - CollectionProxy instances can be registered like any proxy
 - Serialize `state` property (the proxy object)
 - Restore and reassign to `collection.state`
@@ -233,16 +243,16 @@ state: CollectionState = proxy({ loading: true, items: [], ... })
 ### Files to Modify
 
 1. **New files**:
-   - `render/ssrState.ts` - State registry and serialization
-   - `common/lib/ssr.ts` - SSR utilities (optional `ssrProxy` wrapper)
+    - `render/ssrState.ts` - State registry and serialization
+    - `common/lib/ssr.ts` - SSR utilities (optional `ssrProxy` wrapper)
 
 2. **Modified files**:
-   - `render/renderToString.ts` - Collect and return serialized state
-   - `render/render.ts` - Hydration detection and skip `oninit`
-   - `api/mount-redraw.ts` - Restore state before mounting
-   - `examples/ssr/server.ts` - Inject state into HTML
-   - `common/lib/proxy.ts` - Optional auto-registration
-   - `common/app.ts` - Register global store `$s`
+    - `render/renderToString.ts` - Collect and return serialized state
+    - `render/render.ts` - Hydration detection and skip `oninit`
+    - `api/mount-redraw.ts` - Restore state before mounting
+    - `examples/ssr/server.ts` - Inject state into HTML
+    - `common/lib/proxy.ts` - Optional auto-registration
+    - `common/app.ts` - Register global store `$s`
 
 ### Future Signals Support
 
@@ -260,8 +270,8 @@ This approach will work seamlessly with signals when added (see ADR-0002):
 ```typescript
 // Signals with proxy store
 const signalStore = proxy({
-  count: signal(0),
-  _computed: signal(() => count() * 2), // Computed signal
+    count: signal(0),
+    _computed: signal(() => count() * 2), // Computed signal
 })
 
 // Automatically handled:
@@ -297,22 +307,26 @@ const signalStore = proxy({
 ## Migration Path
 
 **Phase 1: Core Infrastructure**
+
 1. Implement state registry and serialization
 2. Add hydration detection
 3. Skip `oninit` during hydration
 
 **Phase 2: Auto-Registration**
+
 1. Auto-register proxy objects created during SSR
 2. Auto-register global store `$s`
 3. Test with simple components
 4. Verify computed properties (`_` prefix) are excluded
 
 **Phase 3: Complex State**
+
 1. Handle CollectionProxy
 2. Handle nested proxy objects
 3. Handle circular references
 
 **Phase 4: Optimization**
+
 1. Only serialize changed state
 2. Compress serialized state
 3. Lazy deserialization

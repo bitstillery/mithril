@@ -1,6 +1,7 @@
 <!--meta-description
 Documentation on m.parsePathname(), which parses URLs to path and query object
 -->
+
 # parsePathname(string)
 
 - [Description](#description)
@@ -14,7 +15,7 @@ Documentation on m.parsePathname(), which parses URLs to path and query object
 Turns a string of the form `/path/user?a=1&b=2` to an object
 
 ```javascript
-var object = m.parsePathname("/path/user?a=1&b=2")
+var object = m.parsePathname('/path/user?a=1&b=2')
 // {path: "/path/user", params: {a: "1", b: "2"}}
 ```
 
@@ -24,10 +25,10 @@ var object = m.parsePathname("/path/user?a=1&b=2")
 
 `object = m.parsePathname(string)`
 
-Argument     | Type     | Required | Description
------------- | -------- | -------- | ---
-`url`        | `String` | Yes      | A URL
-**returns**  | `Object` |          | A `{path, params}` pair where `path` is the [normalized path](paths.md#path-normalization) and `params` is the [parsed parameters](paths.md#parameter-normalization).
+| Argument    | Type     | Required | Description                                                                                                                                                           |
+| ----------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`       | `String` | Yes      | A URL                                                                                                                                                                 |
+| **returns** | `Object` |          | A `{path, params}` pair where `path` is the [normalized path](paths.md#path-normalization) and `params` is the [parsed parameters](paths.md#parameter-normalization). |
 
 [How to read signatures](signatures.md)
 
@@ -38,7 +39,7 @@ Argument     | Type     | Required | Description
 The `m.parsePathname` method creates an object from a path with a possible query string. It is useful for parsing a local path name into its parts, and it's what [`m.route`](route.md) uses internally to normalize paths to later match them. It uses [`m.parseQueryString`](parseQueryString.md) to parse the query parameters into an object.
 
 ```javascript
-var data = m.parsePathname("/path/user?a=hello&b=world")
+var data = m.parsePathname('/path/user?a=hello&b=world')
 
 // data.path is "/path/user"
 // data.params is {a: "hello", b: "world"}

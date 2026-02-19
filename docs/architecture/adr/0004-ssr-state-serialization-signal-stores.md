@@ -13,16 +13,16 @@ ADR-0001 describes a generic state serialization approach for SSR hydration, but
 **Current Behavior:**
 
 1. **Server-side rendering (SSR)**:
-   - `renderToString` calls `oninit` with `waitFor` parameter
-   - Components populate signal stores during `oninit`
-   - Server renders HTML with loaded data
-   - HTML sent to client includes the rendered data
+    - `renderToString` calls `oninit` with `waitFor` parameter
+    - Components populate signal stores during `oninit`
+    - Server renders HTML with loaded data
+    - HTML sent to client includes the rendered data
 
 2. **Client-side hydration**:
-   - `oninit` is skipped during hydration (correct, per ADR-0001)
-   - However, signal store state is **not restored**
-   - Components show empty/initial state instead of SSR-rendered data
-   - Example: Component shows "No data" even though server rendered "Data loaded from server!"
+    - `oninit` is skipped during hydration (correct, per ADR-0001)
+    - However, signal store state is **not restored**
+    - Components show empty/initial state instead of SSR-rendered data
+    - Example: Component shows "No data" even though server rendered "Data loaded from server!"
 
 **Root Cause:**
 
@@ -34,6 +34,7 @@ ADR-0001 describes a generic state serialization approach for SSR hydration, but
 ### Expected Behavior
 
 During hydration, signal stores should:
+
 1. **Preserve SSR state**: Store values populated on server should be restored on client
 2. **Work generically**: Support both component-bound stores and global stores
 3. **Handle nested stores**: Recursively serialize/deserialize nested store structures
@@ -187,41 +188,47 @@ store<T>(initial: T, name: string): Store<T>
 ### State Registry (`render/ssrState.ts`)
 
 **Registry:**
+
 - Internal Map tracking stores by name
 - Stores register themselves when created (after name validation)
 - `getRegisteredStates()`: Get all registered stores
 - `clearRegistry()`: Clear registry after serialization
 
 **Serialization:**
+
 - `serializeStore(store)`: Extract signal values from store
-  - Access `store.__signalMap` to get all signals
-  - Skip ComputedSignal instances
-  - Get `.value` from each Signal
-  - Recursively serialize nested stores
+    - Access `store.__signalMap` to get all signals
+    - Skip ComputedSignal instances
+    - Get `.value` from each Signal
+    - Recursively serialize nested stores
 - `serializeAllStates()`: Serialize all registered stores
-  - Returns `Record<string, any>` mapping names to serialized state
+    - Returns `Record<string, any>` mapping names to serialized state
 
 **Deserialization:**
+
 - `deserializeStore(store, serialized)`: Restore signal values into store
-  - Access `store.__signalMap` to check existing signals
-  - Set `signal.value = serialized[key]` for existing signals
-  - Use `store[key] = value` for new signals (proxy setter creates signal)
-  - Recursively deserialize nested stores
+    - Access `store.__signalMap` to check existing signals
+    - Set `signal.value = serialized[key]` for existing signals
+    - Use `store[key] = value` for new signals (proxy setter creates signal)
+    - Recursively deserialize nested stores
 - `deserializeAllStates(serialized)`: Restore all states
-  - Requires stores to be registered with same names on client
+    - Requires stores to be registered with same names on client
 
 ### SSR Integration
 
 **Server-side (`render/renderToString.ts`):**
+
 - After final render pass, call `serializeAllStates()`
 - Return both HTML and serialized state
 - Return type: `Promise<{html: string, state: Record<string, any>}>`
 
 **Server-side (`examples/ssr/server.ts`):**
+
 - Extract serialized state from `renderToString` result
 - Inject into HTML: `<script id="__SSR_STATE__" type="application/json">${JSON.stringify(state)}</script>`
 
 **Client-side (`examples/ssr/client.tsx`):**
+
 - Before `m.route()` or `m.mount()`, read `__SSR_STATE__` script tag
 - Stores are already registered (auto-registered when modules load)
 - Call `deserializeAllStates()` to restore state
@@ -231,46 +238,59 @@ store<T>(initial: T, name: string): Store<T>
 
 ```typescript
 // Module-level store
-const state = store({
-  loading: false,
-  data: undefined
-}, 'AsyncData.state')
+const state = store(
+    {
+        loading: false,
+        data: undefined,
+    },
+    'AsyncData.state',
+)
 
 // Global store
-const globalStore = store({
-  user: null
-}, 'globalStore')
+const globalStore = store(
+    {
+        user: null,
+    },
+    'globalStore',
+)
 
 // Component instance store
 export class MyComponent {
-  state = store({
-    items: []
-  }, 'MyComponent.state')
+    state = store(
+        {
+            items: [],
+        },
+        'MyComponent.state',
+    )
 }
 ```
 
 ### Serialization Details
 
 **Store Structure (Proxy-based):**
+
 - `store.__isStore === true`: Identifies store objects
 - `store.__signalMap`: `Map<string, Signal | ComputedSignal>` containing all signals
 - `store.property`: Returns signal value (via proxy getter)
 - `store.$property`: Returns raw Signal object (deepsignal-style)
 
 **Signal Extraction:**
+
 - Access `store.__signalMap` directly (bypasses proxy)
 - For each entry in `__signalMap`:
-  - Skip if signal is `ComputedSignal` instance
-  - Get `.value` from Signal
-  - If value is a store (`value.__isStore === true`), recursively serialize
-  - If value is an array, serialize each element
+    - Skip if signal is `ComputedSignal` instance
+    - Get `.value` from Signal
+    - If value is a store (`value.__isStore === true`), recursively serialize
+    - If value is an array, serialize each element
 
 **Nested Stores:**
+
 - When serializing a signal value, check if `value.__isStore === true`
 - If nested store, recursively call `serializeStore(value)`
 - Preserve structure in serialized output
 
 **Computed Signals:**
+
 - ComputedSignal instances are detected via `instanceof ComputedSignal`
 - Skipped from serialization (they're functions/computed, recreated on client)
 - Recreated on client when accessed via proxy getter

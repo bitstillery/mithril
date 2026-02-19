@@ -13,24 +13,24 @@ Mithril currently has TypeScript type definitions split between `index.d.ts` (de
 **Current State:**
 
 1. **Type definitions in `index.d.ts`**:
-   - Types are separated from implementation
-   - Risk of types getting out of sync with implementation
-   - Harder to maintain and understand
+    - Types are separated from implementation
+    - Risk of types getting out of sync with implementation
+    - Harder to maintain and understand
 
 2. **`Store<T>` type parsing error**:
-   - `store.ts(319,14)`: TypeScript parser error with mapped type syntax
-   - Current type doesn't support `$` prefix access (`store.$property` returns raw signal)
-   - Need proper typing for deepsignal-like unwrapping pattern
+    - `store.ts(319,14)`: TypeScript parser error with mapped type syntax
+    - Current type doesn't support `$` prefix access (`store.$property` returns raw signal)
+    - Need proper typing for deepsignal-like unwrapping pattern
 
 3. **Missing `MithrilComponent` support**:
-   - Frontend applications use class-based TSX components
-   - No TypeScript support for this pattern
-   - Need to add `MithrilComponent` abstract base class
+    - Frontend applications use class-based TSX components
+    - No TypeScript support for this pattern
+    - Need to add `MithrilComponent` abstract base class
 
 4. **Type checking issues**:
-   - Some files have type errors that need fixing
-   - Need to ensure proper type inference without runtime changes
-   - Must not add runtime checks just to satisfy TypeScript
+    - Some files have type errors that need fixing
+    - Need to ensure proper type inference without runtime changes
+    - Must not add runtime checks just to satisfy TypeScript
 
 ### Requirements
 
@@ -77,15 +77,19 @@ We will consolidate all TypeScript type definitions into their respective implem
 ### Alternatives Considered
 
 **Option A: Keep `index.d.ts`**
+
 - **Rejected**: Creates maintenance overhead, types can drift from implementation
 
 **Option B: Use separate `.d.ts` files per module**
+
 - **Rejected**: Still separates types from implementation, harder to maintain
 
 **Option C: Consolidate into implementation files (Chosen)**
+
 - **Chosen**: Single source of truth, easier maintenance, standard practice
 
 **Option D: Exclude `store.ts` from type checking**
+
 - **Rejected**: User explicitly wants proper typing, not exclusions
 
 ## Implementation Details
@@ -95,6 +99,7 @@ We will consolidate all TypeScript type definitions into their respective implem
 **File**: `store.ts`
 
 **Current Problem**: Parsing error with mapped type syntax. Need to support:
+
 - Regular access: `store.property` → unwrapped value
 - Signal access: `store.$property` → raw Signal instance
 - Function properties → computed values
@@ -104,18 +109,19 @@ We will consolidate all TypeScript type definitions into their respective implem
 
 ```typescript
 export type Store<T extends Record<string, any>> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => infer R
-    ? R  // Function properties return computed value
-    : T[K] extends Record<string, any>
-    ? Store<T[K]>  // Nested objects become stores
-    : T[K]  // Primitive values
+    [K in keyof T]: T[K] extends (...args: any[]) => infer R
+        ? R // Function properties return computed value
+        : T[K] extends Record<string, any>
+          ? Store<T[K]> // Nested objects become stores
+          : T[K] // Primitive values
 } & {
-  // Index signature for $ prefix access (runtime only, typed as Signal)
-  [key: `$${string}`]: Signal<any> | ComputedSignal<any>
+    // Index signature for $ prefix access (runtime only, typed as Signal)
+    [key: `$${string}`]: Signal<any> | ComputedSignal<any>
 }
 ```
 
 **Note**: If template literal types cause parser issues, use simpler index signature:
+
 ```typescript
 } & {
   [key: string]: any  // Fallback for $ prefix access
@@ -133,6 +139,7 @@ export type Store<T extends Record<string, any>> = {
 - **`index.ts`**: Add `MithrilStatic` interface, re-export all types
 
 **Strategy**:
+
 - Add type definitions at the top of each implementation file using `export interface` or `export type`
 - Update `index.ts` to re-export all types from their source files
 - Remove `index.d.ts` after consolidation
@@ -143,34 +150,37 @@ export type Store<T extends Record<string, any>> = {
 **File**: `render/vnode.ts`
 
 **Add**:
+
 ```typescript
 /**
  * Abstract base class for TSX/JSX class-based components
  * Similar to mithril-tsx-component package
  */
 export abstract class MithrilComponent<Attrs = Record<string, any>> {
-  oninit?(vnode: Vnode<Attrs>): void
-  oncreate?(vnode: Vnode<Attrs>): void
-  onbeforeupdate?(vnode: Vnode<Attrs>, old: Vnode<Attrs>): boolean | void
-  onupdate?(vnode: Vnode<Attrs>): void
-  onbeforeremove?(vnode: Vnode<Attrs>): Promise<any> | void
-  onremove?(vnode: Vnode<Attrs>): void
-  abstract view(vnode: Vnode<Attrs>): Children
+    oninit?(vnode: Vnode<Attrs>): void
+    oncreate?(vnode: Vnode<Attrs>): void
+    onbeforeupdate?(vnode: Vnode<Attrs>, old: Vnode<Attrs>): boolean | void
+    onupdate?(vnode: Vnode<Attrs>): void
+    onbeforeremove?(vnode: Vnode<Attrs>): Promise<any> | void
+    onremove?(vnode: Vnode<Attrs>): void
+    abstract view(vnode: Vnode<Attrs>): Children
 }
 ```
 
 **Update `ComponentType`** to include `MithrilComponent`:
+
 ```typescript
-export type ComponentType<Attrs = Record<string, any>, State = any> = 
-  | Component<Attrs, State>
-  | ComponentFactory<Attrs, State>
-  | (() => Component<Attrs, State>)
-  | (new (...args: any[]) => MithrilComponent<Attrs>)
+export type ComponentType<Attrs = Record<string, any>, State = any> =
+    | Component<Attrs, State>
+    | ComponentFactory<Attrs, State>
+    | (() => Component<Attrs, State>)
+    | (new (...args: any[]) => MithrilComponent<Attrs>)
 ```
 
 ### 4. Fix Type Imports Throughout Codebase
 
 **Files to update**:
+
 - `store.ts` - Change `import type { ComponentType } from './index'` to `import type { ComponentType } from './render/vnode'`
 - `render/hyperscript.ts` - Update imports
 - `api/router.ts` - Update imports
@@ -187,11 +197,13 @@ export type ComponentType<Attrs = Record<string, any>, State = any> =
 **Key Principle**: Use type assertions (`as Type`) and type guards only. Never add runtime checks like `if (x == null)` just for TypeScript.
 
 **Examples of acceptable fixes**:
+
 - `const vnode = Vnode(...) as Vnode<Attrs>` - type assertion
 - `(Vnode as any).normalize(...)` - bypassing static method typing issues
 - `route as unknown as Route & ((...) => void)` - complex intersection types
 
 **Examples of unacceptable fixes**:
+
 - Adding `if (dom == null) return` checks
 - Changing `key ?? undefined` to `key || undefined`
 - Adding `typeof children !== 'boolean'` filters
@@ -200,12 +212,14 @@ export type ComponentType<Attrs = Record<string, any>, State = any> =
 
 **Problem**: `Vnode.normalize` and `Vnode.normalizeChildren` are attached at runtime but TypeScript doesn't recognize them.
 
-**Solution**: 
+**Solution**:
+
 - Export `Vnode` function with intersection type including static methods
 - Use `(Vnode as any).normalize` at call sites where needed
 - Or define a separate type for the function with static methods
 
 **Pattern**:
+
 ```typescript
 function Vnode(...): Vnode { ... }
 Vnode.normalize = function(...): Vnode | null { ... }
@@ -241,26 +255,26 @@ export default Vnode as typeof Vnode & {
 **High Risk Areas:**
 
 1. **Breaking existing imports**: Changing import paths could break existing code
-   - **Mitigation**: Update all imports systematically, test thoroughly
-   - **Fallback**: Can keep `index.d.ts` temporarily during migration
+    - **Mitigation**: Update all imports systematically, test thoroughly
+    - **Fallback**: Can keep `index.d.ts` temporarily during migration
 
 2. **Store<T> type complexity**: Complex mapped types might cause parser issues
-   - **Mitigation**: Use simpler intersection type if template literals fail
-   - **Fallback**: Use index signature with `any` type
+    - **Mitigation**: Use simpler intersection type if template literals fail
+    - **Fallback**: Use index signature with `any` type
 
 3. **Static method typing**: TypeScript doesn't handle runtime-attached methods well
-   - **Mitigation**: Use type assertions at call sites
-   - **Fallback**: Define separate type for function with static methods
+    - **Mitigation**: Use type assertions at call sites
+    - **Fallback**: Define separate type for function with static methods
 
 **Medium Risk Areas:**
 
 1. **Type inference issues**: Some complex types might not infer correctly
-   - **Mitigation**: Use explicit type annotations where needed
-   - **Fallback**: Use `as any` sparingly for edge cases
+    - **Mitigation**: Use explicit type annotations where needed
+    - **Fallback**: Use `as any` sparingly for edge cases
 
 2. **Import path changes**: Many files need import updates
-   - **Mitigation**: Systematic update, verify with type checker
-   - **Fallback**: Can update incrementally
+    - **Mitigation**: Systematic update, verify with type checker
+    - **Fallback**: Can update incrementally
 
 ## Implementation Order
 

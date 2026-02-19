@@ -37,11 +37,13 @@ $ npm install @types/mithril --save-dev
 ### Create a project locally
 
 You can use one of several existing Mithril.js starter templates such as
-* [mithril-vite-starter](https://github.com/ArthurClemens/mithril-vite-starter)
-* [mithril-esbuild-starter](https://github.com/kevinfiol/mithril-esbuild-starter)
-* [mithril-rollup-starter](https://github.com/kevinfiol/mithril-rollup-starter)
+
+- [mithril-vite-starter](https://github.com/ArthurClemens/mithril-vite-starter)
+- [mithril-esbuild-starter](https://github.com/kevinfiol/mithril-esbuild-starter)
+- [mithril-rollup-starter](https://github.com/kevinfiol/mithril-rollup-starter)
 
 For example, if you'd like to get started with `mithril-esbuild-starter`, run the following commands:
+
 ```bash
 # Clone the the template to a directory of your choice
 npx degit kevinfiol/mithril-esbuild-starter hello-world
@@ -58,56 +60,62 @@ npm run dev
 
 ### Quick start with esbuild
 
-*esbuild documentation can be found [here](https://esbuild.github.io/).*
+_esbuild documentation can be found [here](https://esbuild.github.io/)._
 
 1. Initialize the directory as an npm package.
+
 ```bash
 $ npm init --yes
 ```
 
 2. Install required tools.
+
 ```bash
 $ npm install mithril
 $ npm install esbuild --save-dev
 ```
 
 3. Add a "start" entry to the scripts section in `package.json`.
-	```json
-	{
-		"...": "...",
-		"scripts": {
-			"start": "esbuild index.js --bundle --outfile=bin/main.js --watch"
-		}
-	}
-	```
 
-	Optionally, if you'd like to use JSX, you can use the `--jsx-factory` and `--jsx-fragment` flags with esbuild.
+    ```json
+    {
+        "...": "...",
+        "scripts": {
+            "start": "esbuild index.js --bundle --outfile=bin/main.js --watch"
+        }
+    }
+    ```
 
-	```json
-	{
-		"...": "...",
-		"scripts": {
-			"start": "esbuild index.js --bundle --outfile=bin/main.js --jsx-factory=m --jsx-fragment='\"[\"' --watch"
-		}
-	}
-	```
+    Optionally, if you'd like to use JSX, you can use the `--jsx-factory` and `--jsx-fragment` flags with esbuild.
+
+    ```json
+    {
+        "...": "...",
+        "scripts": {
+            "start": "esbuild index.js --bundle --outfile=bin/main.js --jsx-factory=m --jsx-fragment='\"[\"' --watch"
+        }
+    }
+    ```
 
 4. Create `index.js` file.
+
 ```javascript
-import m from "mithril";
-m.render(document.getElementById("app"), "hello world");
+import m from 'mithril'
+m.render(document.getElementById('app'), 'hello world')
 ```
 
 5. Create `index.html` file.
+
 ```html
 <!DOCTYPE html>
 <body>
-	<div id="app"></div>
-	<script src="bin/main.js"></script>
+    <div id="app"></div>
+    <script src="bin/main.js"></script>
 </body>
 ```
 
 6. Run your bundler script.
+
 ```bash
 $ npm run start
 ```

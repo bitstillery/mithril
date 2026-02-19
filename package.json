@@ -1,66 +1,69 @@
 {
-  "name": "@bitstillery/mithril",
-  "version": "2.3.8",
-  "description": "A framework for building brilliant applications",
-  "author": "Leo Horie",
-  "license": "MIT",
-  "type": "module",
-  "main": "./index.ts",
-  "module": "./index.ts",
-  "repository": "github:bitstillery/mithril",
-  "files": [
-    "*.ts",
-    "*.d.ts",
-    "ssrContext.ts",
-    "signal.ts",
-    "store.ts",
-    "api/*.ts",
-    "pathname/*.ts",
-    "querystring/*.ts",
-    "render/*.ts",
-    "util/*.ts",
-    "LICENSE",
-    "README.md"
-  ],
-  "exports": {
-    ".": {
-      "import": "./index.ts",
-      "default": "./index.ts"
+    "name": "@bitstillery/mithril",
+    "version": "3.0.0",
+    "description": "A framework for building brilliant applications",
+    "license": "MIT",
+    "author": "Leo Horie",
+    "repository": "github:bitstillery/mithril",
+    "files": [
+        "*.ts",
+        "*.d.ts",
+        "ssrContext.ts",
+        "signal.ts",
+        "store.ts",
+        "api/*.ts",
+        "pathname/*.ts",
+        "querystring/*.ts",
+        "render/*.ts",
+        "util/*.ts",
+        "LICENSE",
+        "README.md"
+    ],
+    "type": "module",
+    "main": "./index.ts",
+    "module": "./index.ts",
+    "exports": {
+        ".": {
+            "import": "./index.ts",
+            "default": "./index.ts"
+        },
+        "./browser": {
+            "import": "./browser.ts",
+            "default": "./browser.ts"
+        },
+        "./server": {
+            "import": "./server.ts",
+            "default": "./server.ts"
+        }
     },
-    "./browser": {
-      "import": "./browser.ts",
-      "default": "./browser.ts"
+    "scripts": {
+        "cleanup:lint": "rm -rf .eslintcache",
+        "commit": "bun run lint && bun run fmt",
+        "fmt": "oxfmt",
+        "lint": "bun run lint:ts",
+        "lint:ts": "bun run lint:ts:format && bun run lint:ts:syntax && bun run lint:ts:types",
+        "lint:ts:format": "oxfmt",
+        "lint:ts:syntax": "oxlint -c .oxlintrc.json",
+        "lint:ts:types": "tsgo --noEmit",
+        "perf": "bun run performance/test-perf.ts",
+        "test": "bun test",
+        "tsgo": "tsgo --noEmit"
     },
-    "./server": {
-      "import": "./server.ts",
-      "default": "./server.ts"
+    "devDependencies": {
+        "@stylistic/eslint-plugin": "^5.6.1",
+        "@types/benchmark": "^2.1.4",
+        "@typescript-eslint/eslint-plugin": "^8.51.0",
+        "@typescript-eslint/parser": "^8.48.0",
+        "@typescript/native-preview": "^7.0.0-dev.20260120.1",
+        "benchmark": "^2.1.4",
+        "bun-types": "^1.3.6",
+        "eslint": "^9.39.2",
+        "eslint-plugin-import": "^2.31.0",
+        "glob": "^13.0.0",
+        "globals": "^17.0.0",
+        "jiti": "^2.6.1",
+        "ospec": "^4.2.1",
+        "oxfmt": "^0.32.0",
+        "oxlint": "^1.30.0"
     }
-  },
-  "scripts": {
-    "cleanup:lint": "rm -rf .eslintcache",
-    "lint": "bun run lint:ts",
-    "lint:ts": "bun run lint:ts:style && bun run lint:ts:syntax",
-    "lint:ts:style": "eslint . -c eslint.config.ts",
-    "lint:ts:syntax": "oxlint -c .oxlintrc.json",
-    "lint:ts:types": "tsgo --noEmit",
-    "perf": "bun run performance/test-perf.ts",
-    "test": "bun test",
-    "tsgo": "tsgo --noEmit"
-  },
-  "devDependencies": {
-    "@stylistic/eslint-plugin": "^5.6.1",
-    "@types/benchmark": "^2.1.4",
-    "@typescript-eslint/eslint-plugin": "^8.51.0",
-    "@typescript-eslint/parser": "^8.48.0",
-    "@typescript/native-preview": "^7.0.0-dev.20260120.1",
-    "benchmark": "^2.1.4",
-    "bun-types": "^1.3.6",
-    "eslint": "^9.39.2",
-    "eslint-plugin-import": "^2.31.0",
-    "glob": "^13.0.0",
-    "globals": "^17.0.0",
-    "jiti": "^2.6.1",
-    "ospec": "^4.2.1",
-    "oxlint": "^1.30.0"
-  }
 }

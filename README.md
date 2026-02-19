@@ -15,13 +15,13 @@ Mithril.js uses global `m.redraw()`—one state change updates **all** component
 Fine-grained reactivity primitives with automatic dependency tracking. Zero-dependency implementation—no Preact Signals or other packages.
 
 ```typescript
-import { signal, computed, effect } from '@bitstillery/mithril'
+import {signal, computed, effect} from '@bitstillery/mithril'
 
 const count = signal(0)
 const doubled = computed(() => count() * 2)
 
 effect(() => {
-  console.log(`Count: ${count()}, Doubled: ${doubled()}`)
+    console.log(`Count: ${count()}, Doubled: ${doubled()}`)
 })
 
 count(5) // Logs: Count: 5, Doubled: 10
@@ -32,25 +32,28 @@ count(5) // Logs: Count: 5, Doubled: 10
 Proxy-based reactive state that makes signals developer-friendly. Automatic dependency tracking with no manual redraw calls.
 
 ```tsx
-import { state } from '@bitstillery/mithril'
+import {state} from '@bitstillery/mithril'
 
-const $s = state({
-  count: 0,
-  user: { name: 'John' },
-  todos: [],
-  totalTodos: () => $s.todos.length, // Computed
-}, 'my.state') // Name required for SSR serialization
+const $s = state(
+    {
+        count: 0,
+        user: {name: 'John'},
+        todos: [],
+        totalTodos: () => $s.todos.length, // Computed
+    },
+    'my.state',
+) // Name required for SSR serialization
 
 // Component only re-renders when $s.count changes
 class Counter extends MithrilComponent {
-  view() {
-    return (
-      <div>
-        <p>Count: {$s.count}</p>
-        <button onclick={() => $s.count++}>Increment</button>
-      </div>
-    )
-  }
+    view() {
+        return (
+            <div>
+                <p>Count: {$s.count}</p>
+                <button onclick={() => $s.count++}>Increment</button>
+            </div>
+        )
+    }
 }
 ```
 
@@ -59,18 +62,21 @@ class Counter extends MithrilComponent {
 State persistence with automatic serialization. The `Store` class wraps `state()` with localStorage/sessionStorage support, seamlessly integrating with SSR hydration.
 
 ```typescript
-import { Store } from '@bitstillery/mithril'
+import {Store} from '@bitstillery/mithril'
 
-const store = new Store<{ user: { name: string }, preferences: Record<string, any> }>()
+const store = new Store<{user: {name: string}; preferences: Record<string, any>}>()
 
 // Define what persists vs what's volatile
-store.blueprint({ user: { name: '' }, preferences: {} }, {
-  user: { name: '' },        // Persistent
-  preferences: {},           // Persistent
-})
+store.blueprint(
+    {user: {name: ''}, preferences: {}},
+    {
+        user: {name: ''}, // Persistent
+        preferences: {}, // Persistent
+    },
+)
 
 // Load from storage, or initialize with defaults
-store.load({ user: { name: 'John' }, preferences: { theme: 'dark' } })
+store.load({user: {name: 'John'}, preferences: {theme: 'dark'}})
 
 // State is reactive and automatically saves on changes
 store.state.user.name = 'Jane' // Auto-saves to localStorage
@@ -82,15 +88,15 @@ Server-side rendering with state preservation. `renderToString` automatically se
 
 ```typescript
 // Server
-const { html, state } = await m.renderToString(App)
+const {html, state} = await m.renderToString(App)
 // Inject: <script id="__SSR_STATE__">${JSON.stringify(state)}</script>
 
 // Client
-import { deserializeAllStates } from '@bitstillery/mithril'
+import {deserializeAllStates} from '@bitstillery/mithril'
 
 const ssrState = document.getElementById('__SSR_STATE__')
 if (ssrState?.textContent) {
-  deserializeAllStates(JSON.parse(ssrState.textContent))
+    deserializeAllStates(JSON.parse(ssrState.textContent))
 }
 m.mount(root, App)
 ```
@@ -106,19 +112,19 @@ bun add @bitstillery/mithril
 ```
 
 ```tsx
-import m, { state, MithrilComponent } from '@bitstillery/mithril'
+import m, {state, MithrilComponent} from '@bitstillery/mithril'
 
-const $s = state({ count: 0 }, 'app.state') // Name required for SSR
+const $s = state({count: 0}, 'app.state') // Name required for SSR
 
 class App extends MithrilComponent {
-  view() {
-    return (
-      <div>
-        <p>Count: {$s.count}</p>
-        <button onclick={() => $s.count++}>Increment</button>
-      </div>
-    )
-  }
+    view() {
+        return (
+            <div>
+                <p>Count: {$s.count}</p>
+                <button onclick={() => $s.count++}>Increment</button>
+            </div>
+        )
+    }
 }
 
 m.mount(document.body, App)
@@ -131,12 +137,12 @@ m.mount(document.body, App)
 
 ## Differences from Mithril.js
 
-| Feature | Original | This Fork |
-|---------|----------|-----------|
-| Reactivity | Global `m.redraw()` | Fine-grained component updates |
+| Feature          | Original            | This Fork                       |
+| ---------------- | ------------------- | ------------------------------- |
+| Reactivity       | Global `m.redraw()` | Fine-grained component updates  |
 | State Management | Manual redraw calls | Signals with automatic tracking |
-| SSR Hydration | State loss | Proper state preservation |
-| TypeScript | Community types | Native TypeScript |
+| SSR Hydration    | State loss          | Proper state preservation       |
+| TypeScript       | Community types     | Native TypeScript               |
 
 **100% API compatible** with Mithril.js v2.x. Signals are opt-in.
 

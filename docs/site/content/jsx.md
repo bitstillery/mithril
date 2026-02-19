@@ -4,15 +4,15 @@ Explanation, examples, and build notes on how to use JSX in your Mithril.js-base
 
 # JSX
 
--   [Description](#description)
--   [Setup for JavaScript](#setup-for-javascript)
--   [Production build](#production-build)
--   [Using Babel with Webpack](#using-babel-with-webpack)
--   [Setup for TypeScript](#setup-for-typescript)
--   [Using Closure Components in TypeScript with JSX](#using-closure-components-in-typescript-with-jsx)
--   [Differences with React](#differences-with-react)
--   [JSX vs hyperscript](#jsx-vs-hyperscript)
--   [Tips and Tricks](#tips-and-tricks)
+- [Description](#description)
+- [Setup for JavaScript](#setup-for-javascript)
+- [Production build](#production-build)
+- [Using Babel with Webpack](#using-babel-with-webpack)
+- [Setup for TypeScript](#setup-for-typescript)
+- [Using Closure Components in TypeScript with JSX](#using-closure-components-in-typescript-with-jsx)
+- [Differences with React](#differences-with-react)
+- [JSX vs hyperscript](#jsx-vs-hyperscript)
+- [Tips and Tricks](#tips-and-tricks)
 
 ---
 
@@ -22,30 +22,30 @@ JSX is a syntax extension that enables you to write HTML tags interspersed with 
 
 ```jsx
 function MyComponent() {
-	return {
-		view: () => m("main", [m("h1", "Hello world")]),
-	};
+    return {
+        view: () => m('main', [m('h1', 'Hello world')]),
+    }
 }
 
 // can be written as:
 
 function MyComponent() {
-	return {
-		view: () => (
-			<main>
-				<h1>Hello world</h1>
-			</main>
-		),
-	};
+    return {
+        view: () => (
+            <main>
+                <h1>Hello world</h1>
+            </main>
+        ),
+    }
 }
 ```
 
 When using JSX, it's possible to interpolate JavaScript expressions within JSX tags by using curly braces:
 
 ```jsx
-var greeting = "Hello";
-var url = "https://google.com";
-var link = <a href={url}>{greeting}!</a>;
+var greeting = 'Hello'
+var url = 'https://google.com'
+var link = <a href={url}>{greeting}!</a>
 // yields <a href="https://google.com">Hello!</a>
 ```
 
@@ -82,16 +82,16 @@ Create a `.babelrc` file:
 
 ```json
 {
-	"presets": ["@babel/preset-env"],
-	"plugins": [
-		[
-			"@babel/plugin-transform-react-jsx",
-			{
-				"pragma": "m",
-				"pragmaFrag": "'['"
-			}
-		]
-	]
+    "presets": ["@babel/preset-env"],
+    "plugins": [
+        [
+            "@babel/plugin-transform-react-jsx",
+            {
+                "pragma": "m",
+                "pragmaFrag": "'['"
+            }
+        ]
+    ]
 }
 ```
 
@@ -99,10 +99,10 @@ To run Babel, setup an npm script. Open `package.json` and add this entry under 
 
 ```json
 {
-	"name": "my-project",
-	"scripts": {
-		"babel": "babel src --out-dir bin --source-maps"
-	}
+    "name": "my-project",
+    "scripts": {
+        "babel": "babel src --out-dir bin --source-maps"
+    }
 }
 ```
 
@@ -130,45 +130,45 @@ Create a `.babelrc` file:
 
 ```json
 {
-	"presets": ["@babel/preset-env"],
-	"plugins": [
-		[
-			"@babel/plugin-transform-react-jsx",
-			{
-				"pragma": "m",
-				"pragmaFrag": "'['"
-			}
-		]
-	]
+    "presets": ["@babel/preset-env"],
+    "plugins": [
+        [
+            "@babel/plugin-transform-react-jsx",
+            {
+                "pragma": "m",
+                "pragmaFrag": "'['"
+            }
+        ]
+    ]
 }
 ```
 
 Next, create a file called `webpack.config.js`
 
 ```jsx
-const path = require("path");
+const path = require('path')
 
 module.exports = {
-	entry: "./src/index.js",
-	output: {
-		path: path.resolve(__dirname, "./bin"),
-		filename: "app.js",
-	},
-	module: {
-		rules: [
-			{
-				test: /\.(js|jsx)$/,
-				exclude: /\/node_modules\//,
-				use: {
-					loader: "babel-loader",
-				},
-			},
-		],
-	},
-	resolve: {
-		extensions: [".js", ".jsx"],
-	},
-};
+    entry: './src/index.js',
+    output: {
+        path: path.resolve(__dirname, './bin'),
+        filename: 'app.js',
+    },
+    module: {
+        rules: [
+            {
+                test: /\.(js|jsx)$/,
+                exclude: /\/node_modules\//,
+                use: {
+                    loader: 'babel-loader',
+                },
+            },
+        ],
+    },
+    resolve: {
+        extensions: ['.js', '.jsx'],
+    },
+}
 ```
 
 For those familiar with Webpack already, please note that adding the Babel options to the `babel-loader` section of your `webpack.config.js` will throw an error, so you need to include them in the separate `.babelrc` file.
@@ -179,10 +179,10 @@ To run the bundler, setup an npm script. Open `package.json` and add this entry 
 
 ```json
 {
-	"name": "my-project",
-	"scripts": {
-		"start": "webpack --mode development --watch"
-	}
+    "name": "my-project",
+    "scripts": {
+        "start": "webpack --mode development --watch"
+    }
 }
 ```
 
@@ -198,11 +198,11 @@ To generate a minified file, open `package.json` and add a new npm script called
 
 ```json
 {
-	"name": "my-project",
-	"scripts": {
-		"start": "webpack -d --watch",
-		"build": "webpack -p"
-	}
+    "name": "my-project",
+    "scripts": {
+        "start": "webpack -d --watch",
+        "build": "webpack -p"
+    }
 }
 ```
 
@@ -210,12 +210,12 @@ You can use hooks in your production environment to run the production build scr
 
 ```json
 {
-	"name": "my-project",
-	"scripts": {
-		"start": "webpack -d --watch",
-		"build": "webpack -p",
-		"heroku-postbuild": "webpack -p"
-	}
+    "name": "my-project",
+    "scripts": {
+        "start": "webpack -d --watch",
+        "build": "webpack -p",
+        "heroku-postbuild": "webpack -p"
+    }
 }
 ```
 
@@ -231,11 +231,11 @@ Then create a new plugin in the `plugins` property of the Webpack configuration 
 
 ```js
 {
-	plugins: [
-		new webpack.ProvidePlugin({
-			m: "mithril",
-		}),
-	];
+    plugins: [
+        new webpack.ProvidePlugin({
+            m: 'mithril',
+        }),
+    ]
 }
 ```
 
@@ -251,40 +251,42 @@ Add `jsx` and `jsxFactory` to `compilerOptions` in your `tsconfig.json`:
 
 ```json
 {
-  "compilerOptions": {
-    "jsx": "react",
-    "jsxFactory": "m",
-    "jsxFragmentFactory": "m.Fragment"
-  }
+    "compilerOptions": {
+        "jsx": "react",
+        "jsxFactory": "m",
+        "jsxFragmentFactory": "m.Fragment"
+    }
 }
 ```
 
 This setup should be enough to get most JSX functionality working.
 
 #### Using closure components in TypeScript with JSX
->Because of https://github.com/microsoft/TypeScript/issues/21699, we advise against using [closure components](components.md#closure-component-state) in TypeScript for now. Either use [class components](components.md#class-component-state) without attribute inspection or Hyperscript instead (see the list of alternatives below the code example).
+
+> Because of https://github.com/microsoft/TypeScript/issues/21699, we advise against using [closure components](components.md#closure-component-state) in TypeScript for now. Either use [class components](components.md#class-component-state) without attribute inspection or Hyperscript instead (see the list of alternatives below the code example).
 
 TypeScript only expects an attribute object as a parameter. But Mithril.js provides a `Vnode` object instead. This leads to the editor showing faulty parameters even though the JSX would compile correctly. If you want to use closure components in TypeScript, you need to trick the TypeScript error checking.
-
 
 For example, if you try to compile this code:
 
 ```tsx
 interface Attributes {
-  greet: string
+    greet: string
 }
 function ChildComponent(vNode: Vnode<Attributes>): m.Component<Attributes> {
-  return {
-    view: () => <div>{vNode.attrs.greet}</div>
-  };
+    return {
+        view: () => <div>{vNode.attrs.greet}</div>,
+    }
 }
 
 function ParentComponent() {
-  return {
-    view: () => <div>
-      <ChildComponent greet="Hello World"/>
-    </div>
-  };
+    return {
+        view: () => (
+            <div>
+                <ChildComponent greet='Hello World' />
+            </div>
+        ),
+    }
 }
 ```
 
@@ -296,6 +298,7 @@ TS2786: ChildComponent cannot be used as a JSX component.
 ```
 
 There are a few options to circumvent that problem:
+
 1. Instead of `<div><ChildComponent greet="Hello World"/></div>`, use [hyperscript](hyperscript.md) instead: `<div>{m(ChildComponent, {greet: "Hello World"})}</div>`.
 2. Use [class components](components.md#class-component-state) instead. Class components will not show any errors. But TypeScript will not be able to autocomplete or inspect attributes (in this example `greet` would be unknown when used in `ParentComponent`).
 3. Create a "translation function" (like `TsClosureComponent()` in the example below) to trick TypeScript.
@@ -305,30 +308,28 @@ The following code will work without errors:
 ```tsx
 // Use this helper to force TypeScript to treat closure components as valid JSX components
 export function TsClosureComponent<T>(create: Mithril.ClosureComponent<T>) {
-  return create as any as (
-    (attrs: T & Mithril.CommonAttributes<T, unknown>) => JSX.Element
-  )
+    return create as any as (attrs: T & Mithril.CommonAttributes<T, unknown>) => JSX.Element
 }
-
 
 interface Attributes {
-  greet: string
+    greet: string
 }
 // We slightly altered the definition of `ChildComponent` by using `TsClosureComponent`
-const ChildComponent = TsClosureComponent<Attributes>(vNode => {
-  return {
-    view: () => <div>{vNode.attrs.greet}</div>
-  };
+const ChildComponent = TsClosureComponent<Attributes>((vNode) => {
+    return {
+        view: () => <div>{vNode.attrs.greet}</div>,
+    }
 })
 
 function ParentComponent() {
-  return {
-    view: () => <div>
-      <ChildComponent greet="Hello World"/>
-    </div>
-  };
+    return {
+        view: () => (
+            <div>
+                <ChildComponent greet='Hello World' />
+            </div>
+        ),
+    }
 }
-
 ```
 
 This also works with generics, as long as you define the generic as part of the wrapped component:
@@ -344,7 +345,6 @@ const jsx = <div>
   <ChildComponent<SomeClass> />
 </div>
 ```
-
 
 ### Differences with React
 
@@ -368,88 +368,73 @@ React supports scheduling event listeners during the capture phase, as events fi
 
 JSX and hyperscript are two different syntaxes you can use for specifying vnodes, and they have different tradeoffs:
 
--   JSX is much more approachable if you're coming from an HTML/XML background and are more comfortable specifying DOM elements with that kind of syntax. It is also slightly cleaner in many cases since it uses fewer punctuation and the attributes contain less visual noise, so many people find it much easier to read. And of course, many common editors provide autocomplete support for DOM elements in the same way they do for HTML. However, it requires an extra build step to use, editor support isn't as broad as it is with normal JS, and it's considerably more verbose. It's also a bit more verbose when dealing with a lot of dynamic content because you have to use interpolations for everything.
+- JSX is much more approachable if you're coming from an HTML/XML background and are more comfortable specifying DOM elements with that kind of syntax. It is also slightly cleaner in many cases since it uses fewer punctuation and the attributes contain less visual noise, so many people find it much easier to read. And of course, many common editors provide autocomplete support for DOM elements in the same way they do for HTML. However, it requires an extra build step to use, editor support isn't as broad as it is with normal JS, and it's considerably more verbose. It's also a bit more verbose when dealing with a lot of dynamic content because you have to use interpolations for everything.
 
--   Hyperscript is more approachable if you come from a backend JS background that doesn't involve much HTML or XML. It's more concise with less redundancy, and it provides a CSS-like sugar for static classes, IDs, and other attributes. It also can be used with no build step at all, although [you can add one if you wish](https://github.com/MithrilJS/mopt). And it's slightly easier to work with in the face of a lot of dynamic content, because you don't need to "interpolate" anything. However, the terseness does make it harder to read for some people, especially those less experienced and coming from a front end HTML/CSS/XML background, and I'm not aware of any plugins that auto-complete parts of hyperscript selectors like IDs, classes, and attributes.
+- Hyperscript is more approachable if you come from a backend JS background that doesn't involve much HTML or XML. It's more concise with less redundancy, and it provides a CSS-like sugar for static classes, IDs, and other attributes. It also can be used with no build step at all, although [you can add one if you wish](https://github.com/MithrilJS/mopt). And it's slightly easier to work with in the face of a lot of dynamic content, because you don't need to "interpolate" anything. However, the terseness does make it harder to read for some people, especially those less experienced and coming from a front end HTML/CSS/XML background, and I'm not aware of any plugins that auto-complete parts of hyperscript selectors like IDs, classes, and attributes.
 
 You can see the tradeoffs come into play in more complex trees. For instance, consider this hyperscript tree, adapted from a real-world project by [@dead-claudia](https://github.com/dead-claudia) with some alterations for clarity and readability:
 
 ```javascript
 function SummaryView() {
-	let tag, posts;
+    let tag, posts
 
-	function init({ attrs }) {
-		Model.sendView(attrs.tag != null);
-		if (attrs.tag != null) {
-			tag = attrs.tag.toLowerCase();
-			posts = Model.getTag(tag);
-		} else {
-			tag = undefined;
-			posts = Model.posts;
-		}
-	}
+    function init({attrs}) {
+        Model.sendView(attrs.tag != null)
+        if (attrs.tag != null) {
+            tag = attrs.tag.toLowerCase()
+            posts = Model.getTag(tag)
+        } else {
+            tag = undefined
+            posts = Model.posts
+        }
+    }
 
-	function feed(type, href) {
-		return m(".feed", [
-			type,
-			m("a", { href }, m("img.feed-icon[src=./feed-icon-16.gif]")),
-		]);
-	}
+    function feed(type, href) {
+        return m('.feed', [type, m('a', {href}, m('img.feed-icon[src=./feed-icon-16.gif]'))])
+    }
 
-	return {
-		oninit: init,
-		// To ensure the tag gets properly diffed on route change.
-		onbeforeupdate: init,
-		view: () =>
-			m(".blog-summary", [
-				m("p", "My ramblings about everything"),
+    return {
+        oninit: init,
+        // To ensure the tag gets properly diffed on route change.
+        onbeforeupdate: init,
+        view: () =>
+            m('.blog-summary', [
+                m('p', 'My ramblings about everything'),
 
-				m(".feeds", [
-					feed("Atom", "blog.atom.xml"),
-					feed("RSS", "blog.rss.xml"),
-				]),
+                m('.feeds', [feed('Atom', 'blog.atom.xml'), feed('RSS', 'blog.rss.xml')]),
 
-				tag != null
-					? m(TagHeader, { len: posts.length, tag })
-					: m(".summary-header", [
-							m(
-								".summary-title",
-								"Posts, sorted by most recent."
-							),
-							m(TagSearch),
-					  ]),
+                tag != null
+                    ? m(TagHeader, {len: posts.length, tag})
+                    : m('.summary-header', [m('.summary-title', 'Posts, sorted by most recent.'), m(TagSearch)]),
 
-				m(
-					".blog-list",
-					posts.map((post) =>
-						m(
-							m.route.Link,
-							{
-								class: "blog-entry",
-								href: `/posts/${post.url}`,
-							},
-							[
-								m(
-									".post-date",
-									post.date.toLocaleDateString("en-US", {
-										year: "numeric",
-										month: "long",
-										day: "numeric",
-									})
-								),
+                m(
+                    '.blog-list',
+                    posts.map((post) =>
+                        m(
+                            m.route.Link,
+                            {
+                                class: 'blog-entry',
+                                href: `/posts/${post.url}`,
+                            },
+                            [
+                                m(
+                                    '.post-date',
+                                    post.date.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                    }),
+                                ),
 
-								m(".post-stub", [
-									m(".post-title", post.title),
-									m(".post-preview", post.preview, "..."),
-								]),
+                                m('.post-stub', [m('.post-title', post.title), m('.post-preview', post.preview, '...')]),
 
-								m(TagList, { post, tag }),
-							]
-						)
-					)
-				),
-			]),
-	};
+                                m(TagList, {post, tag}),
+                            ],
+                        ),
+                    ),
+                ),
+            ]),
+    }
 }
 ```
 
@@ -457,82 +442,75 @@ Here's the exact equivalent of the above code, using JSX instead. You can see ho
 
 ```jsx
 function SummaryView() {
-	let tag, posts;
+    let tag, posts
 
-	function init({ attrs }) {
-		Model.sendView(attrs.tag != null);
-		if (attrs.tag != null) {
-			tag = attrs.tag.toLowerCase();
-			posts = Model.getTag(tag);
-		} else {
-			tag = undefined;
-			posts = Model.posts;
-		}
-	}
+    function init({attrs}) {
+        Model.sendView(attrs.tag != null)
+        if (attrs.tag != null) {
+            tag = attrs.tag.toLowerCase()
+            posts = Model.getTag(tag)
+        } else {
+            tag = undefined
+            posts = Model.posts
+        }
+    }
 
-	function feed(type, href) {
-		return (
-			<div class="feed">
-				{type}
-				<a href={href}>
-					<img class="feed-icon" src="./feed-icon-16.gif" />
-				</a>
-			</div>
-		);
-	}
+    function feed(type, href) {
+        return (
+            <div class='feed'>
+                {type}
+                <a href={href}>
+                    <img class='feed-icon' src='./feed-icon-16.gif' />
+                </a>
+            </div>
+        )
+    }
 
-	return {
-		oninit: init,
-		// To ensure the tag gets properly diffed on route change.
-		onbeforeupdate: init,
-		view: () => (
-			<div class="blog-summary">
-				<p>My ramblings about everything</p>
+    return {
+        oninit: init,
+        // To ensure the tag gets properly diffed on route change.
+        onbeforeupdate: init,
+        view: () => (
+            <div class='blog-summary'>
+                <p>My ramblings about everything</p>
 
-				<div class="feeds">
-					{feed("Atom", "blog.atom.xml")}
-					{feed("RSS", "blog.rss.xml")}
-				</div>
+                <div class='feeds'>
+                    {feed('Atom', 'blog.atom.xml')}
+                    {feed('RSS', 'blog.rss.xml')}
+                </div>
 
-				{tag != null ? (
-					<TagHeader len={posts.length} tag={tag} />
-				) : (
-					<div class="summary-header">
-						<div class="summary-title">
-							Posts, sorted by most recent
-						</div>
-						<TagSearch />
-					</div>
-				)}
+                {tag != null ? (
+                    <TagHeader len={posts.length} tag={tag} />
+                ) : (
+                    <div class='summary-header'>
+                        <div class='summary-title'>Posts, sorted by most recent</div>
+                        <TagSearch />
+                    </div>
+                )}
 
-				<div class="blog-list">
-					{posts.map((post) => (
-						<m.route.Link
-							class="blog-entry"
-							href={`/posts/${post.url}`}
-						>
-							<div class="post-date">
-								{post.date.toLocaleDateString("en-US", {
-									year: "numeric",
-									month: "long",
-									day: "numeric",
-								})}
-							</div>
+                <div class='blog-list'>
+                    {posts.map((post) => (
+                        <m.route.Link class='blog-entry' href={`/posts/${post.url}`}>
+                            <div class='post-date'>
+                                {post.date.toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                })}
+                            </div>
 
-							<div class="post-stub">
-								<div class="post-title">{post.title}</div>
-								<div class="post-preview">
-									{post.preview}...
-								</div>
-							</div>
+                            <div class='post-stub'>
+                                <div class='post-title'>{post.title}</div>
+                                <div class='post-preview'>{post.preview}...</div>
+                            </div>
 
-							<TagList post={post} tag={tag} />
-						</m.route.Link>
-					))}
-				</div>
-			</div>
-		),
-	};
+                            <TagList post={post} tag={tag} />
+                        </m.route.Link>
+                    ))}
+                </div>
+            </div>
+        ),
+    }
 }
 ```
 

@@ -6,32 +6,32 @@ Documentation on m.route(), Mithril.js' client-side router
 
 - [Description](#description)
 - [Signature](#signature)
-	- [Static members](#static-members)
-		- [m.route.set](#mrouteset)
-		- [m.route.get](#mrouteget)
-		- [m.route.prefix](#mrouteprefix)
-		- [m.route.Link](#mroutelink)
-		- [m.route.param](#mrouteparam)
-		- [m.route.SKIP](#mrouteskip)
-	- [RouteResolver](#routeresolver)
-		- [routeResolver.onmatch](#routeresolveronmatch)
-		- [routeResolver.render](#routeresolverrender)
+    - [Static members](#static-members)
+        - [m.route.set](#mrouteset)
+        - [m.route.get](#mrouteget)
+        - [m.route.prefix](#mrouteprefix)
+        - [m.route.Link](#mroutelink)
+        - [m.route.param](#mrouteparam)
+        - [m.route.SKIP](#mrouteskip)
+    - [RouteResolver](#routeresolver)
+        - [routeResolver.onmatch](#routeresolveronmatch)
+        - [routeResolver.render](#routeresolverrender)
 - [How it works](#how-it-works)
 - [Typical usage](#typical-usage)
 - [Navigating to different routes](#navigating-to-different-routes)
 - [Routing parameters](#routing-parameters)
-	- [Key parameter](#key-parameter)
-	- [Variadic routes](#variadic-routes)
-	- [History state](#history-state)
+    - [Key parameter](#key-parameter)
+    - [Variadic routes](#variadic-routes)
+    - [History state](#history-state)
 - [Changing router prefix](#changing-router-prefix)
 - [Advanced component resolution](#advanced-component-resolution)
-	- [Wrapping a layout component](#wrapping-a-layout-component)
-	- [Redirection](#redirection)
-	- [Preloading data](#preloading-data)
-	- [Code splitting](#code-splitting)
-	- [Typed routes](#typed-routes)
-	- [Hidden routes](#hidden-routes)
-	- [Route cancellation / blocking](#route-cancellation--blocking)
+    - [Wrapping a layout component](#wrapping-a-layout-component)
+    - [Redirection](#redirection)
+    - [Preloading data](#preloading-data)
+    - [Code splitting](#code-splitting)
+    - [Typed routes](#typed-routes)
+    - [Hidden routes](#hidden-routes)
+    - [Route cancellation / blocking](#route-cancellation--blocking)
 - [Third-party integration](#third-party-integration)
 
 ---
@@ -42,13 +42,13 @@ Navigate between "pages" within an application
 
 ```javascript
 var Home = {
-	view: function() {
-		return "Welcome"
-	}
+    view: function () {
+        return 'Welcome'
+    },
 }
 
-m.route(document.body, "/home", {
-	"/home": Home, // defines `https://localhost/#!/home`
+m.route(document.body, '/home', {
+    '/home': Home, // defines `https://localhost/#!/home`
 })
 ```
 
@@ -60,15 +60,14 @@ You can only have one `m.route` call per application.
 
 `m.route(root, defaultRoute, routes)`
 
-Argument               | Type                                     | Required | Description
----------------------- | ---------------------------------------- | -------- | ---
-`root`                 | `Element`                                | Yes      | A DOM element that will be the parent node to the subtree
-`defaultRoute`         | `String`                                 | Yes      | The route to redirect to if the current URL does not match a route. Note, this is not the initial route.  Initial route will be your address bar's url.
-`routes`               | `Object<String,Component|RouteResolver>` | Yes      | An object whose keys are route strings and values are either components or a [RouteResolver](#routeresolver)
-**returns**            |                                          |          | Returns `undefined`
+| Argument       | Type                     | Required        | Description                                                                                                                                            |
+| -------------- | ------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `root`         | `Element`                | Yes             | A DOM element that will be the parent node to the subtree                                                                                              |
+| `defaultRoute` | `String`                 | Yes             | The route to redirect to if the current URL does not match a route. Note, this is not the initial route. Initial route will be your address bar's url. |
+| `routes`       | `Object<String,Component | RouteResolver>` | Yes                                                                                                                                                    | An object whose keys are route strings and values are either components or a [RouteResolver](#routeresolver) |
+| **returns**    |                          |                 | Returns `undefined`                                                                                                                                    |
 
 [How to read signatures](signatures.md)
-
 
 #### Static members
 
@@ -78,27 +77,28 @@ Redirects to a matching route, or to the default route if no matching routes can
 
 `m.route.set(path, params, options)`
 
-Argument          | Type      | Required | Description
------------------ | --------- | -------- | ---
-`path`            | `String`  | Yes      | The [path name](paths.md) to route to, without a prefix. The path may include parameters, interpolated with values from `params`.
-`params`          | `Object`  | No       | Routing parameters. If `path` has routing parameter slots, the properties of this object are interpolated into the path string
-`options.replace` | `Boolean` | No       | Whether to create a new history entry or to replace the current one. Defaults to false
-`options.state`   | `Object`  | No       | The `state` object to pass to the underlying `history.pushState` / `history.replaceState` call. This state object becomes available in the `history.state` property, and is merged into the [routing parameters](#routing-parameters) object. Note that this option only works when using the pushState API, but is ignored if the router falls back to hashchange mode (i.e. if the pushState API is not available)
-`options.title`   | `String`  | No       | The `title` string to pass to the underlying `history.pushState` / `history.replaceState` call.
-**returns**       |           |          | Returns `undefined`
+| Argument          | Type      | Required | Description                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ----------------- | --------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`            | `String`  | Yes      | The [path name](paths.md) to route to, without a prefix. The path may include parameters, interpolated with values from `params`.                                                                                                                                                                                                                                                                                    |
+| `params`          | `Object`  | No       | Routing parameters. If `path` has routing parameter slots, the properties of this object are interpolated into the path string                                                                                                                                                                                                                                                                                       |
+| `options.replace` | `Boolean` | No       | Whether to create a new history entry or to replace the current one. Defaults to false                                                                                                                                                                                                                                                                                                                               |
+| `options.state`   | `Object`  | No       | The `state` object to pass to the underlying `history.pushState` / `history.replaceState` call. This state object becomes available in the `history.state` property, and is merged into the [routing parameters](#routing-parameters) object. Note that this option only works when using the pushState API, but is ignored if the router falls back to hashchange mode (i.e. if the pushState API is not available) |
+| `options.title`   | `String`  | No       | The `title` string to pass to the underlying `history.pushState` / `history.replaceState` call.                                                                                                                                                                                                                                                                                                                      |
+| **returns**       |           |          | Returns `undefined`                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 Remember that when using `.set` with `params` you also need to define the route:
+
 ```javascript
 var Article = {
-	view: function(vnode) {
-		return "This is article " + vnode.attrs.articleid
-	}
+    view: function (vnode) {
+        return 'This is article ' + vnode.attrs.articleid
+    },
 }
 
-m.route(document.body, "/article/1", {
-	"/article/:articleid": Article
+m.route(document.body, '/article/1', {
+    '/article/:articleid': Article,
 })
-m.route.set("/article/:articleid", {articleid: 1})
+m.route.set('/article/:articleid', {articleid: 1})
 ```
 
 ##### m.route.get
@@ -107,9 +107,9 @@ Returns the last fully resolved routing path, without the prefix. It may differ 
 
 `path = m.route.get()`
 
-Argument          | Type      | Required | Description
------------------ | --------- | -------- | ---
-**returns**       | `String`  |          | Returns the last fully resolved path
+| Argument    | Type     | Required | Description                          |
+| ----------- | -------- | -------- | ------------------------------------ |
+| **returns** | `String` |          | Returns the last fully resolved path |
 
 ##### m.route.prefix
 
@@ -117,9 +117,9 @@ Defines a router prefix. The router prefix is a fragment of the URL that dictate
 
 `m.route.prefix = prefix`
 
-Argument          | Type      | Required | Description
------------------ | --------- | -------- | ---
-`prefix`          | `String`  | Yes      | The prefix that controls the underlying [routing strategy](#routing-strategies) used by Mithril.
+| Argument | Type     | Required | Description                                                                                      |
+| -------- | -------- | -------- | ------------------------------------------------------------------------------------------------ |
+| `prefix` | `String` | Yes      | The prefix that controls the underlying [routing strategy](#routing-strategies) used by Mithril. |
 
 This is a simple property, so you can both read it and write to it.
 
@@ -128,27 +128,32 @@ This is a simple property, so you can both read it and write to it.
 This component creates a dynamic routed link. Its essential function is to produce `a` links with local `href`s transformed to take account of the [route prefix](#mrouteprefix).
 
 ```javascript
-m(m.route.Link, {href: "/foo"}, "foo")
+m(m.route.Link, {href: '/foo'}, 'foo')
 
 // Unless m.route.prefix has changed from the default strategy, render to:
 // <a href="#!/foo">foo</a>
 ```
 
-Links accept a selection of special attributes: 
-* `selector` is what would be passed as the first argument to [`m`](hyperscript.md): any selector is valid, including non-`a` elements.
-* `params` & `options` are the arguments with the same names as defined in [`m.route.set`](#mrouteset).
-* `disabled`, if true, disables routing behaviour and any bound `onclick` handler, and attaches a `data-disabled="true"` attribute for accessibility hints; if the element is an `a`, the `href` is removed.
+Links accept a selection of special attributes:
 
-*Routing behaviour cannot be prevented using the event handling API: use `disabled` instead.*
+- `selector` is what would be passed as the first argument to [`m`](hyperscript.md): any selector is valid, including non-`a` elements.
+- `params` & `options` are the arguments with the same names as defined in [`m.route.set`](#mrouteset).
+- `disabled`, if true, disables routing behaviour and any bound `onclick` handler, and attaches a `data-disabled="true"` attribute for accessibility hints; if the element is an `a`, the `href` is removed.
+
+_Routing behaviour cannot be prevented using the event handling API: use `disabled` instead._
 
 ```javascript
-m(m.route.Link, {
-	href: "/foo",
-	selector: "button.large",
-	disabled: true,
-	params: {key: "value"},
-	options: {replace: true},
-}, "link name")
+m(
+    m.route.Link,
+    {
+        href: '/foo',
+        selector: 'button.large',
+        disabled: true,
+        params: {key: 'value'},
+        options: {replace: true},
+    },
+    'link name',
+)
 
 // Renders to:
 // <button disabled aria-disabled="true" class="large">link name</button>
@@ -156,16 +161,16 @@ m(m.route.Link, {
 
 `vnode = m(m.route.Link, attributes, children)`
 
-Argument              | Type                                 | Required | Description
---------------------- | ------------------------------------ | -------- | ---
-`attributes.href`     | `Object`                             | Yes      | The target route to navigate to.
-`attributes.disabled` | `Boolean`                            | No       | Disables the element accessibly.
-`attributes.selector` | `String|Object|Function`             | No       | A selector for [`m`](hyperscript.md), defaults to `"a"`.
-`attributes.options`  | `Object`                             | No       | Sets the `options` passed to [`m.route.set`](#mrouteset).
-`attributes.params`   | `Object`                             | No       | Sets the `params` passed to [`m.route.set`](#mrouteset).
-`attributes`          | `Object`                             | No       | Any other attributes to be forwarded to `m`.
-`children`            | `Array<Vnode>|String|Number|Boolean` | No       | Child [vnodes](vnodes.md) for this link.
-**returns**           | `Vnode`                              |          | A [vnode](vnodes.md).
+| Argument              | Type          | Required | Description                                               |
+| --------------------- | ------------- | -------- | --------------------------------------------------------- | -------- | -------------------------------------------------------- | ---------------------------------------- |
+| `attributes.href`     | `Object`      | Yes      | The target route to navigate to.                          |
+| `attributes.disabled` | `Boolean`     | No       | Disables the element accessibly.                          |
+| `attributes.selector` | `String       | Object   | Function`                                                 | No       | A selector for [`m`](hyperscript.md), defaults to `"a"`. |
+| `attributes.options`  | `Object`      | No       | Sets the `options` passed to [`m.route.set`](#mrouteset). |
+| `attributes.params`   | `Object`      | No       | Sets the `params` passed to [`m.route.set`](#mrouteset).  |
+| `attributes`          | `Object`      | No       | Any other attributes to be forwarded to `m`.              |
+| `children`            | `Array<Vnode> | String   | Number                                                    | Boolean` | No                                                       | Child [vnodes](vnodes.md) for this link. |
+| **returns**           | `Vnode`       |          | A [vnode](vnodes.md).                                     |
 
 ##### m.route.param
 
@@ -177,10 +182,10 @@ Retrieves a route parameter from the last fully resolved route. A route paramete
 
 `value = m.route.param(key)`
 
-Argument          | Type            | Required | Description
------------------ | --------------- | -------- | ---
-`key`             | `String`        | No       | A route parameter name (e.g. `id` in route `/users/:id`, or `page` in path `/users/1?page=3`, or a key in `history.state`)
-**returns**       | `String|Object` |          | Returns a value for the specified key. If a key is not specified, it returns an object that contains all the interpolation keys
+| Argument    | Type     | Required | Description                                                                                                                |
+| ----------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `key`       | `String` | No       | A route parameter name (e.g. `id` in route `/users/:id`, or `page` in path `/users/1?page=3`, or a key in `history.state`) |
+| **returns** | `String  | Object`  |                                                                                                                            | Returns a value for the specified key. If a key is not specified, it returns an object that contains all the interpolation keys |
 
 Note that in the `onmatch` function of a RouteResolver, the new route hasn't yet been fully resolved, and `m.route.param()` will return the parameters of the previous route, if any. `onmatch` receives the parameters of the new route as an argument.
 
@@ -202,8 +207,12 @@ When using components, you could think of them as special sugar for this route r
 
 ```javascript
 var routeResolver = {
-	onmatch: function() { return Home },
-	render: function(vnode) { return [vnode] },
+    onmatch: function () {
+        return Home
+    },
+    render: function (vnode) {
+        return [vnode]
+    },
 }
 ```
 
@@ -217,12 +226,12 @@ For more information on `onmatch`, see the [advanced component resolution](#adva
 
 `routeResolver.onmatch(args, requestedPath, route)`
 
-Argument        | Type                                     | Description
---------------- | ---------------------------------------- | ---
-`args`          | `Object`                                 | The [routing parameters](#routing-parameters)
-`requestedPath` | `String`                                 | The router path requested by the last routing action, including interpolated routing parameter values, but without the prefix. When `onmatch` is called, the resolution for this path is not complete and `m.route.get()` still returns the previous path.
-`route`         | `String`                                 | The router path requested by the last routing action, excluding interpolated routing parameter values
-**returns**     | `Component|Promise<Component>|undefined` | Returns a component or a promise that resolves to a component
+| Argument        | Type       | Description                                                                                                                                                                                                                                                |
+| --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
+| `args`          | `Object`   | The [routing parameters](#routing-parameters)                                                                                                                                                                                                              |
+| `requestedPath` | `String`   | The router path requested by the last routing action, including interpolated routing parameter values, but without the prefix. When `onmatch` is called, the resolution for this path is not complete and `m.route.get()` still returns the previous path. |
+| `route`         | `String`   | The router path requested by the last routing action, excluding interpolated routing parameter values                                                                                                                                                      |
+| **returns**     | `Component | Promise<Component>                                                                                                                                                                                                                                         | undefined` | Returns a component or a promise that resolves to a component |
 
 If `onmatch` returns a component or a promise that resolves to a component, this component is used as the `vnode.tag` for the first argument in the RouteResolver's `render` method. Otherwise, `vnode.tag` is set to `"div"`. Similarly, if the `onmatch` method is omitted, `vnode.tag` is also `"div"`.
 
@@ -234,11 +243,11 @@ The `render` method is called on every redraw for a matching route. It is simila
 
 `vnode = routeResolver.render(vnode)`
 
-Argument            | Type                 | Description
-------------------- | -------------------- | -----------
-`vnode`             | `Object`             | A [vnode](vnodes.md) whose attributes object contains routing parameters. If onmatch does not return a component or a promise that resolves to a component, the vnode's `tag` field defaults to `"div"`
-`vnode.attrs`       | `Object`             | A map of URL parameter values
-**returns**         | `Array<Vnode>|Vnode` | The [vnodes](vnodes.md) to be rendered
+| Argument      | Type          | Description                                                                                                                                                                                             |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `vnode`       | `Object`      | A [vnode](vnodes.md) whose attributes object contains routing parameters. If onmatch does not return a component or a promise that resolves to a component, the vnode's `tag` field defaults to `"div"` |
+| `vnode.attrs` | `Object`      | A map of URL parameter values                                                                                                                                                                           |
+| **returns**   | `Array<Vnode> | Vnode`                                                                                                                                                                                                  | The [vnodes](vnodes.md) to be rendered |
 
 The `vnode` parameter is just `m(Component, m.route.param())` where `Component` is the resolved component for the route (after `routeResolver.onmatch`) and `m.route.param()` is as documented [here](#mrouteparam). If you omit this method, the default return value is `[vnode]`, wrapped in a fragment so you can use [key parameters](#key-parameter). Combined with a `:key` parameter, it becomes a [single-element keyed fragment](keys.md#reinitializing-views-with-single-child-keyed-fragments), since it ends up rendering to something like `[m(Component, {key: m.route.param("key"), ...})]`.
 
@@ -266,7 +275,7 @@ The querystring strategy allows server-side detection, but it doesn't appear as 
 
 The pathname strategy produces the cleanest looking URLs, but requires setting up the server to serve the single page application code from every URL that the application can route to. Use this strategy if you want cleaner-looking URLs.
 
-Single page applications that use the hash strategy often use the convention of having an exclamation mark after the hash to indicate that they're using the hash as a routing mechanism and not for the purposes of linking to anchors. The `#!` string is known as a *hashbang*.
+Single page applications that use the hash strategy often use the convention of having an exclamation mark after the hash to indicate that they're using the hash as a routing mechanism and not for the purposes of linking to anchors. The `#!` string is known as a _hashbang_.
 
 The default strategy uses the hashbang.
 
@@ -278,21 +287,15 @@ Normally, you need to create a few [components](components.md) to map routes to:
 
 ```javascript
 var Home = {
-	view: function() {
-		return [
-			m(Menu),
-			m("h1", "Home")
-		]
-	}
+    view: function () {
+        return [m(Menu), m('h1', 'Home')]
+    },
 }
 
 var Page1 = {
-	view: function() {
-		return [
-			m(Menu),
-			m("h1", "Page 1")
-		]
-	}
+    view: function () {
+        return [m(Menu), m('h1', 'Page 1')]
+    },
 }
 ```
 
@@ -300,21 +303,18 @@ In the example above, there are two components: `Home` and `Page1`. Each contain
 
 ```javascript
 var Menu = {
-	view: function() {
-		return m("nav", [
-			m(m.route.Link, {href: "/"}, "Home"),
-			m(m.route.Link, {href: "/page1"}, "Page 1"),
-		])
-	}
+    view: function () {
+        return m('nav', [m(m.route.Link, {href: '/'}, 'Home'), m(m.route.Link, {href: '/page1'}, 'Page 1')])
+    },
 }
 ```
 
 Now we can define routes and map our components to them:
 
 ```javascript
-m.route(document.body, "/", {
-	"/": Home,
-	"/page1": Page1,
+m.route(document.body, '/', {
+    '/': Home,
+    '/page1': Page1,
 })
 ```
 
@@ -340,15 +340,12 @@ Sometimes we want to have a variable id or similar data appear in a route, but w
 
 ```javascript
 var Edit = {
-	view: function(vnode) {
-		return [
-			m(Menu),
-			m("h1", "Editing " + vnode.attrs.id)
-		]
-	}
+    view: function (vnode) {
+        return [m(Menu), m('h1', 'Editing ' + vnode.attrs.id)]
+    },
 }
-m.route(document.body, "/edit/1", {
-	"/edit/:id": Edit,
+m.route(document.body, '/edit/1', {
+    '/edit/:id': Edit,
 })
 ```
 
@@ -363,8 +360,8 @@ When a user navigates from a parameterized route to the same route with a differ
 To achieve that, it's possible to combine route parameterization with [keys](#reinitializing-views-with-single-child-keyed-fragments) for a very convenient pattern:
 
 ```javascript
-m.route(document.body, "/edit/1", {
-	"/edit/:key": Edit,
+m.route(document.body, '/edit/1', {
+    '/edit/:key': Edit,
 })
 ```
 
@@ -385,8 +382,8 @@ Note that the key parameter works only for component routes. If you're using a r
 It's also possible to have variadic routes, i.e. a route with an argument that contains URL pathnames that contain slashes:
 
 ```javascript
-m.route(document.body, "/edit/pictures/image.jpg", {
-	"/edit/:file...": Edit,
+m.route(document.body, '/edit/pictures/image.jpg', {
+    '/edit/:file...': Edit,
 })
 ```
 
@@ -397,11 +394,11 @@ For isomorphic / universal JavaScript app, an url param and a variadic route com
 In a case of 404 Not Found error, the server send back the custom page to client. When Mithril.js is loaded, it will redirect client to the default route because it can't know that route.
 
 ```javascript
-m.route(document.body, "/", {
-  "/": homeComponent,
-  // [...]
-  "/:404...": errorPageComponent
-});
+m.route(document.body, '/', {
+    '/': homeComponent,
+    // [...]
+    '/:404...': errorPageComponent,
+})
 ```
 
 #### History state
@@ -412,34 +409,36 @@ For example, you could create a form like this:
 
 ```javascript
 var state = {
-	term: "",
-	search: function() {
-		// save the state for this route
-		// this is equivalent to `history.replaceState({term: state.term}, null, location.href)`
-		m.route.set(m.route.get(), null, {replace: true, state: {term: state.term}})
+    term: '',
+    search: function () {
+        // save the state for this route
+        // this is equivalent to `history.replaceState({term: state.term}, null, location.href)`
+        m.route.set(m.route.get(), null, {replace: true, state: {term: state.term}})
 
-		// navigate away
-		location.href = "https://google.com/?q=" + state.term
-	}
+        // navigate away
+        location.href = 'https://google.com/?q=' + state.term
+    },
 }
 
 var Form = {
-	oninit: function(vnode) {
-		state.term = vnode.attrs.term || "" // populated from the `history.state` property if the user presses the back button
-	},
-	view: function() {
-		return m("form", [
-			m("input[placeholder='Search']", {
-				oninput: function (e) { state.term = e.target.value },
-				value: state.term
-			}),
-			m("button", {onclick: state.search}, "Search")
-		])
-	}
+    oninit: function (vnode) {
+        state.term = vnode.attrs.term || '' // populated from the `history.state` property if the user presses the back button
+    },
+    view: function () {
+        return m('form', [
+            m("input[placeholder='Search']", {
+                oninput: function (e) {
+                    state.term = e.target.value
+                },
+                value: state.term,
+            }),
+            m('button', {onclick: state.search}, 'Search'),
+        ])
+    },
 }
 
-m.route(document.body, "/", {
-	"/": Form,
+m.route(document.body, '/', {
+    '/': Form,
 })
 ```
 
@@ -453,18 +452,18 @@ The router prefix is a fragment of the URL that dictates the underlying [strateg
 
 ```javascript
 // set to pathname strategy
-m.route.prefix = ""
+m.route.prefix = ''
 
 // set to querystring strategy
-m.route.prefix = "?"
+m.route.prefix = '?'
 
 // set to hash without bang
-m.route.prefix = "#"
+m.route.prefix = '#'
 
 // set to pathname strategy on a non-root URL
 // e.g. if the app lives under `https://localhost/my-app` and something else
 // lives under `https://localhost`
-m.route.prefix = "/my-app"
+m.route.prefix = '/my-app'
 ```
 
 ---
@@ -474,15 +473,15 @@ m.route.prefix = "/my-app"
 Instead of mapping a component to a route, you can specify a RouteResolver object. A RouteResolver object contains a `onmatch()` and/or a `render()` method. Both methods are optional but at least one of them must be present.
 
 ```javascript
-m.route(document.body, "/", {
-	"/": {
-		onmatch: function(args, requestedPath, route) {
-			return Home
-		},
-		render: function(vnode) {
-			return vnode // equivalent to m(Home)
-		},
-	}
+m.route(document.body, '/', {
+    '/': {
+        onmatch: function (args, requestedPath, route) {
+            return Home
+        },
+        render: function (vnode) {
+            return vnode // equivalent to m(Home)
+        },
+    },
 })
 ```
 
@@ -496,9 +495,9 @@ It's often desirable to wrap all or most of the routed components in a reusable 
 
 ```javascript
 var Layout = {
-	view: function(vnode) {
-		return m(".layout", vnode.children)
-	}
+    view: function (vnode) {
+        return m('.layout', vnode.children)
+    },
 }
 ```
 
@@ -508,17 +507,17 @@ One way to wrap the layout is to define an anonymous component in the routes map
 
 ```javascript
 // example 1
-m.route(document.body, "/", {
-	"/": {
-		view: function() {
-			return m(Layout, m(Home))
-		},
-	},
-	"/form": {
-		view: function() {
-			return m(Layout, m(Form))
-		},
-	}
+m.route(document.body, '/', {
+    '/': {
+        view: function () {
+            return m(Layout, m(Home))
+        },
+    },
+    '/form': {
+        view: function () {
+            return m(Layout, m(Form))
+        },
+    },
 })
 ```
 
@@ -528,17 +527,17 @@ If you would prefer to have the Layout component be diffed and maintained intact
 
 ```javascript
 // example 2
-m.route(document.body, "/", {
-	"/": {
-		render: function() {
-			return m(Layout, m(Home))
-		},
-	},
-	"/form": {
-		render: function() {
-			return m(Layout, m(Form))
-		},
-	}
+m.route(document.body, '/', {
+    '/': {
+        render: function () {
+            return m(Layout, m(Home))
+        },
+    },
+    '/form': {
+        render: function () {
+            return m(Layout, m(Form))
+        },
+    },
 })
 ```
 
@@ -549,27 +548,27 @@ To clarify the difference between the two examples, example 1 is equivalent to t
 ```javascript
 // functionally equivalent to example 1
 var Anon1 = {
-	view: function() {
-		return m(Layout, m(Home))
-	},
+    view: function () {
+        return m(Layout, m(Home))
+    },
 }
 var Anon2 = {
-	view: function() {
-		return m(Layout, m(Form))
-	},
+    view: function () {
+        return m(Layout, m(Form))
+    },
 }
 
-m.route(document.body, "/", {
-	"/": {
-		render: function() {
-			return m(Anon1)
-		}
-	},
-	"/form": {
-		render: function() {
-			return m(Anon2)
-		}
-	},
+m.route(document.body, '/', {
+    '/': {
+        render: function () {
+            return m(Anon1)
+        },
+    },
+    '/form': {
+        render: function () {
+            return m(Anon2)
+        },
+    },
 })
 ```
 
@@ -591,26 +590,30 @@ The example below shows how to implement a login wall that prevents users from s
 var isLoggedIn = false
 
 var Login = {
-	view: function() {
-		return m("form", [
-			m("button[type=button]", {
-				onclick: function() {
-					isLoggedIn = true
-					m.route.set("/secret")
-				}
-			}, "Login")
-		])
-	}
+    view: function () {
+        return m('form', [
+            m(
+                'button[type=button]',
+                {
+                    onclick: function () {
+                        isLoggedIn = true
+                        m.route.set('/secret')
+                    },
+                },
+                'Login',
+            ),
+        ])
+    },
 }
 
-m.route(document.body, "/secret", {
-	"/secret": {
-		onmatch: function() {
-			if (!isLoggedIn) m.route.set("/login")
-			else return Home
-		}
-	},
-	"/login": Login
+m.route(document.body, '/secret', {
+    '/secret': {
+        onmatch: function () {
+            if (!isLoggedIn) m.route.set('/login')
+            else return Home
+        },
+    },
+    '/login': Login,
 })
 ```
 
@@ -620,50 +623,54 @@ For the sake of simplicity, in the example above, the user's logged in status is
 
 ```javascript
 var Auth = {
-	username: "",
-	password: "",
+    username: '',
+    password: '',
 
-	setUsername: function(value) {
-		Auth.username = value
-	},
-	setPassword: function(value) {
-		Auth.password = value
-	},
-	login: function() {
-		m.request({
-			url: "/api/v1/auth",
-			params: {username: Auth.username, password: Auth.password}
-		}).then(function(data) {
-			localStorage.setItem("auth-token", data.token)
-			m.route.set("/secret")
-		})
-	}
+    setUsername: function (value) {
+        Auth.username = value
+    },
+    setPassword: function (value) {
+        Auth.password = value
+    },
+    login: function () {
+        m.request({
+            url: '/api/v1/auth',
+            params: {username: Auth.username, password: Auth.password},
+        }).then(function (data) {
+            localStorage.setItem('auth-token', data.token)
+            m.route.set('/secret')
+        })
+    },
 }
 
 var Login = {
-	view: function() {
-		return m("form", [
-			m("input[type=text]", {
-				oninput: function (e) { Auth.setUsername(e.target.value) },
-				value: Auth.username
-			}),
-			m("input[type=password]", {
-				oninput: function (e) { Auth.setPassword(e.target.value) },
-				value: Auth.password
-			}),
-			m("button[type=button]", {onclick: Auth.login}, "Login")
-		])
-	}
+    view: function () {
+        return m('form', [
+            m('input[type=text]', {
+                oninput: function (e) {
+                    Auth.setUsername(e.target.value)
+                },
+                value: Auth.username,
+            }),
+            m('input[type=password]', {
+                oninput: function (e) {
+                    Auth.setPassword(e.target.value)
+                },
+                value: Auth.password,
+            }),
+            m('button[type=button]', {onclick: Auth.login}, 'Login'),
+        ])
+    },
 }
 
-m.route(document.body, "/secret", {
-	"/secret": {
-		onmatch: function() {
-			if (!localStorage.getItem("auth-token")) m.route.set("/login")
-			else return Home
-		}
-	},
-	"/login": Login
+m.route(document.body, '/secret', {
+    '/secret': {
+        onmatch: function () {
+            if (!localStorage.getItem('auth-token')) m.route.set('/login')
+            else return Home
+        },
+    },
+    '/login': Login,
 })
 ```
 
@@ -675,23 +682,25 @@ Typically, a component can load data upon initialization. Loading data this way 
 
 ```javascript
 var state = {
-	users: [],
-	loadUsers: function() {
-		return m.request("/api/v1/users").then(function(users) {
-			state.users = users
-		})
-	}
+    users: [],
+    loadUsers: function () {
+        return m.request('/api/v1/users').then(function (users) {
+            state.users = users
+        })
+    },
 }
 
-m.route(document.body, "/user/list", {
-	"/user/list": {
-		oninit: state.loadUsers,
-		view: function() {
-			return state.users.length > 0 ? state.users.map(function(user) {
-				return m("div", user.id)
-			}) : "loading"
-		}
-	},
+m.route(document.body, '/user/list', {
+    '/user/list': {
+        oninit: state.loadUsers,
+        view: function () {
+            return state.users.length > 0
+                ? state.users.map(function (user) {
+                      return m('div', user.id)
+                  })
+                : 'loading'
+        },
+    },
 })
 ```
 
@@ -701,23 +710,23 @@ RouteResolvers can be used as a mechanism to preload data before rendering a com
 
 ```javascript
 var state = {
-	users: [],
-	loadUsers: function() {
-		return m.request("/api/v1/users").then(function(users) {
-			state.users = users
-		})
-	}
+    users: [],
+    loadUsers: function () {
+        return m.request('/api/v1/users').then(function (users) {
+            state.users = users
+        })
+    },
 }
 
-m.route(document.body, "/user/list", {
-	"/user/list": {
-		onmatch: state.loadUsers,
-		render: function() {
-			return state.users.map(function(user) {
-				return m("div", user.id)
-			})
-		}
-	},
+m.route(document.body, '/user/list', {
+    '/user/list': {
+        onmatch: state.loadUsers,
+        render: function () {
+            return state.users.map(function (user) {
+                return m('div', user.id)
+            })
+        },
+    },
 })
 ```
 
@@ -734,33 +743,30 @@ At its most basic form, one could do the following:
 ```javascript
 // Home.js
 module.export = {
-	view: function() {
-		return [
-			m(Menu),
-			m("h1", "Home")
-		]
-	}
+    view: function () {
+        return [m(Menu), m('h1', 'Home')]
+    },
 }
 ```
 
 ```javascript
 // index.js
 function load(file) {
-	return m.request({
-		method: "GET",
-		url: file,
-		extract: function(xhr) {
-			return new Function("var module = {};" + xhr.responseText + ";return module.exports;")
-		}
-	})
+    return m.request({
+        method: 'GET',
+        url: file,
+        extract: function (xhr) {
+            return new Function('var module = {};' + xhr.responseText + ';return module.exports;')
+        },
+    })
 }
 
-m.route(document.body, "/", {
-	"/": {
-		onmatch: function() {
-			return load("Home.js")
-		},
-	},
+m.route(document.body, '/', {
+    '/': {
+        onmatch: function () {
+            return load('Home.js')
+        },
+    },
 })
 ```
 
@@ -769,12 +775,12 @@ However, realistically, in order for that to work on a production scale, it woul
 Fortunately, there are a number of tools that facilitate the task of bundling modules for lazy loading. Here's an example using [native dynamic `import(...)`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import), supported by many bundlers:
 
 ```javascript
-m.route(document.body, "/", {
-	"/": {
-		onmatch: function() {
-			return import('./Home.js')
-		},
-	},
+m.route(document.body, '/', {
+    '/': {
+        onmatch: function () {
+            return import('./Home.js')
+        },
+    },
 })
 ```
 
@@ -785,14 +791,14 @@ m.route(document.body, "/", {
 In certain advanced routing cases, you may want to constrain a value further than just the path itself, only matching something like a numeric ID. You can do that pretty easily by returning `m.route.SKIP` from a route.
 
 ```javascript
-m.route(document.body, "/", {
-	"/view/:id": {
-		onmatch: function(args) {
-			if (!/^\d+$/.test(args.id)) return m.route.SKIP
-			return ItemView
-		},
-	},
-	"/view/:name": UserView,
+m.route(document.body, '/', {
+    '/view/:id': {
+        onmatch: function (args) {
+            if (!/^\d+$/.test(args.id)) return m.route.SKIP
+            return ItemView
+        },
+    },
+    '/view/:name': UserView,
 })
 ```
 
@@ -803,15 +809,15 @@ m.route(document.body, "/", {
 In rare circumstances, you may want to hide certain routes for some users, but not all. For instance, a user might be prohibited from viewing a particular user, and instead of showing a permission error, you'd rather pretend it doesn't exist and redirect to a 404 view instead. In this case, you can use `m.route.SKIP` to just pretend the route doesn't exist.
 
 ```javascript
-m.route(document.body, "/", {
-	"/user/:id": {
-		onmatch: function(args) {
-			return Model.checkViewable(args.id).then(function(viewable) {
-				return viewable ? UserView : m.route.SKIP
-			})
-		},
-	},
-	"/:404...": PageNotFound,
+m.route(document.body, '/', {
+    '/user/:id': {
+        onmatch: function (args) {
+            return Model.checkViewable(args.id).then(function (viewable) {
+                return viewable ? UserView : m.route.SKIP
+            })
+        },
+    },
+    '/:404...': PageNotFound,
 })
 ```
 
@@ -822,13 +828,12 @@ m.route(document.body, "/", {
 RouteResolver `onmatch` can prevent route resolution by returning a promise that never resolves. This can be used to detect attempted redundant route resolutions and cancel them:
 
 ```javascript
-m.route(document.body, "/", {
-	"/": {
-		onmatch: function(args, requestedPath) {
-			if (m.route.get() === requestedPath)
-				return new Promise(function() {})
-		},
-	},
+m.route(document.body, '/', {
+    '/': {
+        onmatch: function (args, requestedPath) {
+            if (m.route.get() === requestedPath) return new Promise(function () {})
+        },
+    },
 })
 ```
 
@@ -838,31 +843,31 @@ m.route(document.body, "/", {
 
 In certain situations, you may find yourself needing to interoperate with another framework like React. Here's how you do it:
 
-- Define all your routes using `m.route` as normal, but make sure you only use it *once*. Multiple route points are not supported.
+- Define all your routes using `m.route` as normal, but make sure you only use it _once_. Multiple route points are not supported.
 - When you need to remove routing subscriptions, use `m.mount(root, null)`, using the same root you used `m.route(root, ...)` on. `m.route` uses `m.mount` internally to hook everything up, so it's not magic.
 
 Here's an example with React:
 
 ```jsx
 class Child extends React.Component {
-	constructor(props) {
-		super(props)
-		this.root = React.createRef()
-	}
+    constructor(props) {
+        super(props)
+        this.root = React.createRef()
+    }
 
-	componentDidMount() {
-		m.route(this.root, "/", {
-			// ...
-		})
-	}
+    componentDidMount() {
+        m.route(this.root, '/', {
+            // ...
+        })
+    }
 
-	componentDidUnmount() {
-		m.mount(this.root, null)
-	}
+    componentDidUnmount() {
+        m.mount(this.root, null)
+    }
 
-	render() {
-		return <div ref={this.root} />
-	}
+    render() {
+        return <div ref={this.root} />
+    }
 }
 ```
 
@@ -873,15 +878,15 @@ And here's the rough equivalent with Vue:
 ```
 
 ```javascript
-Vue.component("my-child", {
-	template: `<div ref="root"></div>`,
-	mounted: function() {
-		m.route(this.$refs.root, "/", {
-			// ...
-		})
-	},
-	destroyed: function() {
-		m.mount(this.$refs.root, null)
-	},
+Vue.component('my-child', {
+    template: `<div ref="root"></div>`,
+    mounted: function () {
+        m.route(this.$refs.root, '/', {
+            // ...
+        })
+    },
+    destroyed: function () {
+        m.mount(this.$refs.root, null)
+    },
 })
 ```

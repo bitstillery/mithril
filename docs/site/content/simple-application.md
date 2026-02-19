@@ -6,27 +6,27 @@ A complete walkthrough tutorial for building your first simple application in Mi
 
 Let's develop a simple application that shows off how to do most of the major things you would need to deal with while using Mithril.
 
-*An interactive example of the end result can be seen [here](https://flems.io/#0=N4IgzgpgNhDGAuEAmIBcICqkBOBZA9ktAHQBWYIANCAGYCWMFqA2qAHYCGAthGpjgSJQyFarHxtEkvgDcO2AARYIigLwLgAHTYLdCqHTDxUC5gF1K2vfvwckAGUPGFNAK5sEdCQAoAlBqtrPWwIeFdsHS5iEIBHVwgjby0dINSeeAALQhNNEABxAFEAFVzLFNTrcKgckAz4eAAHMFQAehauOkzsBgBaEKiaKABPYiIZFo4GuhbXHDBSwIq9AHdOjIBhEKJJOg4oZoV4bHiypYBfX0Wg4kyINm83D3gve5CwVyh4f2Sl62VsYgGIwKdRvD7wUYceAcK7WC5XM5lK6wcIhSQmYCIq5QWxIEyPTw+OhIb6w4KhcKRaIQOIJeBJMlpUJZPEKXKFEpURlBKo1OqNZptDpdXr9YiDEZjCZTGZzFq5BQAagUxNOv10q0ym2Qd2eewORxO3Ph5Wut3uBOePjBn1JpqW-2IKOwaPgIIUNvgxsupqxbCuYA4Mgg+PchPudqWITCEQUUVi8USP3VceZ2TZIAAChhOWr1byM-ymq12mtulA+hABsNRhBxpNprMVGB5SAlUocE7UbriKrudYAEaEIYmR3O11536ajZbXW7fYmQ0QSdwn1w7RnbRUcDQOBWthMEAAVlQABYj5QAIwAdjPF4ATAAOO8gRHsbi8dD-RxGETb8SSLqsjyB2Kg-m66jJroEh0GwnSjp2OJ2OBk4yHQEDLKGTwvH4AT2uSMaRN4uTEE22A9ECXpUKBAKUcQXCTA8Yb7t4ZGRim0aUnG3jxvgriIMQjhsAA1pQGgZCENA1C0yCdK27Zkb2SBibAUAcGABwAORkRRTg9J0VaaYiCiKfQ2BGAAch+7YKgqyqKWplkfmuFQXC5uibmwnmvpQ748Hw-wAGL4NgUTkP+EhSPAwGKEFIVcO6UEKDBcHOJaOEyGwhAQN8jpIUg3iZdlxBQkcYBKb4frWGhGFYeGuFJdYnGxlwxG0PFpR4SmQQSO8A7CnVLE5V13UVBAxANCEwaSAAIhANAcOCfj9imjqBsGy34eqnndcZzArborW5GpA4kCd0CdbkgV0OZbqcDwuS+CuFRHSAsENPxvZsB98DMPAQwNBAqiIAAHvAZjMA0amwBAWRQEQ2CqNdt0KPdEBmJ1jUpilP2DThw3AGO3aSOKN1OTw7rjdC2AAOahMQchQPEVWjbojPxAhKhdi6PZmeTEAHQoFzPWkbXncI4uXSA9jqXdH6PSLQSve9n0q79UMcDDcMI6oMvAmjGPUVj6o4-xeM+ATRM8yTjnwFZFPqFT8h0xC7MQCzrNu5zALjj2tv2wLW1BMLguvQO-HwBIxDh-UEh-QDQN9cKhtibkADKQYCyAT3cmY7lCxuW5viAaN8DLQx8RC4ViJFQHoHIijl5XiVXDVmEuMxGVZUQ7GpM1RG5AxsGAhwFf8Z1+1B9Yr2cDI9F3K4E+C9PPHRJX41CaJI2s7oEnzSYmktJRmnL3oxm5P88zZ4LeeKyvuSQOGnVFUQToZAwSBovn1h5wihdsD5Pyn4QCTAaH+GugFpDoF4vxcak15p0BBu6TSABiE+bAYGIG8EgfAKIeAkyHEgIYqcQBHycJjK4uQyFGFyBibkaIEbmwjNvX4-duJN34mJVq34nC+G-mfBEk4qGyXgC0VAxJaEsKancRhHdsI+BfgTQWbDWocPgFw7wcVQpiUUSVeo5k+HGkERuH0gCS4fj4E6DSEVIHRXQIQ4hCgvo-TEtHCOEgRo0EiiYLKoU9gKEvAANgaEggAaioJAHBOAAG5AgMVprBEw94AAMITYleW0NoEeY83TJniTTRJATUlIMWpHdJh0OAgx6KsJAmQTCXmSY0tJ-8sn4NcCNfJhTkkKG6QAZmKekzyWSdKURGpRHoRghgwB8RICA5S4zOy6T0opzSUgNDsEgWCNMTDJMGZktgpEcC6SMPpRACVkwDk1sJGm2A+JsFZCghaTyODzKHNgWRl4QkKDAPgAwSAFAoKQEC+Z4gcTYBMCg3pUL5mbLABrEcCgBw4lgMJeZnS2A7OWZ8kG8z1lAq2SYR8XzLxHlWboUG8AehEHENgKELwZlsDmS0g5Iy9IGS4KgLIwZFDJgpVSuAIU6USBMO4BGBhGV7P9Ac8WI1YXwpMEi3BqK4mLIxcs7ppKcXMucfxEabyPlfJ+X8gFQKkCvJCgjPodg6CzBML0sliL8BVLAHQAAXgSx17yVA9CHFqlIcq1IIsVSitFqrMXdIaQ6vFmy2DbJWUgklDqal1KKckgApJKrJMdI46AuVcm5dyHkQGLear14KAmGt+cSE1wLAj6u9bSzZtqFD2r9boUFIUIVQt6TCww8qVRsHFRAH1yLlUpHReG+NuKNkesjQmzV8y+XUsFfuBlTKMlSrcbHDFXKVB6vzbc0VEKICPhPSeyVr4LAgHFcJJgrBzH+WgWWBg24qh8CLIKGY31rlOnwFwUsIooAAAF7zEGScQU8AGJIMHosPauIB-qAz4GAWA3QGjRTOGYM4QA)*
+_An interactive example of the end result can be seen [here](https://flems.io/#0=N4IgzgpgNhDGAuEAmIBcICqkBOBZA9ktAHQBWYIANCAGYCWMFqA2qAHYCGAthGpjgSJQyFarHxtEkvgDcO2AARYIigLwLgAHTYLdCqHTDxUC5gF1K2vfvwckAGUPGFNAK5sEdCQAoAlBqtrPWwIeFdsHS5iEIBHVwgjby0dINSeeAALQhNNEABxAFEAFVzLFNTrcKgckAz4eAAHMFQAehauOkzsBgBaEKiaKABPYiIZFo4GuhbXHDBSwIq9AHdOjIBhEKJJOg4oZoV4bHiypYBfX0Wg4kyINm83D3gve5CwVyh4f2Sl62VsYgGIwKdRvD7wUYceAcK7WC5XM5lK6wcIhSQmYCIq5QWxIEyPTw+OhIb6w4KhcKRaIQOIJeBJMlpUJZPEKXKFEpURlBKo1OqNZptDpdXr9YiDEZjCZTGZzFq5BQAagUxNOv10q0ym2Qd2eewORxO3Ph5Wut3uBOePjBn1JpqW-2IKOwaPgIIUNvgxsupqxbCuYA4Mgg+PchPudqWITCEQUUVi8USP3VceZ2TZIAAChhOWr1byM-ymq12mtulA+hABsNRhBxpNprMVGB5SAlUocE7UbriKrudYAEaEIYmR3O11536ajZbXW7fYmQ0QSdwn1w7RnbRUcDQOBWthMEAAVlQABYj5QAIwAdjPF4ATAAOO8gRHsbi8dD-RxGETb8SSLqsjyB2Kg-m66jJroEh0GwnSjp2OJ2OBk4yHQEDLKGTwvH4AT2uSMaRN4uTEE22A9ECXpUKBAKUcQXCTA8Yb7t4ZGRim0aUnG3jxvgriIMQjhsAA1pQGgZCENA1C0yCdK27Zkb2SBibAUAcGABwAORkRRTg9J0VaaYiCiKfQ2BGAAch+7YKgqyqKWplkfmuFQXC5uibmwnmvpQ748Hw-wAGL4NgUTkP+EhSPAwGKEFIVcO6UEKDBcHOJaOEyGwhAQN8jpIUg3iZdlxBQkcYBKb4frWGhGFYeGuFJdYnGxlwxG0PFpR4SmQQSO8A7CnVLE5V13UVBAxANCEwaSAAIhANAcOCfj9imjqBsGy34eqnndcZzArborW5GpA4kCd0CdbkgV0OZbqcDwuS+CuFRHSAsENPxvZsB98DMPAQwNBAqiIAAHvAZjMA0amwBAWRQEQ2CqNdt0KPdEBmJ1jUpilP2DThw3AGO3aSOKN1OTw7rjdC2AAOahMQchQPEVWjbojPxAhKhdi6PZmeTEAHQoFzPWkbXncI4uXSA9jqXdH6PSLQSve9n0q79UMcDDcMI6oMvAmjGPUVj6o4-xeM+ATRM8yTjnwFZFPqFT8h0xC7MQCzrNu5zALjj2tv2wLW1BMLguvQO-HwBIxDh-UEh-QDQN9cKhtibkADKQYCyAT3cmY7lCxuW5viAaN8DLQx8RC4ViJFQHoHIijl5XiVXDVmEuMxGVZUQ7GpM1RG5AxsGAhwFf8Z1+1B9Yr2cDI9F3K4E+C9PPHRJX41CaJI2s7oEnzSYmktJRmnL3oxm5P88zZ4LeeKyvuSQOGnVFUQToZAwSBovn1h5wihdsD5Pyn4QCTAaH+GugFpDoF4vxcak15p0BBu6TSABiE+bAYGIG8EgfAKIeAkyHEgIYqcQBHycJjK4uQyFGFyBibkaIEbmwjNvX4-duJN34mJVq34nC+G-mfBEk4qGyXgC0VAxJaEsKancRhHdsI+BfgTQWbDWocPgFw7wcVQpiUUSVeo5k+HGkERuH0gCS4fj4E6DSEVIHRXQIQ4hCgvo-TEtHCOEgRo0EiiYLKoU9gKEvAANgaEggAaioJAHBOAAG5AgMVprBEw94AAMITYleW0NoEeY83TJniTTRJATUlIMWpHdJh0OAgx6KsJAmQTCXmSY0tJ-8sn4NcCNfJhTkkKG6QAZmKekzyWSdKURGpRHoRghgwB8RICA5S4zOy6T0opzSUgNDsEgWCNMTDJMGZktgpEcC6SMPpRACVkwDk1sJGm2A+JsFZCghaTyODzKHNgWRl4QkKDAPgAwSAFAoKQEC+Z4gcTYBMCg3pUL5mbLABrEcCgBw4lgMJeZnS2A7OWZ8kG8z1lAq2SYR8XzLxHlWboUG8AehEHENgKELwZlsDmS0g5Iy9IGS4KgLIwZFDJgpVSuAIU6USBMO4BGBhGV7P9Ac8WI1YXwpMEi3BqK4mLIxcs7ppKcXMucfxEabyPlfJ+X8gFQKkCvJCgjPodg6CzBML0sliL8BVLAHQAAXgSx17yVA9CHFqlIcq1IIsVSitFqrMXdIaQ6vFmy2DbJWUgklDqal1KKckgApJKrJMdI46AuVcm5dyHkQGLear14KAmGt+cSE1wLAj6u9bSzZtqFD2r9boUFIUIVQt6TCww8qVRsHFRAH1yLlUpHReG+NuKNkesjQmzV8y+XUsFfuBlTKMlSrcbHDFXKVB6vzbc0VEKICPhPSeyVr4LAgHFcJJgrBzH+WgWWBg24qh8CLIKGY31rlOnwFwUsIooAAAF7zEGScQU8AGJIMHosPauIB-qAz4GAWA3QGjRTOGYM4QA)_
 
 First let's create an entry point for the application. Create a file `index.html`:
 
 ```html
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>My Application</title>
-	</head>
-	<body>
-		<script src="bin/app.js"></script>
-	</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>My Application</title>
+    </head>
+    <body>
+        <script src="bin/app.js"></script>
+    </body>
 </html>
 ```
 
 The `<!doctype html>` line indicates this is an HTML 5 document. The first `charset` meta tag indicates the encoding of the document and the `viewport` meta tag dictates how mobile browsers should scale the page. The `title` tag contains the text to be displayed on the browser tab for this application, and the `script` tag indicates what is the path to the JavaScript file that controls the application.
 
-We could create the entire application in a single JavaScript file, but doing so would make it difficult to navigate the codebase later on. Instead, let's split the code into *modules*, and assemble these modules into a *bundle* `bin/app.js`.
+We could create the entire application in a single JavaScript file, but doing so would make it difficult to navigate the codebase later on. Instead, let's split the code into _modules_, and assemble these modules into a _bundle_ `bin/app.js`.
 
 There are many ways to setup a bundler tool, but most are distributed via npm. In fact, most modern JavaScript libraries and tools are distributed that way, including Mithril. To download npm, [install Node.js](https://nodejs.org/en/); npm is installed automatically with it. Once you have Node.js and npm installed, open the command line and run this command:
 
@@ -45,7 +45,7 @@ Let's start by creating a module to store our state. Let's create a file called 
 ```javascript
 // src/models/User.js
 var User = {
-	list: []
+    list: [],
 }
 
 module.exports = User
@@ -55,10 +55,10 @@ Now let's add code to load some data from a server. To communicate with a server
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: []
+    list: [],
 }
 
 module.exports = User
@@ -68,13 +68,13 @@ Next we create a function that will trigger an XHR call. Let's call it `loadList
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: [],
-	loadList: function() {
-		// TODO: make XHR call
-	}
+    list: [],
+    loadList: function () {
+        // TODO: make XHR call
+    },
 }
 
 module.exports = User
@@ -82,24 +82,25 @@ module.exports = User
 
 Then we can add an `m.request` call to make an XHR request. For this tutorial, we'll make XHR calls to the REM (DEAD LINK, FIXME: https //rem-rest-api.herokuapp.com/) API, a mock REST API designed for rapid prototyping. This API returns a list of users from the `GET https://mithril-rem.fly.dev/api/users` endpoint. Let's use `m.request` to make an XHR request and populate our data with the response of that endpoint.
 
-*Note: third-party cookies may have to be enabled for the REM endpoint to work.*
+_Note: third-party cookies may have to be enabled for the REM endpoint to work._
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: [],
-	loadList: function() {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users",
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.list = result.data
-		})
-	},
+    list: [],
+    loadList: function () {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users',
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.list = result.data
+            })
+    },
 }
 
 module.exports = User
@@ -121,21 +122,21 @@ Create a file called `src/views/UserList.js`. First, let's include Mithril.js an
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 ```
 
 Next, let's create a Mithril.js component. A component is simply an object that has a `view` method:
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	view: function() {
-		// TODO add code here
-	}
+    view: function () {
+        // TODO add code here
+    },
 }
 ```
 
@@ -151,13 +152,13 @@ Let's start off with hyperscript and create a list of items. Hyperscript is the 
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	view: function() {
-		return m(".user-list")
-	}
+    view: function () {
+        return m('.user-list')
+    },
 }
 ```
 
@@ -167,15 +168,18 @@ Now, let's reference the list of users from the model we created earlier (`User.
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	view: function() {
-		return m(".user-list", User.list.map(function(user) {
-			return m(".user-list-item", user.firstName + " " + user.lastName)
-		}))
-	}
+    view: function () {
+        return m(
+            '.user-list',
+            User.list.map(function (user) {
+                return m('.user-list-item', user.firstName + ' ' + user.lastName)
+            }),
+        )
+    },
 }
 ```
 
@@ -185,16 +189,19 @@ The problem, of course, is that we never called the `User.loadList` function. Th
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	oninit: User.loadList,
-	view: function() {
-		return m(".user-list", User.list.map(function(user) {
-			return m(".user-list-item", user.firstName + " " + user.lastName)
-		}))
-	}
+    oninit: User.loadList,
+    view: function () {
+        return m(
+            '.user-list',
+            User.list.map(function (user) {
+                return m('.user-list-item', user.firstName + ' ' + user.lastName)
+            }),
+        )
+    },
 }
 ```
 
@@ -208,9 +215,9 @@ Let's render the view from the entry point file `src/index.js` we created earlie
 
 ```javascript
 // src/index.js
-var m = require("mithril")
+var m = require('mithril')
 
-var UserList = require("./views/UserList")
+var UserList = require('./views/UserList')
 
 m.mount(document.body, UserList)
 ```
@@ -224,15 +231,15 @@ Right now, the list looks rather plain because we have not defined any styles. S
 ```html
 <!doctype html>
 <html>
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<title>My Application</title>
-		<link href="styles.css" rel="stylesheet" />
-	</head>
-	<body>
-		<script src="bin/app.js"></script>
-	</body>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>My Application</title>
+        <link href="styles.css" rel="stylesheet" />
+    </head>
+    <body>
+        <script src="bin/app.js"></script>
+    </body>
 </html>
 ```
 
@@ -240,23 +247,23 @@ Now we can style the `UserList` component:
 
 ```css
 .user-list {
-	list-style: none;
-	margin: 0 0 10px;
-	padding: 0;
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
 }
 
 .user-list-item {
-	background: #fafafa;
-	border: 1px solid #ddd;
-	color: #333;
-	display: block;
-	margin: 0 0 1px;
-	padding: 8px 15px;
-	text-decoration: none;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    color: #333;
+    display: block;
+    margin: 0 0 1px;
+    padding: 8px 15px;
+    text-decoration: none;
 }
 
 .user-list-item:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 ```
 
@@ -272,12 +279,12 @@ We can add routing by changing the `m.mount` call to a `m.route` call:
 
 ```javascript
 // src/index.js
-var m = require("mithril")
+var m = require('mithril')
 
-var UserList = require("./views/UserList")
+var UserList = require('./views/UserList')
 
-m.route(document.body, "/list", {
-	"/list": UserList
+m.route(document.body, '/list', {
+    '/list': UserList,
 })
 ```
 
@@ -295,9 +302,9 @@ Let's add another route to our application for editing users. First let's create
 // src/views/UserForm.js
 
 module.exports = {
-	view: function() {
-		// TODO implement view
-	}
+    view: function () {
+        // TODO implement view
+    },
 }
 ```
 
@@ -305,13 +312,13 @@ Then we can `require` this new module from `src/index.js`
 
 ```javascript
 // src/index.js
-var m = require("mithril")
+var m = require('mithril')
 
-var UserList = require("./views/UserList")
-var UserForm = require("./views/UserForm")
+var UserList = require('./views/UserList')
+var UserForm = require('./views/UserForm')
 
-m.route(document.body, "/list", {
-	"/list": UserList
+m.route(document.body, '/list', {
+    '/list': UserList,
 })
 ```
 
@@ -319,14 +326,14 @@ And finally, we can create a route that references it:
 
 ```javascript
 // src/index.js
-var m = require("mithril")
+var m = require('mithril')
 
-var UserList = require("./views/UserList")
-var UserForm = require("./views/UserForm")
+var UserList = require('./views/UserList')
+var UserForm = require('./views/UserForm')
 
-m.route(document.body, "/list", {
-	"/list": UserList,
-	"/edit/:id": UserForm,
+m.route(document.body, '/list', {
+    '/list': UserList,
+    '/edit/:id': UserForm,
 })
 ```
 
@@ -336,18 +343,18 @@ Let's implement the `UserForm` component so that it can respond to those route p
 
 ```javascript
 // src/views/UserForm.js
-var m = require("mithril")
+var m = require('mithril')
 
 module.exports = {
-	view: function() {
-		return m("form", [
-			m("label.label", "First name"),
-			m("input.input[type=text][placeholder=First name]"),
-			m("label.label", "Last name"),
-			m("input.input[placeholder=Last name]"),
-			m("button.button[type=submit]", "Save"),
-		])
-	}
+    view: function () {
+        return m('form', [
+            m('label.label', 'First name'),
+            m('input.input[type=text][placeholder=First name]'),
+            m('label.label', 'Last name'),
+            m('input.input[placeholder=Last name]'),
+            m('button.button[type=submit]', 'Save'),
+        ])
+    },
 }
 ```
 
@@ -355,59 +362,61 @@ And let's add some more styles to `styles.css`:
 
 ```css
 /* styles.css */
-body, .input, .button {
-	font: normal 16px Verdana;
-	margin: 0;
+body,
+.input,
+.button {
+    font: normal 16px Verdana;
+    margin: 0;
 }
 
 .user-list {
-	list-style: none;
-	margin: 0 0 10px;
-	padding: 0;
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
 }
 
 .user-list-item {
-	background: #fafafa;
-	border: 1px solid #ddd;
-	color: #333;
-	display: block;
-	margin: 0 0 1px;
-	padding: 8px 15px;
-	text-decoration: none;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    color: #333;
+    display: block;
+    margin: 0 0 1px;
+    padding: 8px 15px;
+    text-decoration: none;
 }
 
 .user-list-item:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 .label {
-	display: block;
-	margin: 0 0 5px;
+    display: block;
+    margin: 0 0 5px;
 }
 
 .input {
-	border: 1px solid #ddd;
-	border-radius: 3px;
-	box-sizing: border-box;
-	display: block;
-	margin: 0 0 10px;
-	padding: 10px 15px;
-	width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+    display: block;
+    margin: 0 0 10px;
+    padding: 10px 15px;
+    width: 100%;
 }
 
 .button {
-	background: #eee;
-	border: 1px solid #ddd;
-	border-radius: 3px;
-	color: #333;
-	display: inline-block;
-	margin: 0 0 10px;
-	padding: 10px 15px;
-	text-decoration: none;
+    background: #eee;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    color: #333;
+    display: inline-block;
+    margin: 0 0 10px;
+    padding: 10px 15px;
+    text-decoration: none;
 }
 
 .button:hover {
-	background: #e8e8e8;
+    background: #e8e8e8;
 }
 ```
 
@@ -415,20 +424,21 @@ Right now, this component does nothing to respond to user events. Let's add some
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: [],
-	loadList: function() {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users",
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.list = result.data
-		})
-	},
+    list: [],
+    loadList: function () {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users',
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.list = result.data
+            })
+    },
 }
 
 module.exports = User
@@ -438,32 +448,34 @@ Let's add code to allow us to load a single user
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: [],
-	loadList: function() {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users",
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.list = result.data
-		})
-	},
+    list: [],
+    loadList: function () {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users',
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.list = result.data
+            })
+    },
 
-	current: {},
-	load: function(id) {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users/" + id,
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.current = result
-		})
-	}
+    current: {},
+    load: function (id) {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users/' + id,
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.current = result
+            })
+    },
 }
 
 module.exports = User
@@ -473,20 +485,22 @@ Notice we added a `User.current` property, and a `User.load(id)` method which po
 
 ```javascript
 // src/views/UserForm.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	oninit: function(vnode) {User.load(vnode.attrs.id)},
-	view: function() {
-		return m("form", [
-			m("label.label", "First name"),
-			m("input.input[type=text][placeholder=First name]", {value: User.current.firstName}),
-			m("label.label", "Last name"),
-			m("input.input[placeholder=Last name]", {value: User.current.lastName}),
-			m("button.button[type=submit]", "Save"),
-		])
-	}
+    oninit: function (vnode) {
+        User.load(vnode.attrs.id)
+    },
+    view: function () {
+        return m('form', [
+            m('label.label', 'First name'),
+            m('input.input[type=text][placeholder=First name]', {value: User.current.firstName}),
+            m('label.label', 'Last name'),
+            m('input.input[placeholder=Last name]', {value: User.current.lastName}),
+            m('button.button[type=submit]', 'Save'),
+        ])
+    },
 }
 ```
 
@@ -496,19 +510,26 @@ Now, let's modify the `UserList` view so that we can navigate from there to a `U
 
 ```javascript
 // src/views/UserList.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	oninit: User.loadList,
-	view: function() {
-		return m(".user-list", User.list.map(function(user) {
-			return m(m.route.Link, {
-				class: "user-list-item",
-				href: "/edit/" + user.id,
-			}, user.firstName + " " + user.lastName)
-		}))
-	}
+    oninit: User.loadList,
+    view: function () {
+        return m(
+            '.user-list',
+            User.list.map(function (user) {
+                return m(
+                    m.route.Link,
+                    {
+                        class: 'user-list-item',
+                        href: '/edit/' + user.id,
+                    },
+                    user.firstName + ' ' + user.lastName,
+                )
+            }),
+        )
+    },
 }
 ```
 
@@ -522,31 +543,41 @@ The form itself still doesn't save when you press "Save". Let's make this form w
 
 ```javascript
 // src/views/UserForm.js
-var m = require("mithril")
-var User = require("../models/User")
+var m = require('mithril')
+var User = require('../models/User')
 
 module.exports = {
-	oninit: function(vnode) {User.load(vnode.attrs.id)},
-	view: function() {
-		return m("form", {
-				onsubmit: function(e) {
-					e.preventDefault()
-					User.save()
-				}
-			}, [
-			m("label.label", "First name"),
-			m("input.input[type=text][placeholder=First name]", {
-				oninput: function (e) {User.current.firstName = e.target.value},
-				value: User.current.firstName
-			}),
-			m("label.label", "Last name"),
-			m("input.input[placeholder=Last name]", {
-				oninput: function (e) {User.current.lastName = e.target.value},
-				value: User.current.lastName
-			}),
-			m("button.button[type=submit]", "Save"),
-		])
-	}
+    oninit: function (vnode) {
+        User.load(vnode.attrs.id)
+    },
+    view: function () {
+        return m(
+            'form',
+            {
+                onsubmit: function (e) {
+                    e.preventDefault()
+                    User.save()
+                },
+            },
+            [
+                m('label.label', 'First name'),
+                m('input.input[type=text][placeholder=First name]', {
+                    oninput: function (e) {
+                        User.current.firstName = e.target.value
+                    },
+                    value: User.current.firstName,
+                }),
+                m('label.label', 'Last name'),
+                m('input.input[placeholder=Last name]', {
+                    oninput: function (e) {
+                        User.current.lastName = e.target.value
+                    },
+                    value: User.current.lastName,
+                }),
+                m('button.button[type=submit]', 'Save'),
+            ],
+        )
+    },
 }
 ```
 
@@ -556,41 +587,43 @@ In addition, we declared that a `User.save` method should be called when the "Sa
 
 ```javascript
 // src/models/User.js
-var m = require("mithril")
+var m = require('mithril')
 
 var User = {
-	list: [],
-	loadList: function() {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users",
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.list = result.data
-		})
-	},
+    list: [],
+    loadList: function () {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users',
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.list = result.data
+            })
+    },
 
-	current: {},
-	load: function(id) {
-		return m.request({
-			method: "GET",
-			url: "https://mithril-rem.fly.dev/api/users/" + id,
-			withCredentials: true,
-		})
-		.then(function(result) {
-			User.current = result
-		})
-	},
+    current: {},
+    load: function (id) {
+        return m
+            .request({
+                method: 'GET',
+                url: 'https://mithril-rem.fly.dev/api/users/' + id,
+                withCredentials: true,
+            })
+            .then(function (result) {
+                User.current = result
+            })
+    },
 
-	save: function() {
-		return m.request({
-			method: "PUT",
-			url: "https://mithril-rem.fly.dev/api/users/" + User.current.id,
-			body: User.current,
-			withCredentials: true,
-		})
-	}
+    save: function () {
+        return m.request({
+            method: 'PUT',
+            url: 'https://mithril-rem.fly.dev/api/users/' + User.current.id,
+            body: User.current,
+            withCredentials: true,
+        })
+    },
 }
 
 module.exports = User
@@ -608,17 +641,12 @@ Let's create a file `src/views/Layout.js`:
 
 ```javascript
 // src/views/Layout.js
-var m = require("mithril")
+var m = require('mithril')
 
 module.exports = {
-	view: function(vnode) {
-		return m("main.layout", [
-			m("nav.menu", [
-				m(m.route.Link, {href: "/list"}, "Users")
-			]),
-			m("section", vnode.children)
-		])
-	}
+    view: function (vnode) {
+        return m('main.layout', [m('nav.menu', [m(m.route.Link, {href: '/list'}, 'Users')]), m('section', vnode.children)])
+    },
 }
 ```
 
@@ -630,68 +658,70 @@ And let's update the styles once more:
 
 ```css
 /* styles.css */
-body, .input, .button {
-	font: normal 16px Verdana;
-	margin: 0;
+body,
+.input,
+.button {
+    font: normal 16px Verdana;
+    margin: 0;
 }
 
 .layout {
-	margin: 10px auto;
-	max-width: 1000px;
+    margin: 10px auto;
+    max-width: 1000px;
 }
 
 .menu {
-	margin: 0 0 30px;
+    margin: 0 0 30px;
 }
 
 .user-list {
-	list-style: none;
-	margin: 0 0 10px;
-	padding: 0;
+    list-style: none;
+    margin: 0 0 10px;
+    padding: 0;
 }
 
 .user-list-item {
-	background: #fafafa;
-	border: 1px solid #ddd;
-	color: #333;
-	display: block;
-	margin: 0 0 1px;
-	padding: 8px 15px;
-	text-decoration: none;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    color: #333;
+    display: block;
+    margin: 0 0 1px;
+    padding: 8px 15px;
+    text-decoration: none;
 }
 
 .user-list-item:hover {
-	text-decoration: underline;
+    text-decoration: underline;
 }
 
 .label {
-	display: block;
-	margin: 0 0 5px;
+    display: block;
+    margin: 0 0 5px;
 }
 
 .input {
-	border: 1px solid #ddd;
-	border-radius: 3px;
-	box-sizing: border-box;
-	display: block;
-	margin: 0 0 10px;
-	padding: 10px 15px;
-	width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    box-sizing: border-box;
+    display: block;
+    margin: 0 0 10px;
+    padding: 10px 15px;
+    width: 100%;
 }
 
 .button {
-	background: #eee;
-	border: 1px solid #ddd;
-	border-radius: 3px;
-	color: #333;
-	display: inline-block;
-	margin: 0 0 10px;
-	padding: 10px 15px;
-	text-decoration: none;
+    background: #eee;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    color: #333;
+    display: inline-block;
+    margin: 0 0 10px;
+    padding: 10px 15px;
+    text-decoration: none;
 }
 
 .button:hover {
-	background: #e8e8e8;
+    background: #e8e8e8;
 }
 ```
 
@@ -699,23 +729,23 @@ Let's change the router in `src/index.js` to add our layout into the mix:
 
 ```javascript
 // src/index.js
-var m = require("mithril")
+var m = require('mithril')
 
-var UserList = require("./views/UserList")
-var UserForm = require("./views/UserForm")
-var Layout = require("./views/Layout")
+var UserList = require('./views/UserList')
+var UserForm = require('./views/UserForm')
+var Layout = require('./views/Layout')
 
-m.route(document.body, "/list", {
-	"/list": {
-		render: function() {
-			return m(Layout, m(UserList))
-		}
-	},
-	"/edit/:id": {
-		render: function(vnode) {
-			return m(Layout, m(UserForm, vnode.attrs))
-		}
-	},
+m.route(document.body, '/list', {
+    '/list': {
+        render: function () {
+            return m(Layout, m(UserList))
+        },
+    },
+    '/edit/:id': {
+        render: function (vnode) {
+            return m(Layout, m(UserForm, vnode.attrs))
+        },
+    },
 })
 ```
 

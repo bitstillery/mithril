@@ -13,24 +13,24 @@ ADR-0004 introduced SSR state serialization for signal stores, and ADR-0005 intr
 **Current State:**
 
 1. **Inconsistent deserialization mechanisms**:
-   - Store's `load()` method uses a custom `updateState()` function
-   - SSR uses `deserializeStore()` from `render/ssrState.ts`
-   - Two different code paths for the same operation
+    - Store's `load()` method uses a custom `updateState()` function
+    - SSR uses `deserializeStore()` from `render/ssrState.ts`
+    - Two different code paths for the same operation
 
 2. **Computed properties not automatically restored**:
-   - Regular `state()` instances: Computed properties (function properties) are lost after SSR deserialization
-   - Store instances: Require manual `setupComputedProperties()` callback to restore computed properties
-   - Computed properties must be manually re-setup after every deserialization
+    - Regular `state()` instances: Computed properties (function properties) are lost after SSR deserialization
+    - Store instances: Require manual `setupComputedProperties()` callback to restore computed properties
+    - Computed properties must be manually re-setup after every deserialization
 
 3. **State registry doesn't preserve initial state**:
-   - Registry only stores the state instance, not the original initial state
-   - No way to restore computed properties after deserialization
-   - Computed properties must be manually tracked and restored
+    - Registry only stores the state instance, not the original initial state
+    - No way to restore computed properties after deserialization
+    - Computed properties must be manually tracked and restored
 
 4. **Store and regular state instances use different mechanisms**:
-   - Store has its own computed property restoration logic
-   - Regular state instances have no automatic restoration
-   - Inconsistent developer experience
+    - Store has its own computed property restoration logic
+    - Regular state instances have no automatic restoration
+    - Inconsistent developer experience
 
 ### Expected Behavior
 

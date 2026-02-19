@@ -1,6 +1,7 @@
 <!--meta-description
 Approaches you can use to integrate ES6 into your Mithril.js-based apps, including technology and usability suggestions
 -->
+
 # ES6+ on legacy browsers
 
 - [Setup](#setup)
@@ -49,14 +50,14 @@ Now, create a `.babelrc` file and set up with `@babel/preset-env`.
 
 ```json
 {
-	"presets": ["@babel/preset-env"],
-	"sourceMaps": true
+    "presets": ["@babel/preset-env"],
+    "sourceMaps": true
 }
 ```
 
-And finally, if you have *very* specific requirements on what you need to support, you may want to [configure Browserslist](https://github.com/browserslist/browserslist) so Babel (and other libraries) know what features to target.
+And finally, if you have _very_ specific requirements on what you need to support, you may want to [configure Browserslist](https://github.com/browserslist/browserslist) so Babel (and other libraries) know what features to target.
 
-*By default, if you don't configure anything, Browserslist uses a fairly sensible query: `> 0.5%, last 2 versions, Firefox ESR, not dead`. Unless you have very specific circumstances that require you to change this, like if you need to support IE 8 with a lot of polyfills, don't bother with this step.*
+_By default, if you don't configure anything, Browserslist uses a fairly sensible query: `> 0.5%, last 2 versions, Firefox ESR, not dead`. Unless you have very specific circumstances that require you to change this, like if you need to support IE 8 with a lot of polyfills, don't bother with this step._
 
 Whenever you want to compile your project, run this command, and everything will be compiled.
 
@@ -68,9 +69,9 @@ You may find it convenient to use an npm script so you're not having to remember
 
 ```json
 {
-	"scripts": {
-		"build": "babel src --out-dir dist"
-	}
+    "scripts": {
+        "build": "babel src --out-dir dist"
+    }
 }
 ```
 
@@ -97,14 +98,14 @@ Now, create a `.babelrc` file and set up with `@babel/preset-env`.
 
 ```json
 {
-	"presets": ["@babel/preset-env"],
-	"sourceMaps": true
+    "presets": ["@babel/preset-env"],
+    "sourceMaps": true
 }
 ```
 
-Next, if you have *very* specific requirements on what you need to support, you may want to [configure Browserslist](https://github.com/browserslist/browserslist) so Babel (and other libraries) know what features to target.
+Next, if you have _very_ specific requirements on what you need to support, you may want to [configure Browserslist](https://github.com/browserslist/browserslist) so Babel (and other libraries) know what features to target.
 
-*By default, if you don't configure anything, Browserslist uses a fairly sensible query: `> 0.5%, last 2 versions, Firefox ESR, not dead`. Unless you have very specific circumstances that require you to change this, like if you need to support IE 8 with a lot of polyfills, don't bother with this step.*
+_By default, if you don't configure anything, Browserslist uses a fairly sensible query: `> 0.5%, last 2 versions, Firefox ESR, not dead`. Unless you have very specific circumstances that require you to change this, like if you need to support IE 8 with a lot of polyfills, don't bother with this step._
 
 And finally, set up Webpack by creating a file called `webpack.config.js`.
 
@@ -112,20 +113,22 @@ And finally, set up Webpack by creating a file called `webpack.config.js`.
 const path = require('path')
 
 module.exports = {
-	entry: path.resolve(__dirname, 'src/index.js'),
-	output: {
-		path: path.resolve(__dirname, 'dist'),
-		filename: 'app.js',
-	},
-	module: {
-		rules: [{
-			test: /\.js$/,
-			exclude: /\/node_modules\//,
-			use: {
-				loader: 'babel-loader'
-			}
-		}]
-	}
+    entry: path.resolve(__dirname, 'src/index.js'),
+    output: {
+        path: path.resolve(__dirname, 'dist'),
+        filename: 'app.js',
+    },
+    module: {
+        rules: [
+            {
+                test: /\.js$/,
+                exclude: /\/node_modules\//,
+                use: {
+                    loader: 'babel-loader',
+                },
+            },
+        ],
+    },
 }
 ```
 
@@ -141,9 +144,9 @@ You may find it convenient to use an npm script so you're not having to remember
 
 ```json
 {
-	"scripts": {
-		"start": "webpack -d --watch"
-	}
+    "scripts": {
+        "start": "webpack -d --watch"
+    }
 }
 ```
 
@@ -163,10 +166,10 @@ You may want to also add this to your npm scripts, so you can build it quickly a
 
 ```json
 {
-	"scripts": {
-		"start": "webpack -d --watch",
-		"build": "webpack -p"
-	}
+    "scripts": {
+        "start": "webpack -d --watch",
+        "build": "webpack -p"
+    }
 }
 ```
 
@@ -180,10 +183,10 @@ And of course, you can do this in automatic production build scripts, too. Here'
 
 ```json
 {
-	"scripts": {
-		"start": "webpack -d --watch",
-		"build": "webpack -p",
-		"heroku-postbuild": "webpack -p"
-	}
+    "scripts": {
+        "start": "webpack -d --watch",
+        "build": "webpack -p",
+        "heroku-postbuild": "webpack -p"
+    }
 }
 ```

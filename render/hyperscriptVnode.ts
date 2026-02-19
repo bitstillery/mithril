@@ -10,12 +10,12 @@ import Vnode from './vnode'
 // only in the parameter lists of hyperscript and fragment, while an array is
 // passed to hyperscriptVnode.
 export default function hyperscriptVnode(attrs: any, children: any[]): any {
-	if (attrs == null || typeof attrs === 'object' && attrs.tag == null && !Array.isArray(attrs)) {
-		if (children.length === 1 && Array.isArray(children[0])) children = children[0]
-	} else {
-		children = children.length === 0 && Array.isArray(attrs) ? attrs : [attrs, ...children]
-		attrs = undefined
-	}
+    if (attrs == null || (typeof attrs === 'object' && attrs.tag == null && !Array.isArray(attrs))) {
+        if (children.length === 1 && Array.isArray(children[0])) children = children[0]
+    } else {
+        children = children.length === 0 && Array.isArray(attrs) ? attrs : [attrs, ...children]
+        attrs = undefined
+    }
 
-	return Vnode('', attrs && attrs.key, attrs, children, null, null)
+    return Vnode('', attrs && attrs.key, attrs, children, null, null)
 }

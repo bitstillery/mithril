@@ -12,11 +12,11 @@ if (!app) throw new Error('Missing #app element')
 // Restore SSR state before mounting so hydration matches
 const ssrStateScript = document.getElementById('__SSR_STATE__')
 if (ssrStateScript?.textContent) {
-	try {
-		deserializeAllStates(JSON.parse(ssrStateScript.textContent))
-	} catch(err) {
-		console.warn('Failed to deserialize SSR state:', err)
-	}
+    try {
+        deserializeAllStates(JSON.parse(ssrStateScript.textContent))
+    } catch (err) {
+        console.warn('Failed to deserialize SSR state:', err)
+    }
 }
 
 const routes = getRoutes()
@@ -24,11 +24,11 @@ const routes = getRoutes()
 m.route.prefix = ''
 
 try {
-	m.route(app, '/', routes)
-} catch(err) {
-	app.innerHTML = `<div style="padding:20px;font-family:sans-serif">
+    m.route(app, '/', routes)
+} catch (err) {
+    app.innerHTML = `<div style="padding:20px;font-family:sans-serif">
 		<h1>Error loading docs</h1>
 		<pre style="background:#f5f5f5;padding:10px;overflow:auto">${String(err instanceof Error ? err.message : err)}</pre>
 	</div>`
-	throw err
+    throw err
 }

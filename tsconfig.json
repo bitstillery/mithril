@@ -1,37 +1,25 @@
 {
-  "compilerOptions": {
-    "target": "ES2020",
-    "module": "ES2020",
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
-    "moduleResolution": "bundler",
-    "allowJs": true,
-    "checkJs": false,
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "declaration": true,
-    "declarationMap": true,
-    "outDir": "./dist",
-    "rootDir": ".",
-    "types": ["bun-types"],
-    "skipDefaultLibCheck": true
-  },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "*.min.js",
-    "mithril.js",
-    "examples"
-  ]
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "ES2020",
+        "lib": ["ES2020", "DOM"],
+        "moduleResolution": "bundler",
+        "allowJs": true,
+        "checkJs": false,
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "noEmit": true,
+        "declaration": true,
+        "declarationMap": true,
+        "outDir": "./dist",
+        "rootDir": ".",
+        "types": ["bun-types"],
+        "skipDefaultLibCheck": true
+    },
+    "include": ["**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules", "dist", "*.min.js", "mithril.js", "examples"]
 }

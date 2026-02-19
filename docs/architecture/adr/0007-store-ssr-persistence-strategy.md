@@ -13,22 +13,22 @@ ADR-0005 introduced the `Store` class with three types of state: persistent (loc
 **Current State:**
 
 1. **Persistent state (localStorage)**:
-   - Client-side only storage
-   - Persists across browser sessions
-   - Not available on server (no localStorage in Bun)
-   - Makes sense for user preferences, settings, etc.
+    - Client-side only storage
+    - Persists across browser sessions
+    - Not available on server (no localStorage in Bun)
+    - Makes sense for user preferences, settings, etc.
 
 2. **Session state (sessionStorage)**:
-   - Client-side only storage
-   - Persists for browser tab session
-   - Not available on server
-   - Name is confusing - suggests server session, but it's browser sessionStorage
+    - Client-side only storage
+    - Persists for browser tab session
+    - Not available on server
+    - Name is confusing - suggests server session, but it's browser sessionStorage
 
 3. **SSR state**:
-   - Server-rendered state serialized and sent to client
-   - Used for hydration to match server-rendered content
-   - Overwrites client-side state during deserialization
-   - Different purpose than persistent storage
+    - Server-rendered state serialized and sent to client
+    - Used for hydration to match server-rendered content
+    - Overwrites client-side state during deserialization
+    - Different purpose than persistent storage
 
 **Conflicts:**
 
@@ -64,6 +64,7 @@ We will clarify the relationship between Store persistence and SSR, and add supp
 The Store uses a **unified state model** where all storage types are mingled together in a single `store.state` object. Templates act as **blueprints** that determine which properties belong to which storage type.
 
 **Key Design:**
+
 - **Single unified state**: All state lives in `store.state` (persistent, volatile, tab, session properties coexist)
 - **Templates as blueprints**: Templates define which properties belong to which storage type
 - **Blueprint function**: `blueprint(state, template)` extracts only properties defined in template
@@ -73,39 +74,40 @@ The Store uses a **unified state model** where all storage types are mingled tog
 **State Types:**
 
 1. **Persistent** (localStorage):
-   - Client-side only
-   - Survives browser restarts
-   - Use for: User preferences, settings, cached data
-   - Not available on server
-   - **Template defines**: Which properties in `store.state` are persistent
+    - Client-side only
+    - Survives browser restarts
+    - Use for: User preferences, settings, cached data
+    - Not available on server
+    - **Template defines**: Which properties in `store.state` are persistent
 
 2. **Volatile**:
-   - Not persisted anywhere
-   - Resets on page reload
-   - Use for: UI state, temporary data
-   - Available on both server and client
-   - **Template defines**: Which properties in `store.state` are volatile
+    - Not persisted anywhere
+    - Resets on page reload
+    - Use for: UI state, temporary data
+    - Available on both server and client
+    - **Template defines**: Which properties in `store.state` are volatile
 
 3. **Tab** (renamed from "session", sessionStorage):
-   - Client-side only
-   - Survives page reloads but clears when tab closes
-   - Use for: Tab-specific state, temporary user data
-   - Not available on server
-   - **Name change**: Rename to avoid confusion with server sessions
-   - **Template defines**: Which properties in `store.state` are tab-specific
+    - Client-side only
+    - Survives page reloads but clears when tab closes
+    - Use for: Tab-specific state, temporary user data
+    - Not available on server
+    - **Name change**: Rename to avoid confusion with server sessions
+    - **Template defines**: Which properties in `store.state` are tab-specific
 
 4. **Session** (new, optional):
-   - Server-side session storage (requires backend)
-   - Tied to server session ID/cookie
-   - Tied to user via session-to-user mapping (in-memory session store)
-   - Hydrated via SSR state serialization (comes from server, not localStorage)
-   - Not stored in localStorage - only exists via SSR state
-   - Use for: Server-rendered data, session-bound content, user-specific state
-   - Setting state: Uses same setters as other state variants (e.g., `store.state.user.field = value` where `user` is defined in session template)
-   - Requires: Backend session storage mechanism (HTTP endpoint + in-memory session store)
-   - **Template defines**: Which properties in `store.state` are server session-bound (no need for explicit `session` key - templates define any properties at any nesting level)
+    - Server-side session storage (requires backend)
+    - Tied to server session ID/cookie
+    - Tied to user via session-to-user mapping (in-memory session store)
+    - Hydrated via SSR state serialization (comes from server, not localStorage)
+    - Not stored in localStorage - only exists via SSR state
+    - Use for: Server-rendered data, session-bound content, user-specific state
+    - Setting state: Uses same setters as other state variants (e.g., `store.state.user.field = value` where `user` is defined in session template)
+    - Requires: Backend session storage mechanism (HTTP endpoint + in-memory session store)
+    - **Template defines**: Which properties in `store.state` are server session-bound (no need for explicit `session` key - templates define any properties at any nesting level)
 
 **Example:**
+
 ```typescript
 // Unified state - all properties coexist
 store.state = {
@@ -140,18 +142,18 @@ sessionStorage.setItem('store', JSON.stringify(blueprint(store.state, tab)))    
 **State Precedence:**
 
 1. **Initial load (with SSR)**:
-   - Load persistent state from localStorage (preserved, not overwritten by SSR)
-   - Load tab state from sessionStorage (preserved, not overwritten by SSR)
-   - Hydrate volatile state with SSR state (overwritten for hydration correctness)
-   - Hydrate session state with SSR state (comes from server, not localStorage)
-   - Restore computed properties
+    - Load persistent state from localStorage (preserved, not overwritten by SSR)
+    - Load tab state from sessionStorage (preserved, not overwritten by SSR)
+    - Hydrate volatile state with SSR state (overwritten for hydration correctness)
+    - Hydrate session state with SSR state (comes from server, not localStorage)
+    - Restore computed properties
 
 2. **Subsequent navigation (client-side)**:
-   - Persistent state persists (localStorage, not overwritten by SSR)
-   - Tab state persists (sessionStorage, not overwritten by SSR)
-   - Volatile state reset and hydrated with SSR state (overwritten)
-   - Session state hydrated with SSR state (from server)
-   - User preferences (persistent/tab) preserved across SSR hydration
+    - Persistent state persists (localStorage, not overwritten by SSR)
+    - Tab state persists (sessionStorage, not overwritten by SSR)
+    - Volatile state reset and hydrated with SSR state (overwritten)
+    - Session state hydrated with SSR state (from server)
+    - User preferences (persistent/tab) preserved across SSR hydration
 
 ### Key Design Decisions
 
@@ -323,20 +325,21 @@ sessionStorage.setItem('store', JSON.stringify(blueprint(store.state, tab)))    
 **Backend Files** (example SSR application):
 
 1. Create in-memory session store (`examples/ssr/sessionStore.ts`)
-   - Map session IDs to user IDs and session data
-   - Provide create/get/update/delete methods
-   - Handle session expiration
+    - Map session IDs to user IDs and session data
+    - Provide create/get/update/delete methods
+    - Handle session expiration
 
 2. Add HTTP endpoints (`examples/ssr/server.ts`)
-   - GET `/api/session/:sessionId` - Retrieve session data
-   - POST `/api/session/:sessionId` - Save session data
-   - Session middleware to extract/create session IDs from requests
-   - JWT middleware to decode tokens and identify users
-   - Session-to-user mapping via JWT user ID claim (e.g., `sub`, `userId`, or custom claim)
+    - GET `/api/session/:sessionId` - Retrieve session data
+    - POST `/api/session/:sessionId` - Save session data
+    - Session middleware to extract/create session IDs from requests
+    - JWT middleware to decode tokens and identify users
+    - Session-to-user mapping via JWT user ID claim (e.g., `sub`, `userId`, or custom claim)
 
 **Backend Integration** (application-specific):
 
 Server session state is handled via HTTP endpoints and in-memory session store. The backend provides:
+
 - In-memory session store mapping session IDs to user IDs and session data
 - GET endpoint to retrieve server session state for a session ID
 - POST/PUT endpoint to save server session state for a session ID
@@ -348,48 +351,51 @@ Server session state is handled via HTTP endpoints and in-memory session store. 
 The typical flow is: **SSR → Client → Login → Session**
 
 1. **Initial SSR (unauthenticated)**:
-   - No JWT token in request
-   - Server creates anonymous session (no userId)
-   - Session state is empty or contains default values
-   - SSR renders with unauthenticated state
+    - No JWT token in request
+    - Server creates anonymous session (no userId)
+    - Session state is empty or contains default values
+    - SSR renders with unauthenticated state
 
 2. **Client-side login**:
-   - User enters credentials → gets pre-auth token
-   - User enters OTP → gets JWT token
-   - JWT token contains user ID (e.g., `sub`, `userId`, or custom claim) and `exp` (expiration)
-   - JWT token stored in localStorage (client-side)
-   - Identity state set with user ID, expiration, token, and user data
-   - User data fetched and populated in identity state
+    - User enters credentials → gets pre-auth token
+    - User enters OTP → gets JWT token
+    - JWT token contains user ID (e.g., `sub`, `userId`, or custom claim) and `exp` (expiration)
+    - JWT token stored in localStorage (client-side)
+    - Identity state set with user ID, expiration, token, and user data
+    - User data fetched and populated in identity state
 
 3. **Post-login SSR**:
-   - JWT token sent to server (via cookie or Authorization header)
-   - Server decodes JWT to extract user ID (e.g., `sub`, `userId`, or custom claim)
-   - Server creates/retrieves session tied to user ID
-   - Server fetches user data and includes in session state
-   - Session state includes identity: `{user: {...}, id: "...", ...}`
-   - SSR renders with authenticated state
+    - JWT token sent to server (via cookie or Authorization header)
+    - Server decodes JWT to extract user ID (e.g., `sub`, `userId`, or custom claim)
+    - Server creates/retrieves session tied to user ID
+    - Server fetches user data and includes in session state
+    - Session state includes identity: `{user: {...}, id: "...", ...}`
+    - SSR renders with authenticated state
 
 4. **Subsequent SSR requests**:
-   - JWT token validated on server
-   - Session retrieved/updated for that user
-   - Session state includes current user identity
-   - SSR renders with proper user context
+    - JWT token validated on server
+    - Session retrieved/updated for that user
+    - Session state includes current user identity
+    - SSR renders with proper user context
 
 ```typescript
 // Backend: In-memory session store
 interface SessionStore {
-  sessions: Map<string, {
-    userId: string | null // null for anonymous sessions
-    data: Record<string, any>
-    createdAt: Date
-    expiresAt: Date
-  }>
-  
-  createSession(userId: string | null): string // Returns sessionId
-  getSession(sessionId: string): { userId: string | null, data: Record<string, any> } | null
-  getSessionByUserId(userId: string): string | null // Returns sessionId
-  updateSession(sessionId: string, data: Record<string, any>): void
-  deleteSession(sessionId: string): void
+    sessions: Map<
+        string,
+        {
+            userId: string | null // null for anonymous sessions
+            data: Record<string, any>
+            createdAt: Date
+            expiresAt: Date
+        }
+    >
+
+    createSession(userId: string | null): string // Returns sessionId
+    getSession(sessionId: string): {userId: string | null; data: Record<string, any>} | null
+    getSessionByUserId(userId: string): string | null // Returns sessionId
+    updateSession(sessionId: string, data: Record<string, any>): void
+    deleteSession(sessionId: string): void
 }
 
 // On server-side (during SSR):
@@ -399,15 +405,15 @@ let userId: string | null = null
 let sessionId: string | null = null
 
 if (jwtToken) {
-  // Decode JWT to get user ID (e.g., from 'sub', 'userId', or custom claim)
-  const claims = jwtDecode(jwtToken)
-  userId = claims.sub || claims.userId || claims.user_id // Use standard or custom claim
-  
-  // Find existing session for this user, or create new one
-  sessionId = sessionStore.getSessionByUserId(userId) || sessionStore.createSession(userId)
+    // Decode JWT to get user ID (e.g., from 'sub', 'userId', or custom claim)
+    const claims = jwtDecode(jwtToken)
+    userId = claims.sub || claims.userId || claims.user_id // Use standard or custom claim
+
+    // Find existing session for this user, or create new one
+    sessionId = sessionStore.getSessionByUserId(userId) || sessionStore.createSession(userId)
 } else {
-  // No JWT token - anonymous session
-  sessionId = getSessionIdFromRequest(req) || sessionStore.createSession(null)
+    // No JWT token - anonymous session
+    sessionId = getSessionIdFromRequest(req) || sessionStore.createSession(null)
 }
 
 const session = sessionStore.getSession(sessionId)
@@ -415,16 +421,17 @@ let serverData = session?.data || {}
 
 // 2. If authenticated, include identity in session state
 if (userId) {
-  const userData = await getUserData(userId) // Fetch user data from backend
-  serverData = {
-    ...serverData,
-    user: {  // Properties defined in session template (e.g., 'user')
-      id: userId,
-      name: userData.name,
-      preferences: userData.preferences,
-      // Note: token not included in session (security)
+    const userData = await getUserData(userId) // Fetch user data from backend
+    serverData = {
+        ...serverData,
+        user: {
+            // Properties defined in session template (e.g., 'user')
+            id: userId,
+            name: userData.name,
+            preferences: userData.preferences,
+            // Note: token not included in session (security)
+        },
     }
-  }
 }
 
 // 3. Pass serverData as session template to Store.load()
@@ -443,15 +450,16 @@ store.state.user.preferences.theme = 'dark'
 // Use blueprint to extract only properties defined in session template
 const sessionData = store.blueprint(store.state, sessionTemplate)
 await fetch(`/api/session/${sessionId}`, {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${localStorage.getItem('token')}` // Include JWT
-  },
-  body: JSON.stringify(sessionData)  // Only properties defined in session template
+    method: 'POST',
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`, // Include JWT
+    },
+    body: JSON.stringify(sessionData), // Only properties defined in session template
 })
 ```
 
 **Key Authentication Points:**
+
 - JWT token contains user ID (e.g., `sub`, `userId`, or custom claim) - decoded on server
 - Server creates/retrieves session tied to user ID
 - Identity included in session template (user data, id) - properties defined in session template
@@ -460,6 +468,7 @@ await fetch(`/api/session/${sessionId}`, {
 - Identity checks work via properties defined in session template (e.g., `store.state.user.id`)
 
 **Key Points:**
+
 - **Unified state model**: All state types (persistent, volatile, tab, session) coexist in `store.state`
 - **Templates as blueprints**: Templates define which properties belong to which storage type
 - **Blueprint function**: Used to extract properties for each storage type during save/load
@@ -471,10 +480,11 @@ await fetch(`/api/session/${sessionId}`, {
 - In-memory storage for simplicity (can be upgraded to Redis/database later)
 
 **Blueprint Function Usage:**
+
 ```typescript
 // Save: Extract only properties defined in template
-const persistentData = blueprint(store.state, persistentTemplate)  // Only persistent properties
-const tabData = blueprint(store.state, tabTemplate)              // Only tab properties
+const persistentData = blueprint(store.state, persistentTemplate) // Only persistent properties
+const tabData = blueprint(store.state, tabTemplate) // Only tab properties
 const sessionData = blueprint(store.state, sessionTemplate) // Only session properties
 
 // Load: Merge properties from different storage types into unified state

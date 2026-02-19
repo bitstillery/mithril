@@ -1,6 +1,7 @@
 <!--meta-description
 Documentation on how to work with paths in Mithril.js
 -->
+
 # Path Handling
 
 - [Path types](#path-types)
@@ -9,7 +10,7 @@ Documentation on how to work with paths in Mithril.js
 - [Path normalization](#path-normalization)
 - [Path escaping](#path-escaping)
 
------
+---
 
 [`m.route`](route.md) and [`m.request`](request.md) each have a concept called a path. This is used to generate the URL you route to or fetch from.
 
@@ -31,30 +32,24 @@ Path parameters are themselves pretty simple. They come in two forms:
 
 You're probably wondering what that `params` object is supposed to be. It's pretty simple: it's the `params` in either [`m.route.set(path, params)`](route.md#mrouteset), [`m.request({url, params})`](request.md#signature).
 
-When receiving routes via [`m.route(root, defaultRoute, routes)`](route.md#signature), you can use these parameters to *extract* values from routes. They work basically the same way as generating the paths, just in the opposite direction.
+When receiving routes via [`m.route(root, defaultRoute, routes)`](route.md#signature), you can use these parameters to _extract_ values from routes. They work basically the same way as generating the paths, just in the opposite direction.
 
 ```javascript
 // Edit a single item
-m.route(document.body, "/edit/1", {
-	"/edit/:id": {
-    	view: function() {
-    		return [
-    			m(Menu),
-    			m("h1", "Editing user " + m.route.param("id"))
-    		]
-    	}
+m.route(document.body, '/edit/1', {
+    '/edit/:id': {
+        view: function () {
+            return [m(Menu), m('h1', 'Editing user ' + m.route.param('id'))]
+        },
     },
 })
 
 // Edit an item identified by path
-m.route(document.body, "/edit/pictures/image.jpg", {
-	"/edit/:file...": {
-    	view: function() {
-    		return [
-    			m(Menu),
-    			m("h1", "Editing file " + m.route.param("file"))
-    		]
-    	}
+m.route(document.body, '/edit/pictures/image.jpg', {
+    '/edit/:file...': {
+        view: function () {
+            return [m(Menu), m('h1', 'Editing file ' + m.route.param('file'))]
+        },
     },
 })
 ```
@@ -71,11 +66,11 @@ Path parameters that are interpolated into path names are omitted from the query
 
 ```javascript
 m.request({
-    url: "https://example.com/api/user/:userID/connections",
+    url: 'https://example.com/api/user/:userID/connections',
     params: {
         userID: 1,
-        sort: "name-asc"
-    }
+        sort: 'name-asc',
+    },
 })
 ```
 
@@ -83,10 +78,10 @@ You can also specify parameters explicitly in the query string itself, such as i
 
 ```javascript
 m.request({
-    url: "https://example.com/api/user/:userID/connections?sort=name-asc",
+    url: 'https://example.com/api/user/:userID/connections?sort=name-asc',
     params: {
-        userID: 1
-    }
+        userID: 1,
+    },
 })
 ```
 
@@ -94,36 +89,30 @@ And of course, you can mix and match. This fires a request to `GET /api/user/1/c
 
 ```javascript
 m.request({
-    url: "https://example.com/api/user/:userID/connections?sort=name-asc",
+    url: 'https://example.com/api/user/:userID/connections?sort=name-asc',
     params: {
         userID: 1,
-        first: 10
-    }
+        first: 10,
+    },
 })
 ```
 
-This even extends to route matching: you can match against a route *with* explicit query strings. It retains the matched parameter for convenience, so you can still access them via vnode parameters or via [`m.route.param`](route.md#mrouteparam). Note that although this *is* possible, it's not generally recommended, since you should prefer paths for pages. It could sometimes useful if you need to generate a somewhat different view just for a particular file type, but it still logically is a query-like parameter, not a whole separate page.
+This even extends to route matching: you can match against a route _with_ explicit query strings. It retains the matched parameter for convenience, so you can still access them via vnode parameters or via [`m.route.param`](route.md#mrouteparam). Note that although this _is_ possible, it's not generally recommended, since you should prefer paths for pages. It could sometimes useful if you need to generate a somewhat different view just for a particular file type, but it still logically is a query-like parameter, not a whole separate page.
 
 ```javascript
 // Note: this is generally *not* recommended - you should prefer paths for route
 // declarations, not query strings.
-m.route(document.body, "/edit/1", {
-	"/edit?type=image": {
-    	view: function() {
-    		return [
-    			m(Menu),
-    			m("h1", "Editing photo")
-    		]
-    	}
+m.route(document.body, '/edit/1', {
+    '/edit?type=image': {
+        view: function () {
+            return [m(Menu), m('h1', 'Editing photo')]
+        },
     },
-    "/edit": {
-        view: function() {
-    		return [
-    			m(Menu),
-    			m("h1", "Editing " + m.route.param("type"))
-    		]
-    	}
-    }
+    '/edit': {
+        view: function () {
+            return [m(Menu), m('h1', 'Editing ' + m.route.param('type'))]
+        },
+    },
 })
 ```
 

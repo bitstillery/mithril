@@ -6,8 +6,7 @@ Documentation on m.redraw(), which schedules an update of all components mounted
 
 - [Description](#description)
 - [Signature](#signature)
-	- [Static members](#static-members)
-		-[m.redraw.sync()](#mredrawsync)
+    - [Static members](#static-members) -[m.redraw.sync()](#mredrawsync)
 - [How it works](#how-it-works)
 
 ---
@@ -26,9 +25,9 @@ You DO need to call it in `setTimeout`/`setInterval`/`requestAnimationFrame` cal
 
 `m.redraw()`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-**returns** |                      |          | Returns nothing
+| Argument    | Type | Required | Description     |
+| ----------- | ---- | -------- | --------------- |
+| **returns** |      |          | Returns nothing |
 
 #### Static members
 
@@ -36,9 +35,9 @@ Argument    | Type                 | Required | Description
 
 `m.redraw.sync()`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-**returns** |                      |          | Returns nothing
+| Argument    | Type | Required | Description     |
+| ----------- | ---- | -------- | --------------- |
+| **returns** |      |          | Returns nothing |
 
 ---
 

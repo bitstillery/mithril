@@ -24,18 +24,24 @@ Mithril.js does not provide any animation APIs per se, since these other options
 Animating an element via CSS when the element is created couldn't be simpler. Just add an animation to a CSS class normally:
 
 ```css
-.fancy {animation:fade-in 0.5s;}
+.fancy {
+    animation: fade-in 0.5s;
+}
 @keyframes fade-in {
-	from {opacity:0;}
-	to {opacity:1;}
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 ```
 
 ```javascript
 var FancyComponent = {
-	view: function() {
-		return m(".fancy", "Hello world")
-	}
+    view: function () {
+        return m('.fancy', 'Hello world')
+    },
 }
 
 m.mount(document.body, FancyComponent)
@@ -50,10 +56,16 @@ The problem with animating before removing an element is that we must wait until
 Let's create an `exit` animation that fades `opacity` from 1 to 0.
 
 ```css
-.exit {animation:fade-out 0.5s;}
+.exit {
+    animation: fade-out 0.5s;
+}
 @keyframes fade-out {
-	from {opacity:1;}
-	to {opacity:0;}
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
 }
 ```
 
@@ -63,12 +75,20 @@ Now let's create a contrived component that shows and hides the `FancyComponent`
 var on = true
 
 var Toggler = {
-	view: function() {
-		return [
-			m("button", {onclick: function() {on = !on}}, "Toggle"),
-			on ? m(FancyComponent) : null,
-		]
-	}
+    view: function () {
+        return [
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        on = !on
+                    },
+                },
+                'Toggle',
+            ),
+            on ? m(FancyComponent) : null,
+        ]
+    },
 }
 ```
 
@@ -76,15 +96,15 @@ Next, let's modify `FancyComponent` so that it fades out when removed:
 
 ```javascript
 var FancyComponent = {
-	onbeforeremove: function(vnode) {
-		vnode.dom.classList.add("exit")
-		return new Promise(function(resolve) {
-			vnode.dom.addEventListener("animationend", resolve)
-		})
-	},
-	view: function() {
-		return m(".fancy", "Hello world")
-	}
+    onbeforeremove: function (vnode) {
+        vnode.dom.classList.add('exit')
+        return new Promise(function (resolve) {
+            vnode.dom.addEventListener('animationend', resolve)
+        })
+    },
+    view: function () {
+        return m('.fancy', 'Hello world')
+    },
 }
 ```
 

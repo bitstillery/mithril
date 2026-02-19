@@ -17,18 +17,18 @@ initStore({})
 
 // Read and restore SSR state after store is registered
 // This will hydrate the store state and restore computed properties
-	const ssrStateScript = document.getElementById('__SSR_STATE__')
-	if (ssrStateScript && ssrStateScript.textContent) {
-		try {
-			const serializedState = JSON.parse(ssrStateScript.textContent)
-			deserializeAllStates(serializedState)
-			logger.debug('SSR state deserialized successfully', {
-				stateKeys: Object.keys(serializedState),
-			})
-		} catch (error) {
-			logger.error('Error deserializing SSR state', error)
-		}
-	}
+const ssrStateScript = document.getElementById('__SSR_STATE__')
+if (ssrStateScript && ssrStateScript.textContent) {
+    try {
+        const serializedState = JSON.parse(ssrStateScript.textContent)
+        deserializeAllStates(serializedState)
+        logger.debug('SSR state deserialized successfully', {
+            stateKeys: Object.keys(serializedState),
+        })
+    } catch (error) {
+        logger.error('Error deserializing SSR state', error)
+    }
+}
 
 // Client-side routing with isomorphic router
 m.route(document.getElementById('app')!, '/', routes)

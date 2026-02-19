@@ -6,24 +6,24 @@ Documentation on m.stream(), a reactive data structure provided optionally withi
 
 - [Description](#description)
 - [Signature](#signature)
-	- [Static members](#static-members)
-		- [Stream.combine](#streamcombine)
-		- [Stream.merge](#streammerge)
-		- [Stream.scan](#streamscan)
-		- [Stream.scanMerge](#streamscanmerge)
-		- [Stream.lift](#streamlift)
-		- [Stream.SKIP](#streamskip)
-		- [Stream["fantasy-land/of"]](#streamfantasy-landof)
-	- [Instance members](#instance-members)
-		- [stream.map](#streammap)
-		- [stream.end](#streamend)
-		- [stream["fantasy-land/of"]](#streamfantasy-landof-1)
-		- [stream["fantasy-land/map"]](#streamfantasy-landmap)
-		- [stream["fantasy-land/ap"]](#streamfantasy-landap)
+    - [Static members](#static-members)
+        - [Stream.combine](#streamcombine)
+        - [Stream.merge](#streammerge)
+        - [Stream.scan](#streamscan)
+        - [Stream.scanMerge](#streamscanmerge)
+        - [Stream.lift](#streamlift)
+        - [Stream.SKIP](#streamskip)
+        - [Stream["fantasy-land/of"]](#streamfantasy-landof)
+    - [Instance members](#instance-members)
+        - [stream.map](#streammap)
+        - [stream.end](#streamend)
+        - [stream["fantasy-land/of"]](#streamfantasy-landof-1)
+        - [stream["fantasy-land/map"]](#streamfantasy-landmap)
+        - [stream["fantasy-land/ap"]](#streamfantasy-landap)
 - [Basic usage](#basic-usage)
-	- [Streams as variables](#streams-as-variables)
-	- [Bidirectional bindings](#bidirectional-bindings)
-	- [Computed properties](#computed-properties)
+    - [Streams as variables](#streams-as-variables)
+    - [Bidirectional bindings](#bidirectional-bindings)
+    - [Computed properties](#computed-properties)
 - [Chaining streams](#chaining-streams)
 - [Combining streams](#combining-streams)
 - [Stream states](#stream-states)
@@ -44,7 +44,7 @@ Similarly, you can make a stream depend on other streams so that changing the va
 Streams are NOT bundled with Mithril.js' core distribution. To include the Streams module, use:
 
 ```javascript
-var Stream = require("mithril/stream")
+var Stream = require('mithril/stream')
 ```
 
 You can also download the module directly if your environment does not support a bundling toolchain:
@@ -63,10 +63,10 @@ Creates a stream
 
 `stream = Stream(value)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`value`     | `any`                | No       | If this argument is present, the value of the stream is set to it
-**returns** | `Stream`             |          | Returns a stream
+| Argument    | Type     | Required | Description                                                       |
+| ----------- | -------- | -------- | ----------------------------------------------------------------- |
+| `value`     | `any`    | No       | If this argument is present, the value of the stream is set to it |
+| **returns** | `Stream` |          | Returns a stream                                                  |
 
 [How to read signatures](signatures.md)
 
@@ -80,11 +80,11 @@ Creates a computed stream that reactively updates if any of its upstreams are up
 
 `stream = Stream.combine(combiner, streams)`
 
-Argument    | Type                        | Required | Description
------------ | --------------------------- | -------- | ---
-`combiner`  | `(Stream..., Array) -> any` | Yes      | See [combiner](#combiner) argument
-`streams`   | `Array<Stream>`             | Yes      | A list of streams to be combined
-**returns** | `Stream`                    |          | Returns a stream
+| Argument    | Type                        | Required | Description                        |
+| ----------- | --------------------------- | -------- | ---------------------------------- |
+| `combiner`  | `(Stream..., Array) -> any` | Yes      | See [combiner](#combiner) argument |
+| `streams`   | `Array<Stream>`             | Yes      | A list of streams to be combined   |
+| **returns** | `Stream`                    |          | Returns a stream                   |
 
 [How to read signatures](signatures.md)
 
@@ -96,11 +96,11 @@ Specifies how the value of a computed stream is generated. See [combining stream
 
 `any = combiner(streams..., changed)`
 
-Argument     | Type                 | Required | Description
------------- | -------------------- | -------- | ---
-`streams...` | splat of `Streams`   | No       | Splat of zero or more streams that correspond to the streams passed as the second argument to [`stream.combine`](#stream-combine)
-`changed`    | `Array<Stream>`      | Yes      | List of streams that were affected by an update
-**returns**  | `any`                |          | Returns a computed value
+| Argument     | Type               | Required | Description                                                                                                                       |
+| ------------ | ------------------ | -------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `streams...` | splat of `Streams` | No       | Splat of zero or more streams that correspond to the streams passed as the second argument to [`stream.combine`](#stream-combine) |
+| `changed`    | `Array<Stream>`    | Yes      | List of streams that were affected by an update                                                                                   |
+| **returns**  | `any`              |          | Returns a computed value                                                                                                          |
 
 [How to read signatures](signatures.md)
 
@@ -112,10 +112,10 @@ Creates a stream whose value is the array of values from an array of streams
 
 `stream = Stream.merge(streams)`
 
-Argument     | Type                 | Required | Description
------------- | -------------------- | -------- | ---
-`streams`    | `Array<Stream>`      | Yes      | A list of streams
-**returns**  | `Stream`             |          | Returns a stream whose value is an array of input stream values
+| Argument    | Type            | Required | Description                                                     |
+| ----------- | --------------- | -------- | --------------------------------------------------------------- |
+| `streams`   | `Array<Stream>` | Yes      | A list of streams                                               |
+| **returns** | `Stream`        |          | Returns a stream whose value is an array of input stream values |
 
 [How to read signatures](signatures.md)
 
@@ -129,12 +129,12 @@ Note that you can prevent dependent streams from being updated by returning the 
 
 `stream = Stream.scan(fn, accumulator, stream)`
 
-Argument      | Type                             | Required | Description
-------------- | -------------------------------- | -------- | ---
-`fn`          | `(accumulator, value) -> result \| SKIP` | Yes      | A function that takes an accumulator and value parameter and returns a new accumulator value of the same type
-`accumulator` | `any`                            | Yes      | The starting value for the accumulator
-`stream`      | `Stream`                         | Yes      | Stream containing the values
-**returns**   | `Stream`                         |          | Returns a new stream containing the result
+| Argument      | Type                                     | Required | Description                                                                                                   |
+| ------------- | ---------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `fn`          | `(accumulator, value) -> result \| SKIP` | Yes      | A function that takes an accumulator and value parameter and returns a new accumulator value of the same type |
+| `accumulator` | `any`                                    | Yes      | The starting value for the accumulator                                                                        |
+| `stream`      | `Stream`                                 | Yes      | Stream containing the values                                                                                  |
+| **returns**   | `Stream`                                 |          | Returns a new stream containing the result                                                                    |
 
 [How to read signatures](signatures.md)
 
@@ -146,11 +146,11 @@ Takes an array of pairs of streams and scan functions and merges all those strea
 
 `stream = Stream.scanMerge(pairs, accumulator)`
 
-Argument      | Type                                             | Required | Description
-------------- | ------------------------------------------------ | -------- | ---
-`pairs`       | `Array<[Stream, (accumulator, value) -> value]>` | Yes      | An array of tuples of stream and scan functions
-`accumulator` | `any`                                            | Yes      | The starting value for the accumulator
-**returns**   | `Stream`                                         |          | Returns a new stream containing the result
+| Argument      | Type                                             | Required | Description                                     |
+| ------------- | ------------------------------------------------ | -------- | ----------------------------------------------- |
+| `pairs`       | `Array<[Stream, (accumulator, value) -> value]>` | Yes      | An array of tuples of stream and scan functions |
+| `accumulator` | `any`                                            | Yes      | The starting value for the accumulator          |
+| **returns**   | `Stream`                                         |          | Returns a new stream containing the result      |
 
 [How to read signatures](signatures.md)
 
@@ -162,11 +162,11 @@ Creates a computed stream that reactively updates if any of its upstreams are up
 
 `stream = Stream.lift(lifter, stream1, stream2, ...)`
 
-Argument     | Type                        | Required | Description
------------- | --------------------------- | -------- | ---
-`lifter`     | `(any...) -> any` | Yes     | See [lifter](#lifter) argument
-`streams...` | list of `Streams`           | Yes      | Streams to be lifted
-**returns**  | `Stream`                    |          | Returns a stream
+| Argument     | Type              | Required | Description                    |
+| ------------ | ----------------- | -------- | ------------------------------ |
+| `lifter`     | `(any...) -> any` | Yes      | See [lifter](#lifter) argument |
+| `streams...` | list of `Streams` | Yes      | Streams to be lifted           |
+| **returns**  | `Stream`          |          | Returns a stream               |
 
 [How to read signatures](signatures.md)
 
@@ -178,10 +178,10 @@ Specifies how the value of a computed stream is generated. See [combining stream
 
 `any = lifter(streams...)`
 
-Argument     | Type                 | Required | Description
------------- | -------------------- | -------- | ---
-`streams...` | splat of `Streams`   | No       | Splat of zero or more values that correspond to the values of the streams passed to [`stream.lift`](#stream-lift)
-**returns**  | `any`                |          | Returns a computed value
+| Argument     | Type               | Required | Description                                                                                                       |
+| ------------ | ------------------ | -------- | ----------------------------------------------------------------------------------------------------------------- |
+| `streams...` | splat of `Streams` | No       | Splat of zero or more values that correspond to the values of the streams passed to [`stream.lift`](#stream-lift) |
+| **returns**  | `any`              |          | Returns a computed value                                                                                          |
 
 [How to read signatures](signatures.md)
 
@@ -199,10 +199,10 @@ This method is functionally identical to `stream`. It exists to conform to [Fant
 
 `stream = Stream["fantasy-land/of"](value)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`value`     | `any`                | No       | If this argument is present, the value of the stream is set to it
-**returns** | `Stream`             |          | Returns a stream
+| Argument    | Type     | Required | Description                                                       |
+| ----------- | -------- | -------- | ----------------------------------------------------------------- |
+| `value`     | `any`    | No       | If this argument is present, the value of the stream is set to it |
+| **returns** | `Stream` |          | Returns a stream                                                  |
 
 ---
 
@@ -214,10 +214,10 @@ Creates a dependent stream whose value is set to the result of the callback func
 
 `dependentStream = stream().map(callback)`
 
-Argument     | Type                 | Required | Description
------------- | -------------------- | -------- | ---
-`callback`   | `any -> any`         | Yes      | A callback whose return value becomes the value of the stream
-**returns**  | `Stream`             |          | Returns a stream
+| Argument    | Type         | Required | Description                                                   |
+| ----------- | ------------ | -------- | ------------------------------------------------------------- |
+| `callback`  | `any -> any` | Yes      | A callback whose return value becomes the value of the stream |
+| **returns** | `Stream`     |          | Returns a stream                                              |
 
 [How to read signatures](signatures.md)
 
@@ -237,10 +237,10 @@ This method is functionally identical to `stream`. It exists to conform to [Fant
 
 `stream = stream()["fantasy-land/of"](value)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`value`     | `any`                | No       | If this argument is present, the value of the stream is set to it
-**returns** | `Stream`             |          | Returns a stream
+| Argument    | Type     | Required | Description                                                       |
+| ----------- | -------- | -------- | ----------------------------------------------------------------- |
+| `value`     | `any`    | No       | If this argument is present, the value of the stream is set to it |
+| **returns** | `Stream` |          | Returns a stream                                                  |
 
 ---
 
@@ -252,10 +252,10 @@ This method exists to conform to [Fantasy Land's Applicative specification](http
 
 `dependentStream = stream()["fantasy-land/map"](callback)`
 
-Argument     | Type                 | Required | Description
------------- | -------------------- | -------- | ---
-`callback`   | `any -> any`         | Yes      | A callback whose return value becomes the value of the stream
-**returns**  | `Stream`             |          | Returns a stream
+| Argument    | Type         | Required | Description                                                   |
+| ----------- | ------------ | -------- | ------------------------------------------------------------- |
+| `callback`  | `any -> any` | Yes      | A callback whose return value becomes the value of the stream |
+| **returns** | `Stream`     |          | Returns a stream                                              |
 
 [How to read signatures](signatures.md)
 
@@ -267,10 +267,10 @@ The name of this method stands for `apply`. If a stream `a` has a function as it
 
 `stream = stream()["fantasy-land/ap"](apply)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`apply`     | `Stream`             | Yes      | A stream whose value is a function
-**returns** | `Stream`             |          | Returns a stream
+| Argument    | Type     | Required | Description                        |
+| ----------- | -------- | -------- | ---------------------------------- |
+| `apply`     | `Stream` | Yes      | A stream whose value is a function |
+| **returns** | `Stream` |          | Returns a stream                   |
 
 ---
 
@@ -279,19 +279,18 @@ Argument    | Type                 | Required | Description
 Streams are not part of the core Mithril.js distribution. To include them in a project, require its module:
 
 ```javascript
-var stream = require("mithril/stream")
+var stream = require('mithril/stream')
 ```
-
 
 #### Streams as variables
 
 `stream()` returns a stream. At its most basic level, a stream works similar to a variable or a getter-setter property: it can hold state, which can be modified.
 
 ```javascript
-var username = stream("John")
+var username = stream('John')
 console.log(username()) // logs "John"
 
-username("John Doe")
+username('John Doe')
 console.log(username()) // logs "John Doe"
 ```
 
@@ -301,9 +300,11 @@ The main difference is that a stream is a function, and therefore can be compose
 var users = stream()
 
 // request users from a server using the fetch API
-fetch("/api/users")
-	.then(function(response) {return response.json()})
-	.then(users)
+fetch('/api/users')
+    .then(function (response) {
+        return response.json()
+    })
+    .then(users)
 ```
 
 In the example above, the `users` stream is populated with the response data when the request resolves.
@@ -314,12 +315,14 @@ Streams can also be populated from event callbacks and similar.
 
 ```javascript
 // a stream
-var user = stream("")
+var user = stream('')
 
 // a bi-directional binding to the stream
-m("input", {
-	oninput: function (e) { user(e.target.value) },
-	value: user()
+m('input', {
+    oninput: function (e) {
+        user(e.target.value)
+    },
+    value: user(),
 })
 ```
 
@@ -330,12 +333,12 @@ In the example above, when the user types in the input, the `user` stream is upd
 Streams are useful for implementing computed properties:
 
 ```javascript
-var title = stream("")
-var slug = title.map(function(value) {
-	return value.toLowerCase().replace(/\W/g, "-")
+var title = stream('')
+var slug = title.map(function (value) {
+    return value.toLowerCase().replace(/\W/g, '-')
 })
 
-title("Hello world")
+title('Hello world')
 console.log(slug()) // logs "hello-world"
 ```
 
@@ -344,15 +347,15 @@ In the example above, the value of `slug` is computed when `title` is updated, n
 It's of course also possible to compute properties based on multiple streams:
 
 ```javascript
-var firstName = stream("John")
-var lastName = stream("Doe")
-var fullName = stream.merge([firstName, lastName]).map(function(values) {
-	return values.join(" ")
+var firstName = stream('John')
+var lastName = stream('Doe')
+var fullName = stream.merge([firstName, lastName]).map(function (values) {
+    return values.join(' ')
 })
 
 console.log(fullName()) // logs "John Doe"
 
-firstName("Mary")
+firstName('Mary')
 
 console.log(fullName()) // logs "Mary Doe"
 ```
@@ -363,31 +366,31 @@ Computed properties in Mithril.js are updated atomically: streams that depend on
 
 ### Chaining streams
 
-Streams can be chained using the `map` method. A chained stream is also known as a *dependent stream*.
+Streams can be chained using the `map` method. A chained stream is also known as a _dependent stream_.
 
 ```javascript
 // parent stream
 var value = stream(1)
 
 // dependent stream
-var doubled = value.map(function(value) {
-	return value * 2
+var doubled = value.map(function (value) {
+    return value * 2
 })
 
 console.log(doubled()) // logs 2
 ```
 
-Dependent streams are *reactive*: their values are updated any time the value of their parent stream is updated. This happens regardless of whether the dependent stream was created before or after the value of the parent stream was set.
+Dependent streams are _reactive_: their values are updated any time the value of their parent stream is updated. This happens regardless of whether the dependent stream was created before or after the value of the parent stream was set.
 
 You can prevent dependent streams from being updated by returning the special value `stream.SKIP`
 
 ```javascript
-var skipped = stream(1).map(function(value) {
-	return stream.SKIP
+var skipped = stream(1).map(function (value) {
+    return stream.SKIP
 })
 
-skipped.map(function() {
-	// never runs
+skipped.map(function () {
+    // never runs
 })
 ```
 
@@ -398,11 +401,11 @@ skipped.map(function() {
 Streams can depend on more than one parent stream. These kinds of streams can be created via `stream.merge()`
 
 ```javascript
-var a = stream("hello")
-var b = stream("world")
+var a = stream('hello')
+var b = stream('world')
 
-var greeting = stream.merge([a, b]).map(function(values) {
-	return values.join(" ")
+var greeting = stream.merge([a, b]).map(function (values) {
+    return values.join(' ')
 })
 
 console.log(greeting()) // logs "hello world"
@@ -411,12 +414,16 @@ console.log(greeting()) // logs "hello world"
 Or you can use the helper function `stream.lift()`
 
 ```javascript
-var a = stream("hello")
-var b = stream("world")
+var a = stream('hello')
+var b = stream('world')
 
-var greeting = stream.lift(function(_a, _b) {
-	return _a + " " + _b
-}, a, b)
+var greeting = stream.lift(
+    function (_a, _b) {
+        return _a + ' ' + _b
+    },
+    a,
+    b,
+)
 
 console.log(greeting()) // logs "hello world"
 ```
@@ -427,9 +434,12 @@ There's also a lower level method called `stream.combine()` that exposes the str
 var a = stream(5)
 var b = stream(7)
 
-var added = stream.combine(function(a, b) {
-	return a() + b()
-}, [a, b])
+var added = stream.combine(
+    function (a, b) {
+        return a() + b()
+    },
+    [a, b],
+)
 
 console.log(added()) // logs 12
 ```
@@ -439,12 +449,15 @@ A stream can depend on any number of streams and it's guaranteed to update atomi
 You can prevent dependent streams from being updated by returning the special value `stream.SKIP`
 
 ```javascript
-var skipped = stream.combine(function(stream) {
-	return stream.SKIP
-}, [stream(1)])
+var skipped = stream.combine(
+    function (stream) {
+        return stream.SKIP
+    },
+    [stream(1)],
+)
 
-skipped.map(function() {
-	// never runs
+skipped.map(function () {
+    // never runs
 })
 ```
 
@@ -452,7 +465,7 @@ skipped.map(function() {
 
 ### Stream states
 
-At any given time, a stream can be in one of three states: *pending*, *active*, and *ended*.
+At any given time, a stream can be in one of three states: _pending_, _active_, and _ended_.
 
 #### Pending state
 
@@ -468,9 +481,12 @@ If a stream is dependent on more than one stream and any of its parent streams i
 var a = stream(5)
 var b = stream() // pending stream
 
-var added = stream.combine(function(a, b) {
-	return a() + b()
-}, [a, b])
+var added = stream.combine(
+    function (a, b) {
+        return a() + b()
+    },
+    [a, b],
+)
 
 console.log(added()) // logs undefined
 ```
@@ -481,7 +497,9 @@ This also applies to dependent streams created via `stream.map`:
 
 ```javascript
 var value = stream()
-var doubled = value.map(function(value) {return value * 2})
+var doubled = value.map(function (value) {
+    return value * 2
+})
 
 console.log(doubled()) // logs undefined because `doubled` is pending
 ```
@@ -491,20 +509,20 @@ console.log(doubled()) // logs undefined because `doubled` is pending
 When a stream receives a value, it becomes active (unless the stream is ended).
 
 ```javascript
-var stream1 = stream("hello") // stream1 is active
+var stream1 = stream('hello') // stream1 is active
 
 var stream2 = stream() // stream2 starts off pending
-stream2("world") // then becomes active
+stream2('world') // then becomes active
 ```
 
 A dependent stream with multiple parents becomes active if all of its parents are active.
 
 ```javascript
-var a = stream("hello")
+var a = stream('hello')
 var b = stream()
 
-var greeting = stream.merge([a, b]).map(function(values) {
-	return values.join(" ")
+var greeting = stream.merge([a, b]).map(function (values) {
+    return values.join(' ')
 })
 ```
 
@@ -516,7 +534,9 @@ A stream can stop affecting its dependent streams by calling `stream.end(true)`.
 
 ```javascript
 var value = stream()
-var doubled = value.map(function(value) {return value * 2})
+var doubled = value.map(function (value) {
+    return value * 2
+})
 
 value.end(true) // set to ended state
 
@@ -570,7 +590,7 @@ For example, say we want to create a generic function called `plusOne`. The naiv
 
 ```javascript
 function plusOne(a) {
-	return a + 1
+    return a + 1
 }
 ```
 
@@ -579,10 +599,12 @@ The problem with this implementation is that it can only be used with a number. 
 This is where Fantasy Land can help. Let's rewrite that function in terms of a Fantasy Land algebra:
 
 ```javascript
-var fl = require("fantasy-land")
+var fl = require('fantasy-land')
 
 function plusOne(a) {
-	return a[fl.map](function(value) {return value + 1})
+    return a[fl.map](function (value) {
+        return value + 1
+    })
 }
 ```
 

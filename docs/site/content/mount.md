@@ -19,34 +19,42 @@ Activates a component, enabling it to autoredraw on user events
 
 ```javascript
 var state = {
-	count: 0,
-	inc: function() {state.count++}
+    count: 0,
+    inc: function () {
+        state.count++
+    },
 }
 
 var Counter = {
-	view: function() {
-		return m("div", {onclick: state.inc}, state.count)
-	}
+    view: function () {
+        return m('div', {onclick: state.inc}, state.count)
+    },
 }
 
 m.mount(document.body, Counter)
 ```
 
 To pass arguments when mounting a component use:
+
 ```javascript
-m.mount(element, {view: function () {return m(Component, attrs)}})
+m.mount(element, {
+    view: function () {
+        return m(Component, attrs)
+    },
+})
 ```
+
 ---
 
 ### Signature
 
 `m.mount(element, Component)`
 
-Argument    | Type                 | Required | Description
------------ | -------------------- | -------- | ---
-`element`   | `Element`            | Yes      | A DOM element that will be the parent node to the subtree
-`Component` | `Component|null`     | Yes      | The [component](components.md) to be rendered. `null` unmounts the tree and cleans up internal state.
-**returns** |                      |          | Returns nothing
+| Argument    | Type       | Required | Description                                               |
+| ----------- | ---------- | -------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `element`   | `Element`  | Yes      | A DOM element that will be the parent node to the subtree |
+| `Component` | `Component | null`    | Yes                                                       | The [component](components.md) to be rendered. `null` unmounts the tree and cleans up internal state. |
+| **returns** |            |          | Returns nothing                                           |
 
 [How to read signatures](signatures.md)
 
@@ -71,22 +79,22 @@ Using `m.mount(element, null)` on an element with a previously mounted component
 In certain more advanced situations, you may want to subscribe and listen for [redraws](autoredraw.md) without rendering anything to the screen. This can be done using a headless mount, created by simply invoking `m.mount` with an element that's not added to the live DOM tree and putting all your useful logic in the component you're mounting with. You still need a `view` in your component, just it doesn't have to return anything useful and it can just return a junk value like `null` or `undefined`.
 
 ```javascript
-var elem = document.createElement("div")
+var elem = document.createElement('div')
 
 // Subscribe
 m.mount(elem, {
-	oncreate: function() {
-		// once added
-	},
-	onupdate: function() {
-		// on each redraw
-	},
-	onremove: function() {
-		// clean up whatever you need
-	},
+    oncreate: function () {
+        // once added
+    },
+    onupdate: function () {
+        // on each redraw
+    },
+    onremove: function () {
+        // clean up whatever you need
+    },
 
-	// Necessary boilerplate
-	view: function () {},
+    // Necessary boilerplate
+    view: function () {},
 })
 
 // Unsubscribe

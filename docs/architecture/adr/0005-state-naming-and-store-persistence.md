@@ -13,14 +13,13 @@ Mithril currently provides a `store()` function (from ADR-0002) that creates rea
 **Current State:**
 
 1. **Naming ambiguity**: The `store()` function name doesn't clearly distinguish between:
-   - The reactive primitive (creating reactive state objects)
-   - A persistence mechanism (saving/loading state)
-   
+    - The reactive primitive (creating reactive state objects)
+    - A persistence mechanism (saving/loading state)
 2. **No persistence layer**: Mithril has no built-in way to:
-   - Persist state to localStorage/sessionStorage
-   - Restore state on application initialization
-   - Manage persistent vs volatile vs session state
-   - Clean up stale cached data
+    - Persist state to localStorage/sessionStorage
+    - Restore state on application initialization
+    - Manage persistent vs volatile vs session state
+    - Clean up stale cached data
 
 3. **No watch API**: While Signal class has a `watch()` method, there's no convenient top-level `watch()` function for subscribing to signal changes.
 
@@ -180,11 +179,11 @@ mithril/
 2. Rename `store()` function → `state()`
 3. Rename `Store<T>` type → `State<T>`
 4. Update internal references:
-   - `isStore` → `isState`
-   - `storeCache` → `stateCache`
-   - `registerStore()` → `registerState()`
-   - `getRegisteredStores()` → `getRegisteredStates()`
-   - `clearStoreRegistry()` → `clearStateRegistry()`
+    - `isStore` → `isState`
+    - `storeCache` → `stateCache`
+    - `registerStore()` → `registerState()`
+    - `getRegisteredStores()` → `getRegisteredStates()`
+    - `clearStoreRegistry()` → `clearStateRegistry()`
 5. Rename test directory: `tests/store/` → `tests/state/`
 6. Rename test file: `test-store.test.ts` → `test-state.test.ts`
 7. Rename example directory: `examples/store/` → `examples/state/`
@@ -208,9 +207,9 @@ export class Store<T extends Record<string, any>> {
     }
     private lookup_verify_interval: number | null
     private lookup_ttl: number
-    
+
     constructor(options?: {lookup_ttl?: number})
-    
+
     get state(): State<T>
     load(persistent: Partial<T>, volatile: Partial<T>, session?: Partial<T>): void
     save(): void
@@ -235,10 +234,7 @@ export class Store<T extends Record<string, any>> {
 **File**: `mithril/state.ts`
 
 ```typescript
-export function watch<T>(
-    signal: Signal<T> | ComputedSignal<T>,
-    callback: (newValue: T, oldValue: T) => void
-): () => void {
+export function watch<T>(signal: Signal<T> | ComputedSignal<T>, callback: (newValue: T, oldValue: T) => void): () => void {
     return signal.watch(callback)
 }
 ```

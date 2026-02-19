@@ -10,10 +10,10 @@ If you are migrating, consider using the [mithril-codemods](https://www.npmjs.co
 - [`m.version` removed](#mversion-removed)
 - [`config` function](#config-function)
 - [Changes in redraw behaviour](#changes-in-redraw-behaviour)
-	- [No more redraw locks](#no-more-redraw-locks)
-	- [Cancelling redraw from event handlers](#cancelling-redraw-from-event-handlers)
-	- [Synchronous redraw changed](#synchronous-redraw)
-	- [`m.startComputation`/`m.endComputation` removed](#mstartcomputationmendcomputation-removed)
+    - [No more redraw locks](#no-more-redraw-locks)
+    - [Cancelling redraw from event handlers](#cancelling-redraw-from-event-handlers)
+    - [Synchronous redraw changed](#synchronous-redraw)
+    - [`m.startComputation`/`m.endComputation` removed](#mstartcomputationmendcomputation-removed)
 - [Component `controller` function](#component-controller-function)
 - [Component arguments](#component-arguments)
 - [Component vnode children](#component-children)
@@ -47,7 +47,7 @@ In v2.x, `m.prop()` was converted into now a more powerful stream micro-library,
 ### v0.2.x
 
 ```javascript
-var m = require("mithril")
+var m = require('mithril')
 
 var num = m.prop(1)
 ```
@@ -55,11 +55,13 @@ var num = m.prop(1)
 ### v2.x
 
 ```javascript
-var m = require("mithril")
-var prop = require("mithril/stream")
+var m = require('mithril')
+var prop = require('mithril/stream')
 
 var num = prop(1)
-var doubled = num.map(function(n) { return n * 2 })
+var doubled = num.map(function (n) {
+    return n * 2
+})
 ```
 
 ---
@@ -91,24 +93,26 @@ In v0.2.x event listeners could use `oninput: m.withAttr("value", func)` and sim
 ### v0.2.x
 
 ```javascript
-var value = m.prop("")
+var value = m.prop('')
 
 // In your view
-m("input[type=text]", {
-	value: value(),
-	oninput: m.withAttr("value", value),
+m('input[type=text]', {
+    value: value(),
+    oninput: m.withAttr('value', value),
 })
 ```
 
 ### v2.x
 
 ```javascript
-var value = ""
+var value = ''
 
 // In your view
-m("input[type=text]", {
-	value: value,
-	oninput: function (ev) { value = ev.target.value },
+m('input[type=text]', {
+    value: value,
+    oninput: function (ev) {
+        value = ev.target.value
+    },
 })
 ```
 
@@ -127,11 +131,11 @@ In v0.2.x Mithril.js provided a single lifecycle method, `config`. v2.x provide 
 ### v0.2.x
 
 ```javascript
-m("div", {
-	config: function(element, isInitialized) {
-		// runs on each redraw
-		// isInitialized is a boolean representing if the node has been added to the DOM
-	}
+m('div', {
+    config: function (element, isInitialized) {
+        // runs on each redraw
+        // isInitialized is a boolean representing if the node has been added to the DOM
+    },
 })
 ```
 
@@ -140,20 +144,32 @@ m("div", {
 More documentation on these new methods is available in [lifecycle-methods.md](lifecycle-methods.md).
 
 ```javascript
-m("div", {
-	// Called before the DOM node is created
-	oninit: function(vnode) { /*...*/ },
-	// Called after the DOM node is created
-	oncreate: function(vnode) { /*...*/ },
-	// Called before the node is updated, return false to cancel
-	onbeforeupdate: function(vnode, old) { /*...*/ },
-	// Called after the node is updated
-	onupdate: function(vnode) { /*...*/ },
-	// Called before the node is removed, return a Promise that resolves when
-	// ready for the node to be removed from the DOM
-	onbeforeremove: function(vnode) { /*...*/ },
-	// Called before the node is removed, but after onbeforeremove calls done()
-	onremove: function(vnode) { /*...*/ }
+m('div', {
+    // Called before the DOM node is created
+    oninit: function (vnode) {
+        /*...*/
+    },
+    // Called after the DOM node is created
+    oncreate: function (vnode) {
+        /*...*/
+    },
+    // Called before the node is updated, return false to cancel
+    onbeforeupdate: function (vnode, old) {
+        /*...*/
+    },
+    // Called after the node is updated
+    onupdate: function (vnode) {
+        /*...*/
+    },
+    // Called before the node is removed, return a Promise that resolves when
+    // ready for the node to be removed from the DOM
+    onbeforeremove: function (vnode) {
+        /*...*/
+    },
+    // Called before the node is removed, but after onbeforeremove calls done()
+    onremove: function (vnode) {
+        /*...*/
+    },
 })
 ```
 
@@ -176,20 +192,20 @@ In v0.2.x, Mithril.js allowed 'redraw locks' which temporarily prevented blocked
 #### v0.2.x
 
 ```javascript
-m("div", {
-	onclick: function(e) {
-		m.redraw.strategy("none")
-	}
+m('div', {
+    onclick: function (e) {
+        m.redraw.strategy('none')
+    },
 })
 ```
 
 #### v2.x
 
 ```javascript
-m("div", {
-	onclick: function(e) {
-		e.redraw = false
-	}
+m('div', {
+    onclick: function (e) {
+        e.redraw = false
+    },
 })
 ```
 
@@ -224,15 +240,15 @@ In v2.x, there is no more `controller` property in components - use `oninit` ins
 
 ```javascript
 m.mount(document.body, {
-	controller: function() {
-		var ctrl = this
+    controller: function () {
+        var ctrl = this
 
-		ctrl.fooga = 1
-	},
+        ctrl.fooga = 1
+    },
 
-	view: function(ctrl) {
-		return m("p", ctrl.fooga)
-	}
+    view: function (ctrl) {
+        return m('p', ctrl.fooga)
+    },
 })
 ```
 
@@ -240,26 +256,26 @@ m.mount(document.body, {
 
 ```javascript
 m.mount(document.body, {
-	oninit: function(vnode) {
-		vnode.state.fooga = 1
-	},
+    oninit: function (vnode) {
+        vnode.state.fooga = 1
+    },
 
-	view: function(vnode) {
-		return m("p", vnode.state.fooga)
-	}
+    view: function (vnode) {
+        return m('p', vnode.state.fooga)
+    },
 })
 
 // OR
 
 m.mount(document.body, {
-	// this is bound to vnode.state by default
-	oninit: function(vnode) {
-		this.fooga = 1
-	},
+    // this is bound to vnode.state by default
+    oninit: function (vnode) {
+        this.fooga = 1
+    },
 
-	view: function(vnode) {
-		return m("p", this.fooga)
-	}
+    view: function (vnode) {
+        return m('p', this.fooga)
+    },
 })
 ```
 
@@ -273,32 +289,32 @@ Arguments to a component in v2.x must be an object, simple values like `String`/
 
 ```javascript
 var Component = {
-	controller: function(options) {
-		// options.fooga === 1
-	},
+    controller: function (options) {
+        // options.fooga === 1
+    },
 
-	view: function(ctrl, options) {
-		// options.fooga === 1
-	}
+    view: function (ctrl, options) {
+        // options.fooga === 1
+    },
 }
 
-m("div", m.component(Component, { fooga: 1 }))
+m('div', m.component(Component, {fooga: 1}))
 ```
 
 ### v2.x
 
 ```javascript
 var Component = {
-	oninit: function(vnode) {
-		// vnode.attrs.fooga === 1
-	},
+    oninit: function (vnode) {
+        // vnode.attrs.fooga === 1
+    },
 
-	view: function(vnode) {
-		// vnode.attrs.fooga === 1
-	}
+    view: function (vnode) {
+        // vnode.attrs.fooga === 1
+    },
 }
 
-m("div", m(Component, { fooga: 1 }))
+m('div', m(Component, {fooga: 1}))
 ```
 
 ---
@@ -311,36 +327,46 @@ In v0.2.x, component vnode children were not normalized, just passed as extra ar
 
 ```javascript
 var Component = {
-	controller: function(value, renderProp) {
-		// value === "value"
-		// typeof renderProp === "function"
-	},
+    controller: function (value, renderProp) {
+        // value === "value"
+        // typeof renderProp === "function"
+    },
 
-	view: function(ctrl, value, renderProp) {
-		// value === "value"
-		// typeof renderProp === "function"
-	}
+    view: function (ctrl, value, renderProp) {
+        // value === "value"
+        // typeof renderProp === "function"
+    },
 }
 
-m("div", m.component(Component, "value", function(key) { return "child" }))
+m(
+    'div',
+    m.component(Component, 'value', function (key) {
+        return 'child'
+    }),
+)
 ```
 
 ### v2.x
 
 ```javascript
 var Component = {
-	oninit: function(vnode) {
-		// vnode.children[0] === "value"
-		// typeof vnode.children[1] === "function"
-	},
+    oninit: function (vnode) {
+        // vnode.children[0] === "value"
+        // typeof vnode.children[1] === "function"
+    },
 
-	view: function(vnode) {
-		// vnode.children[0] === "value"
-		// typeof vnode.children[1] === "function"
-	},
+    view: function (vnode) {
+        // vnode.children[0] === "value"
+        // typeof vnode.children[1] === "function"
+    },
 }
 
-m("div", m(Component, "value", function(key) { return "child" }))
+m(
+    'div',
+    m(Component, 'value', function (key) {
+        return 'child'
+    }),
+)
 ```
 
 ---
@@ -397,7 +423,7 @@ m("div", "value")
 
 See [the vnode docs](vnodes.md) for more details on the v2.x vnode structure and how things are normalized.
 
-*Most of the v2.x vnode properties here are omitted for brevity.*
+_Most of the v2.x vnode properties here are omitted for brevity._
 
 ---
 
@@ -419,11 +445,11 @@ In v0.2.x view functions are passed a reference to the `controller` instance and
 
 ```javascript
 m.mount(document.body, {
-	controller: function() {},
+    controller: function () {},
 
-	view: function(ctrl, options) {
-		// ...
-	}
+    view: function (ctrl, options) {
+        // ...
+    },
 })
 ```
 
@@ -431,14 +457,14 @@ m.mount(document.body, {
 
 ```javascript
 m.mount(document.body, {
-	oninit: function(vnode) {
-		// ...
-	},
+    oninit: function (vnode) {
+        // ...
+    },
 
-	view: function(vnode) {
-		// Use vnode.state instead of ctrl
-		// Use vnode.attrs instead of options
-	}
+    view: function (vnode) {
+        // Use vnode.state instead of ctrl
+        // Use vnode.attrs instead of options
+    },
 })
 ```
 
@@ -451,13 +477,13 @@ In v0.2.x you could pass components as the second argument of `m()` w/o any wrap
 ### v0.2.x
 
 ```javascript
-m("div", Component)
+m('div', Component)
 ```
 
 ### v2.x
 
 ```javascript
-m("div", m(Component))
+m('div', m(Component))
 ```
 
 ---
@@ -475,18 +501,30 @@ m.mount(element, m('i', 'hello'))
 m.mount(element, m(Component, attrs))
 
 m.route(element, '/', {
-	'/': m('b', 'bye')
+    '/': m('b', 'bye'),
 })
 ```
 
 ### v2.x
 
 ```javascript
-m.mount(element, {view: function () {return m('i', 'hello')}})
-m.mount(element, {view: function () {return m(Component, attrs)}})
+m.mount(element, {
+    view: function () {
+        return m('i', 'hello')
+    },
+})
+m.mount(element, {
+    view: function () {
+        return m(Component, attrs)
+    },
+})
 
 m.route(element, '/', {
-	'/': {view: function () {return m('b', 'bye')}}
+    '/': {
+        view: function () {
+            return m('b', 'bye')
+        },
+    },
 })
 ```
 
@@ -501,18 +539,18 @@ The default was changed to also use a `#!` (hashbang) prefix instead of just `#`
 ### v0.2.x
 
 ```javascript
-m.route.mode = "hash"
-m.route.mode = "pathname"
-m.route.mode = "search"
+m.route.mode = 'hash'
+m.route.mode = 'pathname'
+m.route.mode = 'search'
 ```
 
 ### v2.x
 
 ```javascript
 // Direct equivalents
-m.route.prefix = "#"
-m.route.prefix = ""
-m.route.prefix = "?"
+m.route.prefix = '#'
+m.route.prefix = ''
+m.route.prefix = '?'
 ```
 
 ---
@@ -525,9 +563,9 @@ Handling routable links now uses a special built-in component instead of an attr
 
 ```javascript
 // When clicked this link will load the "/path" route instead of navigating
-m("a", {
-	href: "/path",
-	config: m.route
+m('a', {
+    href: '/path',
+    config: m.route,
 })
 ```
 
@@ -536,7 +574,7 @@ m("a", {
 ```javascript
 // When clicked this link will load the "/path" route instead of navigating
 m(m.route.Link, {
-	href: "/path",
+    href: '/path',
 })
 ```
 
@@ -550,7 +588,7 @@ Concretely, here's how it affects each method:
 
 ### `m.request` URLs
 
-Path components in v2.x are escaped automatically when interpolated and they read their values from `params`. In v0.2.x, `m.request({url: "/user/:name/photos/:id", data: {name: "a/b", id: "c/d"}})` would send its request with the URL set to `/user/a%2Fb/photos/c/d`. In v2.x, the corresponding `m.request({url: "/user/:name/photos/:id", params: {name: "a/b", id: "c/d"}})` would send its request to `/user/a%2Fb/photos/c%2Fd`. If you deliberately *want* to interpolate a key unescaped, use `:key...` instead.
+Path components in v2.x are escaped automatically when interpolated and they read their values from `params`. In v0.2.x, `m.request({url: "/user/:name/photos/:id", data: {name: "a/b", id: "c/d"}})` would send its request with the URL set to `/user/a%2Fb/photos/c/d`. In v2.x, the corresponding `m.request({url: "/user/:name/photos/:id", params: {name: "a/b", id: "c/d"}})` would send its request to `/user/a%2Fb/photos/c%2Fd`. If you deliberately _want_ to interpolate a key unescaped, use `:key...` instead.
 
 Interpolations in inline query strings, like in `/api/search?q=:query`, are not performed in v2.x. Pass those via `params` with appropriate key names instead, without specifying it in the query string.
 
@@ -579,7 +617,7 @@ In v0.2.x all interaction w/ the current route happened via `m.route()`. In v2.x
 m.route()
 
 // Setting a new route
-m.route("/other/route")
+m.route('/other/route')
 ```
 
 ### v2.x
@@ -589,7 +627,7 @@ m.route("/other/route")
 m.route.get()
 
 // Setting a new route
-m.route.set("/other/route")
+m.route.set('/other/route')
 ```
 
 ---
@@ -601,32 +639,32 @@ In v0.2.x reading route params was entirely handled through `m.route.param()`. T
 ### v0.2.x
 
 ```javascript
-m.route(document.body, "/booga", {
-	"/:attr": {
-		controller: function() {
-			m.route.param("attr") // "booga"
-		},
-		view: function() {
-			m.route.param("attr") // "booga"
-		}
-	}
+m.route(document.body, '/booga', {
+    '/:attr': {
+        controller: function () {
+            m.route.param('attr') // "booga"
+        },
+        view: function () {
+            m.route.param('attr') // "booga"
+        },
+    },
 })
 ```
 
 ### v2.x
 
 ```javascript
-m.route(document.body, "/booga", {
-	"/:attr": {
-		oninit: function(vnode) {
-			vnode.attrs.attr // "booga"
-			m.route.param("attr") // "booga"
-		},
-		view: function(vnode) {
-			vnode.attrs.attr // "booga"
-			m.route.param("attr") // "booga"
-		}
-	}
+m.route(document.body, '/booga', {
+    '/:attr': {
+        oninit: function (vnode) {
+            vnode.attrs.attr // "booga"
+            m.route.param('attr') // "booga"
+        },
+        view: function (vnode) {
+            vnode.attrs.attr // "booga"
+            m.route.param('attr') // "booga"
+        },
+    },
 })
 ```
 
@@ -639,17 +677,17 @@ v0.2.x used methods hanging off of `m.route`, `m.route.buildQueryString()` and `
 ### v0.2.x
 
 ```javascript
-var qs = m.route.buildQueryString({ a: 1 });
+var qs = m.route.buildQueryString({a: 1})
 
-var obj = m.route.parseQueryString("a=1");
+var obj = m.route.parseQueryString('a=1')
 ```
 
 ### v2.x
 
 ```javascript
-var qs = m.buildQueryString({ a: 1 });
+var qs = m.buildQueryString({a: 1})
 
-var obj = m.parseQueryString("a=1");
+var obj = m.parseQueryString('a=1')
 ```
 
 Also, in v2.x, `{key: undefined}` is serialized as `key=undefined` by `m.buildQueryString` and methods that use it like `m.request`. In v0.2.x, the key was omitted and this carried over to `m.request`. If you were previously relying on this, change your code to omit the keys from the object entirely. It may be worth using a simple utility to strip all keys from an object whose values are `undefined` if you can't easily do that and you need to retain v0.2.x behavior.
@@ -657,22 +695,22 @@ Also, in v2.x, `{key: undefined}` is serialized as `key=undefined` by `m.buildQu
 ```javascript
 // Call whenever you need to omit `undefined` parameters from an object.
 function omitUndefineds(object) {
-	var result = {}
+    var result = {}
 
-	for (var key in object) {
-		if ({}.hasOwnProperty.call(object, key)) {
-			var value = object[key]
-			if (Array.isArray(value)) {
-				result[key] = value.map(omitUndefineds)
-			} else if (value != null && typeof value === "object") {
-				result[key] = omitUndefineds(value)
-			} else if (value !== undefined) {
-				result[key] = value
-			}
-		}
-	}
+    for (var key in object) {
+        if ({}.hasOwnProperty.call(object, key)) {
+            var value = object[key]
+            if (Array.isArray(value)) {
+                result[key] = value.map(omitUndefineds)
+            } else if (value != null && typeof value === 'object') {
+                result[key] = omitUndefineds(value)
+            } else if (value !== undefined) {
+                result[key] = value
+            }
+        }
+    }
 
-	return result
+    return result
 }
 ```
 
@@ -686,14 +724,14 @@ It is no longer possible to prevent unmounting via `onunload`'s `e.preventDefaul
 
 ```javascript
 var Component = {
-	controller: function() {
-		this.onunload = function(e) {
-			if (condition) e.preventDefault()
-		}
-	},
-	view: function() {
-		return m("a[href=/]", {config: m.route})
-	}
+    controller: function () {
+        this.onunload = function (e) {
+            if (condition) e.preventDefault()
+        }
+    },
+    view: function () {
+        return m('a[href=/]', {config: m.route})
+    },
 }
 ```
 
@@ -701,11 +739,13 @@ var Component = {
 
 ```javascript
 var Component = {
-	view: function() {
-		return m("a", {
-			onclick: function() { if (!condition) m.route.set("/") },
-		})
-	}
+    view: function () {
+        return m('a', {
+            onclick: function () {
+                if (!condition) m.route.set('/')
+            },
+        })
+    },
 }
 ```
 
@@ -719,14 +759,14 @@ Components no longer call `this.onunload` when they are being removed. They now 
 
 ```javascript
 var Component = {
-	controller: function() {
-		this.onunload = function(e) {
-			// ...
-		}
-	},
-	view: function() {
-		// ...
-	}
+    controller: function () {
+        this.onunload = function (e) {
+            // ...
+        }
+    },
+    view: function () {
+        // ...
+    },
 }
 ```
 
@@ -759,19 +799,19 @@ In v0.2.x, you would use a `dataType: "jsonp"` to initiate a JSONP request. In v
 
 ```javascript
 var data = m.request({
-	method: "GET",
-	url: "https://api.github.com/",
-	initialValue: [],
+    method: 'GET',
+    url: 'https://api.github.com/',
+    initialValue: [],
 })
 
-setTimeout(function() {
-	console.log(data())
+setTimeout(function () {
+    console.log(data())
 }, 1000)
 
 m.request({
-	method: "POST",
-	url: "https://api.github.com/",
-	data: someJson,
+    method: 'POST',
+    url: 'https://api.github.com/',
+    data: someJson,
 })
 ```
 
@@ -780,38 +820,36 @@ m.request({
 ```javascript
 var data = []
 m.request({
-	method: "GET",
-	url: "https://api.github.com/",
-})
-.then(function (responseBody) {
-	data = responseBody
+    method: 'GET',
+    url: 'https://api.github.com/',
+}).then(function (responseBody) {
+    data = responseBody
 })
 
-setTimeout(function() {
-	console.log(data) // note: not a getter-setter
+setTimeout(function () {
+    console.log(data) // note: not a getter-setter
 }, 1000)
 
 m.request({
-	method: "POST",
-	url: "https://api.github.com/",
-	body: someJson,
+    method: 'POST',
+    url: 'https://api.github.com/',
+    body: someJson,
 })
 
 // OR
 
 var data = []
-m.request("https://api.github.com/")
-.then(function (responseBody) {
-	data = responseBody
+m.request('https://api.github.com/').then(function (responseBody) {
+    data = responseBody
 })
 
-setTimeout(function() {
-	console.log(data) // note: not a getter-setter
+setTimeout(function () {
+    console.log(data) // note: not a getter-setter
 }, 1000)
 
-m.request("https://api.github.com/", {
-	method: "POST",
-	body: someJson,
+m.request('https://api.github.com/', {
+    method: 'POST',
+    body: someJson,
 })
 ```
 
@@ -828,7 +866,7 @@ In v0.2.x, Mithril.js didn't set any headers on requests by default. Now, it set
 
 The first of the two headers, `Content-Type`, will trigger a CORS prefetch as it [is not a CORS-safelisted request header](https://fetch.spec.whatwg.org/#cors-safelisted-request-header) due to the specified content type, and that could introduce new errors depending on how CORS is configured on your server. If you run into issues with this, you may need to override that header in question by passing `headers: {"Content-Type": "text/plain"}`. (The `Accept` header doesn't trigger anything, so you don't need to override that.)
 
-*The only content types that the Fetch spec lets avoid CORS prefetch checks are `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain`. It doesn't allow anything else, and it intentionally disallows JSON.*
+_The only content types that the Fetch spec lets avoid CORS prefetch checks are `application/x-www-form-urlencoded`, `multipart/form-data`, and `text/plain`. It doesn't allow anything else, and it intentionally disallows JSON._
 
 ---
 
@@ -839,33 +877,41 @@ v0.2.x used its own custom asynchronous contract object, exposed as `m.deferred`
 ### v0.2.x
 
 ```javascript
-var greetAsync = function() {
-	var deferred = m.deferred()
-	setTimeout(function() {
-		deferred.resolve("hello")
-	}, 1000)
-	return deferred.promise
+var greetAsync = function () {
+    var deferred = m.deferred()
+    setTimeout(function () {
+        deferred.resolve('hello')
+    }, 1000)
+    return deferred.promise
 }
 
 greetAsync()
-	.then(function(value) {return value + " world"})
-	.then(function(value) {console.log(value)}) //logs "hello world" after 1 second
+    .then(function (value) {
+        return value + ' world'
+    })
+    .then(function (value) {
+        console.log(value)
+    }) //logs "hello world" after 1 second
 ```
 
 ### v2.x
 
 ```javascript
-var greetAsync = function() {
-	return new Promise(function(resolve){
-		setTimeout(function() {
-			resolve("hello")
-		}, 1000)
-	})
+var greetAsync = function () {
+    return new Promise(function (resolve) {
+        setTimeout(function () {
+            resolve('hello')
+        }, 1000)
+    })
 }
 
 greetAsync()
-	.then(function(value) {return value + " world"})
-	.then(function(value) {console.log(value)}) //logs "hello world" after 1 second
+    .then(function (value) {
+        return value + ' world'
+    })
+    .then(function (value) {
+        console.log(value)
+    }) //logs "hello world" after 1 second
 ```
 
 ---
@@ -878,11 +924,10 @@ Since v2.x uses standards-compliant Promises, `m.sync` is redundant. Use `Promis
 
 ```javascript
 m.sync([
-	m.request({ method: 'GET', url: 'https://api.github.com/users/lhorie' }),
-	m.request({ method: 'GET', url: 'https://api.github.com/users/dead-claudia' }),
-])
-.then(function (users) {
-	console.log("Contributors:", users[0].name, "and", users[1].name)
+    m.request({method: 'GET', url: 'https://api.github.com/users/lhorie'}),
+    m.request({method: 'GET', url: 'https://api.github.com/users/dead-claudia'}),
+]).then(function (users) {
+    console.log('Contributors:', users[0].name, 'and', users[1].name)
 })
 ```
 
@@ -890,11 +935,10 @@ m.sync([
 
 ```javascript
 Promise.all([
-	m.request({ method: 'GET', url: 'https://api.github.com/users/lhorie' }),
-	m.request({ method: 'GET', url: 'https://api.github.com/users/dead-claudia' }),
-])
-.then(function (users) {
-	console.log("Contributors:", users[0].name, "and", users[1].name)
+    m.request({method: 'GET', url: 'https://api.github.com/users/lhorie'}),
+    m.request({method: 'GET', url: 'https://api.github.com/users/dead-claudia'}),
+]).then(function (users) {
+    console.log('Contributors:', users[0].name, 'and', users[1].name)
 })
 ```
 
@@ -907,18 +951,20 @@ In v0.2.x, the `xlink` namespace was the only supported attribute namespace, and
 ### v0.2.x
 
 ```javascript
-m("svg",
-	// the `href` attribute is namespaced automatically
-	m("image[href='image.gif']")
+m(
+    'svg',
+    // the `href` attribute is namespaced automatically
+    m("image[href='image.gif']"),
 )
 ```
 
 ### v2.x
 
 ```javascript
-m("svg",
-	// User-specified namespace on the `href` attribute
-	m("image[xlink:href='image.gif']")
+m(
+    'svg',
+    // User-specified namespace on the `href` attribute
+    m("image[xlink:href='image.gif']"),
 )
 ```
 

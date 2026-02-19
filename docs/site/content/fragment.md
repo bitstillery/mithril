@@ -16,18 +16,20 @@ Allows attaching lifecycle methods to a fragment [vnode](vnodes.md)
 
 ```javascript
 var groupVisible = true
-var log = function() {
-	console.log("group is now visible")
+var log = function () {
+    console.log('group is now visible')
 }
 
-m("ul", [
-	m("li", "child 1"),
-	m("li", "child 2"),
-	groupVisible ? m.fragment({oninit: log}, [
-		// a fragment containing two elements
-		m("li", "child 3"),
-		m("li", "child 4"),
-	]) : null
+m('ul', [
+    m('li', 'child 1'),
+    m('li', 'child 2'),
+    groupVisible
+        ? m.fragment({oninit: log}, [
+              // a fragment containing two elements
+              m('li', 'child 3'),
+              m('li', 'child 4'),
+          ])
+        : null,
 ])
 ```
 
@@ -39,11 +41,11 @@ Generates a fragment [vnode](vnodes.md)
 
 `vnode = m.fragment(attrs, children)`
 
-Argument    | Type                                                | Required | Description
------------ | --------------------------------------------------- | -------- | ---
-`attrs`     | `Object`                                            | No       | HTML attributes or element properties
-`children`  | `Array<Vnode>|String|Number|Boolean`                | No       | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats)
-**returns** | `Vnode`                                             |          | A fragment [vnode](vnodes.md#structure)
+| Argument    | Type          | Required | Description                             |
+| ----------- | ------------- | -------- | --------------------------------------- | -------- | --- | ---------------------------------------------------------------------------------------------- |
+| `attrs`     | `Object`      | No       | HTML attributes or element properties   |
+| `children`  | `Array<Vnode> | String   | Number                                  | Boolean` | No  | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
+| **returns** | `Vnode`       |          | A fragment [vnode](vnodes.md#structure) |
 
 [How to read signatures](signatures.md)
 
@@ -60,14 +62,17 @@ Normally you can use simple arrays or splats instead to denote a list of nodes:
 ```javascript
 var groupVisible = true
 
-m("ul",
-	m("li", "child 1"),
-	m("li", "child 2"),
-	groupVisible ? [
-		// a fragment containing two elements
-		m("li", "child 3"),
-		m("li", "child 4"),
-	] : null
+m(
+    'ul',
+    m('li', 'child 1'),
+    m('li', 'child 2'),
+    groupVisible
+        ? [
+              // a fragment containing two elements
+              m('li', 'child 3'),
+              m('li', 'child 4'),
+          ]
+        : null,
 )
 ```
 

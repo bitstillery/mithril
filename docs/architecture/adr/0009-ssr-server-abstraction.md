@@ -54,23 +54,23 @@ We will abstract reusable SSR server components from the example into the Mithri
 **Reusable Components:**
 
 1. **`createSSRResponse()`**: Bun-specific SSR response creator
-   - Clears state registry
-   - Initializes store with session data (via callback)
-   - Renders route to HTML
-   - Injects serialized state into HTML template
-   - Returns Response with session cookie
+    - Clears state registry
+    - Initializes store with session data (via callback)
+    - Renders route to HTML
+    - Injects serialized state into HTML template
+    - Returns Response with session cookie
 
 2. **`createSessionUpdateHandler()`**: Generic session update API handler factory
-   - Accepts session store interface
-   - Handles POST `/api/session` requests
-   - Extracts session ID from cookies
-   - Updates session store with state
+    - Accepts session store interface
+    - Handles POST `/api/session` requests
+    - Extracts session ID from cookies
+    - Updates session store with state
 
 3. **Session Store Interface**: Abstract interface for session management
-   - `getSession(sessionId): SessionData | null`
-   - `updateSession(sessionId, data): void`
-   - `createSession(userId): string`
-   - Applications provide their own implementation
+    - `getSession(sessionId): SessionData | null`
+    - `updateSession(sessionId, data): void`
+    - `createSession(userId): string`
+    - Applications provide their own implementation
 
 **Key Design:**
 
@@ -85,38 +85,34 @@ We will abstract reusable SSR server components from the example into the Mithri
 // server/utils/session.ts
 
 export interface SessionStore {
-  getSession(sessionId: string): SessionData | null
-  updateSession(sessionId: string, data: Record<string, any>): void
-  createSession(userId: string | null): string
+    getSession(sessionId: string): SessionData | null
+    updateSession(sessionId: string, data: Record<string, any>): void
+    createSession(userId: string | null): string
 }
 
 export interface SessionData {
-  userId: string | null
-  data: Record<string, any>
-  createdAt: Date
-  expiresAt: Date
+    userId: string | null
+    data: Record<string, any>
+    createdAt: Date
+    expiresAt: Date
 }
 
 // server/utils/ssr.ts
 
 export interface SSROptions {
-  routes: Record<string, any>
-  initStore: (sessionData: any) => void
-  getSessionData: (req: Request) => {sessionData: any, sessionId: string}
-  getHtmlTemplate: () => Promise<string>
-  appSelector?: string  // Default: '#app'
-  stateScriptId?: string  // Default: '__SSR_STATE__'
+    routes: Record<string, any>
+    initStore: (sessionData: any) => void
+    getSessionData: (req: Request) => {sessionData: any; sessionId: string}
+    getHtmlTemplate: () => Promise<string>
+    appSelector?: string // Default: '#app'
+    stateScriptId?: string // Default: '__SSR_STATE__'
 }
 
-export async function createSSRResponse(
-  pathname: string,
-  req: Request,
-  options: SSROptions
-): Promise<Response>
+export async function createSSRResponse(pathname: string, req: Request, options: SSROptions): Promise<Response>
 
 export function createSessionUpdateHandler(
-  sessionStore: SessionStore,
-  extractSessionId: (req: Request) => string | null
+    sessionStore: SessionStore,
+    extractSessionId: (req: Request) => string | null,
 ): (req: Request) => Promise<Response>
 ```
 
@@ -205,6 +201,7 @@ export function createSessionUpdateHandler(
 ### New Directory Structure: `server/utils/`
 
 Create new utilities directory:
+
 - `server/utils/session.ts` - Session store interface and helpers
 - `server/utils/ssr.ts` - SSR response creation and session update handlers
 
@@ -212,22 +209,22 @@ Create new utilities directory:
 
 ```typescript
 export interface SessionStore {
-  getSession(sessionId: string): SessionData | null
-  updateSession(sessionId: string, data: Record<string, any>): void
-  createSession(userId: string | null): string
+    getSession(sessionId: string): SessionData | null
+    updateSession(sessionId: string, data: Record<string, any>): void
+    createSession(userId: string | null): string
 }
 
 export interface SessionData {
-  userId: string | null
-  data: Record<string, any>
-  createdAt: Date
-  expiresAt: Date
+    userId: string | null
+    data: Record<string, any>
+    createdAt: Date
+    expiresAt: Date
 }
 
 export function extractSessionId(req: Request): string | null {
-  const cookies = req.headers.get('cookie') || ''
-  const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
-  return sessionIdMatch ? sessionIdMatch[1] : null
+    const cookies = req.headers.get('cookie') || ''
+    const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
+    return sessionIdMatch ? sessionIdMatch[1] : null
 }
 ```
 
@@ -240,114 +237,110 @@ import {serializeAllStates} from '../../render/ssrState'
 import type {SessionStore} from './session'
 
 export interface SessionStore {
-  getSession(sessionId: string): SessionData | null
-  updateSession(sessionId: string, data: Record<string, any>): void
-  createSession(userId: string | null): string
+    getSession(sessionId: string): SessionData | null
+    updateSession(sessionId: string, data: Record<string, any>): void
+    createSession(userId: string | null): string
 }
 
 export interface SessionData {
-  userId: string | null
-  data: Record<string, any>
-  createdAt: Date
-  expiresAt: Date
+    userId: string | null
+    data: Record<string, any>
+    createdAt: Date
+    expiresAt: Date
 }
 
 export interface SSROptions {
-  routes: Record<string, any>
-  initStore: (sessionData: any) => void
-  getSessionData: (req: Request) => {sessionData: any, sessionId: string}
-  getHtmlTemplate: () => Promise<string>
-  appSelector?: string
-  stateScriptId?: string
+    routes: Record<string, any>
+    initStore: (sessionData: any) => void
+    getSessionData: (req: Request) => {sessionData: any; sessionId: string}
+    getHtmlTemplate: () => Promise<string>
+    appSelector?: string
+    stateScriptId?: string
 }
 
-export async function createSSRResponse(
-  pathname: string,
-  req: Request,
-  options: SSROptions
-): Promise<Response> {
-  // Clear state registry
-  clearStateRegistry()
-  
-  // Initialize store with session data
-  const {sessionData, sessionId} = options.getSessionData(req)
-  options.initStore(sessionData)
-  
-  // Render route to HTML
-  const result = await m.route.resolve(pathname, options.routes, m.renderToString)
-  const appHtml = typeof result === 'string' ? result : result.html
-  const serializedState = typeof result === 'string' ? {} : result.state
-  
-  // Get HTML template
-  let html = await options.getHtmlTemplate()
-  
-  // Inject SSR content and state
-  const appSelector = options.appSelector || '#app'
-  html = html.replace(`<div id="${appSelector.slice(1)}"></div>`, `<div id="${appSelector.slice(1)}">${appHtml}</div>`)
-  
-  const stateScriptId = options.stateScriptId || '__SSR_STATE__'
-  const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
-  html = html.replace('</head>', `${stateScript}</head>`)
-  
-  // Return response with session cookie
-  return new Response(html, {
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
-    },
-  })
+export async function createSSRResponse(pathname: string, req: Request, options: SSROptions): Promise<Response> {
+    // Clear state registry
+    clearStateRegistry()
+
+    // Initialize store with session data
+    const {sessionData, sessionId} = options.getSessionData(req)
+    options.initStore(sessionData)
+
+    // Render route to HTML
+    const result = await m.route.resolve(pathname, options.routes, m.renderToString)
+    const appHtml = typeof result === 'string' ? result : result.html
+    const serializedState = typeof result === 'string' ? {} : result.state
+
+    // Get HTML template
+    let html = await options.getHtmlTemplate()
+
+    // Inject SSR content and state
+    const appSelector = options.appSelector || '#app'
+    html = html.replace(`<div id="${appSelector.slice(1)}"></div>`, `<div id="${appSelector.slice(1)}">${appHtml}</div>`)
+
+    const stateScriptId = options.stateScriptId || '__SSR_STATE__'
+    const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
+    html = html.replace('</head>', `${stateScript}</head>`)
+
+    // Return response with session cookie
+    return new Response(html, {
+        headers: {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
+        },
+    })
 }
 
 export function createSessionUpdateHandler(
-  sessionStore: SessionStore,
-  extractSessionId: (req: Request) => string | null
+    sessionStore: SessionStore,
+    extractSessionId: (req: Request) => string | null,
 ): (req: Request) => Promise<Response> {
-  return async (req: Request): Promise<Response> => {
-    const sessionId = extractSessionId(req)
-    
-    if (!sessionId) {
-      return new Response('No session ID', { status: 401 })
+    return async (req: Request): Promise<Response> => {
+        const sessionId = extractSessionId(req)
+
+        if (!sessionId) {
+            return new Response('No session ID', {status: 401})
+        }
+
+        try {
+            const body = await req.json()
+            const sessionData = body.session_data || body.session || {}
+            sessionStore.updateSession(sessionId, {session_data: sessionData})
+
+            return new Response(JSON.stringify({success: true}), {
+                headers: {'Content-Type': 'application/json'},
+            })
+        } catch (error) {
+            console.error('Error updating session:', error)
+            return new Response('Internal Server Error', {status: 500})
+        }
     }
-    
-    try {
-      const body = await req.json()
-      const sessionData = body.session_data || body.session || {}
-      sessionStore.updateSession(sessionId, { session_data: sessionData })
-      
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch (error) {
-      console.error('Error updating session:', error)
-      return new Response('Internal Server Error', { status: 500 })
-    }
-  }
 }
 
 export function createSessionUpdateHandler(
-  sessionStore: SessionStore,
-  extractSessionId: (req: Request) => string | null
+    sessionStore: SessionStore,
+    extractSessionId: (req: Request) => string | null,
 ): (req: Request) => Promise<Response> {
-  return async (req: Request): Promise<Response> => {
-    const sessionId = extractSessionId(req)
-    
-    if (!sessionId) {
-      return new Response('No session ID', { status: 401 })
+    return async (req: Request): Promise<Response> => {
+        const sessionId = extractSessionId(req)
+
+        if (!sessionId) {
+            return new Response('No session ID', {status: 401})
+        }
+
+        try {
+            const body = await req.json()
+            const sessionData = body.session_data || body.session || {}
+            sessionStore.updateSession(sessionId, {session_data: sessionData})
+
+            return new Response(JSON.stringify({success: true}), {
+                headers: {'Content-Type': 'application/json'},
+            })
+        } catch (error) {
+            console.error('Error updating session:', error)
+            return new Response('Internal Server Error', {status: 500})
+        }
     }
-    
-    try {
-      const body = await req.json()
-      const sessionData = body.session_data || body.session || {}
-      sessionStore.updateSession(sessionId, { session_data: sessionData })
-      
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { 'Content-Type': 'application/json' }
-      })
-    } catch (error) {
-      console.error('Error updating session:', error)
-      return new Response('Internal Server Error', { status: 500 })
-    }
-  }
 }
 ```
 
@@ -373,18 +366,15 @@ import htmlTemplate from './public/index.html'
 
 // Use abstracted SSR utilities
 const handleSSR = async (pathname: string, req: Request) => {
-  return await createSSRResponse(pathname, req, {
-    routes,
-    initStore,
-    getSessionData: (req) => getSessionData(req),
-    getHtmlTemplate: getProcessedTemplate,
-  })
+    return await createSSRResponse(pathname, req, {
+        routes,
+        initStore,
+        getSessionData: (req) => getSessionData(req),
+        getHtmlTemplate: getProcessedTemplate,
+    })
 }
 
-const handleSessionUpdate = createSessionUpdateHandler(
-  sessionStore,
-  extractSessionId
-)
+const handleSessionUpdate = createSessionUpdateHandler(sessionStore, extractSessionId)
 ```
 
 ## Examples
@@ -424,19 +414,19 @@ import {createSessionUpdateHandler} from 'mithril/server/utils/ssr'
 import {extractSessionId} from 'mithril/server/utils/session'
 
 Bun.serve({
-  async fetch(req) {
-    const url = new URL(req.url)
-    
-    if (url.pathname === '/api/session' && req.method === 'POST') {
-      return await handleSessionUpdate(req)
-    }
-    
-    if (shouldSSR(url.pathname)) {
-      return await createSSRResponse(url.pathname, req, options)
-    }
-    
-    return undefined
-  }
+    async fetch(req) {
+        const url = new URL(req.url)
+
+        if (url.pathname === '/api/session' && req.method === 'POST') {
+            return await handleSessionUpdate(req)
+        }
+
+        if (shouldSSR(url.pathname)) {
+            return await createSSRResponse(url.pathname, req, options)
+        }
+
+        return undefined
+    },
 })
 ```
 

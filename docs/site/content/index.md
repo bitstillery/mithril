@@ -50,7 +50,7 @@ If you are an experienced developer and want to know how Mithril.js compares to 
 
 Mithril.js supports IE11, Firefox ESR, and the last two versions of Firefox, Edge, Safari, and Chrome. No polyfills required.
 
-*Looking for the v1 docs? [Click here](https://mithril.js.org/archive/v1.1.7/index.html).*
+_Looking for the v1 docs? [Click here](https://mithril.js.org/archive/v1.1.7/index.html)._
 
 ---
 
@@ -62,12 +62,12 @@ Let's create an HTML file to follow along:
 
 ```html
 <body>
-	<script src="https://unpkg.com/mithril/mithril.js"></script>
-	<script>
-	var root = document.body
+    <script src="https://unpkg.com/mithril/mithril.js"></script>
+    <script>
+        var root = document.body
 
-	// your code goes here!
-	</script>
+        // your code goes here!
+    </script>
 </body>
 ```
 
@@ -79,12 +79,13 @@ var root = document.body
 // Your code here
 
 m.mount(root, {
-	view: function() {
-		return m("h1", "Try me out")
-	}
+    view: function () {
+        return m('h1', 'Try me out')
+    },
 })
 ```
-> *[Click here to open the sample on flems.io](https://flems.io/mithril@[version]#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvEAXwvW10QICsEqdBk2J4s+LLQCuDABQATWtSk4G+AEa15ATwoACYAB00e03oBuEGAHdEesDOrEI9WQEoDxs970AnGMRSviZYsgDkhACMYfphACq+2no4etLEYW5eZqzGrG6UIHAwsE4uaAg8ACyIAExsHCCYOHj41HACNPSMzDxsALqsQA)*
+
+> _[Click here to open the sample on flems.io](https://flems.io/mithril@[version]#0=N4IgZglgNgpgziAXAbVAOwIYFsZJAOgAsAXLKEAGhAGMB7NYmBvEAXwvW10QICsEqdBk2J4s+LLQCuDABQATWtSk4G+AEa15ATwoACYAB00e03oBuEGAHdEesDOrEI9WQEoDxs970AnGMRSviZYsgDkhACMYfphACq+2no4etLEYW5eZqzGrG6UIHAwsE4uaAg8ACyIAExsHCCYOHj41HACNPSMzDxsALqsQA)_
 
 ---
 
@@ -95,13 +96,13 @@ Let's start as small as we can: render some text on screen. Copy the code below 
 ```javascript
 var root = document.body
 
-m.render(root, "Hello world")
+m.render(root, 'Hello world')
 ```
 
 Now, let's change the text to something else. Add this line of code under the previous one:
 
 ```javascript
-m.render(root, "My first app")
+m.render(root, 'My first app')
 ```
 
 As you can see, you use the same code to both create and update HTML. Mithril.js automatically figures out the most efficient way of updating the text, rather than blindly recreating it from scratch.
@@ -111,7 +112,7 @@ As you can see, you use the same code to both create and update HTML. Mithril.js
 ```js
 var root = document.body
 
-m.render(root, "Hello World")
+m.render(root, 'Hello World')
 ```
 
 ---
@@ -121,31 +122,25 @@ m.render(root, "Hello World")
 Let's wrap our text in an `<h1>` tag.
 
 ```javascript
-m.render(root, m("h1", "My first app"))
+m.render(root, m('h1', 'My first app'))
 ```
 
 The `m()` function can be used to describe any HTML structure you want. So if you need to add a class to the `<h1>`:
 
 ```javascript
-m("h1", {class: "title"}, "My first app")
+m('h1', {class: 'title'}, 'My first app')
 ```
 
 If you want to have multiple elements:
 
 ```javascript
-[
-	m("h1", {class: "title"}, "My first app"),
-	m("button", "A button"),
-]
+;[m('h1', {class: 'title'}, 'My first app'), m('button', 'A button')]
 ```
 
 And so on:
 
 ```javascript
-m("main", [
-	m("h1", {class: "title"}, "My first app"),
-	m("button", "A button"),
-])
+m('main', [m('h1', {class: 'title'}, 'My first app'), m('button', 'A button')])
 ```
 
 #### Live Example
@@ -153,12 +148,7 @@ m("main", [
 ```js
 var root = document.body
 
-m.render(root, [
-    m("main", [
-        m("h1", {class: "title"}, "My first app"),
-        m("button", "A button"),
-    ])
-])
+m.render(root, [m('main', [m('h1', {class: 'title'}, 'My first app'), m('button', 'A button')])])
 ```
 
 Note: If you prefer `<html>` syntax, [it's possible to use it via a Babel plugin](jsx.md).
@@ -166,8 +156,8 @@ Note: If you prefer `<html>` syntax, [it's possible to use it via a Babel plugin
 ```jsx
 // HTML syntax via Babel's JSX plugin
 <main>
-	<h1 class="title">My first app</h1>
-	<button>A button</button>
+    <h1 class='title'>My first app</h1>
+    <button>A button</button>
 </main>
 ```
 
@@ -179,12 +169,9 @@ A Mithril.js component is just an object with a `view` function. Here's the code
 
 ```javascript
 var Hello = {
-	view: function() {
-		return m("main", [
-			m("h1", {class: "title"}, "My first app"),
-			m("button", "A button"),
-		])
-	}
+    view: function () {
+        return m('main', [m('h1', {class: 'title'}, 'My first app'), m('button', 'A button')])
+    },
 }
 ```
 
@@ -198,8 +185,8 @@ As you would expect, doing so creates this markup:
 
 ```html
 <main>
-	<h1 class="title">My first app</h1>
-	<button>A button</button>
+    <h1 class="title">My first app</h1>
+    <button>A button</button>
 </main>
 ```
 
@@ -209,13 +196,21 @@ The `m.mount` function is similar to `m.render`, but instead of rendering some H
 var count = 0 // added a variable
 
 var Hello = {
-	view: function() {
-		return m("main", [
-			m("h1", {class: "title"}, "My first app"),
-			// changed the next line
-			m("button", {onclick: function() {count++}}, count + " clicks"),
-		])
-	}
+    view: function () {
+        return m('main', [
+            m('h1', {class: 'title'}, 'My first app'),
+            // changed the next line
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        count++
+                    },
+                },
+                count + ' clicks',
+            ),
+        ])
+    },
 }
 
 m.mount(root, Hello)
@@ -234,16 +229,26 @@ var root = document.body
 var count = 0 // added a variable
 
 var Hello = {
-    view: function() {
-        return m("main", [
-            m("h1", {
-                class: "title"
-            }, "My first app"),
-            m("button", {
-                onclick: function() {count++}
-            }, count + " clicks")
+    view: function () {
+        return m('main', [
+            m(
+                'h1',
+                {
+                    class: 'title',
+                },
+                'My first app',
+            ),
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        count++
+                    },
+                },
+                count + ' clicks',
+            ),
         ])
-    }
+    },
 }
 
 m.mount(root, Hello)
@@ -259,9 +264,9 @@ Let's add a splash page that appears before our click counter. First we create a
 
 ```javascript
 var Splash = {
-	view: function() {
-		return m("a", {href: "#!/hello"}, "Enter!")
-	}
+    view: function () {
+        return m('a', {href: '#!/hello'}, 'Enter!')
+    },
 }
 ```
 
@@ -270,9 +275,9 @@ As you can see, this component simply renders a link to `#!/hello`. The `#!` par
 Now that we're going to have more than one screen, we use `m.route` instead of `m.mount`.
 
 ```javascript
-m.route(root, "/splash", {
-	"/splash": Splash,
-	"/hello": Hello,
+m.route(root, '/splash', {
+    '/splash': Splash,
+    '/hello': Hello,
 })
 ```
 
@@ -289,29 +294,43 @@ var root = document.body
 var count = 0
 
 var Hello = {
-    view: function() {
-        return m("main", [
-            m("h1", {
-                class: "title"
-            }, "My first app"),
-            m("button", {
-                onclick: function() {count++}
-            }, count + " clicks"),
+    view: function () {
+        return m('main', [
+            m(
+                'h1',
+                {
+                    class: 'title',
+                },
+                'My first app',
+            ),
+            m(
+                'button',
+                {
+                    onclick: function () {
+                        count++
+                    },
+                },
+                count + ' clicks',
+            ),
         ])
-    }
+    },
 }
 
 var Splash = {
-    view: function() {
-        return m("a", {
-            href: "#!/hello"
-        }, "Enter!")
-    }
+    view: function () {
+        return m(
+            'a',
+            {
+                href: '#!/hello',
+            },
+            'Enter!',
+        )
+    },
 }
 
-m.route(root, "/splash", {
-    "/splash": Splash,
-    "/hello": Hello,
+m.route(root, '/splash', {
+    '/splash': Splash,
+    '/hello': Hello,
 })
 ```
 
@@ -327,16 +346,15 @@ First we create a function that calls `m.request`. The `url` specifies an endpoi
 
 ```javascript
 var count = 0
-var increment = function() {
-	m.request({
-		method: "PUT",
-		url: "//mithril-rem.fly.dev/api/tutorial/1",
-		body: {count: count + 1},
-		withCredentials: true,
-	})
-	.then(function(data) {
-		count = parseInt(data.count)
-	})
+var increment = function () {
+    m.request({
+        method: 'PUT',
+        url: '//mithril-rem.fly.dev/api/tutorial/1',
+        body: {count: count + 1},
+        withCredentials: true,
+    }).then(function (data) {
+        count = parseInt(data.count)
+    })
 }
 ```
 
@@ -346,12 +364,9 @@ Let's replace the event handler in the component to call the `increment` functio
 
 ```javascript
 var Hello = {
-	view: function() {
-		return m("main", [
-			m("h1", {class: "title"}, "My first app"),
-			m("button", {onclick: increment}, count + " clicks"),
-		])
-	}
+    view: function () {
+        return m('main', [m('h1', {class: 'title'}, 'My first app'), m('button', {onclick: increment}, count + ' clicks')])
+    },
 }
 ```
 
@@ -363,29 +378,36 @@ Clicking the button should now update the count.
 var root = document.body
 var count = 0
 
-var increment = function() {
+var increment = function () {
     m.request({
-        method: "PUT",
-        url: "//mithril-rem.fly.dev/api/tutorial/1",
+        method: 'PUT',
+        url: '//mithril-rem.fly.dev/api/tutorial/1',
         body: {count: count + 1},
         withCredentials: true,
-    })
-    .then(function(data) {
+    }).then(function (data) {
         count = parseInt(data.count)
     })
 }
 
 var Hello = {
-    view: function() {
-        return m("main", [
-            m("h1", {
-                class: "title"
-            }, "My first app"),
-            m("button", {
-                onclick: increment
-            }, count + " clicks"),
+    view: function () {
+        return m('main', [
+            m(
+                'h1',
+                {
+                    class: 'title',
+                },
+                'My first app',
+            ),
+            m(
+                'button',
+                {
+                    onclick: increment,
+                },
+                count + ' clicks',
+            ),
         ])
-    }
+    },
 }
 
 m.mount(root, Hello)

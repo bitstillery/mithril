@@ -15,8 +15,8 @@ Documentation on m.censor(), which helps cloning vnodes
 Returns a shallow-cloned object with lifecycle attributes and any given custom attributes omitted.
 
 ```javascript
-var attrs = {one: "two", enabled: false, oninit: function() {}}
-var censored = m.censor(attrs, ["enabled"])
+var attrs = {one: 'two', enabled: false, oninit: function () {}}
+var censored = m.censor(attrs, ['enabled'])
 // {one: "two"}
 ```
 
@@ -26,11 +26,11 @@ var censored = m.censor(attrs, ["enabled"])
 
 `censored = m.censor(object, extra)`
 
-Argument     | Type                                       | Required | Description
------------- | ------------------------------------------ | -------- | ---
-`object`     | `Object`                                   | Yes      | A key-value map to be converted into a string
-`extra`      | `Array<String>`                            | No       | Additional properties to omit.
-**returns**  | `Object`                                   |          | The original object if no properties to omit existed on it, a shallow-cloned object with the removed properties otherwise.
+| Argument    | Type            | Required | Description                                                                                                                |
+| ----------- | --------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `object`    | `Object`        | Yes      | A key-value map to be converted into a string                                                                              |
+| `extra`     | `Array<String>` | No       | Additional properties to omit.                                                                                             |
+| **returns** | `Object`        |          | The original object if no properties to omit existed on it, a shallow-cloned object with the removed properties otherwise. |
 
 [How to read signatures](signatures.md)
 
@@ -42,25 +42,26 @@ Ordinarily, you don't need this method, and you'll just want to specify the attr
 
 ```javascript
 function SomePage() {
-	return {
-		view: function() {
-			return m(SomeFancyView, {
-				oncreate: function() {
-					sendViewHit(m.route.get(), "some fancy view")
-				},
-			})
-		},
-	}
+    return {
+        view: function () {
+            return m(SomeFancyView, {
+                oncreate: function () {
+                    sendViewHit(m.route.get(), 'some fancy view')
+                },
+            })
+        },
+    }
 }
 
 function SomeFancyView() {
-	return {
-		view: function(vnode) {
-			return m("div", vnode.attrs, [ // !!!
-				// ...
-			])
-		},
-	}
+    return {
+        view: function (vnode) {
+            return m('div', vnode.attrs, [
+                // !!!
+                // ...
+            ])
+        },
+    }
 }
 ```
 
@@ -69,13 +70,13 @@ This looks benign, but this creates a problem: you're sending two hits each time
 ```javascript
 // Fixed
 function SomeFancyView() {
-	return {
-		view: function(vnode) {
-			return m("div", m.censor(vnode.attrs), [
-				// ...
-			])
-		},
-	}
+    return {
+        view: function (vnode) {
+            return m('div', m.censor(vnode.attrs), [
+                // ...
+            ])
+        },
+    }
 }
 ```
 
@@ -83,33 +84,35 @@ You can also run into similar issues with keys:
 
 ```javascript
 function SomePage() {
-	return {
-		view: function() {
-			return m(Layout, {
-				pageTitle: "Some Page",
-				key: someKey,
-			}, [
-				// ...
-			])
-		},
-	}
+    return {
+        view: function () {
+            return m(
+                Layout,
+                {
+                    pageTitle: 'Some Page',
+                    key: someKey,
+                },
+                [
+                    // ...
+                ],
+            )
+        },
+    }
 }
 
 function Layout() {
-	return {
-		view: function(vnode) {
-			return [
-				m("header", [
-					m("h1", "My beautiful web app"),
-					m("nav"),
-				]),
-				m(".body", vnode.attrs, [ // !!!
-					m("h2", vnode.attrs.pageTitle),
-					vnode.children,
-				])
-			]
-		},
-	}
+    return {
+        view: function (vnode) {
+            return [
+                m('header', [m('h1', 'My beautiful web app'), m('nav')]),
+                m('.body', vnode.attrs, [
+                    // !!!
+                    m('h2', vnode.attrs.pageTitle),
+                    vnode.children,
+                ]),
+            ]
+        },
+    }
 }
 ```
 
@@ -117,14 +120,13 @@ This would end up [throwing an error](keys.md#key-restrictions) because here's w
 
 ```javascript
 return [
-	m("header", [
-		m("h1", "My beautiful web app"),
-		m("nav"),
-	]),
-	m(".body", {pageTitle: "Some Page", key: someKey}, [
-		m("h2", "Some Page"),
-		[/* ... */],
-	])
+    m('header', [m('h1', 'My beautiful web app'), m('nav')]),
+    m('.body', {pageTitle: 'Some Page', key: someKey}, [
+        m('h2', 'Some Page'),
+        [
+            /* ... */
+        ],
+    ]),
 ]
 ```
 
@@ -133,19 +135,13 @@ You wouldn't likely catch that at first glance, especially in much more real-wor
 ```javascript
 // Fixed
 function Layout() {
-	return {
-		view: function(vnode) {
-			return [
-				m("header", [
-					m("h1", "My beautiful web app"),
-					m("nav"),
-				]),
-				m(".body", m.censor(vnode.attrs, ["pageTitle"]), [
-					m("h2", vnode.attrs.pageTitle),
-					vnode.children,
-				])
-			]
-		},
-	}
+    return {
+        view: function (vnode) {
+            return [
+                m('header', [m('h1', 'My beautiful web app'), m('nav')]),
+                m('.body', m.censor(vnode.attrs, ['pageTitle']), [m('h2', vnode.attrs.pageTitle), vnode.children]),
+            ]
+        },
+    }
 }
 ```

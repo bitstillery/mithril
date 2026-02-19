@@ -19,11 +19,13 @@ tests/
 ## Running Tests
 
 Run all tests:
+
 ```bash
 bun test
 ```
 
 Run specific test suite:
+
 ```bash
 bun test tests/signal/
 bun test tests/store/

@@ -3,128 +3,158 @@ import m from '../../../index'
 import {$store, store} from '../store'
 
 export class StoreDemo extends MithrilComponent {
-	view() {
-		return <div class="store-demo">
-			<h2>Store State Types Demo</h2>
-			<p>This demo shows how different state types work with SSR:</p>
-			
-			<div class="state-section">
-				<h3>Saved State (localStorage)</h3>
-				<p>Survives browser restarts. Not overwritten by SSR.</p>
-				<div class="state-display">
-					<label>Username:</label>
-					<input
-						type="text"
-						value={$store.saved.username}
-						oninput={(e: Event) => {
-							$store.saved.username = (e.target as HTMLInputElement).value
-							m.redraw()
-						}}
-					/>
-					<p>Visit Count: {$store.saved.visitCount}</p>
-					<button onclick={() => {
-						$store.saved.visitCount++
-						m.redraw()
-					}}>Increment Visit Count</button>
-					<button onclick={async () => {
-						try {
-							await store.save({saved: true})
-							alert('localStorage state saved! Reload page to see it persist.')
-						} catch (error) {
-							console.error('Failed to save localStorage state:', error)
-							alert('Failed to save localStorage state')
-						}
-					}}>Save localStorage State</button>
-				</div>
-			</div>
+    view() {
+        return (
+            <div class='store-demo'>
+                <h2>Store State Types Demo</h2>
+                <p>This demo shows how different state types work with SSR:</p>
 
-			<div class="state-section">
-				<h3>Temporary State (not persisted)</h3>
-				<p>Resets on page reload. Overwritten by SSR.</p>
-				<div class="state-display">
-					<p>Click Count: {$store.temporary.clickCount}</p>
-					<button onclick={() => {
-						$store.temporary.clickCount++
-						m.redraw()
-					}}>Increment Click Count</button>
-					<p>Message: {$store.temporary.message}</p>
-					<input
-						type="text"
-						value={$store.temporary.message}
-						placeholder="Enter message"
-						oninput={(e: Event) => {
-							$store.temporary.message = (e.target as HTMLInputElement).value
-							m.redraw()
-						}}
-					/>
-				</div>
-			</div>
+                <div class='state-section'>
+                    <h3>Saved State (localStorage)</h3>
+                    <p>Survives browser restarts. Not overwritten by SSR.</p>
+                    <div class='state-display'>
+                        <label>Username:</label>
+                        <input
+                            type='text'
+                            value={$store.saved.username}
+                            oninput={(e: Event) => {
+                                $store.saved.username = (e.target as HTMLInputElement).value
+                                m.redraw()
+                            }}
+                        />
+                        <p>Visit Count: {$store.saved.visitCount}</p>
+                        <button
+                            onclick={() => {
+                                $store.saved.visitCount++
+                                m.redraw()
+                            }}
+                        >
+                            Increment Visit Count
+                        </button>
+                        <button
+                            onclick={async () => {
+                                try {
+                                    await store.save({saved: true})
+                                    alert('localStorage state saved! Reload page to see it persist.')
+                                } catch (error) {
+                                    console.error('Failed to save localStorage state:', error)
+                                    alert('Failed to save localStorage state')
+                                }
+                            }}
+                        >
+                            Save localStorage State
+                        </button>
+                    </div>
+                </div>
 
-			<div class="state-section">
-				<h3>Tab State (sessionStorage)</h3>
-				<p>Survives page reloads. Clears when tab closes. Not overwritten by SSR.</p>
-				<div class="state-display">
-					<p>Session ID: {$store.tab.sessionId}</p>
-					<p>Last Activity: {new Date($store.tab.lastActivity).toLocaleString()}</p>
-					<p>Tab Data: {$store.tab.tabSpecificData}</p>
-					<button onclick={() => {
-						$store.tab.lastActivity = Date.now()
-						$store.tab.tabSpecificData = `Updated at ${new Date().toLocaleTimeString()}`
-						store.save()
-						m.redraw()
-					}}>Update Tab Activity</button>
-				</div>
-			</div>
+                <div class='state-section'>
+                    <h3>Temporary State (not persisted)</h3>
+                    <p>Resets on page reload. Overwritten by SSR.</p>
+                    <div class='state-display'>
+                        <p>Click Count: {$store.temporary.clickCount}</p>
+                        <button
+                            onclick={() => {
+                                $store.temporary.clickCount++
+                                m.redraw()
+                            }}
+                        >
+                            Increment Click Count
+                        </button>
+                        <p>Message: {$store.temporary.message}</p>
+                        <input
+                            type='text'
+                            value={$store.temporary.message}
+                            placeholder='Enter message'
+                            oninput={(e: Event) => {
+                                $store.temporary.message = (e.target as HTMLInputElement).value
+                                m.redraw()
+                            }}
+                        />
+                    </div>
+                </div>
 
-			<div class="state-section">
-				<h3>Session State (server-side)</h3>
-				<p>Comes from server via SSR. Persists across reloads (via API), clears on server restart.</p>
-				<div class="state-display">
-					<p>User ID: {$store.session.user.id || 'Not authenticated'}</p>
-					<p>User Name: {$store.session.user.name || 'Guest'}</p>
-					<p>Role: {$store.session.user.role || 'None'}</p>
-					<label>Server Data:</label>
-					<input
-						type="text"
-						value={$store.session.serverData || ''}
-						placeholder="Enter server data"
-						oninput={(e: Event) => {
-							$store.session.serverData = (e.target as HTMLInputElement).value
-						}}
-					/>
-					<p>Last Server Update: {$store.session.lastServerUpdate ? new Date($store.session.lastServerUpdate).toLocaleString() : 'Never'}</p>
-					<p>Authenticated: {$store.isAuthenticated ? 'Yes' : 'No'}</p>
-					<p>Display Name: {$store.displayName}</p>
-					<button onclick={async () => {
-						try {
-							await store.save({session: true})
-							alert('Session state saved! Reload page to see it persist.')
-						} catch (error) {
-							console.error('Failed to save session state:', error)
-							alert('Failed to save session state')
-						}
-					}}>Save Session State</button>
-				</div>
-			</div>
+                <div class='state-section'>
+                    <h3>Tab State (sessionStorage)</h3>
+                    <p>Survives page reloads. Clears when tab closes. Not overwritten by SSR.</p>
+                    <div class='state-display'>
+                        <p>Session ID: {$store.tab.sessionId}</p>
+                        <p>Last Activity: {new Date($store.tab.lastActivity).toLocaleString()}</p>
+                        <p>Tab Data: {$store.tab.tabSpecificData}</p>
+                        <button
+                            onclick={() => {
+                                $store.tab.lastActivity = Date.now()
+                                $store.tab.tabSpecificData = `Updated at ${new Date().toLocaleTimeString()}`
+                                store.save()
+                                m.redraw()
+                            }}
+                        >
+                            Update Tab Activity
+                        </button>
+                    </div>
+                </div>
 
-			<div class="state-section">
-				<h3>State Precedence Test</h3>
-				<p>After SSR hydration:</p>
-				<ul>
-					<li>✅ Saved state: Preserved (not overwritten)</li>
-					<li>✅ Tab state: Preserved (not overwritten)</li>
-					<li>⚠️ Temporary state: Overwritten by SSR</li>
-					<li>⚠️ Session state: Overwritten by SSR (comes from server)</li>
-				</ul>
-				<button onclick={() => {
-					// Reload page to test SSR hydration
-					if (typeof window !== 'undefined') {
-						window.location.reload()
-					}
-				}}>Reload Page (Test SSR Hydration)</button>
-			</div>
+                <div class='state-section'>
+                    <h3>Session State (server-side)</h3>
+                    <p>Comes from server via SSR. Persists across reloads (via API), clears on server restart.</p>
+                    <div class='state-display'>
+                        <p>User ID: {$store.session.user.id || 'Not authenticated'}</p>
+                        <p>User Name: {$store.session.user.name || 'Guest'}</p>
+                        <p>Role: {$store.session.user.role || 'None'}</p>
+                        <label>Server Data:</label>
+                        <input
+                            type='text'
+                            value={$store.session.serverData || ''}
+                            placeholder='Enter server data'
+                            oninput={(e: Event) => {
+                                $store.session.serverData = (e.target as HTMLInputElement).value
+                            }}
+                        />
+                        <p>
+                            Last Server Update:{' '}
+                            {$store.session.lastServerUpdate
+                                ? new Date($store.session.lastServerUpdate).toLocaleString()
+                                : 'Never'}
+                        </p>
+                        <p>Authenticated: {$store.isAuthenticated ? 'Yes' : 'No'}</p>
+                        <p>Display Name: {$store.displayName}</p>
+                        <button
+                            onclick={async () => {
+                                try {
+                                    await store.save({session: true})
+                                    alert('Session state saved! Reload page to see it persist.')
+                                } catch (error) {
+                                    console.error('Failed to save session state:', error)
+                                    alert('Failed to save session state')
+                                }
+                            }}
+                        >
+                            Save Session State
+                        </button>
+                    </div>
+                </div>
 
-			<style>{`
+                <div class='state-section'>
+                    <h3>State Precedence Test</h3>
+                    <p>After SSR hydration:</p>
+                    <ul>
+                        <li>✅ Saved state: Preserved (not overwritten)</li>
+                        <li>✅ Tab state: Preserved (not overwritten)</li>
+                        <li>⚠️ Temporary state: Overwritten by SSR</li>
+                        <li>⚠️ Session state: Overwritten by SSR (comes from server)</li>
+                    </ul>
+                    <button
+                        onclick={() => {
+                            // Reload page to test SSR hydration
+                            if (typeof window !== 'undefined') {
+                                window.location.reload()
+                            }
+                        }}
+                    >
+                        Reload Page (Test SSR Hydration)
+                    </button>
+                </div>
+
+                <style>{`
 				.store-demo {
 					padding: 20px;
 				}
@@ -166,6 +196,7 @@ export class StoreDemo extends MithrilComponent {
 					margin: 5px 0;
 				}
 			`}</style>
-		</div>
-	}
+            </div>
+        )
+    }
 }

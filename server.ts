@@ -21,12 +21,12 @@ const {renderToString, renderToStringSync} = renderToStringFactory()
 
 // Create isomorphic router instance (null window for server, mock mountRedraw)
 const router = routerFactory(null, {
-	mount: () => {
-		throw new Error('m.mount is not available on server. Use m.route.resolve instead.')
-	},
-	redraw: () => {
-		throw new Error('m.redraw is not available on server.')
-	},
+    mount: () => {
+        throw new Error('m.mount is not available on server. Use m.route.resolve instead.')
+    },
+    redraw: () => {
+        throw new Error('m.redraw is not available on server.')
+    },
 })
 
 // Set prefix to empty string for pathname-based routing (not hash-based)
@@ -34,31 +34,33 @@ router.prefix = ''
 
 // Expose resolve method and Link component for server-side routing
 const routerServer = {
-	resolve: router.resolve.bind(router),
-	Link: router.Link,
-	prefix: router.prefix,
-	get: router.get.bind(router),
-	set: router.set.bind(router),
-	param: router.param.bind(router),
-	params: router.params,
-	link: router.link.bind(router),
-	redirect: router.redirect.bind(router),
-	REDIRECT: router.REDIRECT,
-	SKIP: router.SKIP,
+    resolve: router.resolve.bind(router),
+    Link: router.Link,
+    prefix: router.prefix,
+    get: router.get.bind(router),
+    set: router.set.bind(router),
+    param: router.param.bind(router),
+    params: router.params,
+    link: router.link.bind(router),
+    redirect: router.redirect.bind(router),
+    REDIRECT: router.REDIRECT,
+    SKIP: router.SKIP,
 }
 
 // Server-side Mithril instance
-const mServer: MithrilStatic & Hyperscript & {
-	renderToString: typeof renderToString
-	renderToStringSync: typeof renderToStringSync
-	route: typeof routerServer
-} = function m(this: any) {
-	return hyperscript.apply(this, arguments as any)
-} as unknown as MithrilStatic & Hyperscript & {
-	renderToString: typeof renderToString
-	renderToStringSync: typeof renderToStringSync
-	route: typeof routerServer
-}
+const mServer: MithrilStatic &
+    Hyperscript & {
+        renderToString: typeof renderToString
+        renderToStringSync: typeof renderToStringSync
+        route: typeof routerServer
+    } = function m(this: any) {
+    return hyperscript.apply(this, arguments as any)
+} as unknown as MithrilStatic &
+    Hyperscript & {
+        renderToString: typeof renderToString
+        renderToStringSync: typeof renderToStringSync
+        route: typeof routerServer
+    }
 
 mServer.m = hyperscript as Hyperscript
 mServer.trust = hyperscript.trust
@@ -76,18 +78,21 @@ mServer.censor = censor
 
 // Placeholder implementations for server (not used but needed for type compatibility)
 mServer.mount = () => {
-	throw new Error('m.mount is not available on server. Use m.renderToString instead.')
+    throw new Error('m.mount is not available on server. Use m.renderToString instead.')
 }
 mServer.render = () => {
-	throw new Error('m.render is not available on server. Use m.renderToString instead.')
+    throw new Error('m.render is not available on server. Use m.renderToString instead.')
 }
-mServer.redraw = Object.assign(() => {
-	throw new Error('m.redraw is not available on server.')
-}, {
-	sync: () => {
-		throw new Error('m.redraw.sync is not available on server.')
-	},
-}) as Redraw
+mServer.redraw = Object.assign(
+    () => {
+        throw new Error('m.redraw is not available on server.')
+    },
+    {
+        sync: () => {
+            throw new Error('m.redraw.sync is not available on server.')
+        },
+    },
+) as Redraw
 
 export default mServer
 

@@ -26,8 +26,9 @@ So in reality, only the following sequences can encode are valid characters:
 
 The regexp just tries to match this as compactly as possible.
 */
-const validUtf8Encodings = /%(?:[0-7]|(?!c[01]|e0%[89]|ed%[ab]|f0%8|f4%[9ab])(?:c|d|(?:e|f[0-4]%[89ab])[\da-f]%[89ab])[\da-f]%[89ab])[\da-f]/gi
+const validUtf8Encodings =
+    /%(?:[0-7]|(?!c[01]|e0%[89]|ed%[ab]|f0%8|f4%[9ab])(?:c|d|(?:e|f[0-4]%[89ab])[\da-f]%[89ab])[\da-f]%[89ab])[\da-f]/gi
 
 export default function decodeURIComponentSafe(str: string): string {
-	return String(str).replace(validUtf8Encodings, decodeURIComponent)
+    return String(str).replace(validUtf8Encodings, decodeURIComponent)
 }
