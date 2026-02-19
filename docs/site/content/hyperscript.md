@@ -34,7 +34,7 @@ m('div.foo', {style: {color: 'red'}}, 'hello')
 // <div class="foo" style="color: red">hello</div>
 ```
 
-You can also use an HTML-like syntax called [JSX](jsx.md), using Babel to convert it to equivalent hyperscript calls. This is equivalent to the above.
+You can also use [TSX or htm](jsx.md) for an HTML-like syntax. This is equivalent to the above.
 
 ```jsx
 <div class='foo' style='color: red'>

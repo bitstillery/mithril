@@ -95,7 +95,7 @@ const server = serve({
                     })
                 }
                 const transpiler = new Bun.Transpiler({
-                    loader: 'jsx',
+                    loader: 'tsx',
                     tsconfig: {
                         compilerOptions: {
                             jsx: 'react',
@@ -109,9 +109,9 @@ const server = serve({
                 // Bare JSX expressions return empty; wrap so they parse
                 const isBareJsx = /^\s*</.test(stripped)
                 const toTransform = isBareJsx ? `var __ = ${stripped}` : code
-                let js = transpiler.transformSync(toTransform, 'jsx')
+                let js = transpiler.transformSync(toTransform, 'tsx')
                 if (!js && isBareJsx) {
-                    js = transpiler.transformSync(`var __ = ${stripped}`, 'jsx')
+                    js = transpiler.transformSync(`var __ = ${stripped}`, 'tsx')
                 }
                 if (js && isBareJsx) {
                     js = js + '\nm.render(document.getElementById("preview-root"), __)'

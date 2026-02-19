@@ -1,11 +1,13 @@
 /**
- * Preview iframe entry point. Exposes m and html to global, listens for code to run.
+ * Preview iframe entry point. Exposes m, html, state, MithrilComponent to global, listens for code to run.
  */
-import m from '../../index'
+import m, {state, MithrilComponent} from '../../index'
 import {html} from '../../htm'
 
 ;(globalThis as any).m = m
 ;(globalThis as any).html = html
+;(globalThis as any).state = state
+;(globalThis as any).MithrilComponent = MithrilComponent
 
 // Use m.mount for m.render so both go through the same code path (fixes standalone m.render)
 m.render = (dom: Element, vnodes: any) => {

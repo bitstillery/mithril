@@ -4,14 +4,6 @@ Documentation on how to work with paths in Mithril.js
 
 # Path Handling
 
-- [Path types](#path-types)
-- [Path parameters](#path-parameters)
-- [Parameter normalization](#parameter-normalization)
-- [Path normalization](#path-normalization)
-- [Path escaping](#path-escaping)
-
----
-
 [`m.route`](route.md) and [`m.request`](request.md) each have a concept called a path. This is used to generate the URL you route to or fetch from.
 
 ### Path types

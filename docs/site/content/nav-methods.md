@@ -3,7 +3,6 @@
     - [m.render](/render)
     - [m.mount](/mount)
     - [m.route](/route)
-    - [m.request](/request)
     - [m.parseQueryString](/parseQueryString)
     - [m.buildQueryString](/buildQueryString)
     - [m.buildPathname](/buildPathname)
@@ -12,7 +11,7 @@
     - [m.fragment](/fragment)
     - [m.redraw](/redraw)
     - [m.censor](/censor)
-- Optional
-    - [Stream](/stream)
-- Tooling
-    - [Ospec](https://github.com/MithrilJS/ospec)
+- State & reactivity
+    - [Signals](/signals)
+    - [State](/state)
+    - [Store](/store)

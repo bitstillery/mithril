@@ -2,6 +2,7 @@ import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {DocPage} from '../markdown'
 
+import {CodeBlock} from './code-block'
 import {DocsSidebar} from './docs-sidebar'
 import {Sandbox} from './sandbox'
 
@@ -38,10 +39,10 @@ const BodyContentWrapper = {
             <div class={`body ${extraClass}`} key={path}>
                 {m.trust(page?.content ?? '')}
                 <div class='footer'>
-                    <div>License: MIT. © Mithril Contributors.</div>
+                    <div>License: MIT. © Mithril Contributors. <a href='https://www.npmjs.com/package/@bitstillery/mithril'><img src='https://img.shields.io/npm/v/@bitstillery/mithril' alt='npm' /></a></div>
                     <div>
                         <a
-                            href={`https://github.com/MithrilJS/docs/edit/main/docs/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
+                            href={`https://github.com/bitstillery/mithril/edit/main/docs/site/content/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
                         >
                             Edit
                         </a>
@@ -57,7 +58,6 @@ const apiPagePatterns = [
     'render',
     'mount',
     'route',
-    'request',
     'parseQueryString',
     'buildQueryString',
     'buildPathname',
@@ -66,13 +66,16 @@ const apiPagePatterns = [
     'fragment',
     'redraw',
     'censor',
-    'stream',
+    'signals',
+    'state',
+    'store',
+    'ssr',
 ]
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
     view(vnode: Vnode<LayoutAttrs>) {
         const attrs = (vnode.attrs ?? {}) as LayoutAttrs
-        const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = '2.3.8'} = attrs
+        const {page, pendingPage, onTransitionEnd, navGuides = [], navMethods = [], version = '3.0.0-AA'} = attrs
 
         if (!page || !page.content) {
             return m('div', 'Loading...')
@@ -131,7 +134,7 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                             {m(m.route.Link, {href: '/'}, 'Guide')}
                             {m(m.route.Link, {href: '/api'}, 'API')}
                             <a href='https://mithril.zulipchat.com/'>Chat</a>
-                            <a href='https://github.com/MithrilJS/mithril.js'>GitHub</a>
+                            <a href='https://github.com/bitstillery/mithril'>GitHub</a>
                         </nav>
                     </section>
                 </header>
@@ -155,21 +158,41 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
         if (typeof window === 'undefined') return
         const bodies = document.querySelectorAll('.body')
         bodies.forEach((body) => {
-            if (typeof (globalThis as any).Prism !== 'undefined') {
-                ;(globalThis as any).Prism.highlightAllUnder(body)
-            }
-
-            const blocks = body.querySelectorAll('pre code.language-js, pre code.language-javascript, pre code.language-jsx')
-            ;[].forEach.call(blocks, (codeEl: HTMLElement) => {
+            // Replace interactive js/jsx blocks with Sandbox (CodeMirror editor + preview)
+            const sandboxBlocks = body.querySelectorAll(
+                'pre code.language-js, pre code.language-javascript, pre code.language-jsx, pre code.language-tsx',
+            )
+            ;[].forEach.call(sandboxBlocks, (codeEl: HTMLElement) => {
                 if (codeEl.closest('.docs-sandbox')) return
                 const pre = codeEl.parentElement
                 if (!pre) return
                 const code = codeEl.textContent ?? ''
-                const lang = codeEl.classList.contains('language-jsx') ? ('jsx' as const) : ('js' as const)
+                const isJsx = codeEl.classList.contains('language-jsx') || codeEl.classList.contains('language-tsx')
+                const lang = isJsx ? ('jsx' as const) : ('js' as const)
                 const wrapper = document.createElement('div')
                 pre.parentNode!.insertBefore(wrapper, pre)
                 pre.remove()
                 m.render(wrapper, m(Sandbox as any, {code, lang}))
+            })
+
+            // Replace static code blocks with CodeBlock (view-only CodeMirror, no line numbers)
+            const staticBlocks = body.querySelectorAll('pre code[class*="language-"]')
+            ;[].forEach.call(staticBlocks, (codeEl: HTMLElement) => {
+                if (codeEl.closest('.docs-sandbox') || codeEl.closest('.docs-code-block')) return
+                const isJs = codeEl.classList.contains('language-js') ||
+                    codeEl.classList.contains('language-javascript') ||
+                    codeEl.classList.contains('language-jsx') ||
+                    codeEl.classList.contains('language-tsx')
+                if (isJs) return
+                const langMatch = codeEl.className.match(/language-(\w+)/)
+                const lang = langMatch ? langMatch[1] : ''
+                const pre = codeEl.parentElement
+                if (!pre || !pre.parentNode) return
+                const code = codeEl.textContent ?? ''
+                const wrapper = document.createElement('div')
+                pre.parentNode.insertBefore(wrapper, pre)
+                pre.remove()
+                m.render(wrapper, m(CodeBlock as any, {code, lang}))
             })
         })
     }

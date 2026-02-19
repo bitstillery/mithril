@@ -8,6 +8,7 @@ function prepareCodeForPreview(code: string): string {
         .replace(/^\s*import\s+\{?\s*html\s*\}?\s+from\s+["'][^"']*mithril[^"']*["']\s*;?\s*$/gm, '')
         .replace(/^\s*import\s+m\s+from\s+["'][^"']*mithril[^"']*["']\s*;?\s*$/gm, '')
         .replace(/^\s*import\s+\{[^}]*\}\s+from\s+["'][^"']*mithril[^"']*["']\s*;?\s*$/gm, '')
+        .replace(/^\s*import\s+m\s*,\s*\{[^}]*\}\s+from\s+["'][^"']*mithril[^"']*["']\s*;?\s*$/gm, '')
         // CommonJS: var m = require('mithril') → var m = globalThis.m
         .replace(/(\b(?:var|let|const)\s+\w+\s*=\s*)require\s*\(\s*["'][^"']*mithril[^"']*["']\s*\)/g, '$1globalThis.m')
         // CommonJS: module.exports (not available in browser eval)
@@ -26,6 +27,8 @@ function prepareCodeForPreview(code: string): string {
     }
     // m.render/m.mount/m.route(document.body, ...) → use preview-root
     out = out.replace(/m\.(render|mount|route)\s*\(\s*document\.body\s*,/g, `m.$1(${mountEl},`)
+    // document.getElementById('app') common in docs examples — preview has preview-root
+    out = out.replace(/document\.getElementById\s*\(\s*['"]app['"]\s*\)/g, mountEl)
     // m.route fragment: stub route components that aren't defined in this block
     const routeMatch = out.match(/m\.route\s*\(\s*\w+\s*,\s*[^,]+,\s*\{([^}]+)\}/s)
     if (routeMatch) {

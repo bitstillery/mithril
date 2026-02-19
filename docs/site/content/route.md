@@ -633,10 +633,9 @@ var Auth = {
         Auth.password = value
     },
     login: function () {
-        m.request({
-            url: '/api/v1/auth',
-            params: {username: Auth.username, password: Auth.password},
-        }).then(function (data) {
+        fetch(`/api/v1/auth?username=${encodeURIComponent(Auth.username)}&password=${encodeURIComponent(Auth.password)}`)
+            .then((r) => r.json())
+            .then(function (data) {
             localStorage.setItem('auth-token', data.token)
             m.route.set('/secret')
         })
@@ -678,13 +677,13 @@ m.route(document.body, '/secret', {
 
 #### Preloading data
 
-Typically, a component can load data upon initialization. Loading data this way renders the component twice. The first render pass occurs upon routing, and the second fires after the request completes. Take care to note that `loadUsers()` returns a Promise, but any Promise returned by `oninit` is currently ignored. The second render pass comes from the [`background` option for `m.request`](request.md).
+Typically, a component can load data upon initialization. Loading data this way renders the component twice. The first render pass occurs upon routing, and the second fires after the request completes. Take care to note that `loadUsers()` returns a Promise, but any Promise returned by `oninit` is currently ignored. The second render pass occurs when the fetch completes and state updates.
 
 ```javascript
 var state = {
     users: [],
     loadUsers: function () {
-        return m.request('/api/v1/users').then(function (users) {
+        return fetch('/api/v1/users').then((r) => r.json()).then(function (users) {
             state.users = users
         })
     },
@@ -712,7 +711,7 @@ RouteResolvers can be used as a mechanism to preload data before rendering a com
 var state = {
     users: [],
     loadUsers: function () {
-        return m.request('/api/v1/users').then(function (users) {
+        return fetch('/api/v1/users').then((r) => r.json()).then(function (users) {
             state.users = users
         })
     },
@@ -752,13 +751,9 @@ module.export = {
 ```javascript
 // index.js
 function load(file) {
-    return m.request({
-        method: 'GET',
-        url: file,
-        extract: function (xhr) {
-            return new Function('var module = {};' + xhr.responseText + ';return module.exports;')
-        },
-    })
+    return fetch(file)
+        .then((r) => r.text())
+        .then((text) => new Function('var module = {};' + text + ';return module.exports;')())
 }
 
 m.route(document.body, '/', {
