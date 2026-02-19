@@ -60,12 +60,12 @@ You can only have one `m.route` call per application.
 
 `m.route(root, defaultRoute, routes)`
 
-| Argument       | Type                     | Required        | Description                                                                                                                                            |
-| -------------- | ------------------------ | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `root`         | `Element`                | Yes             | A DOM element that will be the parent node to the subtree                                                                                              |
-| `defaultRoute` | `String`                 | Yes             | The route to redirect to if the current URL does not match a route. Note, this is not the initial route. Initial route will be your address bar's url. |
-| `routes`       | `Object<String,Component | RouteResolver>` | Yes                                                                                                                                                    | An object whose keys are route strings and values are either components or a [RouteResolver](#routeresolver) |
-| **returns**    |                          |                 | Returns `undefined`                                                                                                                                    |
+| Argument       | Type                                         | Required | Description                                                                                                                                            |
+| -------------- | -------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `root`         | `Element`                                    | Yes      | A DOM element that will be the parent node to the subtree                                                                                              |
+| `defaultRoute` | `String`                                     | Yes      | The route to redirect to if the current URL does not match a route. Note, this is not the initial route. Initial route will be your address bar's url. |
+| `routes`       | `Object<String,Component &#124; RouteResolver>` | Yes      | An object whose keys are route strings and values are either components or a [RouteResolver](#routeresolver)                                              |
+| **returns**    |                                              |          | Returns `undefined`                                                                                                                                   |
 
 [How to read signatures](signatures.md)
 
@@ -161,16 +161,16 @@ m(
 
 `vnode = m(m.route.Link, attributes, children)`
 
-| Argument              | Type          | Required | Description                                               |
-| --------------------- | ------------- | -------- | --------------------------------------------------------- | -------- | -------------------------------------------------------- | ---------------------------------------- |
-| `attributes.href`     | `Object`      | Yes      | The target route to navigate to.                          |
-| `attributes.disabled` | `Boolean`     | No       | Disables the element accessibly.                          |
-| `attributes.selector` | `String       | Object   | Function`                                                 | No       | A selector for [`m`](hyperscript.md), defaults to `"a"`. |
-| `attributes.options`  | `Object`      | No       | Sets the `options` passed to [`m.route.set`](#mrouteset). |
-| `attributes.params`   | `Object`      | No       | Sets the `params` passed to [`m.route.set`](#mrouteset).  |
-| `attributes`          | `Object`      | No       | Any other attributes to be forwarded to `m`.              |
-| `children`            | `Array<Vnode> | String   | Number                                                    | Boolean` | No                                                       | Child [vnodes](vnodes.md) for this link. |
-| **returns**           | `Vnode`       |          | A [vnode](vnodes.md).                                     |
+| Argument              | Type                                            | Required | Description                                               |
+| --------------------- | ----------------------------------------------- | -------- | --------------------------------------------------------- |
+| `attributes.href`     | `Object`                                        | Yes      | The target route to navigate to.                          |
+| `attributes.disabled` | `Boolean`                                       | No       | Disables the element accessibly.                          |
+| `attributes.selector` | `String` &#124; `Object` &#124; `Function`       | No       | A selector for [`m`](hyperscript.md), defaults to `"a"`. |
+| `attributes.options`  | `Object`                                        | No       | Sets the `options` passed to [`m.route.set`](#mrouteset). |
+| `attributes.params`   | `Object`                                        | No       | Sets the `params` passed to [`m.route.set`](#mrouteset).  |
+| `attributes`          | `Object`                                        | No       | Any other attributes to be forwarded to `m`.              |
+| `children`            | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md) for this link.                  |
+| **returns**           | `Vnode`                                         |          | A [vnode](vnodes.md).                                     |
 
 ##### m.route.param
 
@@ -182,10 +182,10 @@ Retrieves a route parameter from the last fully resolved route. A route paramete
 
 `value = m.route.param(key)`
 
-| Argument    | Type     | Required | Description                                                                                                                |
-| ----------- | -------- | -------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `key`       | `String` | No       | A route parameter name (e.g. `id` in route `/users/:id`, or `page` in path `/users/1?page=3`, or a key in `history.state`) |
-| **returns** | `String  | Object`  |                                                                                                                            | Returns a value for the specified key. If a key is not specified, it returns an object that contains all the interpolation keys |
+| Argument    | Type                     | Required | Description                                                                                                                |
+| ----------- | ------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `key`       | `String`                 | No       | A route parameter name (e.g. `id` in route `/users/:id`, or `page` in path `/users/1?page=3`, or a key in `history.state`) |
+| **returns** | `String` &#124; `Object` |          | Returns a value for the specified key. If a key is not specified, it returns an object that contains all the interpolation keys |
 
 Note that in the `onmatch` function of a RouteResolver, the new route hasn't yet been fully resolved, and `m.route.param()` will return the parameters of the previous route, if any. `onmatch` receives the parameters of the new route as an argument.
 
@@ -227,11 +227,11 @@ For more information on `onmatch`, see the [advanced component resolution](#adva
 `routeResolver.onmatch(args, requestedPath, route)`
 
 | Argument        | Type       | Description                                                                                                                                                                                                                                                |
-| --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------------------------------------------------------------- |
+| --------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `args`          | `Object`   | The [routing parameters](#routing-parameters)                                                                                                                                                                                                              |
 | `requestedPath` | `String`   | The router path requested by the last routing action, including interpolated routing parameter values, but without the prefix. When `onmatch` is called, the resolution for this path is not complete and `m.route.get()` still returns the previous path. |
 | `route`         | `String`   | The router path requested by the last routing action, excluding interpolated routing parameter values                                                                                                                                                      |
-| **returns**     | `Component | Promise<Component>                                                                                                                                                                                                                                         | undefined` | Returns a component or a promise that resolves to a component |
+| **returns**     | `Component` &#124; `Promise<Component>` &#124; `undefined` | Returns a component or a promise that resolves to a component |
 
 If `onmatch` returns a component or a promise that resolves to a component, this component is used as the `vnode.tag` for the first argument in the RouteResolver's `render` method. Otherwise, `vnode.tag` is set to `"div"`. Similarly, if the `onmatch` method is omitted, `vnode.tag` is also `"div"`.
 
@@ -244,10 +244,10 @@ The `render` method is called on every redraw for a matching route. It is simila
 `vnode = routeResolver.render(vnode)`
 
 | Argument      | Type          | Description                                                                                                                                                                                             |
-| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| ------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `vnode`       | `Object`      | A [vnode](vnodes.md) whose attributes object contains routing parameters. If onmatch does not return a component or a promise that resolves to a component, the vnode's `tag` field defaults to `"div"` |
 | `vnode.attrs` | `Object`      | A map of URL parameter values                                                                                                                                                                           |
-| **returns**   | `Array<Vnode> | Vnode`                                                                                                                                                                                                  | The [vnodes](vnodes.md) to be rendered |
+| **returns**   | `Array<Vnode>` &#124; `Vnode` | The [vnodes](vnodes.md) to be rendered |
 
 The `vnode` parameter is just `m(Component, m.route.param())` where `Component` is the resolved component for the route (after `routeResolver.onmatch`) and `m.route.param()` is as documented [here](#mrouteparam). If you omit this method, the default return value is `[vnode]`, wrapped in a fragment so you can use [key parameters](#key-parameter). Combined with a `:key` parameter, it becomes a [single-element keyed fragment](keys.md#reinitializing-views-with-single-child-keyed-fragments), since it ends up rendering to something like `[m(Component, {key: m.route.param("key"), ...})]`.
 

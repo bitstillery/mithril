@@ -48,12 +48,12 @@ You can also use [TSX or htm](jsx.md) for an HTML-like syntax. This is equivalen
 
 `vnode = m(selector, attrs, children)`
 
-| Argument    | Type          | Required | Description                           |
-| ----------- | ------------- | -------- | ------------------------------------- | -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `selector`  | `String       | Object   | Function`                             | Yes      | A CSS selector or a [component](components.md) |
-| `attrs`     | `Object`      | No       | HTML attributes or element properties |
-| `children`  | `Array<Vnode> | String   | Number                                | Boolean` | No                                             | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
-| **returns** | `Vnode`       |          | A [vnode](vnodes.md#structure)        |
+| Argument    | Type                                  | Required | Description                                                                 |
+| ----------- | ------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `selector`  | `String` &#124; `Object` &#124; `Function` | Yes      | A CSS selector or a [component](components.md)                               |
+| `attrs`     | `Object`                              | No       | HTML attributes or element properties                                       |
+| `children`  | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
+| **returns** | `Vnode`                               |          | A [vnode](vnodes.md#structure)                                              |
 
 [How to read signatures](signatures.md)
 

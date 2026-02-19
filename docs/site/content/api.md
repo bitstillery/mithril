@@ -2,9 +2,7 @@
 An API cheatsheet for Mithril.js
 -->
 
-# API
-
-### Cheatsheet
+# API Cheatsheet
 
 Here are examples for the most commonly used methods. If a method is not listed below, it's meant for advanced usage.
 

@@ -22,7 +22,7 @@ body {
     & > header,
     & > main {
         margin: auto;
-        max-width: 1000px;
+        max-width: 1280px;
     }
 }
 
@@ -37,7 +37,7 @@ h5 {
 
 #app .docs-container {
     margin: 0 auto;
-    max-width: 1000px;
+    max-width: 1280px;
     position: relative;
 }
 
@@ -72,7 +72,7 @@ header .header-brand {
 
 .docs-sidebar {
     flex-shrink: 0;
-    width: 250px;
+    width: 280px;
     padding-right: 20px;
 }
 
@@ -128,14 +128,25 @@ header .header-brand {
     }
 }
 
+.docs-nav-page-toc .docs-sidebar-toc {
+    margin-top: 0.5em;
+    padding-top: 0.5em;
+    padding-left: 0;
+    border-top: none;
+    border-left: none;
+}
+
 .docs-sidebar .docs-sidebar-toc {
     margin-top: 1.5em;
     padding-top: 1em;
     padding-left: 15px;
+    padding-right: 0;
     border-top: 1px solid var(--od-selection);
     border-left: 3px solid var(--od-blue);
     position: relative;
     z-index: 1;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 
     &::before {
         content: 'On this page';
@@ -149,7 +160,20 @@ header .header-brand {
     }
 
     li {
+        list-style: none;
         margin: 2px 0;
+        padding-left: 0;
+    }
+
+    li::marker {
+        content: none;
+        display: none;
+    }
+
+    a {
+        display: inline;
+        overflow-wrap: break-word;
+        word-wrap: break-word;
     }
 }
 
@@ -186,6 +210,11 @@ main {
 
 .body {
     margin-left: 270px;
+}
+
+/* TOC is in sidebar only; hide any in-content h1+ul (fallback if extraction missed) */
+.body h1 + ul {
+    display: none;
 }
 
 .body-crossfade {
@@ -278,6 +307,24 @@ table {
     td {
         padding: 3px 10px;
         vertical-align: top;
+    }
+
+    /* Allow content-heavy columns to expand; keep narrow columns from shrinking too much */
+    th:nth-child(1),
+    td:nth-child(1) {
+        min-width: 6em;
+    }
+    th:nth-child(2),
+    td:nth-child(2) {
+        min-width: 8em;
+    }
+    th:nth-child(3),
+    td:nth-child(3) {
+        min-width: 4em;
+    }
+    th:nth-child(4),
+    td:nth-child(4) {
+        min-width: 12em;
     }
 }
 

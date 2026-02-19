@@ -53,7 +53,7 @@ m.mount(element, {
 | Argument    | Type       | Required | Description                                               |
 | ----------- | ---------- | -------- | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | `element`   | `Element`  | Yes      | A DOM element that will be the parent node to the subtree |
-| `Component` | `Component | null`    | Yes                                                       | The [component](components.md) to be rendered. `null` unmounts the tree and cleans up internal state. |
+| `Component` | `Component` &#124; `null` | Yes | The [component](components.md) to be rendered. `null` unmounts the tree and cleans up internal state. |
 | **returns** |            |          | Returns nothing                                           |
 
 [How to read signatures](signatures.md)

@@ -19,13 +19,12 @@ interface DocsSidebarAttrs {
 export class DocsSidebar extends MithrilComponent<DocsSidebarAttrs> {
     view(vnode: Vnode<DocsSidebarAttrs>) {
         const {sections = [], pageToc, routePath} = vnode.attrs ?? {}
-        const hasContent = sections?.length || pageToc
+        const hasContent = sections?.length
         if (!hasContent) return null
         return m(
             'aside',
             {class: 'docs-sidebar'},
-            sections?.length ? m(NavSections as any, {sections, routePath}) : null,
-            pageToc ? m.trust(pageToc) : null,
+            m(NavSections as any, {sections, routePath, pageToc}),
         )
     }
 }

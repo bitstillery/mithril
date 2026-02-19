@@ -1,6 +1,9 @@
 import {marked} from 'marked'
+import {gfmHeadingId, getHeadingList} from 'marked-gfm-heading-id'
 import {readFile} from 'fs/promises'
 import {join} from 'path'
+
+marked.use(gfmHeadingId())
 
 // Configure marked - add language-* class for Prism.js highlighting
 marked.use({
@@ -26,7 +29,7 @@ export interface DocPage {
     title: string
     content: string
     metaDescription: string
-    /** First `<ul>` from the page (TOC links) - extracted for sidebar, removed from main content */
+    /** Table of contents for sidebar - generated from headings */
     pageToc?: string
 }
 
@@ -44,17 +47,35 @@ function extractTitle(markdown: string): string {
 
 const h1UlHrPattern = /(<h1[^>]*>[\s\S]*?<\/h1>\s*)(<ul[^>]*>[\s\S]*?<\/ul>)(\s*<hr\/?>)/
 
+function escapeHtml(text: string): string {
+    return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+}
+
+function buildPageTocFromHeadings(): string | undefined {
+    const headings = getHeadingList()
+    const subHeadings = headings.filter((h) => h.level === 3)
+    if (subHeadings.length === 0) return undefined
+    const items = subHeadings
+        .map((h) => `<li><a href="#${h.id}">${escapeHtml(h.raw)}</a></li>`)
+        .join('\n')
+    return `<ul class="docs-sidebar-toc">\n${items}\n</ul>`
+}
+
 export async function loadMarkdownFile(filePath: string): Promise<DocPage> {
     const markdown = await readFile(filePath, 'utf-8')
     let html = marked.parse(markdown) as string
     const title = extractTitle(markdown)
     const metaDescription = extractMetaDescription(markdown)
 
-    let pageToc: string | undefined
+    const pageToc = buildPageTocFromHeadings()
+
     const match = html.match(h1UlHrPattern)
-    if (match) {
-        pageToc = match[2].replace(/^<ul/, '<ul class="docs-sidebar-toc"')
-        html = match[1] + html.slice(match[0].length)
+    if (match && typeof match.index === 'number') {
+        html = html.slice(0, match.index) + match[1] + html.slice(match.index + match[0].length)
     }
 
     return {

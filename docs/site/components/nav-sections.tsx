@@ -6,6 +6,7 @@ import type {NavSection} from '../store'
 interface NavSectionsAttrs {
     sections: NavSection[]
     routePath?: string
+    pageToc?: string
 }
 
 const RouteLink = m.route.Link as any
@@ -35,7 +36,7 @@ function renderNavLink(link: {text: string; href: string; external?: boolean}) {
 
 export class NavSections extends MithrilComponent<NavSectionsAttrs> {
     view(vnode: Vnode<NavSectionsAttrs>) {
-        const {sections = [], routePath = ''} = vnode.attrs ?? {}
+        const {sections = [], routePath = '', pageToc} = vnode.attrs ?? {}
         if (!sections?.length) return null
         return (
             <div class='docs-nav-sections'>
@@ -47,11 +48,19 @@ export class NavSections extends MithrilComponent<NavSectionsAttrs> {
                         <div class='docs-nav-section'>
                             <strong class='docs-nav-section-label'>{section.title}</strong>
                             <div class='docs-nav-links'>
-                                {section.links.map((link) => (
-                                    <div class={`docs-nav-link${isLinkActive(link.href.startsWith('/') ? link.href : `/${link.href}`, routePath) ? ' docs-nav-link--active' : ''}`}>
-                                        {renderNavLink(link)}
-                                    </div>
-                                ))}
+                                {section.links.flatMap((link) => {
+                                    const href = link.href.startsWith('/') ? link.href : `/${link.href}`
+                                    const active = isLinkActive(href, routePath)
+                                    const items: Vnode[] = [
+                                        m('div', {
+                                            class: `docs-nav-link${active ? ' docs-nav-link--active' : ''}`,
+                                        }, renderNavLink(link)),
+                                    ]
+                                    if (active && pageToc) {
+                                        items.push(m('div', {class: 'docs-nav-page-toc'}, m.trust(pageToc)))
+                                    }
+                                    return items
+                                })}
                             </div>
                         </div>
                     )

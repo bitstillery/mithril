@@ -31,7 +31,7 @@ m.render(document.body, 'hello')
 | Argument    | Type          | Required | Description                                                             |
 | ----------- | ------------- | -------- | ----------------------------------------------------------------------- | -------------------------------------- |
 | `element`   | `Element`     | Yes      | A DOM element that will be the parent node to the subtree               |
-| `vnodes`    | `Array<Vnode> | Vnode`   | Yes                                                                     | The [vnodes](vnodes.md) to be rendered |
+| `vnodes`    | `Array<Vnode>` &#124; `Vnode` | Yes | The [vnodes](vnodes.md) to be rendered |
 | `redraw`    | `() -> any`   | No       | A callback invoked each time an event handler in the subtree is invoked |
 | **returns** |               |          | Returns `undefined`                                                     |
 

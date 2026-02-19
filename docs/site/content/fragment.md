@@ -41,11 +41,11 @@ Generates a fragment [vnode](vnodes.md)
 
 `vnode = m.fragment(attrs, children)`
 
-| Argument    | Type          | Required | Description                             |
-| ----------- | ------------- | -------- | --------------------------------------- | -------- | --- | ---------------------------------------------------------------------------------------------- |
-| `attrs`     | `Object`      | No       | HTML attributes or element properties   |
-| `children`  | `Array<Vnode> | String   | Number                                  | Boolean` | No  | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
-| **returns** | `Vnode`       |          | A fragment [vnode](vnodes.md#structure) |
+| Argument    | Type                                                        | Required | Description                                                                 |
+| ----------- | ----------------------------------------------------------- | -------- | --------------------------------------------------------------------------- |
+| `attrs`     | `Object`                                                    | No       | HTML attributes or element properties                                       |
+| `children`  | `Array<Vnode>` &#124; `String` &#124; `Number` &#124; `Boolean` | No       | Child [vnodes](vnodes.md#structure). Can be written as [splat arguments](signatures.md#splats) |
+| **returns** | `Vnode`                                                     |          | A fragment [vnode](vnodes.md#structure)                                     |
 
 [How to read signatures](signatures.md)
 
