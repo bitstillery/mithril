@@ -11,7 +11,8 @@
     - [m.fragment](/fragment)
     - [m.redraw](/redraw)
     - [m.censor](/censor)
-- State & reactivity
+- New features
     - [Signals](/signals)
     - [State](/state)
     - [Store](/store)
+    - [SSR](/ssr)

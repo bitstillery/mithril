@@ -138,6 +138,8 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
             }
             if (this.activeAnchorId !== active) {
                 this.activeAnchorId = active
+                const url = window.location.pathname + window.location.search + (active ? `#${active}` : '')
+                history.replaceState(null, '', url)
                 m.redraw()
             }
         })

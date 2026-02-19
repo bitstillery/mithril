@@ -225,7 +225,7 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
             }),
             m('div.docs-sandbox-preview', {
                 class: activeTab !== 'preview' ? 'docs-sandbox-panel-hidden' : undefined,
-            }, [
+            }, activeTab === 'preview' ? [
                 m('iframe.docs-sandbox-iframe', {
                     sandbox: 'allow-scripts',
                     src: '/preview.html',
@@ -252,7 +252,7 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
                         state.iframeRef = undefined
                     },
                 }),
-            ]),
+            ] : []),
         ])
     }
 }
