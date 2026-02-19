@@ -14,10 +14,8 @@
     --od-cyan: #56b6c2;
 }
 
-html,
-body {
-    height: 100%;
-    overflow: hidden;
+html {
+    scrollbar-gutter: stable;
 }
 
 body {
@@ -30,11 +28,6 @@ body {
         margin: auto;
         max-width: 1280px;
     }
-}
-
-#app {
-    height: 100%;
-    overflow: hidden;
 }
 
 body,
@@ -50,14 +43,13 @@ h5 {
     margin: 0 auto;
     max-width: 1280px;
     position: relative;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    overflow: hidden;
 }
 
 #app .docs-container > header {
-    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: var(--od-bg);
 }
 
 header .header-section {
@@ -78,15 +70,10 @@ header .header-brand {
 .docs-body {
     display: flex;
     margin-top: 0;
-    flex: 1;
-    min-height: 0;
-    overflow: hidden;
 
     main {
         flex: 1;
         min-width: 0;
-        overflow-y: auto;
-        overflow-x: hidden;
     }
 
     .body {
@@ -96,10 +83,13 @@ header .header-brand {
 
 .docs-sidebar {
     flex-shrink: 0;
-    width: 280px;
-    padding-right: 20px;
+    width: 260px;
+    padding-right: 24px;
+    position: sticky;
+    top: 60px;
+    align-self: flex-start;
+    max-height: calc(100vh - 60px);
     overflow-y: auto;
-    overflow-x: hidden;
 }
 
 .docs-nav-sections {
@@ -246,6 +236,13 @@ main {
 /* TOC is in sidebar only; hide any in-content h1+ul (fallback if extraction missed) */
 .body h1 + ul {
     display: none;
+}
+
+/* Anchor scroll offset so headings aren't hidden under sticky header */
+.body h2[id],
+.body h3[id],
+.body h4[id] {
+    scroll-margin-top: 80px;
 }
 
 .body-crossfade {

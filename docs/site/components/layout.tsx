@@ -72,12 +72,12 @@ const apiPagePatterns = [
     'ssr',
 ]
 
-const HASH_NAV_DEBOUNCE_MS = 400
+const HASH_NAV_DEBOUNCE_MS = 200
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
     activeAnchorId: string | null = null
     private scrollSpyRaf = 0
-    private scrollSpyBound: () => void = () => {}
+    private scrollSpyBound: (() => void) | null = null
     private lastHashChangeAt = 0
 
     oncreate(vnode: Vnode<LayoutAttrs>) {
@@ -91,15 +91,10 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
     }
 
     onremove() {
-        const main = document.querySelector('main')
-        if (main) main.removeEventListener('scroll', this.scrollSpyBound)
+        if (this.scrollSpyBound) {
+            window.removeEventListener('scroll', this.scrollSpyBound)
+        }
         window.removeEventListener('hashchange', this.hashChangeBound)
-    }
-
-    scrollToHash = (hashId: string) => {
-        if (!hashId) return
-        const el = document.getElementById(hashId)
-        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
     }
 
     hashChangeBound = () => {
@@ -109,58 +104,60 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
             this.activeAnchorId = hashId || null
             m.redraw()
         }
-        this.scrollToHash(hashId)
+    }
+
+    runScrollSpy = () => {
+        if (this.scrollSpyRaf) return
+        this.scrollSpyRaf = requestAnimationFrame(() => {
+            this.scrollSpyRaf = 0
+            if (Date.now() - this.lastHashChangeAt < HASH_NAV_DEBOUNCE_MS) return
+            const mainEl = document.querySelector('main')
+            if (!mainEl) return
+            const headings = mainEl.querySelectorAll('.body h2[id], .body h3[id], .body h4[id]')
+            if (headings.length === 0) return
+            const viewportTop = 120
+            let active: string | null = null
+            for (let i = headings.length - 1; i >= 0; i--) {
+                const el = headings[i] as HTMLElement
+                if (el.getBoundingClientRect().top <= viewportTop) {
+                    active = el.id
+                    break
+                }
+            }
+            if (!active && headings.length > 0) {
+                for (let i = 0; i < headings.length; i++) {
+                    const el = headings[i] as HTMLElement
+                    if (el.getBoundingClientRect().top > viewportTop) {
+                        active = (headings[Math.max(0, i - 1)] as HTMLElement).id
+                        break
+                    }
+                }
+                if (!active) {
+                    active = (headings[headings.length - 1] as HTMLElement).id
+                }
+            }
+            if (this.activeAnchorId !== active) {
+                this.activeAnchorId = active
+                m.redraw()
+            }
+        })
     }
 
     setupScrollSpy() {
         if (typeof window === 'undefined') return
-        const main = document.querySelector('main')
-        if (main) {
-            main.removeEventListener('scroll', this.scrollSpyBound)
+        if (!this.scrollSpyBound) {
+            this.scrollSpyBound = () => this.runScrollSpy()
+            window.addEventListener('scroll', this.scrollSpyBound)
+            window.addEventListener('hashchange', this.hashChangeBound)
         }
-        window.removeEventListener('hashchange', this.hashChangeBound)
-        this.scrollSpyBound = () => {
-            if (this.scrollSpyRaf) return
-            this.scrollSpyRaf = requestAnimationFrame(() => {
-                this.scrollSpyRaf = 0
-                if (Date.now() - this.lastHashChangeAt < HASH_NAV_DEBOUNCE_MS) return
-                const mainEl = document.querySelector('main')
-                if (!mainEl) return
-                const headings = mainEl.querySelectorAll('.body h2[id], .body h3[id], .body h4[id]')
-                if (headings.length === 0) return
-                const viewportTop = 120
-                let active: string | null = null
-                for (let i = headings.length - 1; i >= 0; i--) {
-                    const el = headings[i] as HTMLElement
-                    if (el.getBoundingClientRect().top <= viewportTop) {
-                        active = el.id
-                        break
-                    }
-                }
-                if (!active && headings.length > 0) {
-                    active = (headings[0] as HTMLElement).id
-                }
-                if (this.activeAnchorId !== active) {
-                    this.activeAnchorId = active
-                    m.redraw()
-                }
-            })
-        }
-        if (main) {
-            main.addEventListener('scroll', this.scrollSpyBound)
-        }
-        window.addEventListener('hashchange', this.hashChangeBound)
         const hashId = window.location.hash.slice(1)
         if (hashId) {
             this.lastHashChangeAt = Date.now()
             this.activeAnchorId = hashId
             m.redraw()
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => this.scrollToHash(hashId))
-            })
         }
-        this.scrollSpyBound()
-        setTimeout(() => this.scrollSpyBound(), 150)
+        this.runScrollSpy()
+        setTimeout(() => this.runScrollSpy(), 150)
     }
 
     view(vnode: Vnode<LayoutAttrs>) {

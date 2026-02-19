@@ -227,7 +227,7 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
                 class: activeTab !== 'preview' ? 'docs-sandbox-panel-hidden' : undefined,
             }, [
                 m('iframe.docs-sandbox-iframe', {
-                    sandbox: 'allow-scripts allow-same-origin',
+                    sandbox: 'allow-scripts',
                     src: '/preview.html',
                     oncreate: (ev: {dom: HTMLIFrameElement}) => {
                         state.iframeRef = ev.dom
