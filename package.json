@@ -1,6 +1,6 @@
 {
     "name": "@bitstillery/mithril",
-    "version": "3.0.0-AA",
+    "version": "3.0.1-AA",
     "description": "Mithril AA (AI Augmented) - Mithril + Signals, Store and SSR",
     "license": "MIT",
     "author": "Bitstillery",

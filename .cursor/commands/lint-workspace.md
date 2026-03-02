@@ -11,31 +11,32 @@ Lint the Mithril codebase. Focuses on fixing types at interface definitions usin
 ## Workflow
 
 1. **Run linting checks**:
-   ```bash
-   bun run lint:ts-format   # oxfmt
-   bun run lint:ts-syntax   # oxlint
-   bun run lint:ts-types    # tsgo (TypeScript types)
-   ```
 
-   Or run all at once: `bun run lint:ts`
+    ```bash
+    bun run lint:ts-format   # oxfmt
+    bun run lint:ts-syntax   # oxlint
+    bun run lint:ts-types    # tsgo (TypeScript types)
+    ```
+
+    Or run all at once: `bun run lint:ts`
 
 2. **Analyze TypeScript errors**:
-   - Read error messages carefully
-   - Identify types causing issues
-   - Trace errors back to interface/type definitions
+    - Read error messages carefully
+    - Identify types causing issues
+    - Trace errors back to interface/type definitions
 
 3. **Fix types at source**:
-   - Find interface/type definitions (trace through imports)
-   - Update definitions to match actual usage patterns
-   - Use type inference to simplify code
-   - Avoid adding conditionals just to satisfy TypeScript
+    - Find interface/type definitions (trace through imports)
+    - Update definitions to match actual usage patterns
+    - Use type inference to simplify code
+    - Avoid adding conditionals just to satisfy TypeScript
 
 4. **Apply fixes**:
-   - Fix interface/type definitions first
-   - Let TypeScript inference work where possible
-   - Only add type guards if value truly can be undefined/null
-   - Remove unnecessary explicit types
-   - **Do NOT introduce helper functions** to work around type errors — use inline assertions (`as Type`) at usage sites or fix the type definition
+    - Fix interface/type definitions first
+    - Let TypeScript inference work where possible
+    - Only add type guards if value truly can be undefined/null
+    - Remove unnecessary explicit types
+    - **Do NOT introduce helper functions** to work around type errors — use inline assertions (`as Type`) at usage sites or fix the type definition
 
 ## TypeScript Inference Strategy
 
@@ -46,10 +47,12 @@ interface types, adding `| null`, changing annotations). Never alter control flo
 change function signatures in ways that affect runtime behavior, or modify emitted JavaScript.
 
 **CRITICAL: Never use inline imports.** Always add imports at the top of the file. For example:
+
 - `import type { ... } from '...'` — use top-level imports
 - `import('...').Type` — NEVER use inline import syntax
 
 **CRITICAL: Never replace mutation with reassignment.** Preserve in-place mutation semantics. For example:
+
 - `arr.splice(0, arr.length, ...items)` mutates the array in place and keeps the same reference
 - `arr = items` reassigns the variable and breaks the reference — NEVER do this as a "fix"
 - Same for `obj.prop = x` vs replacing the whole object
@@ -69,23 +72,25 @@ change function signatures in ways that affect runtime behavior, or modify emitt
 ### Examples
 
 **❌ Bad: Adding conditionals everywhere**
+
 ```tsx
 // Interface says optional, but it's always present
 interface User {
-  name?: string
+    name?: string
 }
 
 // Bad: Adding checks everywhere
 if (user?.name) {
-  console.log(user.name)
+    console.log(user.name)
 }
 ```
 
 **✅ Good: Fix the interface**
+
 ```tsx
 // Fix at source - make it required if it's always present
 interface User {
-  name: string
+    name: string
 }
 
 // No conditionals needed
@@ -93,40 +98,46 @@ console.log(user.name)
 ```
 
 **❌ Bad: Type assertions**
+
 ```tsx
 const value = data as ExpectedType
 const result = maybeNull!.property
 ```
 
 **✅ Good: Fix type definition**
+
 ```tsx
 // Fix function signature or interface
 function processData(data: ExpectedType): Result {
-  // Type is correct, no assertion needed
+    // Type is correct, no assertion needed
 }
 ```
 
 **❌ Bad: Replacing mutation with reassignment**
+
 ```tsx
 // Original: arr.splice(0, arr.length, ...items) — keeps same reference
-this.data.options = result  // BAD: breaks reactivity, new reference
+this.data.options = result // BAD: breaks reactivity, new reference
 ```
 
 **✅ Good: Preserve in-place mutation**
+
 ```tsx
-this.data.options.splice(0, this.data.options.length, ...result)  // Same reference, reactive
+this.data.options.splice(0, this.data.options.length, ...result) // Same reference, reactive
 ```
 
 **❌ Bad: Explicit types when inference works**
+
 ```tsx
 const items: string[] = ['a', 'b', 'c']
-const user: User = { name: 'John' }
+const user: User = {name: 'John'}
 ```
 
 **✅ Good: Use inference**
+
 ```tsx
 const items = ['a', 'b', 'c'] // inferred as string[]
-const user = { name: 'John' } // inferred from usage
+const user = {name: 'John'} // inferred from usage
 ```
 
 ### Error Handling Workflow

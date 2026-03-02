@@ -1,4 +1,4 @@
-/// <reference path="./jsx.d.ts" />
+import './jsx.d.ts'
 import hyperscript from './render/hyperscript'
 import mountRedrawFactory from './api/mount-redraw'
 import routerFactory from './api/router'
