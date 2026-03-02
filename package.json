@@ -4,7 +4,10 @@
     "description": "Mithril AA (AI Augmented) - Mithril + Signals, Store and SSR",
     "license": "MIT",
     "author": "Bitstillery",
-    "repository": "github:bitstillery/mithril",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/bitstillery/mithril.git"
+    },
     "files": [
         "*.ts",
         "*.d.ts",
@@ -15,6 +18,7 @@
         "pathname/*.ts",
         "querystring/*.ts",
         "render/*.ts",
+        "server/*.ts",
         "util/*.ts",
         "LICENSE",
         "README.md"
@@ -46,7 +50,9 @@
         "lint:ts-format": "oxfmt",
         "lint:ts-syntax": "oxlint -c .oxlintrc.json",
         "lint:ts-types": "tsgo --noEmit",
-        "test": "bun test"
+        "test": "bun test",
+        "prepublishOnly": "bun run lint:ts",
+        "pack:dry-run": "npm pack --dry-run"
     },
     "dependencies": {
         "htm": "^3.1.1"

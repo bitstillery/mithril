@@ -1,0 +1,5 @@
+# Not part of published package
+docs/
+examples/
+tests/
+test-utils/
