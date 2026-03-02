@@ -377,7 +377,7 @@ m.mount(root, App) // Hydrate
 **1.3 Basic API**
 
 ```typescript
-import m from 'mithril'
+import m from '@bitstillery/mithril'
 import {store} from 'mithril/store'
 
 // Global store

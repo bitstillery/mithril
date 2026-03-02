@@ -1,5 +1,5 @@
 /**
- * Isomorphic next_tick utility
+ * Isomorphic nextTick utility
  *
  * Returns a Promise that resolves after the current execution stack completes.
  *
@@ -8,8 +8,7 @@
  *
  * @returns Promise that resolves on the next tick
  */
-// eslint-disable-next-line @typescript-eslint/naming-convention
-async function next_tick(): Promise<void> {
+async function nextTick(): Promise<void> {
     // Check if we're in SSR mode
     if (typeof globalThis !== 'undefined' && (globalThis as any).__SSR_MODE__) {
         // In SSR mode, resolve immediately since SSR rendering is synchronous
@@ -41,5 +40,5 @@ async function next_tick(): Promise<void> {
     return Promise.resolve() as Promise<void>
 }
 
-export default next_tick
-export {next_tick}
+export default nextTick
+export {nextTick}

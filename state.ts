@@ -990,13 +990,16 @@ export type State<T extends Record<string, any>> = {
     [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : T[K] extends Record<string, any> ? State<T[K]> : T[K]
 } & StateSignals<T>
 
+/** Function returned by watch() to remove the watcher */
+export type Unwatch = () => void
+
 /**
  * Watch a signal for changes
  * @param signal - The signal to watch
  * @param callback - Callback function called when signal value changes
  * @returns Unsubscribe function
  */
-export function watch<T>(signal: Signal<T> | ComputedSignal<T>, callback: (newValue: T, oldValue: T) => void): () => void {
+export function watch<T>(signal: Signal<T> | ComputedSignal<T>, callback: (newValue: T, oldValue: T) => void): Unwatch {
     const unwatch = signal.watch(callback)
 
     // Register watcher in SSR context for cleanup at end of request
