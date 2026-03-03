@@ -70,13 +70,31 @@ m.censor = censor
 m.nextTick = nextTick
 m.domFor = domFor
 
-// Set up signal-to-component redraw integration
+// Set up signal-to-component redraw integration with batching.
+// Collects all components needing redraw in the current tick, then flushes once via queueMicrotask.
+// Avoids N synchronous redraws when many signals fire (e.g. 50% of 800 rows).
+let pendingRedrawComponents = new Set<any>()
+let redrawScheduled = false
+
+function flushPendingRedraws() {
+    const components = new Set(pendingRedrawComponents)
+    pendingRedrawComponents.clear()
+    redrawScheduled = false
+    if (components.size === 1) {
+        m.redraw(components.values().next().value)
+    } else if (components.size > 1) {
+        m.redraw()
+    }
+}
+
 setSignalRedrawCallback((sig: Signal<any>) => {
     const components = getSignalComponents(sig)
-    if (components) {
-        components.forEach((component) => {
-            m.redraw(component as any)
-        })
+    if (components && components.size > 0) {
+        components.forEach((c) => pendingRedrawComponents.add(c))
+        if (!redrawScheduled) {
+            redrawScheduled = true
+            queueMicrotask(flushPendingRedraws)
+        }
     }
 })
 

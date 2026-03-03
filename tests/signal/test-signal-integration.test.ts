@@ -24,7 +24,7 @@ describe('Signal Integration - Component Redraws', () => {
         }
     })
 
-    test('component redraws when signal changes', () => {
+    test('component redraws when signal changes', async () => {
         const s = signal(0)
         let renderCount = 0
 
@@ -41,12 +41,12 @@ describe('Signal Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
 
         s.value = 10
-        // Component-level redraw should happen synchronously
+        await m.nextTick() // Wait for batched redraw microtask
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
     })
 
-    test('only affected component redraws (fine-grained)', () => {
+    test('only affected component redraws (fine-grained)', async () => {
         const s1 = signal(0)
         const s2 = signal('a')
 
@@ -76,13 +76,15 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount1).toBe(1)
         expect(renderCount2).toBe(1)
 
-        // Change s1 - only Component1 should redraw (synchronously)
+        // Change s1 - only Component1 should redraw
         s1.value = 10
+        await m.nextTick()
         expect(renderCount1).toBe(2)
         expect(renderCount2).toBe(1) // Should not redraw
 
-        // Change s2 - only Component2 should redraw (synchronously)
+        // Change s2 - only Component2 should redraw
         s2.value = 'b'
+        await m.nextTick()
         expect(renderCount1).toBe(2) // Should not redraw again
         expect(renderCount2).toBe(2)
     })
@@ -109,7 +111,7 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount).toBe(1) // Should still be 1
     })
 
-    test('multiple components can use same signal', () => {
+    test('multiple components can use same signal', async () => {
         const s = signal(0)
 
         let renderCount1 = 0
@@ -138,13 +140,15 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount1).toBe(1)
         expect(renderCount2).toBe(1)
 
-        // Change signal - both should redraw (synchronously)
+        // Change signal - both should redraw (batched; 2+ components triggers full sync)
         s.value = 10
+        await m.nextTick()
+        m.redraw.sync() // Force sync since full redraw is scheduled asynchronously
         expect(renderCount1).toBe(2)
         expect(renderCount2).toBe(2)
     })
 
-    test('computed signal triggers component redraw', () => {
+    test('computed signal triggers component redraw', async () => {
         const a = signal(1)
         const b = signal(2)
         const sum = computed(() => a.value + b.value)
@@ -163,8 +167,9 @@ describe('Signal Integration - Component Redraws', () => {
         expect(root.childNodes.length).toBe(1)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('3')
 
-        // Change dependency - component should redraw (synchronously)
+        // Change dependency - component should redraw (batched)
         a.value = 10
+        await m.nextTick()
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('12')
     })
@@ -186,7 +191,7 @@ describe('Store Integration - Component Redraws', () => {
         }
     })
 
-    test('component redraws when state property changes', () => {
+    test('component redraws when state property changes', async () => {
         const $s = state({count: 0}, 'signalIntegration.stateProperty')
         let renderCount = 0
 
@@ -203,12 +208,12 @@ describe('Store Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
 
         $s.count = 10
-        // Component-level redraw should happen synchronously
+        await m.nextTick()
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
     })
 
-    test('component redraws when nested state property changes', () => {
+    test('component redraws when nested state property changes', async () => {
         const $s = state(
             {
                 user: {
@@ -232,12 +237,12 @@ describe('Store Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('John')
 
         $s.user.name = 'Jane'
-        // Component-level redraw should happen synchronously
+        await m.nextTick()
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('Jane')
     })
 
-    test('component redraws when computed property changes', () => {
+    test('component redraws when computed property changes', async () => {
         const $s = state(
             {
                 count: 0,
@@ -260,12 +265,12 @@ describe('Store Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
 
         $s.count = 5
-        // Component-level redraw should happen synchronously
+        await m.nextTick()
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
     })
 
-    test('only component using changed property redraws', () => {
+    test('only component using changed property redraws', async () => {
         const $s = state(
             {
                 count: 0,
@@ -300,13 +305,15 @@ describe('Store Integration - Component Redraws', () => {
         expect(renderCount1).toBe(1)
         expect(renderCount2).toBe(1)
 
-        // Change count - only Component1 should redraw (synchronously)
+        // Change count - only Component1 should redraw
         $s.count = 10
+        await m.nextTick()
         expect(renderCount1).toBe(2)
         expect(renderCount2).toBe(1) // Should not redraw
 
-        // Change name - only Component2 should redraw (synchronously)
+        // Change name - only Component2 should redraw
         $s.name = 'updated'
+        await m.nextTick()
         expect(renderCount1).toBe(2) // Should not redraw again
         expect(renderCount2).toBe(2)
     })
