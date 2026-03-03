@@ -6,15 +6,11 @@ Mithril with Signals, Store, SSR. Setup with Bun development tooling.
 
 This package extends [Mithril](https://mithril.js.org/) with **Signals** for fine-grained reactivity—components re-render only when their dependencies change—plus **Store** for persistent state (localStorage, sessionStorage), **SSR** with hydration, and **htm** for JSX-like syntax without a build step. Stream and the built-in request API are removed (use `fetch()` instead). TypeScript and Bun by default.
 
-## Setup with Bun
-
 ```bash
 bun add @bitstillery/mithril
 ```
 
 Types are built-in; no `@types` package needed.
-
-### Full example
 
 1. `bun init my-app` — choose **Blank**. Then `cd my-app` and `bun add @bitstillery/mithril`
 
