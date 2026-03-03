@@ -3,14 +3,12 @@ import {deserializeAllStates, deserializeStore} from '../../render/ssrState'
 
 import {getRoutes} from './routes'
 
-import {$s, initStore} from './store'
+import {$s} from './store'
 
 const app = document.getElementById('app')
 if (!app) throw new Error('Missing #app element')
 
-// Store already loaded by initStore() in store module
-initStore()
-
+// Store already loaded by initStore() in store module. Single load keeps state.perf stable.
 // Restore docs from SSR for hydration. Skip full Store deserialize so perf stays from localStorage.
 const ssrStateScript = document.getElementById('__SSR_STATE__')
 if (ssrStateScript?.textContent) {

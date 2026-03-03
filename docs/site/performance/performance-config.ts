@@ -14,6 +14,7 @@ if (!$s.state.perf) {
     initStore()
 }
 
+/** Both point to the same perf state; $s.state is a proxy so we always get current values. */
 export const $perfRows = $s.state.perf
 export const $perfDepth = $s.state.perf
 

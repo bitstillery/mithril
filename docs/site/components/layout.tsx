@@ -228,22 +228,25 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
                             <a class='hamburger' href='javascript:;'>
                                 ≡
                             </a>
-                            <h1>
-                                <img src='/logo.svg' alt='Mithril' class='logo' />
-                                Mithril{' '}
-                                <span class='version'>
-                                    {version.endsWith('-AA')
-                                        ? [
-                                              'v',
-                                              version.slice(0, -3),
-                                              m(Tippy as any, {content: VERSION_AA_TOOLTIP, id: 'version-aa-tippy'}, [
-                                                  m('span', {class: 'version-aa'}, ' AA'),
-                                                  m(Icon as any, {name: 'info', class: 'version-aa-icon'}),
-                                              ]),
-                                          ]
-                                        : `v${version}`}
-                                </span>
-                            </h1>
+                            <img src='/logo.svg' alt='Mithril' class='logo' />
+                            <div class='header-brand-text'>
+                                <h1>
+                                    Mithril
+                                    <span class='version'>
+                                        {version.endsWith('-AA')
+                                            ? [
+                                                  'v',
+                                                  version.slice(0, -3),
+                                                  m(Tippy as any, {content: VERSION_AA_TOOLTIP, id: 'version-aa-tippy'}, [
+                                                      m('span', {class: 'version-aa'}, ' AA'),
+                                                      m(Icon as any, {name: 'info', class: 'version-aa-icon'}),
+                                                  ]),
+                                              ]
+                                            : `v${version}`}
+                                    </span>
+                                </h1>
+                                <div class='header-brand-subtitle'>Bitstillery</div>
+                            </div>
                         </div>
                         <nav>
                             {m(

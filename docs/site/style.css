@@ -64,19 +64,39 @@ h5 {
     align-items: center;
     justify-content: space-between;
     gap: 12px 24px;
-    padding: 10px 0;
+    padding: 10px 24px;
 }
 
 header .header-brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+}
+
+header .header-brand-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+
+    h1 {
+        margin: 0;
+        line-height: 1.2;
+    }
+}
+
+header .header-brand-subtitle {
+    font-size: 12px;
+    font-weight: normal;
+    color: var(--od-text-muted);
+    line-height: 1.2;
+    margin-top: 1px;
 }
 
 header .header-brand .logo {
     height: 1.5em;
     width: auto;
-    vertical-align: middle;
+    flex-shrink: 0;
 }
 
 .docs-body {
@@ -416,6 +436,7 @@ h1 {
     .version {
         font-weight: normal;
         font-size: 16px;
+        margin-left: 0.35em;
     }
 
     .version-aa {
