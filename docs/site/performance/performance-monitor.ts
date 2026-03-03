@@ -11,6 +11,7 @@
 export interface PerfStats {
     fps: number
     frameTimeMs: number
+    frameTimeP95Ms: number
 }
 
 const WARMUP_FRAMES = 60
@@ -24,6 +25,13 @@ function median(arr: number[]): number {
     return sorted.length % 2 !== 0 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2
 }
 
+function percentile(arr: number[], p: number): number {
+    if (arr.length === 0) return 0
+    const sorted = [...arr].toSorted((a, b) => a - b)
+    const idx = Math.ceil((p / 100) * sorted.length) - 1
+    return sorted[Math.max(0, idx)] ?? 0
+}
+
 export function createPerformanceMonitor(): {
     recordFrame: (frameDurationMs: number) => void
     getStats: () => PerfStats
@@ -32,7 +40,7 @@ export function createPerformanceMonitor(): {
     if (typeof window === 'undefined') {
         return {
             recordFrame: () => {},
-            getStats: () => ({fps: 0, frameTimeMs: 0}),
+            getStats: () => ({fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0}),
             reset: () => {},
         }
     }
@@ -61,6 +69,7 @@ export function createPerformanceMonitor(): {
             return {
                 fps: fpsTimestamps.length,
                 frameTimeMs: frameTimes.length > 0 ? median(frameTimes) : 0,
+                frameTimeP95Ms: frameTimes.length > 0 ? percentile(frameTimes, 95) : 0,
             }
         },
 

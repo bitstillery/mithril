@@ -1,23 +1,22 @@
 /**
- * Performance demo using per-row signals. Only changed rows re-render,
- * demonstrating the benefit of targeted updates vs full m.redraw() tree walk.
+ * Shared performance demo logic: rAF loop, env, monitor, visibility handling.
+ * Each demo (with/without signals) provides data and onFrame callback.
  */
 
 import {MithrilComponent, Vnode} from '../../../index'
-import m, {state} from '../../../index'
+import m from '../../../index'
 import {createEnv} from './env'
 import {createPerformanceMonitor, type PerfStats} from './performance-monitor'
 import {mountPerformanceStats} from './performance-stats'
-import {TableRowWithSignal} from './table-row-with-signal'
+import {TableRow} from './table-row'
 import {$perfRows, $perfDepth, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'
 import type {DbRow} from './types'
 
-interface RowSignal {
-    row: DbRow
-}
-
-function getRowSignal(i: number): RowSignal {
-    return state({row: {} as DbRow}, 'perf.row.' + i)
+export interface PerformanceDemoAttrs {
+    rows?: number
+    data: DbRow[]
+    onFrame: (data: DbRow[], changedIndices?: number[]) => void
+    deferFirstFrame?: boolean
 }
 
 interface State {
@@ -26,7 +25,6 @@ interface State {
     lastRafTime: number
     lastRows: number
     lastDepth: number
-    rowSignals: RowSignal[]
     monitor: ReturnType<typeof createPerformanceMonitor>
     unmountVisibility: (() => void) | null
 }
@@ -47,96 +45,89 @@ const StatsOverlay = {
     },
 }
 
-export class PerformanceWithSignals extends MithrilComponent {
-    oncreate(vnode: Vnode) {
-        const compState = vnode.state as State
-        const rows = $perfRows.rows
+export const PerformanceDemoBase = {
+    oncreate(vnode: Vnode<PerformanceDemoAttrs>) {
+        const state = vnode.state as State
+        const rows = vnode.attrs?.rows ?? 80
         const depth = $perfDepth.depth
-        compState.env = createEnv(rows, depth)
-        compState.monitor = createPerformanceMonitor()
-        compState.lastRafTime = 0
-        compState.lastRows = rows
-        compState.lastDepth = depth
-        compState.unmountVisibility = null
-        const totalRows = rows * depth
-        compState.rowSignals = Array.from({length: totalRows}, (_, i) => getRowSignal(i))
+        const onFrame = vnode.attrs?.onFrame ?? (() => {})
+        const deferFirstFrame = vnode.attrs?.deferFirstFrame ?? false
+
+        state.env = createEnv(rows, depth)
+        state.monitor = createPerformanceMonitor()
+        state.lastRafTime = 0
+        state.lastRows = rows
+        state.lastDepth = depth
+        state.unmountVisibility = null
 
         const update = () => {
             if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
-                compState.rafId = requestAnimationFrame(update)
+                state.rafId = requestAnimationFrame(update)
                 return
             }
-            compState.rafId = requestAnimationFrame(update)
+            state.rafId = requestAnimationFrame(update)
             const now = typeof performance !== 'undefined' ? performance.now() : 0
-            if (compState.lastRafTime > 0) {
-                compState.monitor.recordFrame(now - compState.lastRafTime)
+            if (state.lastRafTime > 0) {
+                state.monitor.recordFrame(now - state.lastRafTime)
             }
-            compState.lastRafTime = now
-            if (compState.env) {
-                const result = compState.env.generateData()
-                const data = result.toArray()
-                const changedIndices = result.getChangedIndices()
-                for (const i of changedIndices) {
-                    if (compState.rowSignals[i]) {
-                        compState.rowSignals[i]!.row = data[i]!
-                    }
-                }
+            state.lastRafTime = now
+            if (state.env) {
+                const result = state.env.generateData()
+                onFrame(result.toArray(), result.getChangedIndices())
             }
         }
-        requestAnimationFrame(update)
+
+        if (deferFirstFrame) {
+            requestAnimationFrame(update)
+        } else {
+            update()
+        }
 
         const handleVisibility = () => {
             if (document.visibilityState === 'hidden') {
-                if (compState.rafId != null) {
-                    cancelAnimationFrame(compState.rafId)
-                    compState.rafId = null
+                if (state.rafId != null) {
+                    cancelAnimationFrame(state.rafId)
+                    state.rafId = null
                 }
             } else {
-                if (compState.rafId == null) update()
+                if (state.rafId == null) update()
             }
         }
         document.addEventListener('visibilitychange', handleVisibility)
-        compState.unmountVisibility = () => document.removeEventListener('visibilitychange', handleVisibility)
-    }
+        state.unmountVisibility = () => document.removeEventListener('visibilitychange', handleVisibility)
+    },
 
-    onupdate(vnode: Vnode) {
-        const compState = vnode.state as State
+    onupdate(vnode: Vnode<PerformanceDemoAttrs>) {
+        const state = vnode.state as State
+        const rows = vnode.attrs?.rows ?? 80
+        const depth = $perfDepth.depth
+        if ((rows !== state.lastRows || depth !== state.lastDepth) && state.env) {
+            state.lastRows = rows
+            state.lastDepth = depth
+            state.env = createEnv(rows, depth)
+        }
+    },
+
+    onremove(vnode: Vnode<PerformanceDemoAttrs>) {
+        const state = vnode.state as State
+        if (state.rafId != null) {
+            cancelAnimationFrame(state.rafId)
+        }
+        state.unmountVisibility?.()
+    },
+
+    view(vnode: Vnode<PerformanceDemoAttrs>) {
+        const state = vnode.state as State
+        const data = vnode.attrs?.data ?? []
+
+        const mutationsPct = (state.env?.mutations() ?? 0.5) * 100
         const rows = $perfRows.rows
         const depth = $perfDepth.depth
-        if ((rows !== compState.lastRows || depth !== compState.lastDepth) && compState.env) {
-            compState.lastRows = rows
-            compState.lastDepth = depth
-            compState.env = createEnv(rows, depth)
-            const totalRows = rows * depth
-            while (compState.rowSignals.length < totalRows) {
-                compState.rowSignals.push(getRowSignal(compState.rowSignals.length))
-            }
-        }
-    }
-
-    onremove(vnode: Vnode) {
-        const compState = vnode.state as State
-        if (compState.rafId != null) {
-            cancelAnimationFrame(compState.rafId)
-        }
-        compState.unmountVisibility?.()
-    }
-
-    view(vnode: Vnode) {
-        const compState = vnode.state as State
-        const rows = $perfRows.rows
-        const depth = $perfDepth.depth
-        const totalRows = rows * depth
-        const rowSignals = compState.rowSignals ?? []
-        const mutationsPct = (compState.env?.mutations() ?? 0.5) * 100
-
         return (
             <div class='performance-demo'>
                 <div class='performance-controls'>
                     <div class='performance-controls-stats'>
-                        {m(StatsOverlay as any, {
-                            getStats: () => compState.monitor?.getStats() ?? defaultStats,
-                        })}
+                        {m(StatsOverlay as any, {getStats: () => state.monitor?.getStats() ?? defaultStats})}
                     </div>
                     <div class='performance-controls-sliders'>
                         <label class='performance-slider-label' title='Number of top-level items'>
@@ -177,24 +168,24 @@ export class PerformanceWithSignals extends MithrilComponent {
                                 value={mutationsPct}
                                 oninput={(e: Event) => {
                                     const val = (e.target as HTMLInputElement).valueAsNumber / 100
-                                    compState.env?.mutations(val)
+                                    state.env?.mutations(val)
                                     m.redraw()
                                 }}
                             />
                         </label>
                         <span class='performance-row-count' title='Total rows (items × depth)'>
-                            {totalRows} total
+                            {data.length} total
                         </span>
                     </div>
                 </div>
                 <table class='table table-striped latest-data'>
                     <tbody>
-                        {rowSignals.slice(0, totalRows).map((rowSignal, i) => (
-                            <TableRowWithSignal key={`row-${i}`} rowSignal={rowSignal} />
+                        {data.map((row) => (
+                            <TableRow key={row.dbname} row={row} />
                         ))}
                     </tbody>
                 </table>
             </div>
         )
-    }
+    },
 }

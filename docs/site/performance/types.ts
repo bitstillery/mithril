@@ -9,7 +9,7 @@ export interface Query {
 export interface LastSample {
     nbQueries: number
     countClassName: string
-    topFiveQueries: Query[]
+    topFiveQueries?: Query[]
     queries?: Query[]
 }
 

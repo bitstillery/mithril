@@ -1,15 +1,20 @@
+/**
+ * Table row that reads from a per-row signal. Only this row re-renders when its signal updates.
+ * Used by the "with signals" demo for fair comparison (targeted updates vs full tree walk).
+ */
+
 import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
 import {QueryCell} from './query-cell'
 import type {DbRow, Query} from './types'
 
 interface Attrs {
-    row: DbRow
+    rowSignal: {row: DbRow}
 }
 
-export class TableRow extends MithrilComponent<Attrs> {
+export class TableRowWithSignal extends MithrilComponent<Attrs> {
     view(vnode: Vnode<Attrs>) {
-        const {row} = vnode.attrs ?? {}
+        const row = vnode.attrs?.rowSignal?.row
         if (!row) return <tr />
         const lastSample = row.lastSample
         const queries = (lastSample?.queries ?? []).slice(0, 12)

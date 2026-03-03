@@ -897,10 +897,9 @@ h5 {
     padding: 0.5em 0;
 }
 
-/* Performance stats - inline with controls */
+/* Performance stats - at top of controls */
 .performance-stats-container {
-    flex-shrink: 0;
-    margin-left: auto;
+    display: inline-block;
 }
 
 .performance-stats {
@@ -935,15 +934,33 @@ h5 {
 
 .performance-demo .performance-controls {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 10px;
+}
+
+.performance-demo .performance-controls-stats {
+    flex-shrink: 0;
+}
+
+.performance-demo .performance-controls-sliders {
+    display: flex;
+    align-items: center;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
-.performance-demo .performance-controls input[type='range'] {
+.performance-demo .performance-slider-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     flex: 1;
-    min-width: 120px;
+    min-width: 180px;
+}
+
+.performance-demo .performance-slider {
+    flex: 1;
+    min-width: 100px;
 }
 
 .performance-demo label {
@@ -1009,75 +1026,4 @@ h5 {
 
 .performance-demo .label-important {
     background-color: var(--od-red);
-}
-
-.performance-demo .popover {
-    background-color: var(--od-bg-highlight);
-    background-clip: padding-box;
-    border: 1px solid var(--od-selection);
-    border-radius: 6px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
-    color: var(--od-text);
-    display: none;
-    left: 0;
-    max-width: 276px;
-    padding: 1px;
-    position: absolute;
-    text-align: left;
-    top: 0;
-    white-space: normal;
-    z-index: 1010;
-}
-
-.performance-demo .popover > .arrow:after {
-    border-width: 10px;
-    content: '';
-}
-
-.performance-demo .popover.left {
-    margin-left: -10px;
-}
-
-.performance-demo .popover.left > .arrow {
-    border-right-width: 0;
-    border-left-color: var(--od-selection);
-    margin-top: -11px;
-    right: -11px;
-    top: 50%;
-}
-
-.performance-demo .popover.left > .arrow:after {
-    border-left-color: var(--od-bg-highlight);
-    border-right-width: 0;
-    bottom: -10px;
-    content: ' ';
-    right: 1px;
-}
-
-.performance-demo .popover > .arrow {
-    border-width: 11px;
-}
-
-.performance-demo .popover > .arrow,
-.performance-demo .popover > .arrow:after {
-    border-color: transparent;
-    border-style: solid;
-    display: block;
-    height: 0;
-    position: absolute;
-    width: 0;
-}
-
-.performance-demo .popover-content {
-    padding: 9px 14px;
-}
-
-.performance-demo .Query {
-    position: relative;
-}
-
-.performance-demo .Query:hover .popover {
-    display: block;
-    left: -100%;
-    width: 100%;
 }

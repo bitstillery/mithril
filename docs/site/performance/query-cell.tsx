@@ -10,14 +10,6 @@ export class QueryCell extends MithrilComponent<Attrs> {
     view(vnode: Vnode<Attrs>) {
         const {query} = vnode.attrs ?? {}
         if (!query) return <td />
-        return (
-            <td class={query.elapsedClassName}>
-                {query.formatElapsed}
-                <div class='popover left'>
-                    <div class='popover-content'>{query.query}</div>
-                    <div class='arrow' />
-                </div>
-            </td>
-        )
+        return <td class={query.elapsedClassName}>{query.formatElapsed}</td>
     }
 }

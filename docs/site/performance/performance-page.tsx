@@ -68,6 +68,9 @@ export class PerformancePage extends MithrilComponent {
                             ? 'Uses m.redraw() every frame to update the table.'
                             : 'Uses state() for reactivity—no m.redraw() needed.'}
                     </p>
+                    <p class='performance-hint'>
+                        Tip: Use CPU throttling in DevTools (Performance tab) to see more pronounced differences on fast hardware.
+                    </p>
                     {m(PerformanceMount as any, {activeTab})}
                 </div>
             </div>

@@ -1,9 +1,5 @@
 import type {DbRow, Query} from './types'
 
-function lpad(str: string, padding: string, toLength: number): string {
-    return padding.repeat(Math.ceil((toLength - str.length) / padding.length)).concat(str)
-}
-
 function formatElapsed(value: number): string {
     let str = value.toFixed(2)
     if (value > 60) {
@@ -78,10 +74,7 @@ function generateRow(object: DbRow | null, keepIdentity: boolean, mutCounter: nu
     ;(obj as any).nbQueries = nbQueries
 
     if (!obj.lastSample) {
-        obj.lastSample = {nbQueries: 0, countClassName: '', topFiveQueries: []}
-    }
-    if (!obj.lastSample.topFiveQueries) {
-        obj.lastSample.topFiveQueries = []
+        obj.lastSample = {nbQueries: 0, countClassName: ''}
     }
 
     if (keepIdentity) {
@@ -110,33 +103,34 @@ function generateRow(object: DbRow | null, keepIdentity: boolean, mutCounter: nu
         }
     }
 
-    for (let i = 0; i < 5; i++) {
-        const source = obj.lastSample!.queries![i]
-        obj.lastSample!.topFiveQueries![i] = source
-    }
-
     obj.lastSample!.nbQueries = nbQueries
     obj.lastSample!.countClassName = countClassName(nbQueries)
 
     return obj
 }
 
-export interface EnvConfig {
-    rows: number
-    mutations: (value?: number) => number
-    generateData: (keepIdentity?: boolean) => {toArray: () => DbRow[]}
+export interface GenerateResult {
+    toArray: () => DbRow[]
+    getChangedIndices: () => number[]
 }
 
-export function createEnv(rows = 15): EnvConfig {
+export interface EnvConfig {
+    rows: number
+    depth: number
+    mutations: (value?: number) => number
+    generateData: (keepIdentity?: boolean) => GenerateResult
+}
+
+export function createEnv(rows = 15, depth = 10): EnvConfig {
     let counter = 0
     let data: DbRow[] | null = null
     let oldData: DbRow[] | null = null
     let mutationsValue = 0.5
 
-    const DEPTHS = 10
+    const DEPTHS = depth
     const depthSuffix = (d: number) => (d === 0 ? '' : d === 1 ? '-replica' : `-replica-${d}`)
 
-    function getData(keepIdentity?: boolean): {toArray: () => DbRow[]} {
+    function getData(keepIdentity?: boolean): GenerateResult {
         const keep = keepIdentity ?? false
         if (!keep) {
             data = []
@@ -156,6 +150,7 @@ export function createEnv(rows = 15): EnvConfig {
             oldData = data
         }
 
+        const changedIndices: number[] = []
         for (let i = 0; i < data!.length; i++) {
             const row = data![i]
             if (!keep && oldData && oldData[i]) {
@@ -167,6 +162,7 @@ export function createEnv(rows = 15): EnvConfig {
                     row.lastSample = undefined
                 }
                 generateRow(row, keep, counter)
+                changedIndices.push(i)
             } else {
                 data![i] = oldData![i]
             }
@@ -174,6 +170,7 @@ export function createEnv(rows = 15): EnvConfig {
         oldData = data
         return {
             toArray: () => data!,
+            getChangedIndices: () => changedIndices,
         }
     }
 
@@ -187,6 +184,7 @@ export function createEnv(rows = 15): EnvConfig {
 
     return {
         rows,
+        depth,
         mutations,
         generateData: getData,
     }
