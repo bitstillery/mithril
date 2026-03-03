@@ -9,6 +9,14 @@ import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
 
 import type {Vnode as VnodeType, Children} from './vnode'
 
+// Module-level maps for component/state-to-DOM tracking (used by mount-redraw for signal redraws)
+const stateToDomMap = new WeakMap<any, Element>()
+const stateToComponentMap = new WeakMap<any, any>()
+
+export function getStateMaps() {
+    return {stateToDomMap, stateToComponentMap}
+}
+
 export default function renderFactory() {
     const nameSpace: Record<string, string> = {
         svg: 'http://www.w3.org/2000/svg',
@@ -383,8 +391,7 @@ export default function renderFactory() {
         // Track component for signal dependency tracking
         // Store mapping from vnode.state to vnode.tag (component object) for redraw
         if (vnode.state && vnode.tag && !isHydrating) {
-            ;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
-            ;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
+            stateToComponentMap.set(vnode.state, vnode.tag)
         }
         // Always track component dependencies for signal tracking (even during hydration)
         // This allows signals to know which components depend on them
@@ -420,8 +427,7 @@ export default function renderFactory() {
 
             // Store component's DOM element for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
-                ;(globalThis as any).__mithrilStateToDom = (globalThis as any).__mithrilStateToDom || new WeakMap()
-                ;(globalThis as any).__mithrilStateToDom.set(vnode.state, vnode.dom)
+                stateToDomMap.set(vnode.state, vnode.dom)
             }
         } else {
             vnode.domSize = 0
@@ -697,8 +703,7 @@ export default function renderFactory() {
         // Track component for signal dependency tracking
         // Store mapping from vnode.state to vnode.tag (component object) for redraw
         if (vnode.state && vnode.tag && !isHydrating) {
-            ;(globalThis as any).__mithrilStateToComponent = (globalThis as any).__mithrilStateToComponent || new WeakMap()
-            ;(globalThis as any).__mithrilStateToComponent.set(vnode.state, vnode.tag)
+            stateToComponentMap.set(vnode.state, vnode.tag)
         }
         // Always track component dependencies for signal tracking (even during hydration)
         // This allows signals to know which components depend on them
@@ -725,8 +730,7 @@ export default function renderFactory() {
 
             // Store component's DOM element for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
-                ;(globalThis as any).__mithrilStateToDom = (globalThis as any).__mithrilStateToDom || new WeakMap()
-                ;(globalThis as any).__mithrilStateToDom.set(vnode.state, vnode.dom)
+                stateToDomMap.set(vnode.state, vnode.dom)
             }
         } else {
             if (old.instance != null) removeNode(parent, old.instance)
@@ -912,9 +916,11 @@ export default function renderFactory() {
     }
 
     function onremove(vnode: any) {
-        // Clean up signal dependencies when component is removed
+        // Clean up signal dependencies and state maps when component is removed
         if (typeof vnode.tag !== 'string' && vnode.state != null) {
             clearComponentDependencies(vnode.state)
+            stateToDomMap.delete(vnode.state)
+            stateToComponentMap.delete(vnode.state)
         }
         if (typeof vnode.tag !== 'string' && typeof vnode.state.onremove === 'function')
             callHook.call(vnode.state.onremove, vnode)

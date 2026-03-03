@@ -75,7 +75,6 @@ setSignalRedrawCallback((sig: Signal<any>) => {
     const components = getSignalComponents(sig)
     if (components) {
         components.forEach((component) => {
-            // Use the component-level redraw
             m.redraw(component as any)
         })
     }

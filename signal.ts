@@ -25,10 +25,13 @@ export function getCurrentComponent() {
 }
 
 export function trackComponentSignal(component: any, signal: Signal<any>) {
-    if (!componentSignalMap.has(component)) {
-        componentSignalMap.set(component, new Set())
+    let set = componentSignalMap.get(component)
+    if (!set) {
+        set = new Set()
+        componentSignalMap.set(component, set)
     }
-    componentSignalMap.get(component)!.add(signal)
+    if (set.has(signal)) return
+    set.add(signal)
 
     if (!signalComponentMap.has(signal)) {
         signalComponentMap.set(signal, new Set())

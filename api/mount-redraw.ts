@@ -1,5 +1,6 @@
 import Vnode from '../render/vnode'
 import {getSignalComponents, type Signal} from '../signal'
+import {getStateMaps} from '../render/render'
 
 import type {ComponentType, Children, Vnode as VnodeType} from '../render/vnode'
 
@@ -54,11 +55,9 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     function redrawComponent(componentOrState: ComponentType) {
         // componentOrState might be vnode.state (from signal tracking) or component object
         // Try to find the actual component object if it's vnode.state
-        let component = componentOrState
-        const stateToComponentMap = (globalThis as any).__mithrilStateToComponent as WeakMap<any, ComponentType> | undefined
-        if (stateToComponentMap && stateToComponentMap.has(componentOrState)) {
-            component = stateToComponentMap.get(componentOrState)!
-        }
+        const {stateToComponentMap, stateToDomMap} = getStateMaps()
+        const resolved = stateToComponentMap.get(componentOrState)
+        const component = resolved !== undefined ? resolved : componentOrState
 
         // First try: find element in componentToElement (for m.mount components)
         // Check this first to ensure synchronous redraws for m.mount components
@@ -76,8 +75,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
         // Second try: find DOM element directly from component state (for routed components)
         // Only check this if componentToElement didn't find anything (not an m.mount component)
-        const stateToDomMap = (globalThis as any).__mithrilStateToDom as WeakMap<any, Element> | undefined
-        if (stateToDomMap && stateToDomMap.has(componentOrState)) {
+        if (stateToDomMap.has(componentOrState)) {
             // For routed components, always use global redraw to ensure RouterRoot re-renders correctly
             // RouterRoot needs currentResolver and component to be set (from route resolution)
             // A direct redraw might use stale route state, so we trigger a full sync instead
