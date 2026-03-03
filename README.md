@@ -10,12 +10,13 @@ bun add @bitstillery/mithril
 
 Mithril.js uses global `m.redraw()` — one state change re-renders **everything**. This fork adds component-level reactivity via signals so only affected components update.
 
-| Feature          | Original            | This Fork                       |
-| ---------------- | ------------------- | ------------------------------- |
-| Reactivity       | Global `m.redraw()` | Fine-grained component updates  |
-| State Management | Manual redraw calls | Signals with automatic tracking |
-| SSR              | No hydration        | State serialization + hydration |
-| TypeScript       | Community types     | Native                          |
+| Feature          | Original            | This Fork                        |
+| ---------------- | ------------------- | -------------------------------- |
+| Reactivity       | Global `m.redraw()` | Fine-grained component updates   |
+| State Management | Manual redraw calls | Signals with automatic tracking  |
+| SSR              | No hydration        | State serialization + hydration  |
+| TypeScript       | Community types     | Native                           |
+| Stream / request | Built-in            | Removed (use signals, `fetch()`) |
 
 Signals are opt-in. Existing Mithril code works unchanged.
 
