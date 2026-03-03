@@ -55,7 +55,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     function redrawComponent(componentOrState: ComponentType) {
         // componentOrState might be vnode.state (from signal tracking) or component object
         // Try to find the actual component object if it's vnode.state
-        const {stateToComponentMap, stateToDomMap} = getStateMaps()
+        const {stateToComponentMap, stateToDomMap, stateToVnodeMap} = getStateMaps()
         const resolved = stateToComponentMap.get(componentOrState)
         const component = resolved !== undefined ? resolved : componentOrState
 
@@ -73,13 +73,31 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
             }
         }
 
-        // Second try: find DOM element directly from component state (for routed components)
+        // Second try: targeted redraw for nested components (stateToDomMap path)
         // Only check this if componentToElement didn't find anything (not an m.mount component)
-        if (stateToDomMap.get(componentOrState) !== undefined) {
-            // For routed components, always use global redraw to ensure RouterRoot re-renders correctly
-            // RouterRoot needs currentResolver and component to be set (from route resolution)
-            // A direct redraw might use stale route state, so we trigger a full sync instead
-            // This ensures RouterRoot re-renders with the current route, preserving Layout
+        const nestedElement = stateToDomMap.get(componentOrState)
+        if (nestedElement !== undefined) {
+            const vnodeInfo = stateToVnodeMap.get(componentOrState)
+            if (nestedElement?.isConnected && component != null && vnodeInfo != null) {
+                const parent = nestedElement.parentElement
+                const oldVnodes = parent != null ? (parent as any).vnodes : null
+                if (parent != null && Array.isArray(oldVnodes) && oldVnodes.length > 0) {
+                    const i = oldVnodes.findIndex((v: any) => v?.state === componentOrState)
+                    if (i >= 0) {
+                        const {key, attrs} = vnodeInfo
+                        const newVnodes = [...oldVnodes]
+                        newVnodes[i] = Vnode(component, key ?? null, attrs ?? null, null, null, null)
+                        try {
+                            render(parent, newVnodes, redraw)
+                            return
+                        } catch (e) {
+                            console.error(e)
+                            // Fall through to full sync on error
+                        }
+                    }
+                }
+            }
+            // Fallback: full sync for RouterRoot correctness or when targeted path fails
             if (!pending) {
                 pending = true
                 schedule(function () {
@@ -115,6 +133,107 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         }
     }
 
+    function redrawComponents(components: Set<ComponentType>) {
+        const {stateToComponentMap, stateToDomMap, stateToVnodeMap} = getStateMaps()
+        const mountRoots: ComponentType[] = []
+        const nested = new Set<ComponentType>()
+
+        for (const c of components) {
+            const component = stateToComponentMap.get(c) ?? c
+            if (componentToElement.get(component)) {
+                mountRoots.push(c)
+            } else {
+                nested.add(c)
+            }
+        }
+
+        for (const c of mountRoots) {
+            redrawComponent(c)
+        }
+
+        if (nested.size === 0) return
+
+        // Group nested components by parent element
+        const parentToStates = new Map<Element, Set<ComponentType>>()
+        for (const state of nested) {
+            const el = stateToDomMap.get(state)
+            const parent = el?.parentElement
+            if (!parent || !el?.isConnected) {
+                // Can't do targeted redraw, fall back to full sync
+                if (!pending) {
+                    pending = true
+                    schedule(function () {
+                        pending = false
+                        sync()
+                    })
+                }
+                return
+            }
+            let set = parentToStates.get(parent)
+            if (!set) {
+                set = new Set()
+                parentToStates.set(parent, set)
+            }
+            set.add(state)
+        }
+
+        for (const [parent, states] of parentToStates) {
+            const oldVnodes = (parent as any).vnodes
+            if (!Array.isArray(oldVnodes) || oldVnodes.length === 0) {
+                if (!pending) {
+                    pending = true
+                    schedule(function () {
+                        pending = false
+                        sync()
+                    })
+                }
+                return
+            }
+
+            const newVnodes = [...oldVnodes]
+            let allFound = true
+            for (const state of states) {
+                const i = oldVnodes.findIndex((v: any) => v?.state === state)
+                if (i < 0) {
+                    allFound = false
+                    break
+                }
+                const component = stateToComponentMap.get(state) ?? state
+                const vnodeInfo = stateToVnodeMap.get(state)
+                if (!vnodeInfo) {
+                    allFound = false
+                    break
+                }
+                const {key, attrs} = vnodeInfo
+                newVnodes[i] = Vnode(component, key ?? null, attrs ?? null, null, null, null)
+            }
+
+            if (!allFound) {
+                if (!pending) {
+                    pending = true
+                    schedule(function () {
+                        pending = false
+                        sync()
+                    })
+                }
+                return
+            }
+
+            try {
+                render(parent, newVnodes, redraw)
+            } catch (e) {
+                console.error(e)
+                if (!pending) {
+                    pending = true
+                    schedule(function () {
+                        pending = false
+                        sync()
+                    })
+                }
+            }
+        }
+    }
+
     function redraw(component?: ComponentType) {
         // Component-level redraw
         if (component !== undefined) {
@@ -133,6 +252,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     }
 
     redraw.sync = sync
+    ;(redraw as any).redrawComponents = redrawComponents
 
     // Export function to redraw components affected by signal changes
     ;(redraw as any).signal = function (signal: Signal<any>) {

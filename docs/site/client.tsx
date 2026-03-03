@@ -1,19 +1,29 @@
 import m from '../../index'
-import {deserializeAllStates} from '../../render/ssrState'
+import {deserializeAllStates, deserializeStore} from '../../render/ssrState'
 
 import {getRoutes} from './routes'
 
-// Import store so $docs is registered before deserialization
-import './store'
+import {$s, initStore} from './store'
 
 const app = document.getElementById('app')
 if (!app) throw new Error('Missing #app element')
 
-// Restore SSR state before mounting so hydration matches
+// Store already loaded by initStore() in store module
+initStore()
+
+// Restore docs from SSR for hydration. Skip full Store deserialize so perf stays from localStorage.
 const ssrStateScript = document.getElementById('__SSR_STATE__')
 if (ssrStateScript?.textContent) {
     try {
-        deserializeAllStates(JSON.parse(ssrStateScript.textContent))
+        const ssrState = JSON.parse(ssrStateScript.textContent)
+        deserializeAllStates(ssrState, {skipStates: new Set([$s.state])})
+        // Merge docs from SSR store into $s.state.docs (hydration)
+        const storeEntry = Object.values(ssrState).find(
+            (s): s is {perf: unknown; docs: unknown} => s != null && typeof s === 'object' && 'perf' in s && 'docs' in s,
+        )
+        if (storeEntry?.docs) {
+            deserializeStore($s.state, {docs: storeEntry.docs})
+        }
     } catch (err) {
         console.warn('Failed to deserialize SSR state:', err)
     }

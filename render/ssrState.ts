@@ -326,12 +326,18 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
     restore(initial, state)
 }
 
-export function deserializeAllStates(serialized: Record<string, any>): void {
+export interface DeserializeOptions {
+    /** Skip deserializing these state instances (e.g. Store state that should come from localStorage) */
+    skipStates?: Set<any>
+}
+
+export function deserializeAllStates(serialized: Record<string, any>, options?: DeserializeOptions): void {
     if (!serialized || typeof serialized !== 'object') {
         return
     }
 
     const registeredStates = getRegisteredStates()
+    const skipStates = options?.skipStates
 
     // First, deserialize all states
     for (const [name, serializedState] of Object.entries(serialized)) {
@@ -342,6 +348,10 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
             if (typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production') {
                 logger.warn(`state not found in registry. skipping deserialization.`, {stateName: name})
             }
+            continue
+        }
+
+        if (skipStates?.has(entry.state)) {
             continue
         }
 
@@ -356,6 +366,9 @@ export function deserializeAllStates(serialized: Record<string, any>): void {
     // After deserializing, restore computed properties from original initial states
     // This ensures computed properties work after SSR deserialization
     for (const [name, entry] of registeredStates.entries()) {
+        if (skipStates?.has(entry.state)) {
+            continue
+        }
         try {
             restoreComputedProperties(entry.state, entry.initial)
         } catch (error) {

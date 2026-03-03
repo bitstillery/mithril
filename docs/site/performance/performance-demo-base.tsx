@@ -9,7 +9,7 @@ import {createEnv} from './env'
 import {createPerformanceMonitor, type PerfStats} from './performance-monitor'
 import {mountPerformanceStats} from './performance-stats'
 import {TableRow} from './table-row'
-import {$perfRows, $perfDepth, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'
+import {$perfRows, $perfDepth, savePerfSettings, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'
 import type {DbRow} from './types'
 
 export interface PerformanceDemoAttrs {
@@ -29,7 +29,7 @@ interface State {
     unmountVisibility: (() => void) | null
 }
 
-const defaultStats: PerfStats = {fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0}
+const defaultStats: PerfStats = {fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0, rendersPerFrame: 0}
 
 const StatsOverlay = {
     view(vnode: Vnode<{getStats: () => PerfStats}>) {
@@ -54,6 +54,7 @@ export const PerformanceDemoBase = {
         const deferFirstFrame = vnode.attrs?.deferFirstFrame ?? false
 
         state.env = createEnv(rows, depth)
+        state.env.mutations($perfDepth.mutations)
         state.monitor = createPerformanceMonitor()
         state.lastRafTime = 0
         state.lastRows = rows
@@ -105,6 +106,7 @@ export const PerformanceDemoBase = {
             state.lastRows = rows
             state.lastDepth = depth
             state.env = createEnv(rows, depth)
+            state.env.mutations($perfDepth.mutations)
         }
     },
 
@@ -120,7 +122,7 @@ export const PerformanceDemoBase = {
         const state = vnode.state as State
         const data = vnode.attrs?.data ?? []
 
-        const mutationsPct = (state.env?.mutations() ?? 0.5) * 100
+        const mutationsPct = $perfDepth.mutations * 100
         const rows = $perfRows.rows
         const depth = $perfDepth.depth
         return (
@@ -140,6 +142,7 @@ export const PerformanceDemoBase = {
                                 value={rows}
                                 oninput={(e: Event) => {
                                     $perfRows.rows = (e.target as HTMLInputElement).valueAsNumber
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />
@@ -154,6 +157,7 @@ export const PerformanceDemoBase = {
                                 value={depth}
                                 oninput={(e: Event) => {
                                     $perfDepth.depth = (e.target as HTMLInputElement).valueAsNumber
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />
@@ -168,7 +172,9 @@ export const PerformanceDemoBase = {
                                 value={mutationsPct}
                                 oninput={(e: Event) => {
                                     const val = (e.target as HTMLInputElement).valueAsNumber / 100
+                                    $perfDepth.mutations = val
                                     state.env?.mutations(val)
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />

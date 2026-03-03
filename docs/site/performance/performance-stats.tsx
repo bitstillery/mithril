@@ -15,12 +15,14 @@ export function mountPerformanceStats(container: HTMLElement, getStats: () => Pe
     container.appendChild(el)
 
     const intervalId = setInterval(() => {
-        const {fps, frameTimeMs, frameTimeP95Ms} = getStats()
+        const {fps, frameTimeMs, frameTimeP95Ms, rendersPerFrame} = getStats()
         const fpsClass = fps >= 55 ? 'fps-good' : fps >= 45 ? 'fps-warn' : 'fps-bad'
         el.textContent = ''
         el.className = `performance-stats ${fpsClass}`
         el.appendChild(
-            document.createTextNode(`FPS: ${fps} | Frame: ${frameTimeMs.toFixed(1)}ms (P95: ${frameTimeP95Ms.toFixed(1)}ms)`),
+            document.createTextNode(
+                `FPS: ${fps} | Frame: ${frameTimeMs.toFixed(1)}ms (P95: ${frameTimeP95Ms.toFixed(1)}ms) | Renders/frame: ${rendersPerFrame}`,
+            ),
         )
     }, UPDATE_INTERVAL_MS)
 

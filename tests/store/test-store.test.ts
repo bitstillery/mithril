@@ -604,6 +604,26 @@ describe('Store', () => {
         })
     })
 
+    describe('Custom storage key', () => {
+        test('storageKey option uses different localStorage key', () => {
+            const customKey = 'my-app-store'
+            const store = new Store({storageKey: customKey})
+            const saved = {count: 0}
+            const temporary = {}
+            const tab = {}
+
+            store.load(saved, temporary, tab)
+            store.state.count = 42
+            store.save()
+
+            // Default 'store' key should be empty or different
+            const defaultData = JSON.parse(localStorageMock.getItem('store') || '{}')
+            const customData = JSON.parse(localStorageMock.getItem(customKey) || '{}')
+            expect(customData.count).toBe(42)
+            expect(defaultData.count).toBeUndefined()
+        })
+    })
+
     describe('Integration Tests', () => {
         test('complete flow: load, modify, save, reload', () => {
             const store1 = new Store()

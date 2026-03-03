@@ -1,5 +1,6 @@
 import {MithrilComponent, Vnode} from '../../../index'
 import m from '../../../index'
+import {recordComponentRender} from './performance-monitor'
 import {QueryCell} from './query-cell'
 import type {DbRow, Query} from './types'
 
@@ -9,6 +10,7 @@ interface Attrs {
 
 export class TableRow extends MithrilComponent<Attrs> {
     view(vnode: Vnode<Attrs>) {
+        recordComponentRender()
         const {row} = vnode.attrs ?? {}
         if (!row) return <tr />
         const lastSample = row.lastSample

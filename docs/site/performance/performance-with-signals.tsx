@@ -9,7 +9,7 @@ import {createEnv} from './env'
 import {createPerformanceMonitor, type PerfStats} from './performance-monitor'
 import {mountPerformanceStats} from './performance-stats'
 import {TableRowWithSignal} from './table-row-with-signal'
-import {$perfRows, $perfDepth, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'
+import {$perfRows, $perfDepth, savePerfSettings, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'
 import type {DbRow} from './types'
 
 interface RowSignal {
@@ -31,7 +31,7 @@ interface State {
     unmountVisibility: (() => void) | null
 }
 
-const defaultStats: PerfStats = {fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0}
+const defaultStats: PerfStats = {fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0, rendersPerFrame: 0}
 
 const StatsOverlay = {
     view(vnode: Vnode<{getStats: () => PerfStats}>) {
@@ -53,6 +53,7 @@ export class PerformanceWithSignals extends MithrilComponent {
         const rows = $perfRows.rows
         const depth = $perfDepth.depth
         compState.env = createEnv(rows, depth)
+        compState.env.mutations($perfDepth.mutations)
         compState.monitor = createPerformanceMonitor()
         compState.lastRafTime = 0
         compState.lastRows = rows
@@ -107,6 +108,7 @@ export class PerformanceWithSignals extends MithrilComponent {
             compState.lastRows = rows
             compState.lastDepth = depth
             compState.env = createEnv(rows, depth)
+            compState.env.mutations($perfDepth.mutations)
             const totalRows = rows * depth
             while (compState.rowSignals.length < totalRows) {
                 compState.rowSignals.push(getRowSignal(compState.rowSignals.length))
@@ -128,7 +130,7 @@ export class PerformanceWithSignals extends MithrilComponent {
         const depth = $perfDepth.depth
         const totalRows = rows * depth
         const rowSignals = compState.rowSignals ?? []
-        const mutationsPct = (compState.env?.mutations() ?? 0.5) * 100
+        const mutationsPct = $perfDepth.mutations * 100
 
         return (
             <div class='performance-demo'>
@@ -149,6 +151,7 @@ export class PerformanceWithSignals extends MithrilComponent {
                                 value={rows}
                                 oninput={(e: Event) => {
                                     $perfRows.rows = (e.target as HTMLInputElement).valueAsNumber
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />
@@ -163,6 +166,7 @@ export class PerformanceWithSignals extends MithrilComponent {
                                 value={depth}
                                 oninput={(e: Event) => {
                                     $perfDepth.depth = (e.target as HTMLInputElement).valueAsNumber
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />
@@ -177,7 +181,9 @@ export class PerformanceWithSignals extends MithrilComponent {
                                 value={mutationsPct}
                                 oninput={(e: Event) => {
                                     const val = (e.target as HTMLInputElement).valueAsNumber / 100
+                                    $perfDepth.mutations = val
                                     compState.env?.mutations(val)
+                                    savePerfSettings()
                                     m.redraw()
                                 }}
                             />

@@ -83,7 +83,9 @@ function flushPendingRedraws() {
     if (components.size === 1) {
         m.redraw(components.values().next().value)
     } else if (components.size > 1) {
-        m.redraw()
+        const fn = (m.redraw as any).redrawComponents
+        if (fn) fn(components)
+        else m.redraw()
     }
 }
 
@@ -107,6 +109,7 @@ export {Store} from './store'
 
 // Export SSR utilities
 export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './render/ssrState'
+export type {DeserializeOptions} from './render/ssrState'
 
 // Export SSR request context (for per-request store and state registry)
 export {getSSRContext, runWithContext, runWithContextAsync, cleanupWatchers} from './ssrContext'

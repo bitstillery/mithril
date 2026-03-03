@@ -144,9 +144,13 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
     private lookup_verify_interval: number | null = null
     private lookup_ttl: number
     private computedPropertiesSetup?: () => void
+    private storageKey: string
+    private tabStorageKey: string
 
-    constructor(options: {lookup_ttl?: number} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
+    constructor(options: {lookup_ttl?: number; storageKey?: string; tabStorageKey?: string} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
         this.lookup_ttl = options.lookup_ttl || DEFAULT_LOOKUP_TTL
+        this.storageKey = options.storageKey ?? 'store'
+        this.tabStorageKey = options.tabStorageKey ?? this.storageKey
         // Initialize with empty state, will be loaded later (ADR-0013: defer computeds until ready() is called)
         const instanceName = `store.instance.${storeInstanceCounter++}`
         this.stateInstance = state({} as T, instanceName, {deferComputed: true})
@@ -271,8 +275,8 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 
     load(saved: Partial<T>, temporary: Partial<T>, tab: Partial<T> = {} as Partial<T>, session: Partial<T> = {} as Partial<T>) {
         const restored_state = {
-            tab: this.get_tab_storage('store'),
-            store: this.get('store'),
+            tab: this.get_tab_storage(this.tabStorageKey),
+            store: this.get(this.storageKey),
         }
 
         this.templates = {
@@ -381,7 +385,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 
         // Save to localStorage (saved state)
         if (saveSaved && this.templates.saved) {
-            this.set('store', this.blueprint(statePlain, copy_object(this.templates.saved)))
+            this.set(this.storageKey, this.blueprint(statePlain, copy_object(this.templates.saved)))
         }
 
         // Save to sessionStorage (tab state)
@@ -397,18 +401,18 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 if (isState(tabState)) {
                     const tabPlain = serializeStore(tabState)
                     // blueprint expects both arguments to have the same structure
-                    this.set_tab('store', this.blueprint(tabPlain, copy_object(tabTemplate)))
+                    this.set_tab(this.tabStorageKey, this.blueprint(tabPlain, copy_object(tabTemplate)))
                 } else {
                     // Plain object tab
-                    this.set_tab('store', this.blueprint(tabState, copy_object(tabTemplate)))
+                    this.set_tab(this.tabStorageKey, this.blueprint(tabState, copy_object(tabTemplate)))
                 }
             } else {
                 // No tab state - save empty tab based on template structure
                 const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
                 if (tabTemplate && Object.keys(tabTemplate).length > 0) {
-                    this.set_tab('store', this.blueprint({} as any, copy_object(tabTemplate)))
+                    this.set_tab(this.tabStorageKey, this.blueprint({} as any, copy_object(tabTemplate)))
                 } else {
-                    this.set_tab('store', {})
+                    this.set_tab(this.tabStorageKey, {})
                 }
             }
         }

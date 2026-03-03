@@ -12,6 +12,20 @@ export interface PerfStats {
     fps: number
     frameTimeMs: number
     frameTimeP95Ms: number
+    /** Row components rendered in the last frame (TableRow/TableRowWithSignal view() calls) */
+    rendersPerFrame: number
+}
+
+/** Call from row component view() to count renders. Used for performance comparison. */
+let frameRenderCount = 0
+export function recordComponentRender(): void {
+    frameRenderCount++
+}
+
+function getAndResetFrameRenderCount(): number {
+    const count = frameRenderCount
+    frameRenderCount = 0
+    return count
 }
 
 const WARMUP_FRAMES = 60
@@ -40,22 +54,29 @@ export function createPerformanceMonitor(): {
     if (typeof window === 'undefined') {
         return {
             recordFrame: () => {},
-            getStats: () => ({fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0}),
+            getStats: () => ({fps: 0, frameTimeMs: 0, frameTimeP95Ms: 0, rendersPerFrame: 0}),
             reset: () => {},
         }
     }
 
     const frameTimes: number[] = []
     const fpsTimestamps: number[] = []
+    const renderCounts: number[] = []
     let frameCount = 0
+    let lastRendersPerFrame = 0
 
     return {
         recordFrame(frameDurationMs: number) {
+            lastRendersPerFrame = getAndResetFrameRenderCount()
             frameCount++
             if (frameCount > WARMUP_FRAMES) {
                 frameTimes.push(frameDurationMs)
                 if (frameTimes.length > FRAME_BUFFER_SIZE) {
                     frameTimes.shift()
+                }
+                renderCounts.push(lastRendersPerFrame)
+                if (renderCounts.length > FRAME_BUFFER_SIZE) {
+                    renderCounts.shift()
                 }
                 const now = performance.now()
                 fpsTimestamps.push(now)
@@ -70,13 +91,17 @@ export function createPerformanceMonitor(): {
                 fps: fpsTimestamps.length,
                 frameTimeMs: frameTimes.length > 0 ? median(frameTimes) : 0,
                 frameTimeP95Ms: frameTimes.length > 0 ? percentile(frameTimes, 95) : 0,
+                rendersPerFrame: renderCounts.length > 0 ? Math.round(median(renderCounts)) : lastRendersPerFrame,
             }
         },
 
         reset() {
             frameTimes.length = 0
             fpsTimestamps.length = 0
+            renderCounts.length = 0
             frameCount = 0
+            lastRendersPerFrame = 0
+            getAndResetFrameRenderCount()
         },
     }
 }

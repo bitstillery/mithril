@@ -220,8 +220,11 @@ const server = serve({
                         }
                     },
                     initRequestContext: async (context) => {
-                        // Copy global states (e.g. $docs) into per-request context for SSR serialization
+                        // Copy global states (e.g. $docs, $s) into per-request context first,
+                        // so initStore's load() can find the Store state in the registry
                         copyGlobalStatesToContext(context)
+                        const {initStore} = await import('./store')
+                        initStore()
                     },
                     getHtmlTemplate: getProcessedTemplate,
                 })

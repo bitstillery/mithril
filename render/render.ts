@@ -12,9 +12,10 @@ import type {Vnode as VnodeType, Children} from './vnode'
 // Module-level maps for component/state-to-DOM tracking (used by mount-redraw for signal redraws)
 const stateToDomMap = new WeakMap<any, Element>()
 const stateToComponentMap = new WeakMap<any, any>()
+const stateToVnodeMap = new WeakMap<any, {key?: string | number | null; attrs?: Record<string, any>}>()
 
 export function getStateMaps() {
-    return {stateToDomMap, stateToComponentMap}
+    return {stateToDomMap, stateToComponentMap, stateToVnodeMap}
 }
 
 export default function renderFactory() {
@@ -425,9 +426,10 @@ export default function renderFactory() {
             vnode.dom = vnode.instance.dom
             vnode.domSize = vnode.instance.domSize
 
-            // Store component's DOM element for fine-grained redraw (not during hydration)
+            // Store component's DOM element and vnode info for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
                 stateToDomMap.set(vnode.state, vnode.dom)
+                stateToVnodeMap.set(vnode.state, {key: vnode.key, attrs: vnode.attrs})
             }
         } else {
             vnode.domSize = 0
@@ -728,9 +730,10 @@ export default function renderFactory() {
             vnode.dom = vnode.instance.dom
             vnode.domSize = vnode.instance.domSize
 
-            // Store component's DOM element for fine-grained redraw (not during hydration)
+            // Store component's DOM element and vnode info for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
                 stateToDomMap.set(vnode.state, vnode.dom)
+                stateToVnodeMap.set(vnode.state, {key: vnode.key, attrs: vnode.attrs})
             }
         } else {
             if (old.instance != null) removeNode(parent, old.instance)
@@ -921,6 +924,7 @@ export default function renderFactory() {
             clearComponentDependencies(vnode.state)
             stateToDomMap.delete(vnode.state)
             stateToComponentMap.delete(vnode.state)
+            stateToVnodeMap.delete(vnode.state)
         }
         if (typeof vnode.tag !== 'string' && typeof vnode.state.onremove === 'function')
             callHook.call(vnode.state.onremove, vnode)

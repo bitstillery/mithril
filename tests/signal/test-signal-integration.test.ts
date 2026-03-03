@@ -140,10 +140,10 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount1).toBe(1)
         expect(renderCount2).toBe(1)
 
-        // Change signal - both should redraw (batched; 2+ components triggers full sync)
+        // Change signal - both should redraw (batched; merged targeted or full sync)
         s.value = 10
         await m.nextTick()
-        m.redraw.sync() // Force sync since full redraw is scheduled asynchronously
+        mockThrottle.fire() // Run any scheduled sync (old path); no-op when merged targeted redraw runs inline
         expect(renderCount1).toBe(2)
         expect(renderCount2).toBe(2)
     })
