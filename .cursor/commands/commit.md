@@ -10,12 +10,28 @@ Create a conventional commit and push. Use `/commit` to run.
 
 3. **Analyze**: Use `git diff --cached` to see what changed.
 
-4. **Commit message**: Conventional format `type(scope): subject`. Types: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`, `perf`, `ci`, `build`. Scope from path: `api`, `render`, `docs`, `examples`, `server`, or `core`. Subject: imperative, lowercase, no period.
+4. **Commit message**: Conventional format:
+
+    ```
+    type(scope): subject
+
+    body
+    ```
+
+    - **Types**: `feat`, `fix`, `refactor`, `chore`, `docs`, `style`, `test`, `perf`, `ci`, `build`
+    - **Scope** from path: `api`, `render`, `docs`, `examples`, `server`, or `core`
+    - **Subject**: imperative, lowercase, no period
+    - **Body**: explain what and why (recommended for significant changes)
 
 5. **Commit & push**:
+
     ```bash
-    .cursor/scripts/commit.sh "type(scope): subject"
+    .cursor/scripts/commit.sh "type(scope): subject
+
+    body"
     ```
+
+    For single-line messages, omit the body.
 
 ## Note
 
