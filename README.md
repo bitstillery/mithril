@@ -1,18 +1,29 @@
 # @bitstillery/mithril
 
-> Mithril.js with **fine-grained reactivity**, **SSR hydration**, and **zero-dependency signals**.
+Mithril.js fork with fine-grained reactivity, SSR hydration, and built-in signals. Drop-in compatible with Mithril v2.x.
 
-[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+```bash
+bun add @bitstillery/mithril
+```
 
-## The Problem
+## Why
 
-Mithril.js uses global `m.redraw()`—one state change updates **all** components. This fork adds fine-grained reactivity: only components using changed state re-render.
+Mithril.js uses global `m.redraw()` — one state change re-renders **everything**. This fork adds component-level reactivity via signals so only affected components update.
 
-## What Makes This Different
+| Feature          | Original            | This Fork                       |
+| ---------------- | ------------------- | ------------------------------- |
+| Reactivity       | Global `m.redraw()` | Fine-grained component updates  |
+| State Management | Manual redraw calls | Signals with automatic tracking |
+| SSR              | No hydration        | State serialization + hydration |
+| TypeScript       | Community types     | Native                          |
 
-### Signals
+Signals are opt-in. Existing Mithril code works unchanged.
 
-Fine-grained reactivity primitives with automatic dependency tracking. Zero-dependency implementation—no Preact Signals or other packages.
+**Docs**: [mithril.garage44.org](https://mithril.garage44.org)
+
+## Signals
+
+Zero-dependency reactive primitives with automatic dependency tracking:
 
 ```typescript
 import {signal, computed, effect} from '@bitstillery/mithril'
@@ -20,71 +31,36 @@ import {signal, computed, effect} from '@bitstillery/mithril'
 const count = signal(0)
 const doubled = computed(() => count() * 2)
 
-effect(() => {
-    console.log(`Count: ${count()}, Doubled: ${doubled()}`)
-})
-
-count(5) // Logs: Count: 5, Doubled: 10
+effect(() => console.log(`${count()} × 2 = ${doubled()}`))
+count(5) // Logs: 5 × 2 = 10
 ```
 
-### Signal State
+## Proxy State
 
-Proxy-based reactive state that makes signals developer-friendly. Automatic dependency tracking with no manual redraw calls.
+Wraps signals in a proxy for ergonomic access. Components automatically track which properties they read and only re-render when those change.
 
 ```tsx
-import {state} from '@bitstillery/mithril'
+import m, {state, MithrilComponent} from '@bitstillery/mithril'
 
-const $s = state(
-    {
-        count: 0,
-        user: {name: 'John'},
-        todos: [],
-        totalTodos: () => $s.todos.length, // Computed
-    },
-    'my.state',
-) // Name required for SSR serialization
+const $s = state({count: 0, todos: [], totalTodos: () => $s.todos.length}, 'app')
 
-// Component only re-renders when $s.count changes
 class Counter extends MithrilComponent {
     view() {
         return (
             <div>
-                <p>Count: {$s.count}</p>
-                <button onclick={() => $s.count++}>Increment</button>
+                <p>{$s.count}</p>
+                <button onclick={() => $s.count++}>+</button>
             </div>
         )
     }
 }
+
+m.mount(document.body, Counter)
 ```
 
-### Persistent Store
+The second argument to `state()` is a name used for SSR serialization.
 
-State persistence with automatic serialization. The `Store` class wraps `state()` with localStorage/sessionStorage support, seamlessly integrating with SSR hydration.
-
-```typescript
-import {Store} from '@bitstillery/mithril'
-
-const store = new Store<{user: {name: string}; preferences: Record<string, any>}>()
-
-// Define what persists vs what's volatile
-store.blueprint(
-    {user: {name: ''}, preferences: {}},
-    {
-        user: {name: ''}, // Persistent
-        preferences: {}, // Persistent
-    },
-)
-
-// Load from storage, or initialize with defaults
-store.load({user: {name: 'John'}, preferences: {theme: 'dark'}})
-
-// State is reactive and automatically saves on changes
-store.state.user.name = 'Jane' // Auto-saves to localStorage
-```
-
-### SSR Hydration
-
-Server-side rendering with state preservation. `renderToString` automatically serializes state; restore it on the client before mounting.
+## SSR Hydration
 
 ```typescript
 // Server
@@ -94,57 +70,31 @@ const {html, state} = await m.renderToString(App)
 // Client
 import {deserializeAllStates} from '@bitstillery/mithril'
 
-const ssrState = document.getElementById('__SSR_STATE__')
-if (ssrState?.textContent) {
-    deserializeAllStates(JSON.parse(ssrState.textContent))
-}
+const el = document.getElementById('__SSR_STATE__')
+if (el?.textContent) deserializeAllStates(JSON.parse(el.textContent))
 m.mount(root, App)
 ```
 
-## The Complete Picture
+## Persistent Store
 
-These features build on each other: signals provide the foundation for fine-grained reactivity, proxy-based state makes them developer-friendly, `Store` adds persistence for localStorage/sessionStorage, and SSR hydration enables search-engine friendly websites. The result? State that "just works"—from initial render through hydration, user interactions, and page refreshes—all while maintaining Mithril's familiar API.
+`Store` wraps `state()` with localStorage/sessionStorage. Define a blueprint with defaults and which keys persist:
 
-## Quick Start
+```typescript
+import {Store} from '@bitstillery/mithril'
 
-```bash
-bun add @bitstillery/mithril
-```
-
-```tsx
-import m, {state, MithrilComponent} from '@bitstillery/mithril'
-
-const $s = state({count: 0}, 'app.state') // Name required for SSR
-
-class App extends MithrilComponent {
-    view() {
-        return (
-            <div>
-                <p>Count: {$s.count}</p>
-                <button onclick={() => $s.count++}>Increment</button>
-            </div>
-        )
-    }
-}
-
-m.mount(document.body, App)
+const store = new Store<{user: {name: string}; preferences: Record<string, any>}>()
+store.blueprint(
+    {user: {name: ''}, preferences: {}},
+    {user: {name: ''}, preferences: {}}, // Keys here persist to storage
+)
+store.load({user: {name: 'John'}, preferences: {theme: 'dark'}})
+store.state.user.name = 'Jane' // Auto-saves
 ```
 
 ## Examples
 
-- **SSR**: [`examples/ssr/`](examples/ssr/) - Server-side rendering with hydration
-- **State**: [`examples/state/`](examples/state/) - Signals, state management, and Store persistence patterns
-
-## Differences from Mithril.js
-
-| Feature          | Original            | This Fork                       |
-| ---------------- | ------------------- | ------------------------------- |
-| Reactivity       | Global `m.redraw()` | Fine-grained component updates  |
-| State Management | Manual redraw calls | Signals with automatic tracking |
-| SSR Hydration    | State loss          | Proper state preservation       |
-| TypeScript       | Community types     | Native TypeScript               |
-
-**100% API compatible** with Mithril.js v2.x. Signals are opt-in.
+- [`examples/ssr/`](examples/ssr/) — Server-side rendering with hydration
+- [`examples/state/`](examples/state/) — Signals, state, and Store patterns
 
 ## Development
 
@@ -155,31 +105,8 @@ bun test
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
 
 ## Credits
 
-Mithril.js was originally written by Leo Horie, but it is where it is today thanks to the hard work and great ideas of many people.
-
-Special thanks to:
-
-- Pat Cavit, who exposed most of the public API for Mithril.js 1.0, brought in test coverage and automated the publishing process
-- Claudia Meadows, who brought in linting, modernized the test suite and has been a strong voice in design discussions
-- Zoli Kahan, who replaced the original Promise implementation with one that actually worked properly
-- Alec Embke, who single-handedly wrote the JSON-P implementation
-- Barney Carroll, who suggested many great ideas and relentlessly pushed Mithril.js to the limit to uncover design issues prior to Mithril.js 1.0
-- Dominic Gannaway, who offered insanely meticulous technical insight into rendering performance
-- Boris Letocha, whose search space reduction algorithm is the basis for Mithril.js' virtual DOM engine
-- Joel Richard, whose monomorphic virtual DOM structure is the basis for Mithril.js' vnode implementation
-- Simon Friis Vindum, whose open source work was an inspiration to many design decisions for Mithril.js 1.0
-- Boris Kaul, for his awesome work on the benchmarking tools used to develop Mithril.js
-- Leon Sorokin, for writing a DOM instrumentation tool that helped improve performance in Mithril.js 1.0
-- Jordan Walke, whose work on React was prior art to the implementation of keys in Mithril.js
-- Pierre-Yves Gérardy, who consistently makes high quality contributions
-- Gyandeep Singh, who contributed significant IE performance improvements
-
-Other people who also deserve recognition:
-
-- Arthur Clemens - creator of [Polythene](https://github.com/ArthurClemens/Polythene) and the [HTML-to-Mithril converter](https://arthurclemens.github.io/mithril-template-converter/index.html)
-- Stephan Hoyer - creator of [mithril-node-render](https://github.com/StephanHoyer/mithril-node-render), [mithril-query](https://github.com/StephanHoyer/mithril-query) and [mithril-source-hint](https://github.com/StephanHoyer/mithril-source-hint)
-- the countless people who have reported and fixed bugs, participated in discussions, and helped promote Mithril.js
+Originally created by Leo Horie. See the [Mithril.js contributors](https://github.com/MithrilJS/mithril.js/graphs/contributors) for the many people who made Mithril what it is.

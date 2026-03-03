@@ -225,7 +225,7 @@ export class Sandbox extends MithrilComponent<SandboxAttrs> {
                             if (state.debounceTimer) clearTimeout(state.debounceTimer)
                             state.debounceTimer = setTimeout(() => this.run(vnode), 400)
                         }
-                        const updateListener = EditorView.updateListener.of((update) => {
+                        const updateListener = EditorView.updateListener.of((update: import('@codemirror/view').ViewUpdate) => {
                             if (update.docChanged) scheduleRun()
                         })
 

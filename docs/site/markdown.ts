@@ -58,14 +58,20 @@ function escapeHtml(text: string): string {
     return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+interface GfmHeading {
+    level: number
+    id: string
+    raw: string
+}
+
 function buildPageTocFromHeadings(basePath: string): {html: string; headings: TocHeading[]} | undefined {
-    const headings = getHeadingList()
-    const subHeadings = headings.filter((h) => h.level === 3 || h.level === 4)
+    const headings = getHeadingList() as GfmHeading[]
+    const subHeadings = headings.filter((h: GfmHeading) => h.level === 3 || h.level === 4)
     if (subHeadings.length === 0) return undefined
-    const items = subHeadings.map((h) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`).join('\n')
+    const items = subHeadings.map((h: GfmHeading) => `<li><a href="${basePath}#${h.id}">${escapeHtml(h.raw)}</a></li>`).join('\n')
     return {
         html: `<ul class="docs-sidebar-toc">\n${items}\n</ul>`,
-        headings: subHeadings.map((h) => ({id: h.id, raw: h.raw})),
+        headings: subHeadings.map((h: GfmHeading) => ({id: h.id, raw: h.raw})),
     }
 }
 
