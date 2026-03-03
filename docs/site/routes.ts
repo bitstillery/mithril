@@ -6,7 +6,6 @@ import type {RouteResolver} from '../../api/router'
 // Map of route paths to markdown file names (extensionless for clean client-side routing)
 const routeMap: Record<string, string> = {
     '/': 'index',
-    '/setup': 'setup',
     '/support': 'support',
     '/jsx': 'jsx',
     '/animation': 'animation',

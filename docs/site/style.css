@@ -2,6 +2,7 @@
 :root {
     --od-bg: #282c34;
     --od-bg-dark: #21252b;
+    --od-bg-darker: #1e2228;
     --od-bg-highlight: #2c313c;
     --od-selection: #3e4451;
     --od-text: #abb2bf;
@@ -721,10 +722,12 @@ h5 {
     margin: 20px 0;
     border-left: 3px solid var(--od-blue);
     overflow: auto;
+    background: var(--od-bg-darker);
 }
 
 .docs-code-block .cm-editor {
     min-height: 0;
+    background: var(--od-bg-darker) !important;
 }
 
 .docs-code-block .cm-scroller {

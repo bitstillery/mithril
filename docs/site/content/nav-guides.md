@@ -1,6 +1,5 @@
 - Getting Started
     - [About](/)
-    - [Setup](/setup)
     - [Examples](https://github.com/bitstillery/mithril/tree/main/examples)
     - [Animation](/animation)
     - [Testing](/testing)

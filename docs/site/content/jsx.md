@@ -20,7 +20,7 @@ m('div', {class: 'card'}, [m('h1', 'Title'), m('button', {onclick: () => alert('
 
 ### TSX
 
-JSX with Bun — set `jsxFactory: "m"` in `tsconfig.json`. See [Setup](setup.md).
+JSX with Bun — set `jsxFactory: "m"` in `tsconfig.json`. See [About](/).
 
 ```tsx
 <div class='card'>
