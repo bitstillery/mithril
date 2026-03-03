@@ -113,6 +113,17 @@ export async function loadMarkdownFromDocs(docName: string, basePath?: string): 
         return null
     }
 
+    if (docName === 'performance') {
+        const path = basePath ?? '/performance'
+        return {
+            title: 'Performance',
+            content: '<div data-embed="performance-page"></div>',
+            metaDescription: 'Data grid benchmark: without signals vs with signals.',
+            pageToc: '',
+            pageTocHeadings: [],
+        }
+    }
+
     try {
         // Load from in-repo content (mithril/docs/site/content/)
         const docsPath = join(import.meta.dir, 'content', `${docName}.md`)

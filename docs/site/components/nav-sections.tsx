@@ -42,18 +42,20 @@ function renderNavLink(link: {text: string; href: string; external?: boolean}) {
 export class NavSections extends MithrilComponent<NavSectionsAttrs> {
     view(vnode: Vnode<NavSectionsAttrs>) {
         const {sections = [], routePath = '', pageToc, pageTocHeadings, activeAnchorId, basePath} = vnode.attrs ?? {}
-        if (!sections?.length) return null
+        const safeSections = Array.isArray(sections) ? sections : []
+        if (!safeSections.length) return null
         return (
             <div class='docs-nav-sections'>
-                {sections.map((section: NavSection) => {
-                    if (section.links.length === 0) {
+                {safeSections.map((section: NavSection) => {
+                    const links = section.links ?? []
+                    if (links.length === 0) {
                         return <div class='docs-nav-section-title'>{section.title}</div>
                     }
                     return (
                         <div class='docs-nav-section'>
                             <strong class='docs-nav-section-label'>{section.title}</strong>
                             <div class='docs-nav-links'>
-                                {section.links.flatMap((link) => {
+                                {links.flatMap((link) => {
                                     const href = link.href.startsWith('/') ? link.href : `/${link.href}`
                                     const active = isLinkActive(href, routePath)
                                     const items: Vnode[] = [

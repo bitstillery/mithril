@@ -8,6 +8,7 @@ import {DocsSidebar} from './docs-sidebar'
 import {Icon} from './icon'
 import {Sandbox} from './sandbox'
 import {Tippy} from './tippy'
+import {PerformancePage} from '../performance'
 
 import type {NavSection} from '../store'
 
@@ -49,11 +50,13 @@ const BodyContentWrapper = {
                         </a>
                     </div>
                     <div>
-                        <a
-                            href={`https://github.com/bitstillery/mithril/edit/main/docs/site/content/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
-                        >
-                            Edit
-                        </a>
+                        {path !== '/performance' && (
+                            <a
+                                href={`https://github.com/bitstillery/mithril/edit/main/docs/site/content/${path === '/' ? 'index' : (path ?? '').slice(1)}.md`}
+                            >
+                                Edit
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>
@@ -288,6 +291,12 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
         if (typeof window === 'undefined') return
         const bodies = document.querySelectorAll('.body')
         bodies.forEach((body) => {
+            // Embed Performance page component
+            const perfPlaceholders = body.querySelectorAll('[data-embed="performance-page"]')
+            ;[].forEach.call(perfPlaceholders, (el: HTMLElement) => {
+                m.render(el, m(PerformancePage as any))
+            })
+
             // Replace interactive js/jsx blocks with Sandbox (CodeMirror editor + preview)
             const sandboxBlocks = body.querySelectorAll(
                 'pre code.language-js, pre code.language-javascript, pre code.language-jsx, pre code.language-tsx',

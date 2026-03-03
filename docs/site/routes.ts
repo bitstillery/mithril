@@ -36,6 +36,7 @@ const routeMap: Record<string, string> = {
     '/state': 'state',
     '/store': 'store',
     '/ssr': 'ssr',
+    '/performance': 'performance',
 }
 
 function createRoute(routePath: string, docName: string): RouteResolver {

@@ -9,6 +9,7 @@ import {
     MemorySessionStore,
     extractSessionId,
 } from '../../server'
+import {copyGlobalStatesToContext} from '../../state'
 
 import sourceTemplate from './index.html'
 import builtTemplate from './public/index.html'
@@ -218,8 +219,9 @@ const server = serve({
                             store: null,
                         }
                     },
-                    initRequestContext: async () => {
-                        // No store initialization needed for docs site
+                    initRequestContext: async (context) => {
+                        // Copy global states (e.g. $docs) into per-request context for SSR serialization
+                        copyGlobalStatesToContext(context)
                     },
                     getHtmlTemplate: getProcessedTemplate,
                 })
