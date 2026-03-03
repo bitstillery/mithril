@@ -9,6 +9,7 @@ import type {DbRow} from './types'
 interface State {
     env: ReturnType<typeof createEnv> | null
     rafId: number | null
+    lastRafTime: number
     $s: ReturnType<typeof state<{data: DbRow[]}>>
     monitor: ReturnType<typeof createPerformanceMonitor>
 }
@@ -34,8 +35,9 @@ export class PerformanceWithSignals extends MithrilComponent {
 
     oncreate(vnode: Vnode) {
         const compState = vnode.state as State
-        compState.env = createEnv(15)
+        compState.env = createEnv(80)
         compState.monitor = createPerformanceMonitor()
+        compState.lastRafTime = 0
 
         const update = () => {
             if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
@@ -43,11 +45,14 @@ export class PerformanceWithSignals extends MithrilComponent {
                 return
             }
             compState.rafId = requestAnimationFrame(update)
-            compState.monitor.startFrame()
+            const now = typeof performance !== 'undefined' ? performance.now() : 0
+            if (compState.lastRafTime > 0) {
+                compState.monitor.recordFrame(now - compState.lastRafTime)
+            }
+            compState.lastRafTime = now
             if (compState.env) {
                 ;(compState.$s as {data: DbRow[]}).data = compState.env.generateData().toArray()
             }
-            compState.monitor.endFrame()
         }
         // Defer first update to avoid "Node is locked" - signal write triggers sync redraw during mount
         requestAnimationFrame(update)
@@ -81,23 +86,22 @@ export class PerformanceWithSignals extends MithrilComponent {
         const mutationsPct = (compState.env?.mutations() ?? 0.5) * 100
         return (
             <div class='performance-demo'>
-                {m(StatsOverlay as any, {
-                    getStats: () => compState.monitor?.getStats() ?? {fps: 0, frameTimeMs: 0},
-                })}
-                <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 10px;'>
+                <div class='performance-controls'>
                     <label>mutations: {mutationsPct.toFixed(0)}%</label>
                     <input
                         type='range'
                         min={0}
                         max={100}
                         value={mutationsPct}
-                        style='margin: 0;'
                         oninput={(e: Event) => {
                             const val = (e.target as HTMLInputElement).valueAsNumber / 100
                             compState.env?.mutations(val)
                             m.redraw()
                         }}
                     />
+                    {m(StatsOverlay as any, {
+                        getStats: () => compState.monitor?.getStats() ?? {fps: 0, frameTimeMs: 0},
+                    })}
                 </div>
                 <table class='table table-striped latest-data'>
                     <tbody>

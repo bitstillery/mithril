@@ -2,6 +2,10 @@
  * Lightweight performance monitor for the signals vs no-signals demo.
  * Uses native browser APIs only (no dependencies).
  * ADR-0015: Performance Demo Monitoring and Comparison
+ *
+ * Measures full frame duration (time between rAF callbacks) because m.redraw()
+ * schedules the actual DOM work for the next frame—measuring inside our callback
+ * would only capture scheduling overhead (~0ms), not the real render cost.
  */
 
 export interface PerfStats {
@@ -21,40 +25,31 @@ function median(arr: number[]): number {
 }
 
 export function createPerformanceMonitor(): {
-    startFrame: () => void
-    endFrame: () => void
+    recordFrame: (frameDurationMs: number) => void
     getStats: () => PerfStats
     reset: () => void
 } {
     if (typeof window === 'undefined') {
         return {
-            startFrame: () => {},
-            endFrame: () => {},
+            recordFrame: () => {},
             getStats: () => ({fps: 0, frameTimeMs: 0}),
             reset: () => {},
         }
     }
 
-    let frameStart = 0
     const frameTimes: number[] = []
     const fpsTimestamps: number[] = []
     let frameCount = 0
 
     return {
-        startFrame() {
-            frameStart = performance.now()
-        },
-
-        endFrame() {
-            const now = performance.now()
-            const delta = frameStart > 0 ? now - frameStart : 0
-
+        recordFrame(frameDurationMs: number) {
             frameCount++
             if (frameCount > WARMUP_FRAMES) {
-                frameTimes.push(delta)
+                frameTimes.push(frameDurationMs)
                 if (frameTimes.length > FRAME_BUFFER_SIZE) {
                     frameTimes.shift()
                 }
+                const now = performance.now()
                 fpsTimestamps.push(now)
                 while (fpsTimestamps.length > 0 && fpsTimestamps[0]! <= now - FPS_WINDOW_MS) {
                     fpsTimestamps.shift()
@@ -70,7 +65,6 @@ export function createPerformanceMonitor(): {
         },
 
         reset() {
-            frameStart = 0
             frameTimes.length = 0
             fpsTimestamps.length = 0
             frameCount = 0

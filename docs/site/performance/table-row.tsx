@@ -12,9 +12,12 @@ export class TableRow extends MithrilComponent<Attrs> {
         const {row} = vnode.attrs ?? {}
         if (!row) return <tr />
         const lastSample = row.lastSample
-        const queries = lastSample?.topFiveQueries ?? []
-        return m('tr', {key: row.dbname}, [
-            m('td.dbname', {key: `${row.dbname}-dbname`}, row.dbname),
+        const queries = (lastSample?.queries ?? lastSample?.topFiveQueries ?? []).slice(0, 12)
+        const depth = row.depth ?? 0
+        const rowClass = depth > 0 ? `table-row-nested-${depth}` : ''
+        const indentStyle = depth > 0 ? {paddingLeft: `${1 + depth * 1.5}em`} : undefined
+        return m('tr', {key: row.dbname, class: rowClass}, [
+            m('td.dbname', {key: `${row.dbname}-dbname`, style: indentStyle}, row.dbname),
             m('td.query-count', {key: `${row.dbname}-count`}, [
                 m('span', {class: lastSample?.countClassName ?? 'label'}, lastSample?.nbQueries ?? 0),
             ]),

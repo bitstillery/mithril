@@ -10,6 +10,7 @@ interface State {
     data: DbRow[]
     env: ReturnType<typeof createEnv> | null
     rafId: number | null
+    lastRafTime: number
     monitor: ReturnType<typeof createPerformanceMonitor>
     unmountVisibility: (() => void) | null
 }
@@ -31,9 +32,10 @@ const StatsOverlay = {
 export class PerformanceWithoutSignals extends MithrilComponent {
     oncreate(vnode: Vnode) {
         const state = vnode.state as State
-        state.env = createEnv(15)
+        state.env = createEnv(80)
         state.data = []
         state.monitor = createPerformanceMonitor()
+        state.lastRafTime = 0
         state.unmountVisibility = null
 
         const update = () => {
@@ -42,12 +44,15 @@ export class PerformanceWithoutSignals extends MithrilComponent {
                 return
             }
             state.rafId = requestAnimationFrame(update)
-            state.monitor.startFrame()
+            const now = typeof performance !== 'undefined' ? performance.now() : 0
+            if (state.lastRafTime > 0) {
+                state.monitor.recordFrame(now - state.lastRafTime)
+            }
+            state.lastRafTime = now
             if (state.env) {
                 state.data = state.env.generateData().toArray()
                 m.redraw()
             }
-            state.monitor.endFrame()
         }
         update()
 
@@ -80,21 +85,20 @@ export class PerformanceWithoutSignals extends MithrilComponent {
         const mutationsPct = (state.env?.mutations() ?? 0.5) * 100
         return (
             <div class='performance-demo'>
-                {m(StatsOverlay as any, {getStats: () => state.monitor?.getStats() ?? {fps: 0, frameTimeMs: 0}})}
-                <div style='display: flex; align-items: center; gap: 8px; margin-bottom: 10px;'>
+                <div class='performance-controls'>
                     <label>mutations: {mutationsPct.toFixed(0)}%</label>
                     <input
                         type='range'
                         min={0}
                         max={100}
                         value={mutationsPct}
-                        style='margin: 0;'
                         oninput={(e: Event) => {
                             const val = (e.target as HTMLInputElement).valueAsNumber / 100
                             state.env?.mutations(val)
                             m.redraw()
                         }}
                     />
+                    {m(StatsOverlay as any, {getStats: () => state.monitor?.getStats() ?? {fps: 0, frameTimeMs: 0}})}
                 </div>
                 <table class='table table-striped latest-data'>
                     <tbody>

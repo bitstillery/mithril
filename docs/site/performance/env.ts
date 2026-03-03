@@ -133,20 +133,25 @@ export function createEnv(rows = 15): EnvConfig {
     let oldData: DbRow[] | null = null
     let mutationsValue = 0.5
 
+    const DEPTHS = 10
+    const depthSuffix = (d: number) => (d === 0 ? '' : d === 1 ? '-replica' : `-replica-${d}`)
+
     function getData(keepIdentity?: boolean): {toArray: () => DbRow[]} {
         const keep = keepIdentity ?? false
         if (!keep) {
             data = []
             for (let i = 1; i <= rows; i++) {
-                data.push({dbname: `item-${i}`} as DbRow)
-                data.push({dbname: `item-${i}-replica`} as DbRow)
+                for (let d = 0; d < DEPTHS; d++) {
+                    data.push({dbname: `item-${i}${depthSuffix(d)}`, depth: d} as DbRow)
+                }
             }
         }
         if (!data) {
             data = []
             for (let i = 1; i <= rows; i++) {
-                data.push({dbname: `item-${i}`})
-                data.push({dbname: `item-${i}-replica`})
+                for (let d = 0; d < DEPTHS; d++) {
+                    data.push({dbname: `item-${i}${depthSuffix(d)}`, depth: d})
+                }
             }
             oldData = data
         }

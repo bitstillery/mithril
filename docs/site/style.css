@@ -897,12 +897,10 @@ h5 {
     padding: 0.5em 0;
 }
 
-/* Performance stats overlay */
+/* Performance stats - inline with controls */
 .performance-stats-container {
-    position: absolute;
-    top: 0;
-    right: 16px; /* Leave space for scrollbar */
-    z-index: 1;
+    flex-shrink: 0;
+    margin-left: auto;
 }
 
 .performance-stats {
@@ -929,21 +927,32 @@ h5 {
 /* Performance demo (renderer stress test) */
 .performance-demo {
     position: relative;
-    color: #333;
+    color: var(--od-text);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 14px;
     line-height: 1.42857143;
 }
 
+.performance-demo .performance-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.performance-demo .performance-controls input[type='range'] {
+    flex: 1;
+    min-width: 120px;
+}
+
 .performance-demo label {
     display: inline-block;
     font-weight: 700;
-    margin-bottom: 5px;
 }
 
 .performance-demo input[type='range'] {
-    display: block;
-    width: 100%;
+    margin: 0;
 }
 
 .performance-demo table {
@@ -957,7 +966,7 @@ h5 {
 .performance-demo .table > thead > tr > td,
 .performance-demo .table > tbody > tr > td,
 .performance-demo .table > tfoot > tr > td {
-    border-top: 1px solid #ddd;
+    border-top: 1px solid var(--od-selection);
     line-height: 1.42857143;
     padding: 8px;
     vertical-align: top;
@@ -969,7 +978,12 @@ h5 {
 
 .performance-demo .table-striped > tbody > tr:nth-child(odd) > td,
 .performance-demo .table-striped > tbody > tr:nth-child(odd) > th {
-    background: #f9f9f9;
+    background: var(--od-bg-dark);
+}
+
+.performance-demo .table-striped > tbody > tr:nth-child(even) > td,
+.performance-demo .table-striped > tbody > tr:nth-child(even) > th {
+    background: var(--od-bg);
 }
 
 .performance-demo .label {
@@ -986,23 +1000,24 @@ h5 {
 }
 
 .performance-demo .label-success {
-    background-color: #5cb85c;
+    background-color: var(--od-green);
 }
 
 .performance-demo .label-warning {
-    background-color: #f0ad4e;
+    background-color: var(--od-orange);
 }
 
 .performance-demo .label-important {
-    background-color: #d9534f;
+    background-color: var(--od-red);
 }
 
 .performance-demo .popover {
-    background-color: #fff;
+    background-color: var(--od-bg-highlight);
     background-clip: padding-box;
-    border: 1px solid rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--od-selection);
     border-radius: 6px;
-    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+    color: var(--od-text);
     display: none;
     left: 0;
     max-width: 276px;
@@ -1025,14 +1040,14 @@ h5 {
 
 .performance-demo .popover.left > .arrow {
     border-right-width: 0;
-    border-left-color: rgba(0, 0, 0, 0.25);
+    border-left-color: var(--od-selection);
     margin-top: -11px;
     right: -11px;
     top: 50%;
 }
 
 .performance-demo .popover.left > .arrow:after {
-    border-left-color: #fff;
+    border-left-color: var(--od-bg-highlight);
     border-right-width: 0;
     bottom: -10px;
     content: ' ';
