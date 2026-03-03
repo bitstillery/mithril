@@ -33,10 +33,12 @@ export function trackComponentSignal(component: any, signal: Signal<any>) {
     if (set.has(signal)) return
     set.add(signal)
 
-    if (!signalComponentMap.has(signal)) {
-        signalComponentMap.set(signal, new Set())
+    let compSet = signalComponentMap.get(signal)
+    if (!compSet) {
+        compSet = new Set()
+        signalComponentMap.set(signal, compSet)
     }
-    signalComponentMap.get(signal)!.add(component)
+    compSet.add(component)
 }
 
 export function getComponentSignals(component: any): Set<Signal<any>> | undefined {

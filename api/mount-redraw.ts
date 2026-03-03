@@ -75,7 +75,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
 
         // Second try: find DOM element directly from component state (for routed components)
         // Only check this if componentToElement didn't find anything (not an m.mount component)
-        if (stateToDomMap.has(componentOrState)) {
+        if (stateToDomMap.get(componentOrState) !== undefined) {
             // For routed components, always use global redraw to ensure RouterRoot re-renders correctly
             // RouterRoot needs currentResolver and component to be set (from route resolution)
             // A direct redraw might use stale route state, so we trigger a full sync instead
