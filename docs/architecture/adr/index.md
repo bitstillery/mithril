@@ -29,6 +29,7 @@ Architecture Decision Records are documents that capture important architectural
 | [0012](./0012-mithril-signals-store-ssr-architecture.md)    | Mithril Signals, Store, and SSR Architecture Overview                   | Accepted | 2025-02-02 |
 | [0013](./0013-deferred-computed-evaluation.md)              | Deferred Computed Property Evaluation                                   | Proposed | 2025-02-12 |
 | [0014](./0014-documentation-modernization.md)               | Documentation Modernization for Bitstillery Mithril Fork                | Proposed | 2025-02-19 |
+| [0015](./0015-performance-demo-monitoring.md)               | Performance Demo Monitoring and Comparison                              | Proposed | 2025-03-03 |
 
 ## Status Definitions
 

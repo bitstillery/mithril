@@ -34,6 +34,7 @@ const BodyContentWrapper = {
         const {path, page} = vnode.attrs ?? {}
         const {path: oldPath, page: oldPage} = oa
         if (path !== oldPath) return true
+        if (path === '/performance') return true // PerformancePage has internal state (activeTab)
         if (page?.content !== oldPage?.content) return true
         return false
     },
@@ -41,7 +42,7 @@ const BodyContentWrapper = {
         const {page = {} as DocPage, path = '', extraClass = ''} = vnode.attrs ?? {}
         return (
             <div class={`body ${extraClass}`} key={path}>
-                {m.trust(page?.content ?? '')}
+                {path === '/performance' ? m(PerformancePage as any) : m.trust(page?.content ?? '')}
                 <div class='footer'>
                     <div>
                         License: MIT. © Mithril Contributors.{' '}

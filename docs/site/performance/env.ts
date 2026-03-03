@@ -127,7 +127,7 @@ export interface EnvConfig {
     generateData: (keepIdentity?: boolean) => {toArray: () => DbRow[]}
 }
 
-export function createEnv(container: HTMLElement, rows = 15): EnvConfig {
+export function createEnv(rows = 15): EnvConfig {
     let counter = 0
     let data: DbRow[] | null = null
     let oldData: DbRow[] | null = null
@@ -138,15 +138,15 @@ export function createEnv(container: HTMLElement, rows = 15): EnvConfig {
         if (!keep) {
             data = []
             for (let i = 1; i <= rows; i++) {
-                data.push({dbname: `cluster${i}`} as DbRow)
-                data.push({dbname: `cluster${i} slave`} as DbRow)
+                data.push({dbname: `item-${i}`} as DbRow)
+                data.push({dbname: `item-${i}-replica`} as DbRow)
             }
         }
         if (!data) {
             data = []
             for (let i = 1; i <= rows; i++) {
-                data.push({dbname: `cluster${i}`})
-                data.push({dbname: `cluster${i} slave`})
+                data.push({dbname: `item-${i}`})
+                data.push({dbname: `item-${i}-replica`})
             }
             oldData = data
         }
@@ -179,25 +179,6 @@ export function createEnv(container: HTMLElement, rows = 15): EnvConfig {
         }
         return mutationsValue
     }
-
-    const sliderContainer = document.createElement('div')
-    sliderContainer.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-bottom: 10px;'
-    const slider = document.createElement('input')
-    slider.setAttribute('type', 'range')
-    slider.min = '0'
-    slider.max = '100'
-    slider.value = String(mutationsValue * 100)
-    slider.style.cssText = 'margin: 0;'
-    const text = document.createElement('label')
-    text.textContent = `mutations: ${(mutationsValue * 100).toFixed(0)}%`
-    slider.addEventListener('input', (e) => {
-        const val = (e.target as HTMLInputElement).valueAsNumber / 100
-        mutations(val)
-        text.textContent = `mutations: ${(mutationsValue * 100).toFixed(0)}%`
-    })
-    sliderContainer.appendChild(text)
-    sliderContainer.appendChild(slider)
-    container.insertBefore(sliderContainer, container.firstChild)
 
     return {
         rows,
