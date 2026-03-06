@@ -204,6 +204,16 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
             return stateCache.get(obj)
         }
 
+        const linkArrayParentSignal = (value: any, sig: Signal<any> | ComputedSignal<any>) => {
+            if (!value || typeof value !== 'object') return
+            if ((value as any).__isState === true && Array.isArray((value as any).__signals)) {
+                arrayParentSignalMap.set(value, sig as Signal<any>)
+                ;(value as any)._parentSignal = sig as Signal<any>
+            } else if (Array.isArray(value)) {
+                arrayParentSignalMap.set(value, sig as Signal<any>)
+            }
+        }
+
         // Handle arrays
         if (Array.isArray(obj)) {
             // Arrays don't get their own signalMap - they use the parent's
@@ -609,28 +619,13 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                     nestedSignalMap.set(key, sig)
                                 }
                             } else if (typeof originalValue === 'object' && originalValue !== null) {
-                                // Get the already-wrapped state from the wrapped object
-                                // Don't call initializeSignals again as it would create a new wrapped array
-                                const nestedState = (wrapped as any)[key]
-                                if (nestedState === undefined) {
-                                    // Fallback: initialize if not already wrapped
-                                    const childContext = context
-                                        ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
-                                        : undefined
-                                    const initialized = initializeSignals(originalValue, undefined, childContext)
-                                    const sig = signal(initialized)
-                                    if (Array.isArray(initialized)) {
-                                        arrayParentSignalMap.set(initialized, sig)
-                                    }
-                                    nestedSignalMap.set(key, sig)
-                                } else {
-                                    const sig = signal(nestedState)
-                                    // Store parent signal reference for arrays
-                                    if (Array.isArray(nestedState)) {
-                                        arrayParentSignalMap.set(nestedState, sig)
-                                    }
-                                    nestedSignalMap.set(key, sig)
-                                }
+                                const childContext = context
+                                    ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
+                                    : undefined
+                                const nestedState = initializeSignals(originalValue, undefined, childContext)
+                                const sig = signal(nestedState)
+                                linkArrayParentSignal(nestedState, sig)
+                                nestedSignalMap.set(key, sig)
                             } else {
                                 const sig = toSignal(originalValue)
                                 nestedSignalMap.set(key, sig)
@@ -641,8 +636,13 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                         }
                     }
 
+                    const sig = nestedSignalMap.get(key)
+                    if (sig && !(sig instanceof ComputedSignal)) {
+                        linkArrayParentSignal((sig as Signal<any>).peek(), sig)
+                    }
+
                     // Return raw signal object (not the value)
-                    return nestedSignalMap.get(key)
+                    return sig
                 }
 
                 const key = propStr
