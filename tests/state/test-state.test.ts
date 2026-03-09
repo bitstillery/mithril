@@ -46,17 +46,18 @@ describe('state', () => {
         expect(s.items[0]).toBe(10)
     })
 
-    test('sort().map() returns unwrapped values (not Signals)', () => {
+    test('sort().map() and toSorted().map() return unwrapped values (not Signals)', () => {
         const s = state(
             {
                 hidden_country_codes: ['DE', 'NL', 'BE'],
             },
             'testState.sortMap',
         )
-        const mapped = [...s.hidden_country_codes].toSorted().map((cc: string) => cc.toLowerCase())
+        // toSorted() directly on state array - proxy handles unwrapping
+        const mapped = s.hidden_country_codes.toSorted().map((cc: string) => cc.toLowerCase())
         expect(mapped).toEqual(['be', 'de', 'nl'])
         // Each element in map callback must be unwrapped string, not Signal
-        ;[...s.hidden_country_codes].toSorted().map((cc: unknown) => {
+        s.hidden_country_codes.toSorted().map((cc: unknown) => {
             expect(typeof cc).toBe('string')
             expect(typeof (cc as string).toLowerCase).toBe('function')
             return cc

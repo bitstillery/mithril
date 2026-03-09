@@ -304,7 +304,19 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                         // Search methods also need unwrapped values for comparison
                         const searchMethods = ['includes', 'indexOf', 'lastIndexOf']
                         // Methods that return new arrays or strings need unwrapped values
-                        const returnMethods = ['slice', 'concat', 'flat', 'flatMap', 'join', 'toString', 'toLocaleString']
+                        const returnMethods = [
+                            'slice',
+                            'concat',
+                            'flat',
+                            'flatMap',
+                            'join',
+                            'toString',
+                            'toLocaleString',
+                            // ES2023 copy-with-mutate methods - bind to proxy so iteration unwraps signals
+                            'toSorted',
+                            'toReversed',
+                            'toSpliced',
+                        ]
                         // Iterator methods need unwrapped values
                         const iteratorMethods = ['entries', 'keys', 'values']
                         if (
