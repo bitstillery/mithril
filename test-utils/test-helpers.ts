@@ -1,6 +1,12 @@
 // @ts-nocheck
 // Helper to provide ospec-like spy functionality for Bun test
 import {mock} from 'bun:test'
+import {setupWindowMock} from './storage-mock'
+
+// Ensure window with localStorage/sessionStorage exists before any test runs.
+// This fixes CI failures where Store tests fail due to missing storage mocks
+// (e.g. when test order differs or Bun's test environment differs from local).
+setupWindowMock()
 
 export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: number; this: any; args: any[]} {
     const spyFn = mock(fn || ((() => {}) as T))

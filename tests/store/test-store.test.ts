@@ -4,52 +4,11 @@ import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 import {Store} from '../../store'
 import {clearStateRegistry, getRegisteredStates} from '../../state'
 import {deserializeAllStates, serializeAllStates} from '../../render/ssrState'
+import {localStorageMock, sessionStorageMock} from '../../test-utils/storage-mock'
 
-// Mock localStorage and sessionStorage
-const localStorageMock = (() => {
-    let store: Record<string, string> = {}
-    return {
-        getItem: (key: string) => store[key] || null,
-        setItem: (key: string, value: string) => {
-            store[key] = value.toString()
-        },
-        removeItem: (key: string) => {
-            delete store[key]
-        },
-        clear: () => {
-            store = {}
-        },
-    }
-})()
-
-const sessionStorageMock = (() => {
-    let store: Record<string, string> = {}
-    return {
-        getItem: (key: string) => store[key] || null,
-        setItem: (key: string, value: string) => {
-            store[key] = value.toString()
-        },
-        removeItem: (key: string) => {
-            delete store[key]
-        },
-        clear: () => {
-            store = {}
-        },
-    }
-})()
-
-// Setup global window if it doesn't exist (for Node.js test environment)
-if (typeof window === 'undefined') {
-    ;(global as any).window = {
-        localStorage: localStorageMock,
-        sessionStorage: sessionStorageMock,
-        setInterval: (_fn: () => void, _delay: number) => {
-            // Return a mock interval ID
-            return 1
-        },
-        clearInterval: () => {},
-    }
-}
+// Window with localStorage/sessionStorage is set up in test preload (test-helpers.ts).
+// Ensure our mocks are on window (other tests like signal integration may overwrite
+// window with domMock which lacks storage - we restore it here).
 
 describe('Store', () => {
     let originalConsoleError: typeof console.error
