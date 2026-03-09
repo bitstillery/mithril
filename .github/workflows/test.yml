@@ -32,4 +32,4 @@ jobs:
               env:
                   # Disable Bun's GA annotations so full error output (Expected/Received, stack) appears in the log
                   GITHUB_ACTIONS: 'false'
-              run: bun test --bail=0
+              run: bun test --bail=999
