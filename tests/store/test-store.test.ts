@@ -4,11 +4,10 @@ import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 import {Store} from '../../store'
 import {clearStateRegistry, getRegisteredStates} from '../../state'
 import {deserializeAllStates, serializeAllStates} from '../../render/ssrState'
-import {localStorageMock, sessionStorageMock} from '../../test-utils/storage-mock'
+import {localStorageMock, sessionStorageMock, setupWindowMock} from '../../test-utils/storage-mock'
 
-// Window with localStorage/sessionStorage is set up in test preload (test-helpers.ts).
-// Ensure our mocks are on window (other tests like signal integration may overwrite
-// window with domMock which lacks storage - we restore it here).
+// Window with localStorage/sessionStorage/setInterval is set up in test preload (test-helpers.ts).
+// Re-run setup before each test in case other tests (e.g. signal integration) overwrote window with domMock.
 
 describe('Store', () => {
     let originalConsoleError: typeof console.error
@@ -29,17 +28,7 @@ describe('Store', () => {
 
         // Clear state registry to avoid name collisions
         clearStateRegistry()
-        // Setup mocks
-        if (typeof window !== 'undefined') {
-            Object.defineProperty(window, 'localStorage', {
-                value: localStorageMock,
-                writable: true,
-            })
-            Object.defineProperty(window, 'sessionStorage', {
-                value: sessionStorageMock,
-                writable: true,
-            })
-        }
+        setupWindowMock()
         localStorageMock.clear()
         sessionStorageMock.clear()
     })

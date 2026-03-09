@@ -47,8 +47,10 @@ export function setupWindowMock(): void {
             clearInterval: () => {},
         }
     } else {
-        // Window exists (e.g. from domMock) but may lack storage - ensure mocks are present
+        // Window exists (e.g. from domMock) but may lack storage or setInterval - ensure mocks are present
         g.window.localStorage = localStorageMock
         g.window.sessionStorage = sessionStorageMock
+        g.window.setInterval = g.window.setInterval ?? ((_fn: () => void, _delay: number) => 1)
+        g.window.clearInterval = g.window.clearInterval ?? (() => {})
     }
 }
