@@ -29,4 +29,7 @@ jobs:
               run: bun run tsgo
 
             - name: Run tests
-              run: bun test
+              env:
+                  # Disable Bun's GA annotations so full error output (Expected/Received, stack) appears in the log
+                  GITHUB_ACTIONS: 'false'
+              run: bun test --bail=0

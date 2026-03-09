@@ -37,12 +37,18 @@ export const sessionStorageMock = (() => {
 
 export function setupWindowMock(): void {
     if (typeof globalThis === 'undefined') return
-    if (typeof (globalThis as any).window !== 'undefined') return
 
-    ;(globalThis as any).window = {
-        localStorage: localStorageMock,
-        sessionStorage: sessionStorageMock,
-        setInterval: (_fn: () => void, _delay: number) => 1,
-        clearInterval: () => {},
+    const g = globalThis as any
+    if (typeof g.window === 'undefined') {
+        g.window = {
+            localStorage: localStorageMock,
+            sessionStorage: sessionStorageMock,
+            setInterval: (_fn: () => void, _delay: number) => 1,
+            clearInterval: () => {},
+        }
+    } else {
+        // Window exists (e.g. from domMock) but may lack storage - ensure mocks are present
+        g.window.localStorage = localStorageMock
+        g.window.sessionStorage = sessionStorageMock
     }
 }
