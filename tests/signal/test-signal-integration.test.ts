@@ -2,7 +2,7 @@
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import {signal, computed} from '../../signal'
-import {state} from '../../state'
+import {state, watch} from '../../state'
 import m from '../../index'
 import domMock from '../../test-utils/domMock'
 import throttleMock from '../../test-utils/throttleMock'
@@ -240,6 +240,61 @@ describe('Store Integration - Component Redraws', () => {
         await m.nextTick()
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('Jane')
+    })
+
+    test('child watcher on raw nested array signal works without priming accessor read', async () => {
+        const $filters = state(
+            {
+                range: {
+                    selection: [0, 100],
+                },
+            },
+            'signalIntegration.rawNestedArrayNoPriming',
+        )
+
+        let childWatchCount = 0
+
+        const Child = {
+            oncreate(vnode: any) {
+                vnode.state.unwatch = watch(vnode.attrs.model, () => {
+                    childWatchCount++
+                })
+            },
+            onremove(vnode: any) {
+                vnode.state.unwatch?.()
+            },
+            view(vnode: any) {
+                return m(
+                    'button',
+                    {
+                        onclick: () => {
+                            vnode.attrs.model.value.splice(0, vnode.attrs.model.value.length, 10, 90)
+                        },
+                    },
+                    'Update',
+                )
+            },
+        }
+
+        const Parent = {
+            view() {
+                return m('div', [
+                    m(Child, {model: $filters.range.$selection}),
+                    m('span', `${$filters.range.selection[0]}-${$filters.range.selection[1]}`),
+                ])
+            },
+        }
+
+        m.mount(root, Parent)
+        expect(root.childNodes[0].childNodes[1].childNodes[0].nodeValue).toBe('0-100')
+
+        const clickEvent = $window.document.createEvent('MouseEvents')
+        clickEvent.initEvent('click', true, true)
+        ;(root.childNodes[0].childNodes[0] as HTMLButtonElement).dispatchEvent(clickEvent)
+        await m.nextTick()
+
+        expect(childWatchCount).toBe(1)
+        expect(root.childNodes[0].childNodes[1].childNodes[0].nodeValue).toBe('10-90')
     })
 
     test('component redraws when computed property changes', async () => {

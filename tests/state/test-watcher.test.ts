@@ -236,6 +236,32 @@ describe('watch API', () => {
         unwatch()
     })
 
+    test('watch raw nested array signal without priming accessor read', () => {
+        const $filters = state(
+            {
+                range: {
+                    selection: [0, 100],
+                    type: 'SELECT_RANGE',
+                },
+            },
+            'watch.rawNestedArrayNoPriming',
+        )
+
+        const model = $filters.range.$selection
+        let watchCount = 0
+
+        const unwatch = watch(model, () => {
+            watchCount++
+        })
+
+        model.value.splice(0, model.value.length, 10, 90)
+
+        expect(watchCount).toBe(1)
+        expect($filters.range.selection).toEqual([10, 90])
+
+        unwatch()
+    })
+
     test('watch when iterating over filters (collection pattern)', () => {
         const $filters = state(
             {

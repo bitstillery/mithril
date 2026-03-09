@@ -564,7 +564,41 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
         // Each nested state gets its own signalMap (unless parentSignalMap is explicitly provided)
         // This prevents nested states from sharing the parent's signalMap
         const nestedSignalMap = parentSignalMap || new Map<string, Signal<any> | ComputedSignal<any>>()
-        const wrapped = new Proxy(obj, {
+        let wrapped: any
+        const getChildContext = (): InitContext | undefined =>
+            context ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped} : undefined
+
+        const createPropertySignal = (originalValue: any): Signal<any> | ComputedSignal<any> => {
+            if (typeof originalValue === 'function') {
+                return createStateComputed(wrapped, () => originalValue.call(wrapped), !!context?.deferComputed)
+            }
+            if (isGetSetDescriptor(originalValue)) {
+                if (typeof originalValue.get === 'function') {
+                    return createStateComputed(wrapped, () => originalValue.get.call(wrapped), !!context?.deferComputed)
+                }
+                return signal(undefined)
+            }
+            if (typeof originalValue === 'object' && originalValue !== null) {
+                const nestedState = initializeSignals(originalValue, undefined, getChildContext())
+                const sig = signal(nestedState)
+                if (nestedState && (nestedState as any).__isState) {
+                    stateRootMap.set(nestedState, stateRootMap.get(wrapped) ?? wrapped)
+                }
+                linkArrayParentSignal(nestedState, sig)
+                return sig
+            }
+            return toSignal(originalValue)
+        }
+
+        const ensurePropertySignal = (target: any, prop: string | symbol, key: string) => {
+            if (!nestedSignalMap.has(key)) {
+                const originalValue = Reflect.get(target, prop)
+                if (originalValue === undefined) return undefined
+                nestedSignalMap.set(key, createPropertySignal(originalValue))
+            }
+            return nestedSignalMap.get(key)
+        }
+        wrapped = new Proxy(obj, {
             get(target, prop) {
                 if (prop === '__originalKeys') return originalKeys
                 if (prop === '__isState') return true
@@ -591,55 +625,8 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                 if (propStr.startsWith('$') && propStr.length > 1) {
                     const key = propStr.slice(1) // Remove $ prefix
 
-                    // Ensure signal exists - initialize if needed
-                    // Use the same initialization logic as regular property access
-                    if (!nestedSignalMap.has(key)) {
-                        // First try to get from target (original object)
-                        const originalValue = Reflect.get(target, key)
-                        if (originalValue !== undefined) {
-                            if (typeof originalValue === 'function') {
-                                const computedSig = createStateComputed(
-                                    wrapped,
-                                    () => originalValue.call(wrapped),
-                                    !!context?.deferComputed,
-                                )
-                                nestedSignalMap.set(key, computedSig)
-                            } else if (isGetSetDescriptor(originalValue)) {
-                                // Get/set descriptor -> computed signal from get function
-                                if (typeof originalValue.get === 'function') {
-                                    const computedSig = createStateComputed(
-                                        wrapped,
-                                        () => originalValue.get.call(wrapped),
-                                        !!context?.deferComputed,
-                                    )
-                                    nestedSignalMap.set(key, computedSig)
-                                } else {
-                                    // Only setter, no getter - treat as regular signal with undefined initial value
-                                    const sig = signal(undefined)
-                                    nestedSignalMap.set(key, sig)
-                                }
-                            } else if (typeof originalValue === 'object' && originalValue !== null) {
-                                const childContext = context
-                                    ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
-                                    : undefined
-                                const nestedState = initializeSignals(originalValue, undefined, childContext)
-                                const sig = signal(nestedState)
-                                linkArrayParentSignal(nestedState, sig)
-                                nestedSignalMap.set(key, sig)
-                            } else {
-                                const sig = toSignal(originalValue)
-                                nestedSignalMap.set(key, sig)
-                            }
-                        } else {
-                            // Property doesn't exist - return undefined
-                            return undefined
-                        }
-                    }
-
-                    const sig = nestedSignalMap.get(key)
-                    if (sig && !(sig instanceof ComputedSignal)) {
-                        linkArrayParentSignal((sig as Signal<any>).peek(), sig)
-                    }
+                    const sig = ensurePropertySignal(target, key, key)
+                    if (!sig) return undefined
 
                     // Return raw signal object (not the value)
                     return sig
@@ -647,77 +634,10 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 
                 const key = propStr
 
-                // Check if we have a signal for this property
-                if (!nestedSignalMap.has(key)) {
-                    // Try to get from target first (original object properties)
-                    const originalValue = Reflect.get(target, prop)
-                    if (originalValue !== undefined) {
-                        // Initialize signal for this property
-                        if (typeof originalValue === 'function') {
-                            // Function property -> computed signal
-                            const computedSig = createStateComputed(
-                                wrapped,
-                                () => originalValue.call(wrapped),
-                                !!context?.deferComputed,
-                            )
-                            nestedSignalMap.set(key, computedSig)
-                        } else if (isGetSetDescriptor(originalValue)) {
-                            // Get/set descriptor -> computed signal from get function
-                            if (typeof originalValue.get === 'function') {
-                                const computedSig = createStateComputed(
-                                    wrapped,
-                                    () => originalValue.get.call(wrapped),
-                                    !!context?.deferComputed,
-                                )
-                                nestedSignalMap.set(key, computedSig)
-                            } else {
-                                // Only setter, no getter - treat as regular signal with undefined initial value
-                                const sig = signal(undefined)
-                                nestedSignalMap.set(key, sig)
-                            }
-                        } else if (typeof originalValue === 'object' && originalValue !== null) {
-                            // Nested object -> recursive state with its own signalMap
-                            const childContext = context
-                                ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
-                                : undefined
-                            const nestedState = initializeSignals(originalValue, undefined, childContext)
-                            const sig = signal(nestedState)
-                            // Store parent signal reference for arrays
-                            if (Array.isArray(nestedState)) {
-                                arrayParentSignalMap.set(nestedState, sig)
-                            }
-                            nestedSignalMap.set(key, sig)
-                        } else {
-                            // Primitive value -> signal
-                            const sig = toSignal(originalValue)
-                            nestedSignalMap.set(key, sig)
-                        }
-                    } else {
-                        // Property doesn't exist in original object
-                        // Check if it's a computed property that was added dynamically
-                        // For now, return undefined
-                    }
-                }
-
-                const sig = nestedSignalMap.get(key)
+                const sig = ensurePropertySignal(target, prop, key)
                 if (sig) {
                     // Access signal.value to track component dependency
-                    const value = sig.value
-                    // Always ensure parent signal is stored for arrays (in case it wasn't stored during initialization)
-                    // Check for wrapped arrays by looking for __isState and __signals properties
-                    // Array.isArray() may return false for Proxies, so we check __isState instead
-                    if (value && typeof value === 'object') {
-                        if ((value as any).__isState === true && Array.isArray((value as any).__signals)) {
-                            // This is a wrapped array - store parent signal
-                            arrayParentSignalMap.set(value, sig as Signal<any>)
-                            // Also store directly on the Proxy as a fallback
-                            ;(value as any)._parentSignal = sig as Signal<any>
-                        } else if (Array.isArray(value)) {
-                            // Regular array (shouldn't happen but just in case)
-                            arrayParentSignalMap.set(value, sig as Signal<any>)
-                        }
-                    }
-                    return value
+                    return sig.value
                 }
 
                 // Fallback to original property
@@ -786,47 +706,22 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     const sig = nestedSignalMap.get(key)
                     if (sig && !(sig instanceof ComputedSignal)) {
                         if (typeof value === 'object' && value !== null) {
-                            // Nested object -> recursive state with its own signalMap
-                            const childContext = context
-                                ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
-                                : undefined
-                            const nestedState = initializeSignals(value, undefined, childContext)
-                            // Store parent signal reference for arrays
-                            if (Array.isArray(nestedState)) {
-                                arrayParentSignalMap.set(nestedState, sig as Signal<any>)
+                            const nestedState = initializeSignals(value, undefined, getChildContext())
+                            if (nestedState && (nestedState as any).__isState) {
+                                stateRootMap.set(nestedState, stateRootMap.get(wrapped) ?? wrapped)
                             }
+                            linkArrayParentSignal(nestedState, sig)
                             ;(sig as Signal<any>).value = nestedState
                         } else {
                             ;(sig as Signal<any>).value = value
                         }
                     } else {
                         // Replace computed with regular signal
-                        if (typeof value === 'object' && value !== null && Array.isArray(value)) {
-                            const childContext = context
-                                ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped}
-                                : undefined
-                            const nestedState = initializeSignals(value, undefined, childContext)
-                            const sig = signal(nestedState)
-                            arrayParentSignalMap.set(nestedState, sig)
-                            nestedSignalMap.set(key, sig)
-                        } else {
-                            nestedSignalMap.set(key, toSignal(value))
-                        }
+                        nestedSignalMap.set(key, createPropertySignal(value))
                     }
                 } else {
                     // Create new signal
-                    if (typeof value === 'object' && value !== null) {
-                        const childContext = context ? {...context, rootState: stateRootMap.get(wrapped) ?? wrapped} : undefined
-                        const nestedState = initializeSignals(value, undefined, childContext)
-                        const sig = signal(nestedState)
-                        // Store parent signal reference for arrays
-                        if (Array.isArray(nestedState)) {
-                            arrayParentSignalMap.set(nestedState, sig)
-                        }
-                        nestedSignalMap.set(key, sig)
-                    } else {
-                        nestedSignalMap.set(key, toSignal(value))
-                    }
+                    nestedSignalMap.set(key, createPropertySignal(value))
                 }
 
                 return true
@@ -890,6 +785,11 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 
         stateRootMap.set(wrapped, context?.rootState ?? wrapped)
         stateCache.set(obj, wrapped)
+        for (const key of originalKeys) {
+            if (!nestedSignalMap.has(key)) {
+                nestedSignalMap.set(key, createPropertySignal((obj as any)[key]))
+            }
+        }
         return wrapped
     }
 
@@ -898,61 +798,6 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
     stateRootMap.set(wrapped, wrapped)
     if (deferComputed) {
         stateDeferredFlags.set(wrapped, {allowed: false})
-    }
-
-    // Pre-initialize all signals from the initial object so they're available immediately
-    // This ensures $s.$property works even if $s.property hasn't been accessed yet
-    if (typeof initial === 'object' && initial !== null && !Array.isArray(initial)) {
-        for (const key in initial) {
-            if (Object.prototype.hasOwnProperty.call(initial, key)) {
-                if (!signalMap.has(key)) {
-                    const value = initial[key]
-                    if (typeof value === 'function') {
-                        const computedSig = createStateComputed(wrapped, () => value.call(wrapped), deferComputed)
-                        signalMap.set(key, computedSig)
-                    } else if (isGetSetDescriptor(value)) {
-                        // Get/set descriptor -> computed signal from get function
-                        if (typeof value.get === 'function') {
-                            const computedSig = createStateComputed(wrapped, () => value.get.call(wrapped), deferComputed)
-                            signalMap.set(key, computedSig)
-                        } else {
-                            // Only setter, no getter - treat as regular signal with undefined initial value
-                            const sig = signal(undefined)
-                            signalMap.set(key, sig)
-                        }
-                    } else if (typeof value === 'object' && value !== null) {
-                        // Get the already-wrapped state from stateCache (bypass Proxy to get the actual wrapped value)
-                        // This ensures we get the same wrapped array that was created during initializeSignals
-                        const preInitContext = initContext ? {...initContext, rootState: wrapped} : undefined
-                        const nestedState = stateCache.has(value)
-                            ? stateCache.get(value)
-                            : initializeSignals(value, undefined, preInitContext)
-                        if (nestedState && (nestedState as any).__isState) stateRootMap.set(nestedState, wrapped)
-                        const sig = signal(nestedState)
-                        // Always store parent signal reference for arrays
-                        // Check for wrapped arrays by looking for __isState and __signals properties
-                        // Array.isArray() may return false for Proxies, so we check __isState instead
-                        if (
-                            nestedState &&
-                            typeof nestedState === 'object' &&
-                            (nestedState as any).__isState === true &&
-                            Array.isArray((nestedState as any).__signals)
-                        ) {
-                            arrayParentSignalMap.set(nestedState, sig)
-                            // Also store directly on the Proxy as a fallback
-                            ;(nestedState as any)._parentSignal = sig
-                        } else if (Array.isArray(nestedState)) {
-                            // Fallback for regular arrays (shouldn't happen but just in case)
-                            arrayParentSignalMap.set(nestedState, sig)
-                        }
-                        signalMap.set(key, sig)
-                    } else {
-                        const sig = toSignal(value)
-                        signalMap.set(key, sig)
-                    }
-                }
-            }
-        }
     }
 
     // Register state for SSR serialization when name is provided (required for hydration)
