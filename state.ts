@@ -814,7 +814,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
  * - Nested objects: $prop => Signal<State<T[K]>>
  * - Functions: $prop => ComputedSignal (computed from getter)
  */
-type StateSignals<T extends Record<string, any>> = {
+export type StateSignals<T extends Record<string, any>> = {
     [K in keyof T as K extends string ? `$${K}` : never]: T[K] extends (...args: any[]) => any
         ? ComputedSignal<any>
         : T[K] extends object
