@@ -628,6 +628,12 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     const sig = ensurePropertySignal(target, key, key)
                     if (!sig) return undefined
 
+                    // Re-link array-backed values so mutations (splice, push) notify subscribers.
+                    // Needed when $prop is accessed before .prop (e.g. watcher setup before render).
+                    if (sig && !(sig instanceof ComputedSignal)) {
+                        linkArrayParentSignal((sig as Signal<any>).peek(), sig)
+                    }
+
                     // Return raw signal object (not the value)
                     return sig
                 }
