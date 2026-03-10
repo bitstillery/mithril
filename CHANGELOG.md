@@ -2,17 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [3.3.0](https://github.com/bitstillery/mithril/compare/v3.2.0...v3.3.0) (2026-03-10)
+### [3.3.1](https://github.com/bitstillery/mithril/compare/v3.3.0...v3.3.1) (2026-03-10)
 
+## [3.3.0](https://github.com/bitstillery/mithril/compare/v3.2.0...v3.3.0) (2026-03-10)
 
 ### Features
 
-* **core:** notify parent signal when keys added/removed from nested state objects ([0711f1e](https://github.com/bitstillery/mithril/commit/0711f1ed1700a46666fc913b46df752a76a1d5b3))
-
+- **core:** notify parent signal when keys added/removed from nested state objects ([0711f1e](https://github.com/bitstillery/mithril/commit/0711f1ed1700a46666fc913b46df752a76a1d5b3))
 
 ### Bug Fixes
 
-* **api:** only wrap in keyed fragment when remount is requested ([f2c0199](https://github.com/bitstillery/mithril/commit/f2c0199312ddc8dc73b7242cf2c3ac53848bb8b8))
+- **api:** only wrap in keyed fragment when remount is requested ([f2c0199](https://github.com/bitstillery/mithril/commit/f2c0199312ddc8dc73b7242cf2c3ac53848bb8b8))
 
 ## [3.2.0](https://github.com/bitstillery/mithril/compare/v3.1.2...v3.2.0) (2026-03-10)
 
