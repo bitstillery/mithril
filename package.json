@@ -1,15 +1,12 @@
 {
     "name": "@bitstillery/mithril",
-    "version": "3.1.1",
+    "version": "3.1.2",
     "description": "Mithril + Signals, Store and SSR",
     "license": "MIT",
     "author": "Bitstillery",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/bitstillery/mithril.git"
-    },
-    "publishConfig": {
-        "access": "public"
     },
     "files": [
         "*.ts",
@@ -46,6 +43,9 @@
             "import": "./htm.ts",
             "default": "./htm.ts"
         }
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "scripts": {
         "lint": "bun run lint:ts",
