@@ -1,12 +1,15 @@
 {
     "name": "@bitstillery/mithril",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "description": "Mithril + Signals, Store and SSR",
     "license": "MIT",
     "author": "Bitstillery",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/bitstillery/mithril.git"
+    },
+    "publishConfig": {
+        "access": "public"
     },
     "files": [
         "*.ts",
