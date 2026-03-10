@@ -52,7 +52,11 @@
         "lint:ts-types": "tsgo --noEmit",
         "test": "bun test",
         "prepublishOnly": "bun run lint:ts",
-        "pack:dry-run": "npm pack --dry-run"
+        "pack:dry-run": "npm pack --dry-run",
+        "release": "standard-version && npm publish",
+        "release:patch": "standard-version --release-as patch && npm publish",
+        "release:minor": "standard-version --release-as minor && npm publish",
+        "release:major": "standard-version --release-as major && npm publish"
     },
     "dependencies": {
         "htm": "^3.1.1"
@@ -71,6 +75,7 @@
         "marked-gfm-heading-id": "^4.0.0",
         "oxfmt": "^0.32.0",
         "oxlint": "^1.30.0",
+        "standard-version": "^9.5.0",
         "tippy.js": "^6.3.7"
     }
 }
