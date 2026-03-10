@@ -211,6 +211,9 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                 ;(value as any)._parentSignal = sig as Signal<any>
             } else if (Array.isArray(value)) {
                 arrayParentSignalMap.set(value, sig as Signal<any>)
+            } else if ((value as any).__isState === true) {
+                // Nested object proxies: notify parent when keys are added/removed
+                arrayParentSignalMap.set(value, sig as Signal<any>)
             }
         }
 
@@ -738,8 +741,13 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                         nestedSignalMap.set(key, createPropertySignal(value))
                     }
                 } else {
-                    // Create new signal
+                    // Create new signal (new key added to object)
                     nestedSignalMap.set(key, createPropertySignal(value))
+                    // Notify parent so subscribers see the key addition
+                    const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+                    if (parentSignal && typeof (parentSignal as any).trigger === 'function') {
+                        ;(parentSignal as Signal<any>).trigger()
+                    }
                 }
 
                 return true
@@ -794,6 +802,11 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     }
                     // Remove from the signal map
                     nestedSignalMap.delete(key)
+                    // Notify parent so subscribers see the key removal
+                    const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
+                    if (parentSignal && typeof (parentSignal as any).trigger === 'function') {
+                        ;(parentSignal as Signal<any>).trigger()
+                    }
                 }
 
                 // Delete from target

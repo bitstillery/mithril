@@ -100,32 +100,40 @@ export class Signal<T> {
     set value(newValue: T) {
         if (this._value !== newValue) {
             this._value = newValue
-            // Ensure _subscribers is initialized (defensive check)
-            if (!this._subscribers) {
-                this._subscribers = new Set()
-            }
-            // Notify all subscribers
-            const context = getSSRContext()
-            this._subscribers.forEach((fn) => {
-                try {
-                    // Always run watchers - wrap in SSR context if available
-                    if (context) {
-                        // Run watcher inside SSR context, similar to events
-                        runWithContext(context, () => {
-                            fn()
-                        })
-                    } else {
+            this.trigger()
+        }
+    }
+
+    /**
+     * Notify subscribers and trigger redraws without changing the value.
+     * Use when the value is an object/array that was mutated in place (e.g. keys added/removed).
+     */
+    trigger(): void {
+        // Ensure _subscribers is initialized (defensive check)
+        if (!this._subscribers) {
+            this._subscribers = new Set()
+        }
+        // Notify all subscribers
+        const context = getSSRContext()
+        this._subscribers.forEach((fn) => {
+            try {
+                // Always run watchers - wrap in SSR context if available
+                if (context) {
+                    // Run watcher inside SSR context, similar to events
+                    runWithContext(context, () => {
                         fn()
-                    }
-                } catch (e) {
-                    console.error('Error in signal subscriber:', e)
+                    })
+                } else {
+                    fn()
                 }
-            })
-            // Trigger component redraws for affected components
-            // This is set up in index.ts after m.redraw is created
-            if ((signal as any).__redrawCallback) {
-                ;(signal as any).__redrawCallback(this)
+            } catch (e) {
+                console.error('Error in signal subscriber:', e)
             }
+        })
+        // Trigger component redraws for affected components
+        // This is set up in index.ts after m.redraw is created
+        if ((signal as any).__redrawCallback) {
+            ;(signal as any).__redrawCallback(this)
         }
     }
 

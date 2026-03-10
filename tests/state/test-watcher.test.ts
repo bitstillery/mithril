@@ -107,6 +107,52 @@ describe('watch API', () => {
         unwatchAge()
     })
 
+    test('watch nested object fires when keys are added', () => {
+        const $state = state(
+            {
+                form: {} as Record<string, boolean>,
+            },
+            'watch.nestedObjectKeyAddition',
+        )
+        let watchCount = 0
+
+        const unwatch = watch($state.$form, () => {
+            watchCount++
+        })
+
+        expect(watchCount).toBe(0)
+
+        $state.form['campaign_a'] = true
+        expect(watchCount).toBe(1)
+
+        $state.form['campaign_b'] = false
+        expect(watchCount).toBe(2)
+
+        unwatch()
+    })
+
+    test('watch nested object fires when keys are removed', () => {
+        const $state = state(
+            {
+                form: {a: true, b: false} as Record<string, boolean>,
+            },
+            'watch.nestedObjectKeyRemoval',
+        )
+        let watchCount = 0
+
+        const unwatch = watch($state.$form, () => {
+            watchCount++
+        })
+
+        expect(watchCount).toBe(0)
+
+        delete $state.form['b']
+        expect(watchCount).toBe(1)
+        expect(Object.keys($state.form)).toEqual(['a'])
+
+        unwatch()
+    })
+
     test('watch array state property - element assignment', () => {
         const $state = state({items: [1, 2, 3]}, 'watch.arrayElement')
         let watchCount = 0

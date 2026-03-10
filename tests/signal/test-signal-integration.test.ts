@@ -242,6 +242,62 @@ describe('Store Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('Jane')
     })
 
+    test('component redraws when new key is added to nested object', async () => {
+        const $s = state(
+            {
+                form: {} as Record<string, boolean>,
+            },
+            'signalIntegration.nestedObjectKeyAddition',
+        )
+        let renderCount = 0
+
+        const Component = {
+            view() {
+                renderCount++
+                const keys = Object.keys($s.form)
+                return m('div', keys.length > 0 ? keys.join(',') : 'empty')
+            },
+        }
+
+        m.mount(root, Component)
+        expect(renderCount).toBe(1)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('empty')
+
+        // Simulate merge_deep adding keys (e.g. API response)
+        $s.form['campaign_a'] = true
+        $s.form['campaign_b'] = false
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('campaign_a,campaign_b')
+    })
+
+    test('component redraws when key is removed from nested object', async () => {
+        const $s = state(
+            {
+                form: {a: true, b: false, c: true} as Record<string, boolean>,
+            },
+            'signalIntegration.nestedObjectKeyRemoval',
+        )
+        let renderCount = 0
+
+        const Component = {
+            view() {
+                renderCount++
+                const keys = Object.keys($s.form)
+                return m('div', keys.join(','))
+            },
+        }
+
+        m.mount(root, Component)
+        expect(renderCount).toBe(1)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('a,b,c')
+
+        delete $s.form['b']
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('a,c')
+    })
+
     test('child watcher on raw nested array signal works without priming accessor read', async () => {
         const $filters = state(
             {
