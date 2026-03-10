@@ -56,10 +56,10 @@
         "test": "bun test",
         "prepublishOnly": "bun run lint:ts",
         "pack:dry-run": "npm pack --dry-run",
-        "release": "standard-version && npm publish",
-        "release:patch": "standard-version --release-as patch && npm publish",
-        "release:minor": "standard-version --release-as minor && npm publish",
-        "release:major": "standard-version --release-as major && npm publish"
+        "release": "./scripts/release.sh",
+        "release:patch": "./scripts/release.sh --release-as patch",
+        "release:minor": "./scripts/release.sh --release-as minor",
+        "release:major": "./scripts/release.sh --release-as major"
     },
     "dependencies": {
         "htm": "^3.1.1"
