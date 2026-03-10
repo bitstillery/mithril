@@ -29,7 +29,7 @@ export type SSRResult = string | {html: string; state: SSRState}
 export interface Route {
     (path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
     (path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
-    set: (path: string, params?: Record<string, any>, data?: any) => void
+    set: (path: string, params?: Record<string, any>, data?: any) => Promise<void>
     get: () => string
     prefix: string
     link: (vnode: VnodeType) => string
@@ -53,6 +53,8 @@ interface MountRedraw {
 }
 
 interface RouteOptions {
+    /** When true, forces the route component to remount (e.g. for same-route navigation with different query params) */
+    remount?: boolean
     replace?: boolean
     state?: any
     title?: string | null
@@ -77,6 +79,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     let attrs: Record<string, any> = {}
     let currentPath: string | undefined
     let lastUpdate: ((comp: any) => void) | null = null
+    let routeSetResolve: (() => void) | null = null
+    let remountPath: string | null = null
+    let pendingRemount = false
 
     const RouterRoot: ComponentType = {
         onremove: function () {
@@ -89,11 +94,22 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             // if (!hasBeenResolved) return
 
             // Pass currentPath in attrs so RouteResolver.render can use it for routePath.
-            // Use attrs.key (not currentPath) so that route param changes within the same
-            // route pattern update the component instead of causing a full remount.
+            // Use remountPath when set (from route.set with remount: true) to force remount
+            // for same-route navigation; otherwise attrs.key for route param changes.
             const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath}
-            const vnode = Vnode(component, attrs.key, routeAttrs, null, null, null)
-            if (currentResolver) return currentResolver.render!(vnode as any)
+            const vnodeKey = remountPath ?? attrs.key
+            const vnode = Vnode(component, vnodeKey, routeAttrs, null, null, null)
+            if (currentResolver) {
+                const result = currentResolver.render!(vnode as any)
+                // When remount requested, wrap in keyed fragment so same-route navigation
+                // (e.g. Stock <-> TBO) forces full remount. Key must change when path changes.
+                // Always wrap when we have a path so structure is consistent; key drives remount.
+                const fragmentKey = remountPath ?? currentPath ?? undefined
+                if (fragmentKey != null) {
+                    return hyperscript.fragment({key: fragmentKey}, result)
+                }
+                return result
+            }
             // Wrap in a fragment to preserve existing key semantics
             return [vnode]
         },
@@ -176,7 +192,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 
         function reject(e: any) {
             console.error(e)
-            route.set(fallbackRoute!, null, {replace: true})
+            const resolve = routeSetResolve
+            routeSetResolve = null
+            route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
         }
 
         loop(0)
@@ -206,8 +224,10 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         if (isRedirect(comp)) {
                             // Extract redirect target path
                             const redirectPath = comp[REDIRECT]
-                            // Trigger navigation to redirect target
-                            route.set(redirectPath, null)
+                            const resolve = routeSetResolve
+                            routeSetResolve = null
+                            // Trigger navigation to redirect target; resolve original Promise when redirect completes
+                            route.set(redirectPath, null).then(() => resolve?.())
                             // Skip rendering current route - new route resolution will handle redirect target
                             return
                         }
@@ -228,7 +248,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         }
                         attrs = data.params
                         currentPath = path
+                        if (pendingRemount) {
+                            remountPath = path
+                            pendingRemount = false
+                        }
                         lastUpdate = null
+                        routeSetResolve?.()
+                        routeSetResolve = null
                         if (hasBeenResolved) mountRedraw.redraw()
                         else {
                             hasBeenResolved = true
@@ -255,7 +281,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             if (path === fallbackRoute) {
                 throw new Error('Could not resolve default route ' + fallbackRoute + '.')
             }
-            route.set(fallbackRoute!, null, {replace: true})
+            const resolve = routeSetResolve
+            routeSetResolve = null
+            route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
         }
     }
 
@@ -304,32 +332,39 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         // The RouterRoot component is mounted when the route is first resolved.
         resolveRoute()
     }
-    route.set = function (path: string, data: Record<string, any> | null, options?: RouteOptions) {
+    route.set = function (path: string, data: Record<string, any> | null, options?: RouteOptions): Promise<void> {
         if (lastUpdate != null) {
             options = options || {}
             options.replace = true
         }
         lastUpdate = null
 
+        if (!options?.remount) {
+            remountPath = null
+        }
+        pendingRemount = options?.remount ?? false
+
         path = buildPathname(path, data || {})
-        if (ready) {
-            // Router is initialized - use history API for navigation
-            const state = options ? options.state : null
-            const title = options ? options.title : null
-            if ($window?.history) {
-                if (options && options.replace) $window.history.replaceState(state, title, route.prefix + path)
-                else $window.history.pushState(state, title, route.prefix + path)
-            }
-            // Update URL before fireAsync so resolveRoute reads the new path
-            fireAsync()
-            // In SSR context (no $window), navigation is a no-op since we're just rendering HTML
-        } else {
-            // Router not yet initialized - use location.href for initial navigation
+        if (!ready || !$window) {
+            // Router not yet initialized or SSR - navigation is a no-op
             if ($window?.location) {
                 $window.location.href = route.prefix + path
             }
-            // In SSR context (no $window), this is a no-op since we're just rendering HTML
+            return Promise.resolve()
         }
+        // Router is initialized - use history API for navigation
+        const state = options ? options.state : null
+        const title = options ? options.title : null
+        if ($window.history) {
+            if (options && options.replace) $window.history.replaceState(state, title, route.prefix + path)
+            else $window.history.pushState(state, title, route.prefix + path)
+        }
+        const promise = new Promise<void>((resolve) => {
+            routeSetResolve = resolve
+        })
+        // Update URL before fireAsync so resolveRoute reads the new path
+        fireAsync()
+        return promise
     }
     route.get = function (): string {
         // If currentPath is not set (e.g., during SSR before route.resolve is called),
@@ -352,11 +387,12 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             // let them be specified in the selector as well.
             const child = hyperscript(
                 vnode.attrs?.selector || 'a',
-                censor(vnode.attrs || {}, ['options', 'params', 'selector', 'onclick']),
+                censor(vnode.attrs || {}, ['options', 'params', 'selector', 'onclick', 'onafternavigate']),
                 vnode.children,
             )
             let options: RouteOptions | undefined
             let onclick: any
+            let onafternavigate: (() => void) | undefined
             let href: string
 
             // Let's provide a *right* way to disable a route link, rather than
@@ -373,6 +409,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             } else {
                 options = vnode.attrs?.options
                 onclick = vnode.attrs?.onclick
+                onafternavigate = vnode.attrs?.onafternavigate
                 // Easier to build it now to keep it isomorphic.
                 href = buildPathname(child.attrs!.href || '', vnode.attrs?.params || {})
                 // Make Link isomorphic - use empty prefix on server for pathname routing
@@ -421,7 +458,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                             e.originalEvent.preventDefault()
                         }
                         ;(e as any).redraw = false
-                        route.set(href, null, options)
+                        route.set(href, null, options).then(onafternavigate ?? (() => {}))
                     }
                 }
             }
