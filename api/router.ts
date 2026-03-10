@@ -105,7 +105,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                 // (e.g. Stock <-> TBO) forces full remount. Key must change when path changes.
                 // Always wrap when we have a path so structure is consistent; key drives remount.
                 const fragmentKey = remountPath ?? currentPath ?? undefined
-                if (fragmentKey != null) {
+                if (remountPath && fragmentKey != null) {
                     return hyperscript.fragment({key: fragmentKey}, result)
                 }
                 return result
