@@ -56,6 +56,7 @@
         "test": "bun test",
         "prepublishOnly": "bun run lint:ts",
         "pack:dry-run": "npm pack --dry-run",
+        "publish": "./scripts/release.sh",
         "release": "./scripts/release.sh",
         "release:patch": "./scripts/release.sh --release-as patch",
         "release:minor": "./scripts/release.sh --release-as minor",

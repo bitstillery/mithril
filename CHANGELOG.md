@@ -4,15 +4,13 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.2.0](https://github.com/bitstillery/mithril/compare/v3.1.2...v3.2.0) (2026-03-10)
 
-
 ### Features
 
-* **api:** add remount option and awaitable route.set ([780800d](https://github.com/bitstillery/mithril/commit/780800d8072f640d1bf26bbe9575fbec5bac4c61))
-
+- **api:** add remount option and awaitable route.set ([780800d](https://github.com/bitstillery/mithril/commit/780800d8072f640d1bf26bbe9575fbec5bac4c61))
 
 ### Bug Fixes
 
-* **build:** revert release commit and tag when npm publish fails ([8588ac9](https://github.com/bitstillery/mithril/commit/8588ac9e6d59fc7723efbe6299f6d22744dcbcc9))
+- **build:** revert release commit and tag when npm publish fails ([8588ac9](https://github.com/bitstillery/mithril/commit/8588ac9e6d59fc7723efbe6299f6d22744dcbcc9))
 
 ### [3.1.2](https://github.com/bitstillery/mithril/compare/v3.1.1...v3.1.2) (2026-03-10)
 
