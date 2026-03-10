@@ -1,24 +1,22 @@
-# @bitstillery/mithril
+# Mithril Bitstillery
 
-Mithril.js fork with fine-grained reactivity, SSR hydration, and built-in signals. Drop-in compatible with Mithril v2.x.
+Mithril Bitstillery extends Mithril with integrated state management, SSR hydration, watchers, and a signal/proxy store. Drop-in compatible with Mithril v2.x.
 
 ```bash
 bun add @bitstillery/mithril
 ```
 
-## Why
+## Strengths
 
-Mithril.js uses global `m.redraw()` — one state change re-renders **everything**. This fork adds component-level reactivity via signals so only affected components update.
+Mithril Bitstillery focuses on **state management**, **SSR**, **watchers**, and **developer experience** around its signal/proxy store:
 
-| Feature          | Original            | This Fork                        |
-| ---------------- | ------------------- | -------------------------------- |
-| Reactivity       | Global `m.redraw()` | Fine-grained component updates   |
-| State Management | Manual redraw calls | Signals with automatic tracking  |
-| SSR              | No hydration        | State serialization + hydration  |
-| TypeScript       | Community types     | Native                           |
-| Stream / request | Built-in            | Removed (use signals, `fetch()`) |
-
-Signals are opt-in. Existing Mithril code works unchanged.
+| Feature          | Description                                                         |
+| ---------------- | ------------------------------------------------------------------- |
+| Proxy State      | Reactive objects with nested objects, arrays, computeds             |
+| State Management | `state()` + `Store` for persistence (localStorage, session)         |
+| SSR              | Full server-side rendering with state serialization + hydration     |
+| Watchers         | `watch()` for observing signal changes; `effect()` for side effects |
+| DX               | Automatic dependency tracking, no manual redraw for signals         |
 
 **Docs**: [mithril.garage44.org](https://mithril.garage44.org)
 
@@ -38,7 +36,7 @@ count(5) // Logs: 5 × 2 = 10
 
 ## Proxy State
 
-Wraps signals in a proxy for ergonomic access. Components automatically track which properties they read and only re-render when those change.
+`state()` creates reactive objects. Components track which properties they read and only re-render when those change.
 
 ```tsx
 import m, {state, MithrilComponent} from '@bitstillery/mithril'
@@ -60,6 +58,19 @@ m.mount(document.body, Counter)
 ```
 
 The second argument to `state()` is a name used for SSR serialization.
+
+## Watchers
+
+`watch()` observes signal changes:
+
+```typescript
+import {state, watch} from '@bitstillery/mithril'
+
+const $s = state({count: 0}, 'app')
+const unwatch = watch($s.$count, (newVal, oldVal) => console.log(`${oldVal} → ${newVal}`))
+$s.count++ // triggers callback
+unwatch() // stop observing
+```
 
 ## SSR Hydration
 
