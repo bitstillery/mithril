@@ -42,3 +42,35 @@ m.mount(document.getElementById('app'), Counter)
 - Use `$` prefix (e.g. `$s.$count`) for raw signal access. When passing state to child components, use `model={prop.$field}` so the child receives the signal reference; updates flow back to the parent.
 - Naming (second argument) is required for SSR serialization
 - Components that read state auto-redraw when dependencies change
+
+## Computed properties
+
+Any **function property** in state becomes a computed signal. Reading the property runs the function and returns its result; the value is cached and re-evaluated only when dependencies change.
+
+```tsx
+const $s = state(
+    {
+        count: 0,
+        doubled: () => $s.count * 2,
+        items: [],
+        total: () => $s.items.length,
+    },
+    'app',
+)
+```
+
+- `$s.doubled` returns the current value (e.g. `0`, then `4` when `count` is 2)
+- `$s.total` re-evaluates when `items` changes
+- Computeds work in nested objects and **array elements** (e.g. `options: [{ _disabled: () => !valid }]`)
+
+**Raw signal access.** Use the `$` prefix to get the underlying signal: `$s.$doubled` returns the `ComputedSignal`, useful for `watch()` or passing to components that expect a signal.
+
+**Deferred evaluation.** When state depends on app context (routes, store, other globals) that is not ready at creation time, use `{ deferComputed: true }` and call `allowComputed()` when ready:
+
+```tsx
+const $s = state({step: 0, canProceed: () => $s.step > 0}, 'app', {deferComputed: true})
+// ... after routes/context are ready:
+;($s as any).allowComputed()
+```
+
+Until `allowComputed()` is called, computed properties return `undefined`. See [ADR-0013](../architecture/adr/0013-deferred-computed-evaluation.md) for details.

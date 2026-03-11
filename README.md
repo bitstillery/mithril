@@ -36,7 +36,7 @@ count(5) // Logs: 5 × 2 = 10
 
 ## Proxy State
 
-`state()` creates reactive objects. Components track which properties they read and only re-render when those change.
+`state()` creates reactive objects. Components track which properties they read and only re-render when those change. **Function properties become computed values**—they re-evaluate when their dependencies change.
 
 ```tsx
 import m, {state, MithrilComponent} from '@bitstillery/mithril'
@@ -47,7 +47,9 @@ class Counter extends MithrilComponent {
     view() {
         return (
             <div>
-                <p>{$s.count}</p>
+                <p>
+                    {$s.count} / {$s.totalTodos}
+                </p>
                 <button onclick={() => $s.count++}>+</button>
             </div>
         )
@@ -57,7 +59,9 @@ class Counter extends MithrilComponent {
 m.mount(document.body, Counter)
 ```
 
-The second argument to `state()` is a name used for SSR serialization.
+- **Computed properties**: Any function in state (e.g. `totalTodos: () => $s.todos.length`) is a computed—read it like a normal property, it updates when dependencies change.
+- **`$` prefix**: Use `$s.$count` for the raw signal (e.g. for `watch()`).
+- The second argument is a name used for SSR serialization.
 
 ## Watchers
 

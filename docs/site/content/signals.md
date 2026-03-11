@@ -8,7 +8,7 @@ Traditional Mithril re-renders the whole tree when state changes. Signals add _f
 
 **How it works.** When a component's `view` runs, any signal or state property it accesses is tracked. When that value changes later, only that component (and its subtree) re-renders—not the entire app. Dependencies are automatic; no manual `m.redraw()` needed.
 
-For component state, **`state()`** is the preferred API: define a reactive object, access properties directly, and function properties become computed values. For single values or use outside components, use the low-level primitives: **`signal()`** (reactive value), **`computed()`** (derived value), and **`effect()`** (side effects when dependencies change).
+For component state, **`state()`** is the preferred API: define a reactive object, access properties directly, and **function properties become computed values** (derived from other state; re-evaluate when dependencies change). For single values or use outside components, use the low-level primitives: **`signal()`** (reactive value), **`computed()`** (derived value), and **`effect()`** (side effects when dependencies change).
 
 ```tsx
 import m, {state, MithrilComponent} from '@bitstillery/mithril'
@@ -31,9 +31,9 @@ class App extends MithrilComponent {
 m.mount(document.getElementById('app'), App)
 ```
 
-- **`state(initial, name)`** — reactive object; access properties directly in components, no `.value`
+- **`state(initial, name)`** — reactive object; function properties become computed values
 - **`signal(initial)`** — low-level primitive; use `.value` for read/write outside components
 - **`computed(fn)`** — derives a value from other signals; re-evaluates when dependencies change
 - **`effect(fn)`** — runs side effects when dependencies change
 
-See [State](state.md) for structured component state; use `signal()` when you need a single reactive primitive.
+See [State](state.md) for structured component state and [computed properties](state.md#computed-properties); use `signal()` when you need a single reactive primitive.

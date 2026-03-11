@@ -468,11 +468,7 @@ describe('state', () => {
         const s = state(
             {
                 base: 1,
-                options: [
-                    {_disabled: false},
-                    {_disabled: () => s.base > 0},
-                    {_disabled: () => s.base * 2},
-                ],
+                options: [{_disabled: false}, {_disabled: () => s.base > 0}, {_disabled: () => s.base * 2}],
             },
             'testState.deferComputed.array',
             {deferComputed: true},
