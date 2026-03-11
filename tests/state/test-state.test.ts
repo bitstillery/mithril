@@ -463,4 +463,29 @@ describe('state', () => {
         s.count = 5
         expect(s.doubled).toBe(10)
     })
+
+    test('deferComputed: computeds in array elements are marked dirty when allowComputed() is called', () => {
+        const s = state(
+            {
+                base: 1,
+                options: [
+                    {_disabled: false},
+                    {_disabled: () => s.base > 0},
+                    {_disabled: () => s.base * 2},
+                ],
+            },
+            'testState.deferComputed.array',
+            {deferComputed: true},
+        )
+        expect(s.options[0]._disabled).toBe(false)
+        expect(s.options[1]._disabled).toBeUndefined()
+        expect(s.options[2]._disabled).toBeUndefined()
+        ;(s as any).allowComputed()
+        expect(s.options[0]._disabled).toBe(false)
+        expect(s.options[1]._disabled).toBe(true)
+        expect(s.options[2]._disabled).toBe(2)
+        s.base = 0
+        expect(s.options[1]._disabled).toBe(false)
+        expect(s.options[2]._disabled).toBe(0)
+    })
 })

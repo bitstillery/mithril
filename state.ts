@@ -27,14 +27,27 @@ function createStateComputed<T>(wrapped: any, computeFn: () => T, shouldDefer: b
 function markAllComputedsDirty(stateObj: any): void {
     if (!stateObj || !(stateObj as any).__isState) return
     const signalMap = (stateObj as any).__signalMap
-    if (!signalMap || !(signalMap instanceof Map)) return
-    signalMap.forEach((sig: any) => {
-        if (sig instanceof ComputedSignal) {
-            sig.markDirty()
-        } else if (sig && typeof sig === 'object' && sig.value && (sig.value as any).__isState) {
-            markAllComputedsDirty(sig.value)
+    if (signalMap && signalMap instanceof Map) {
+        signalMap.forEach((sig: any) => {
+            if (sig instanceof ComputedSignal) {
+                sig.markDirty()
+            } else if (sig && typeof sig === 'object' && sig.value && (sig.value as any).__isState) {
+                markAllComputedsDirty(sig.value)
+            }
+        })
+    }
+    // Arrays use __signals instead of __signalMap; recurse into nested state elements
+    const signals = (stateObj as any).__signals
+    if (Array.isArray(signals)) {
+        for (const sig of signals) {
+            if (sig && typeof sig === 'object' && (sig as any).__isState) {
+                markAllComputedsDirty(sig)
+            } else if (sig && typeof sig === 'object' && !isSignal(sig)) {
+                // Array elements that are Proxies (not signals) - they're nested states
+                markAllComputedsDirty(sig)
+            }
         }
-    })
+    }
 }
 
 // Type guard to check if value is a Signal
