@@ -352,6 +352,30 @@ AGENT=1 bun run test
 
 This command runs the test suite. The `AGENT=1` environment variable can be used to configure test behavior when running tests in an automated context.
 
+### Benchmarking
+
+**Run benchmarks:**
+
+```bash
+bun run bench              # all topics
+bun run bench hyperscript  # vnode creation only
+bun run bench render       # DOM create/update/full-redraw
+bun run bench signal       # targeted signal redraw
+bun run bench state        # proxy/state operations
+```
+
+Or use the shorthand scripts: `bun run bench:hyperscript`, `bun run bench:render`, `bun run bench:signal`, `bun run bench:state`.
+
+To compare before/after a change: run `bun run bench state > baseline.txt` before your change, then `bun run bench state > current.txt` after, and compare median/mean times for the relevant benchmarks. A stable ~10%+ improvement or regression is typically meaningful.
+
+**Profile for regression investigation:**
+
+```bash
+bun run bench:profile
+```
+
+This generates a markdown CPU profile (`--cpu-prof-md`) to identify hot spots when investigating performance regressions.
+
 ### Code Quality Checks
 
 **Run linting commands for code quality:**
