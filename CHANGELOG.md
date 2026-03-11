@@ -4,15 +4,13 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.4.0](https://github.com/bitstillery/mithril/compare/v3.3.4...v3.4.0) (2026-03-11)
 
-
 ### Features
 
-* **bench:** add benchmarking suite with topic support ([6e18760](https://github.com/bitstillery/mithril/commit/6e187600abf6e1afa5730236b59ad329603336b7))
-
+- **bench:** add benchmarking suite with topic support ([6e18760](https://github.com/bitstillery/mithril/commit/6e187600abf6e1afa5730236b59ad329603336b7))
 
 ### Bug Fixes
 
-* **state:** recurse into array elements in markAllComputedsDirty ([b6b531d](https://github.com/bitstillery/mithril/commit/b6b531d88d04c98e07b517704e12cb84fb4f4af4))
+- **state:** recurse into array elements in markAllComputedsDirty ([b6b531d](https://github.com/bitstillery/mithril/commit/b6b531d88d04c98e07b517704e12cb84fb4f4af4))
 
 ### [3.3.4](https://github.com/bitstillery/mithril/compare/v3.3.3...v3.3.4) (2026-03-10)
 
