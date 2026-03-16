@@ -100,8 +100,10 @@ export function serializeStore(state: State<any>): any {
                     continue
                 }
 
-                // For nested states, only serialize keys that belong to this state (not parent keys)
-                if (nestedOriginalKeys && !nestedOriginalKeys.has(key)) {
+                // For nested states, only serialize keys that belong to this state (not parent keys).
+                // When originalKeys is empty (e.g. lookup: {}), include all keys so dynamically
+                // added entries (e.g. $s.lookup[path] = data) are serialized.
+                if (nestedOriginalKeys && nestedOriginalKeys.size > 0 && !nestedOriginalKeys.has(key)) {
                     continue
                 }
 

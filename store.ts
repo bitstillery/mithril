@@ -1,6 +1,5 @@
 import {state, State, updateStateRegistry} from './state'
 import {serializeStore, deserializeStore} from './render/ssrState'
-import {ComputedSignal} from './signal'
 
 // Helper function to restore computed properties (same as in ssrState.ts)
 function restoreComputedProperties(state: State<any>, initial: any): void {
@@ -374,22 +373,26 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
             return
         }
 
-        // Default to saving saved/tab when no options; session is opt-in (off by default)
-        const saveSaved = options?.saved ?? options === undefined
-        const saveTab = options?.tab ?? options === undefined
-        const saveSession = options?.session === true
+        // Default: write to localStorage and sessionStorage when no options; session is opt-in
+        const writeLocalStorage = options?.saved ?? options === undefined
+        const writeSessionStorage = options?.tab ?? options === undefined
+        const writeSessionApi = options?.session === true
 
-        // Use SSR serialization which properly handles State objects and skips ComputedSignal properties
-        // This is the same mechanism used for SSR, ensuring consistency
         const statePlain = serializeStore(this.stateInstance)
 
-        // Save to localStorage (saved state)
-        if (saveSaved && this.templates.saved) {
+        // Write to localStorage (persistent across browser restarts)
+        if (writeLocalStorage && this.templates.saved) {
             this.set(this.storageKey, this.blueprint(statePlain, copy_object(this.templates.saved)))
         }
 
-        // Save to sessionStorage (tab state)
-        if (saveTab && this.templates.tab) {
+        // Lookup is always persisted to localStorage when present, regardless of writeLocalStorage.
+        // This ensures cached values (e.g. filter/sort state) are never lost when save() is called.
+        if ((statePlain as any).lookup) {
+            this.persist_lookup_to_local_storage(statePlain)
+        }
+
+        // Write to sessionStorage (tab-scoped, cleared when tab closes)
+        if (writeSessionStorage && this.templates.tab) {
             const tabState = (this.stateInstance as any).tab
             if (tabState) {
                 // Get the tab template - unwrap if it's nested under a 'tab' key
@@ -420,7 +423,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         // Save to session API (session state) - async by nature
         // Only save session on client side (not during SSR)
         if (
-            saveSession &&
+            writeSessionApi &&
             this.templates.session &&
             Object.keys(this.templates.session).length > 0 &&
             typeof window !== 'undefined'
@@ -438,6 +441,27 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
             if (!response.ok) {
                 throw new Error(`Failed to save session state: ${response.statusText}`)
             }
+        }
+    }
+
+    /**
+     * Merge lookup from state into localStorage and write. Ensures lookup is always persisted
+     * whenever save() is called and state contains lookup.
+     */
+    private persist_lookup_to_local_storage(statePlain: Record<string, any>): void {
+        if (typeof window === 'undefined') return
+        try {
+            const existing = this.get(this.storageKey)
+            let storeData: Record<string, any> = {}
+            try {
+                storeData = JSON.parse(existing) || {}
+            } catch {
+                storeData = {}
+            }
+            storeData.lookup = copy_object(statePlain.lookup || {})
+            window.localStorage.setItem(this.storageKey, JSON.stringify(storeData))
+        } catch (err) {
+            console.error('Cannot persist lookup to Local Storage; continue without.', err)
         }
     }
 
