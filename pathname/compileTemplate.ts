@@ -1,5 +1,8 @@
 import parsePathname from './parse'
 
+/** Path segments, :params, and regexp escapes (shared by compileTemplate). */
+const TEMPLATE_PATH_TO_REGEXP = /:([^/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|[\]{}]/g
+
 interface CompiledTemplate {
     (data: {path: string; params: Record<string, any>}): boolean
 }
@@ -20,7 +23,7 @@ export default function compileTemplate(template: string): CompiledTemplate {
                 // `:lang-:locale` in routes. This is all merged into one pass so I
                 // don't also accidentally escape `-` and make it harder to detect it to
                 // ban it from template parameters.
-                /:([^/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|[\]{}]/g,
+                TEMPLATE_PATH_TO_REGEXP,
                 function (m, key, extra) {
                     if (key == null) return '\\' + m
                     keys.push({k: key, r: extra === '...'})

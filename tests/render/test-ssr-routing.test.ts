@@ -649,10 +649,8 @@ describe('SSR Routing', () => {
     })
 
     /**
-     * Route key behavior: the router uses attrs.key (not currentPath) as the vnode key.
-     * When navigating between paths that share the same route pattern (e.g. /list → /list/ENTITY/123),
-     * the component receives an update rather than a full remount. This preserves component state
-     * (context panels, collections) when selecting items or using select_next.
+     * Route resolution: the inner route vnode has no key (same component updates in place when params change).
+     * The resolver output is wrapped in a fragment keyed m-route-${remountNonce} (nonce only bumps on remount: true).
      */
     describe('Route key behavior (update vs remount)', () => {
         test('overlapping routes render same component with different params', async () => {

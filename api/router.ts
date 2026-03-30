@@ -53,7 +53,7 @@ interface MountRedraw {
 }
 
 interface RouteOptions {
-    /** When true, forces the route component to remount (e.g. for same-route navigation with different query params) */
+    /** When true, bumps remountNonce once so the resolver fragment key changes for that navigation (e.g. Link). */
     remount?: boolean
     replace?: boolean
     state?: any
@@ -80,8 +80,8 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     let currentPath: string | undefined
     let lastUpdate: ((comp: any) => void) | null = null
     let routeSetResolve: (() => void) | null = null
-    let remountPath: string | null = null
-    let pendingRemount = false
+    /** Incremented only when route.set(..., { remount: true }); fragment key is m-route-${remountNonce}. */
+    let remountNonce = 0
 
     const RouterRoot: ComponentType = {
         onremove: function () {
@@ -94,21 +94,15 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             // if (!hasBeenResolved) return
 
             // Pass currentPath in attrs so RouteResolver.render can use it for routePath.
-            // Use remountPath when set (from route.set with remount: true) to force remount
-            // for same-route navigation; otherwise attrs.key for route param changes.
+            // No vnode key on the route component: same resolved component updates in place when path/query
+            // changes; apps sync state via attrs/onupdate. Do not use attrs.key from merged query (?key=...).
             const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath}
-            const vnodeKey = remountPath ?? attrs.key
-            const vnode = Vnode(component, vnodeKey, routeAttrs, null, null, null)
+            const vnode = Vnode(component, undefined, routeAttrs, null, null, null)
             if (currentResolver) {
                 const result = currentResolver.render!(vnode as any)
-                // When remount requested, wrap in keyed fragment so same-route navigation
-                // (e.g. Stock <-> TBO) forces full remount. Key must change when path changes.
-                // Always wrap when we have a path so structure is consistent; key drives remount.
-                const fragmentKey = remountPath ?? currentPath ?? undefined
-                if (remountPath && fragmentKey != null) {
-                    return hyperscript.fragment({key: fragmentKey}, result)
-                }
-                return result
+                // Always wrap in a keyed fragment (stable shape). Key only changes when remountNonce bumps
+                // (route.set with remount: true), not on ordinary URL updates.
+                return hyperscript.fragment({key: 'm-route-' + remountNonce}, result)
             }
             // Wrap in a fragment to preserve existing key semantics
             return [vnode]
@@ -188,7 +182,10 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         const path = decodeURIComponentSafe(prefix).slice(route.prefix.length)
         const data = parsePathname(path)
 
-        Object.assign(data.params, $window.history.state || {})
+        const histState = $window?.history?.state
+        if (histState != null && typeof histState === 'object' && !Array.isArray(histState)) {
+            Object.assign(data.params, histState)
+        }
 
         function reject(e: any) {
             console.error(e)
@@ -248,10 +245,6 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         }
                         attrs = data.params
                         currentPath = path
-                        if (pendingRemount) {
-                            remountPath = path
-                            pendingRemount = false
-                        }
                         lastUpdate = null
                         routeSetResolve?.()
                         routeSetResolve = null
@@ -339,10 +332,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         }
         lastUpdate = null
 
-        if (!options?.remount) {
-            remountPath = null
+        if (options?.remount) {
+            remountNonce++
         }
-        pendingRemount = options?.remount ?? false
 
         path = buildPathname(path, data || {})
         if (!ready || !$window) {
