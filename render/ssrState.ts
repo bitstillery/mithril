@@ -239,7 +239,11 @@ export function deserializeStore(state: State<any>, serialized: any): void {
                 const signal = signalMap.get(key)
                 // Don't update ComputedSignal (they're read-only)
                 if (signal && !(signal instanceof ComputedSignal)) {
-                    signal.value = deserializedValue
+                    // Use the proxy setter, not `signal.value = …`. Direct assignment bypasses
+                    // initializeSignals() for nested objects, so nested state (e.g. identity.user)
+                    // stays plain JSON — readable as `user.first_name` but `$first_name` is missing
+                    // and components like FieldText that need model refs render nothing.
+                    ;(state as any)[key] = deserializedValue
                 }
             } else {
                 // Signal doesn't exist - use proxy setter to create it

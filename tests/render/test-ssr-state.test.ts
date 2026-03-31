@@ -272,6 +272,9 @@ describe('SSR State Serialization', () => {
             expect(myState.count).toBe(5)
             expect(myState.user.name).toBe('Restored')
             expect(myState.user.email).toBe('restored@example.com')
+            // Nested object must stay a state proxy so `$name` model refs work (not plain JSON)
+            expect((myState.user as any).__isState).toBe(true)
+            expect((myState.user as any).$name.value).toBe('Restored')
         })
 
         test('deserializeStore handles arrays', () => {
