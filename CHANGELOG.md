@@ -4,13 +4,20 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [3.4.2](https://github.com/bitstillery/mithril/compare/v3.4.1...v3.4.2) (2026-03-30)
 
-### [3.4.1](https://github.com/bitstillery/mithril/compare/v3.4.0...v3.4.1) (2026-03-16)
+### Code Refactoring
 
+- **router:** simplify route vnode keys and fragment wrapping ([8473878](https://github.com/bitstillery/mithril/commit/84738780))
+
+### Tests
+
+- **api:** add client router tests for vnode keys, remount fragment, and history state ([8ffa842](https://github.com/bitstillery/mithril/commit/8ffa8421))
+
+### [3.4.1](https://github.com/bitstillery/mithril/compare/v3.4.0...v3.4.1) (2026-03-16)
 
 ### Bug Fixes
 
-* **core:** serialize dynamically added lookup keys ([78355bf](https://github.com/bitstillery/mithril/commit/78355bfe6350c1693cf1ebaea8d255e802d2dccf))
-* **release:** check npm login before publish ([d868025](https://github.com/bitstillery/mithril/commit/d868025823a88eff259d1b90c4dc381f9c0fa010))
+- **core:** serialize dynamically added lookup keys ([78355bf](https://github.com/bitstillery/mithril/commit/78355bfe6350c1693cf1ebaea8d255e802d2dccf))
+- **release:** check npm login before publish ([d868025](https://github.com/bitstillery/mithril/commit/d868025823a88eff259d1b90c4dc381f9c0fa010))
 
 ## [3.4.0](https://github.com/bitstillery/mithril/compare/v3.3.4...v3.4.0) (2026-03-11)
 
