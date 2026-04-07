@@ -239,14 +239,35 @@ export default function renderFactory() {
         isHydrating: boolean = false,
         matchedNodes: Set<Node> | null = null,
     ) {
-        const fragment = getDocument(parent as Element).createDocumentFragment()
-        if (vnode.children != null) {
-            const children = vnode.children
-            createNodes(fragment, children, 0, children.length, hooks, null, ns, isHydrating, matchedNodes)
+        if (isHydrating && matchedNodes) {
+            // During hydration, render children directly into the real parent so they
+            // can match existing SSR DOM nodes. Using a DocumentFragment would isolate
+            // the children from the parent's childNodes, preventing any reuse.
+            const childCountBefore = parent.childNodes.length
+            if (vnode.children != null) {
+                const children = vnode.children
+                createNodes(parent, children, 0, children.length, hooks, nextSibling, ns, isHydrating, matchedNodes)
+            }
+            // Fragment's dom/domSize must reflect the children that were placed
+            vnode.dom = vnode.children?.[0]?.dom ?? null
+            let size = 0
+            if (vnode.children) {
+                for (let i = 0; i < vnode.children.length; i++) {
+                    const child = vnode.children[i]
+                    if (child != null) size += child.domSize ?? (child.dom ? 1 : 0)
+                }
+            }
+            vnode.domSize = size
+        } else {
+            const fragment = getDocument(parent as Element).createDocumentFragment()
+            if (vnode.children != null) {
+                const children = vnode.children
+                createNodes(fragment, children, 0, children.length, hooks, null, ns, isHydrating, matchedNodes)
+            }
+            vnode.dom = fragment.firstChild
+            vnode.domSize = fragment.childNodes.length
+            insertDOM(parent, fragment, nextSibling)
         }
-        vnode.dom = fragment.firstChild
-        vnode.domSize = fragment.childNodes.length
-        insertDOM(parent, fragment, nextSibling)
     }
     function createElement(
         parent: Element | DocumentFragment,

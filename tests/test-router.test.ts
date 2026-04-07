@@ -1,7 +1,8 @@
 // @ts-nocheck
 /**
- * Client-side router behavior: inner route vnode key, keyed resolver fragment (m-route-*),
- * remount nonce, and history.state merging. Uses browserMock + pathname routing (prefix "").
+ * Client-side router behavior: inner route vnode key, keyed resolver fragment (m-route-*) only
+ * after `remount: true`, remount nonce, and history.state merging. Uses browserMock + pathname routing
+ * (prefix ""). Initial mount omits the fragment wrapper so DOM matches SSR `renderToString`.
  */
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
@@ -52,7 +53,7 @@ describe('router (client)', () => {
         return {$window, root, route}
     }
 
-    test('RouteResolver render receives inner vnode with undefined key; output is wrapped in m-route-0 fragment', () => {
+    test('RouteResolver render receives inner vnode with undefined key; initial output has no m-route-* fragment (SSR hydration parity)', () => {
         const innerKeys: Array<string | null | undefined> = []
         const resolver = {
             render(vnode: any) {
@@ -69,10 +70,10 @@ describe('router (client)', () => {
         })
 
         expect(innerKeys[innerKeys.length - 1]).toBeUndefined()
-        expect(lastMRouteKey(mRouteFragmentKeys)).toBe('m-route-0')
+        expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
     })
 
-    test('ordinary navigations keep m-route-0; remount: true bumps to m-route-1', async () => {
+    test('ordinary navigations omit m-route fragment; remount: true wraps with m-route-1', async () => {
         const resolver = {
             render() {
                 return hyperscript('div', 'x')
@@ -86,15 +87,15 @@ describe('router (client)', () => {
             '/b': resolver,
         })
 
-        expect(lastMRouteKey(mRouteFragmentKeys)).toBe('m-route-0')
+        expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
 
         await route.set('/b', null)
         await flush()
-        expect(lastMRouteKey(mRouteFragmentKeys)).toBe('m-route-0')
+        expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
 
         await route.set('/a', {q: 1}, null)
         await flush()
-        expect(lastMRouteKey(mRouteFragmentKeys)).toBe('m-route-0')
+        expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
 
         await route.set('/a', {q: 2}, {remount: true})
         await flush()

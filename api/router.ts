@@ -100,8 +100,13 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             const vnode = Vnode(component, undefined, routeAttrs, null, null, null)
             if (currentResolver) {
                 const result = currentResolver.render!(vnode as any)
-                // Always wrap in a keyed fragment (stable shape). Key only changes when remountNonce bumps
-                // (route.set with remount: true), not on ordinary URL updates.
+                // SSR `renderToString(resolver.render(...))` has no outer fragment. Wrapping here breaks
+                // hydration: `createFragment` uses an empty DocumentFragment as parent, so descendant
+                // nodes never match `#app`'s existing SSR children (blank tree / mismatch recovery).
+                // After `remount: true`, bump `remountNonce` and use a keyed fragment to force remount.
+                if (remountNonce === 0) {
+                    return result
+                }
                 return hyperscript.fragment({key: 'm-route-' + remountNonce}, result)
             }
             // Wrap in a fragment to preserve existing key semantics
