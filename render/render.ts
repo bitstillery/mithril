@@ -76,6 +76,156 @@ export default function renderFactory() {
             return null
         }
     }
+    // Positional hydration: walk existing DOM children in order, adopting each
+    // to the corresponding vnode. Handles text-node merging (SSR concatenates
+    // adjacent text runs into one node) and component/fragment recursion.
+    // Returns the next unprocessed DOM sibling (or null when exhausted).
+    function hydrateNode(
+        parent: Element,
+        vnode: any,
+        hooks: Array<() => void>,
+        ns: string | undefined,
+        cursor: Node | null,
+    ): Node | null {
+        if (vnode == null) return cursor
+        const tag = vnode.tag
+
+        if (typeof tag === 'string') {
+            switch (tag) {
+                case '#': {
+                    // Text vnode
+                    if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, true)
+                    const expected = String(vnode.children)
+                    if (cursor && cursor.nodeType === 3) {
+                        // Reuse existing text node; patch value if it differs
+                        vnode.dom = cursor as Text
+                        if ((cursor as Text).nodeValue !== expected) {
+                            ;(cursor as Text).nodeValue = expected
+                        }
+                        return cursor.nextSibling
+                    }
+                    // SSR may have merged multiple text vnodes into a single text node.
+                    // Check if the current text node *starts* with our expected text.
+                    if (cursor && cursor.nodeType === 3) {
+                        const full = (cursor as Text).nodeValue || ''
+                        if (full.startsWith(expected)) {
+                            // Split: take our portion, leave the rest for the next vnode
+                            ;(cursor as Text).splitText(expected.length)
+                            vnode.dom = cursor as Text
+                            return cursor.nextSibling
+                        }
+                    }
+                    // No matching text node — create one
+                    const textNode = getDocument(parent).createTextNode(expected)
+                    parent.insertBefore(textNode, cursor)
+                    vnode.dom = textNode
+                    return cursor
+                }
+                case '<': {
+                    // Trust HTML vnode — skip the corresponding DOM range.
+                    // Fall through to non-hydration creation (rare in hydration).
+                    vnode.state = {}
+                    if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, true)
+                    createHTML(parent, vnode, ns, cursor)
+                    return cursor
+                }
+                case '[': {
+                    // Fragment vnode
+                    vnode.state = {}
+                    if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, true)
+                    let c = cursor
+                    if (vnode.children != null) {
+                        for (let i = 0; i < vnode.children.length; i++) {
+                            c = hydrateNode(parent, vnode.children[i], hooks, ns, c)
+                        }
+                    }
+                    vnode.dom = vnode.children?.[0]?.dom ?? null
+                    let size = 0
+                    if (vnode.children) {
+                        for (let i = 0; i < vnode.children.length; i++) {
+                            const child = vnode.children[i]
+                            if (child != null) size += child.domSize ?? (child.dom ? 1 : 0)
+                        }
+                    }
+                    vnode.domSize = size
+                    return c
+                }
+                default: {
+                    // Element vnode
+                    vnode.state = {}
+                    if (vnode.attrs != null) initLifecycle(vnode.attrs, vnode, hooks, true)
+                    // Find matching element (skip whitespace text nodes)
+                    let el: Element | null = null
+                    let scan: Node | null = cursor
+                    while (scan) {
+                        if (scan.nodeType === 1) {
+                            const candidateTag = ((scan as Element).tagName || (scan as Element).nodeName || '').toLowerCase()
+                            if (candidateTag === tag.toLowerCase()) {
+                                el = scan as Element
+                                break
+                            }
+                            break // tag mismatch — don't skip ahead indefinitely
+                        }
+                        // Skip whitespace-only text nodes between elements
+                        if (scan.nodeType === 3 && scan.nodeValue && scan.nodeValue.trim() === '') {
+                            scan = scan.nextSibling
+                            continue
+                        }
+                        break
+                    }
+                    if (el) {
+                        vnode.dom = el
+                        ns = getNameSpace(vnode) || ns
+                        if (vnode.attrs != null) setAttrs(vnode, vnode.attrs, ns)
+                        if (!maybeSetContentEditable(vnode)) {
+                            if (vnode.children != null) {
+                                hydrateElementChildren(el, vnode.children, hooks, ns)
+                            }
+                        }
+                        vnode.domSize = 1
+                        return el.nextSibling
+                    }
+                    // No matching element — create from scratch
+                    createElement(parent, vnode, hooks, ns, cursor)
+                    return cursor
+                }
+            }
+        }
+
+        // Component vnode
+        initComponent(vnode, hooks, true)
+        if (vnode.instance != null) {
+            const nextCursor = hydrateNode(parent, vnode.instance, hooks, ns, cursor)
+            vnode.dom = vnode.instance.dom
+            vnode.domSize = vnode.instance.domSize
+            return nextCursor
+        }
+        vnode.domSize = 0
+        return cursor
+    }
+
+    function hydrateElementChildren(
+        element: Element,
+        children: (VnodeType | null)[],
+        hooks: Array<() => void>,
+        ns: string | undefined,
+    ) {
+        let cursor: Node | null = element.firstChild
+        for (let i = 0; i < children.length; i++) {
+            cursor = hydrateNode(element, children[i], hooks, ns, cursor)
+        }
+        // Remove leftover DOM nodes that weren't claimed by any vnode
+        while (cursor) {
+            const next: Node | null = cursor.nextSibling
+            try {
+                element.removeChild(cursor)
+            } catch (_e) {
+                // already removed
+            }
+            cursor = next
+        }
+    }
+
     // create
     function createNodes(
         parent: Element | DocumentFragment,
@@ -352,46 +502,13 @@ export default function renderFactory() {
         if (!maybeSetContentEditable(vnode)) {
             if (vnode.children != null) {
                 const children = vnode.children
-                // During hydration, if we reused an element, it already has children
-                // Create a new matchedNodes set for this element's children to avoid duplicates
-                const childMatchedNodes = isHydrating && element.firstChild ? new Set<Node>() : null
-                createNodes(element, children, 0, children.length, hooks, null, ns, isHydrating, childMatchedNodes)
-                // After creating/matching children, remove any unmatched nodes that remain
-                // Only remove unmatched nodes if we actually matched some nodes (to avoid clearing everything)
-                if (isHydrating && childMatchedNodes && element.firstChild && childMatchedNodes.size > 0) {
-                    let node: Node | null = element.firstChild
-                    while (node) {
-                        const next: Node | null = node.nextSibling
-                        if (!childMatchedNodes.has(node)) {
-                            // Verify node is still a child before attempting removal
-                            if (element.contains && element.contains(node)) {
-                                try {
-                                    element.removeChild(node)
-                                    hydrationMismatchCount++
-                                    recordHydrationMismatchSummary('unmatched_dom_child_removed', vnode, element, node, true)
-                                } catch (e) {
-                                    const error = e as Error
-                                    // Check if node was already removed (not a child anymore)
-                                    if (!element.contains || !element.contains(node)) {
-                                        // Node already removed, skip silently
-                                        node = next
-                                        continue
-                                    }
-                                    hydrationMismatchCount++
-                                    logHydrationError('removeChild (element children cleanup)', vnode, element, error, {
-                                        parent: element,
-                                        node,
-                                        matchedNodes: childMatchedNodes,
-                                    })
-                                    recordHydrationMismatchSummary('remove_child_failed', vnode, element, node, false)
-                                    // Don't re-throw - we've already logged the error with all details
-                                    // Re-throwing causes the browser to log the DOMException stack trace
-                                }
-                            }
-                            // Node not in parent, already removed - skip silently
-                        }
-                        node = next
-                    }
+                if (isHydrating && element.firstChild) {
+                    // Positional adoption: walk existing DOM children in order, assigning
+                    // each to the corresponding vnode. This avoids the content-matching
+                    // approach which breaks when SSR merges adjacent text nodes.
+                    hydrateElementChildren(element, children, hooks, ns)
+                } else {
+                    createNodes(element, children, 0, children.length, hooks, null, ns)
                 }
                 if (vnode.tag === 'select' && attrs != null) setLateSelectAttrs(vnode, attrs)
             }
