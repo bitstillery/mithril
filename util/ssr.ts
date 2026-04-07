@@ -9,9 +9,20 @@ export const HYDRATION_DEBUG = typeof process !== 'undefined' && process.env?.NO
 let hydrationErrorCount = 0
 const MAX_HYDRATION_ERRORS = 10 // Limit number of errors logged per render cycle
 
+export interface HydrationMismatchSummary {
+    kind: 'unmatched_dom_child_removed' | 'remove_child_failed'
+    parentDom: string
+    parentVnode: string
+    removed: string
+}
+
+const hydrationMismatchSummaries: HydrationMismatchSummary[] = []
+const MAX_HYDRATION_MISMATCH_SUMMARIES = 32
+
 // Reset error count at the start of each render cycle
 export function resetHydrationErrorCount(): void {
     hydrationErrorCount = 0
+    hydrationMismatchSummaries.length = 0
 }
 
 export function getComponentName(vnode: any): string {
@@ -237,7 +248,68 @@ function buildComponentPath(vnode: any, context?: {oldVnode?: any; newVnode?: an
     return path
 }
 
-function formatComponentHierarchy(vnode: any, context?: {oldVnode?: any; newVnode?: any}): string {
+/** Short label for a DOM node during hydration debug (tag, text preview, or node type). */
+export function describeHydrationDomNode(node: Node, textPreviewMax = 80): string {
+    if (node.nodeType === 3) {
+        const raw = (node as Text).nodeValue ?? ''
+        const normalized = raw.replace(/\s+/g, ' ').trim()
+        const excerpt = normalized.length > textPreviewMax ? `${normalized.slice(0, textPreviewMax)}…` : normalized
+        return `text "${excerpt}"`
+    }
+    if (node.nodeType === 1) {
+        const el = node as Element
+        const tag = el.tagName.toLowerCase()
+        const id = el.id ? `#${el.id}` : ''
+        let cls = ''
+        if (el.className && typeof el.className === 'string') {
+            const parts = el.className.split(/\s+/).filter(Boolean).slice(0, 4)
+            if (parts.length) cls = `.${parts.join('.')}`
+        }
+        return `<${tag}${id}${cls}>`
+    }
+    if (node.nodeType === 8) {
+        const c = (node as Comment).data?.replace(/\s+/g, ' ').trim() ?? ''
+        const excerpt = c.length > textPreviewMax ? `${c.slice(0, textPreviewMax)}…` : c
+        return `comment "${excerpt}"`
+    }
+    return `${node.nodeName}[nodeType=${node.nodeType}]`
+}
+
+/** Opening-tag style summary for a parent element (hydration debug). */
+export function describeHydrationParentElement(el: Element): string {
+    const {openTag} = formatDOMElement(el)
+    return openTag
+}
+
+export function recordHydrationMismatchSummary(
+    kind: HydrationMismatchSummary['kind'],
+    parentVnode: any,
+    parentEl: Element,
+    removed: Node,
+    updateStats: boolean,
+): void {
+    if (updateStats) {
+        updateHydrationStats(parentVnode)
+    }
+    if (hydrationMismatchSummaries.length >= MAX_HYDRATION_MISMATCH_SUMMARIES) {
+        return
+    }
+    hydrationMismatchSummaries.push({
+        kind,
+        parentDom: describeHydrationParentElement(parentEl),
+        parentVnode: formatComponentHierarchy(parentVnode),
+        removed: describeHydrationDomNode(removed),
+    })
+}
+
+/** Returns buffered mismatch summaries from the current render and clears the buffer. */
+export function takeHydrationMismatchSummaries(): HydrationMismatchSummary[] {
+    const out = hydrationMismatchSummaries.slice()
+    hydrationMismatchSummaries.length = 0
+    return out
+}
+
+export function formatComponentHierarchy(vnode: any, context?: {oldVnode?: any; newVnode?: any}): string {
     if (!vnode) return 'Unknown'
 
     const path = buildComponentPath(vnode, context)

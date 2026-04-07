@@ -1,5 +1,10 @@
 import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies} from '../signal'
-import {logHydrationError, resetHydrationErrorCount} from '../util/ssr'
+import {
+    logHydrationError,
+    recordHydrationMismatchSummary,
+    resetHydrationErrorCount,
+    takeHydrationMismatchSummaries,
+} from '../util/ssr'
 import {logger} from '../server/logger'
 
 import Vnode from './vnode'
@@ -342,6 +347,7 @@ export default function renderFactory() {
                                 try {
                                     element.removeChild(node)
                                     hydrationMismatchCount++
+                                    recordHydrationMismatchSummary('unmatched_dom_child_removed', vnode, element, node, true)
                                 } catch (e) {
                                     const error = e as Error
                                     // Check if node was already removed (not a child anymore)
@@ -356,6 +362,7 @@ export default function renderFactory() {
                                         node,
                                         matchedNodes: childMatchedNodes,
                                     })
+                                    recordHydrationMismatchSummary('remove_child_failed', vnode, element, node, false)
                                     // Don't re-throw - we've already logged the error with all details
                                     // Re-throwing causes the browser to log the DOMException stack trace
                                 }
@@ -1281,8 +1288,11 @@ export default function renderFactory() {
             // Check if we've exceeded mismatch threshold after processing nodes
             // If so, clear and re-render from scratch (client VDOM wins)
             if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
+                const mismatchSummaries = takeHydrationMismatchSummaries()
                 logger.warn('hydration mismatch threshold exceeded. clearing parent and re-rendering from client vdom.', {
                     mismatchCount: hydrationMismatchCount,
+                    mismatches: mismatchSummaries,
+                    summariesTruncated: mismatchSummaries.length < hydrationMismatchCount,
                     threshold: MAX_HYDRATION_MISMATCHES,
                 })
                 dom.textContent = ''

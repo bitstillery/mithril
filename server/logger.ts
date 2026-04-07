@@ -71,6 +71,22 @@ export interface LogContext {
     [key: string]: any
 }
 
+const RESERVED_CONTEXT_KEYS = new Set(['method', 'pathname', 'route', 'sessionId', 'module'])
+
+/** Serialize non-primitive context for terminal logs (avoids [object Object]). */
+function formatContextValueForServer(value: unknown): string {
+    if (value === undefined) return 'undefined'
+    if (value === null) return 'null'
+    const t = typeof value
+    if (t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint') return String(value)
+    if (value instanceof Error) return value.stack ?? value.message
+    try {
+        return JSON.stringify(value)
+    } catch {
+        return String(value)
+    }
+}
+
 class Logger {
     // Default prefix: [ssr] for server infrastructure, [app] for application code
     private prefix: string = '[ssr]'
@@ -116,8 +132,8 @@ class Logger {
 
             // Add any additional context fields (excluding module which is shown in message)
             for (const [key, value] of Object.entries(context)) {
-                if (!['method', 'pathname', 'route', 'sessionId', 'module'].includes(key)) {
-                    contextParts.push(colorize(`${key}:${value}`, colors.dim + colors.white))
+                if (!RESERVED_CONTEXT_KEYS.has(key)) {
+                    contextParts.push(colorize(`${key}:${formatContextValueForServer(value)}`, colors.dim + colors.white))
                 }
             }
 
@@ -129,19 +145,25 @@ class Logger {
         return `${timestamp} ${prefixStr} ${levelStr}${contextStr} ${displayMessage}`
     }
 
-    private formatContextForBrowser(context?: LogContext): string[] {
-        if (!context) return []
-        const parts: string[] = []
-        if (context.method) parts.push(`Method: ${context.method}`)
-        if (context.pathname) parts.push(`Path: ${context.pathname}`)
-        if (context.route) parts.push(`Route: ${context.route}`)
-        if (context.sessionId) parts.push(`Session: ${context.sessionId.slice(0, 8)}...`)
+    /**
+     * Emit context in DevTools-friendly form: objects/arrays are passed as separate arguments so
+     * they stay expandable instead of becoming "[object Object]" strings.
+     */
+    private logBrowserContext(logFn: typeof console.log, context: LogContext): void {
+        if (context.method != null) logFn('  method:', context.method)
+        if (context.pathname != null) logFn('  pathname:', context.pathname)
+        if (context.route != null) logFn('  route:', context.route)
+        if (context.sessionId != null) logFn('  sessionId:', `${context.sessionId.slice(0, 8)}...`)
+
         for (const [key, value] of Object.entries(context)) {
-            if (!['method', 'pathname', 'route', 'sessionId', 'module'].includes(key)) {
-                parts.push(`${key}: ${value}`)
+            if (RESERVED_CONTEXT_KEYS.has(key)) continue
+            const label = `  ${key}:`
+            if (value !== null && typeof value === 'object') {
+                logFn(label, value)
+            } else {
+                logFn(label, value as string | number | boolean | undefined)
             }
         }
-        return parts
     }
 
     private logBrowser(
@@ -159,10 +181,12 @@ class Logger {
             error: 'color: #ef4444; font-weight: bold',
         }
         const logFn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
-        const contextParts = this.formatContextForBrowser(context)
-        if (contextParts.length > 0 || error) {
+        const hasContext = context != null && Object.keys(context).length > 0
+        if (hasContext || error) {
             console.group(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], 'color: inherit')
-            contextParts.forEach((part) => logFn(`  ${part}`))
+            if (context && hasContext) {
+                this.logBrowserContext(logFn, context)
+            }
             if (error instanceof Error && error.stack) {
                 console.error('Stack trace:', error.stack)
             }
