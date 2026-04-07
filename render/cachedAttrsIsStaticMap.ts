@@ -7,17 +7,8 @@ import emptyAttrs from './emptyAttrs'
 //
 // Since the attrs used as keys in this map are not released from the selectorCache object,
 // there is no risk of memory leaks. Therefore, Map is used here instead of WeakMap.
-//
-// Stored on globalThis so that multiple Mithril bundles on the same page (e.g. a portal
-// app bundle and a CMS runtime bundle) share a single map.  Without this, selector-cached
-// attrs created by one bundle are unknown to the other bundle's renderer, causing false
-// "Don't reuse attrs" warnings and unnecessary updateAttrs work.
-const GLOBAL_KEY = '__mithril_cachedAttrsIsStaticMap__'
-const g = typeof globalThis !== 'undefined' ? globalThis : ({} as Record<string, unknown>)
-if (!(g as Record<string, unknown>)[GLOBAL_KEY]) {
-    ;(g as Record<string, unknown>)[GLOBAL_KEY] = new Map<Record<string, any>, boolean>()
-}
-const map = (g as Record<string, unknown>)[GLOBAL_KEY] as Map<Record<string, any>, boolean>
+
+const map = new Map<Record<string, any>, boolean>()
 // Each Mithril instance registers its own emptyAttrs as static.
 map.set(emptyAttrs, true)
 export default map
