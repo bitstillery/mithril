@@ -1339,13 +1339,13 @@ export default function renderFactory() {
                 isHydrating: isHydrating,
             }
             const result = callHook.call(source.oninit, vnode, context)
-            // Auto-redraw when async oninit completes (client-side only)
+            // Auto-redraw when async oninit completes (client-side only).
+            // Capture currentRedraw now — the closure variable is cleared in
+            // render()'s finally block before the microtask fires.
             if (result != null && typeof result.then === 'function' && currentRedraw != null) {
+                const capturedRedraw = currentRedraw
                 Promise.resolve(result).then(function () {
-                    if (currentRedraw != null) {
-                        // @ts-expect-error - Comma operator intentionally used to call without 'this' binding
-                        ;(0, currentRedraw)()
-                    }
+                    capturedRedraw()
                 })
             }
         }
