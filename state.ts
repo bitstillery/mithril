@@ -756,6 +756,8 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                 } else {
                     // Create new signal (new key added to object)
                     nestedSignalMap.set(key, createPropertySignal(value))
+                    // Mirror the key on the target so devtools show it when expanding <target>
+                    Reflect.set(target, prop, value)
                     // Notify parent so subscribers see the key addition
                     const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
                     if (parentSignal && typeof (parentSignal as any).trigger === 'function') {
@@ -799,6 +801,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     return {
                         enumerable: true,
                         configurable: true,
+                        writable: true,
                     }
                 }
                 return Reflect.getOwnPropertyDescriptor(target, prop)

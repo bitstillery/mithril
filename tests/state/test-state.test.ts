@@ -334,6 +334,22 @@ describe('state', () => {
             expect(s.items['key1'].value).toBe(42)
         })
 
+        test('dynamically added keys appear in Object.keys and on the target', () => {
+            const s = state({data: {} as Record<string, any>}, 'testState.dynamicKeyVisible')
+
+            s.data.foo = 'bar'
+            s.data.list = ['test']
+
+            expect(s.data.foo).toBe('bar')
+            expect(s.data.list).toEqual(['test'])
+            expect(Object.keys(s.data)).toContain('foo')
+            expect(Object.keys(s.data)).toContain('list')
+            // Verify JSON round-trip includes dynamic keys
+            const json = JSON.parse(JSON.stringify(s.data))
+            expect(json.foo).toBe('bar')
+            expect(json.list).toEqual(['test'])
+        })
+
         test('computed accessing non-existent property returns undefined initially', () => {
             const s = state(
                 {
