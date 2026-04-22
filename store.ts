@@ -184,23 +184,26 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         }
         const result: any = {}
         for (const key of Object.keys(blueprint)) {
-            if (Object.prototype.hasOwnProperty.call(state, key)) {
-                const blueprintValue = (blueprint as any)[key]
-                const stateValue = (state as any)[key]
-                if (!Array.isArray(blueprintValue) && blueprintValue !== null && is_object(blueprintValue)) {
-                    // (!) Convention: The contents of a state key with the name 'lookup' is
-                    // always one-one copied from the state, instead of being
-                    // blueprinted per-key. This is to accomodate key/value
-                    // lookups, without having to define each key in the
-                    // state's persistent section.
-                    if (key === 'lookup') {
-                        result[key] = copy_object(stateValue)
-                    } else {
-                        result[key] = this.blueprint(stateValue, blueprintValue)
-                    }
+            // Use `in` so Mithril state proxies (signal-backed roots) are not skipped; `hasOwnProperty`
+            // can be false for keys that only exist on the proxy’s `has` / signal map.
+            if (!(key in (state as object))) {
+                continue
+            }
+            const blueprintValue = (blueprint as any)[key]
+            const stateValue = (state as any)[key]
+            if (!Array.isArray(blueprintValue) && blueprintValue !== null && is_object(blueprintValue)) {
+                // (!) Convention: The contents of a state key with the name 'lookup' is
+                // always one-one copied from the state, instead of being
+                // blueprinted per-key. This is to accomodate key/value
+                // lookups, without having to define each key in the
+                // state's persistent section.
+                if (key === 'lookup') {
+                    result[key] = copy_object(stateValue)
                 } else {
-                    result[key] = stateValue
+                    result[key] = this.blueprint(stateValue, blueprintValue)
                 }
+            } else {
+                result[key] = stateValue
             }
         }
         return result as Partial<T>
@@ -303,7 +306,6 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
             console.log('[store] loading tab state from local store')
             tab_state = merge_deep(copy_object(this.templates.tab), store_state.tab)
         } else {
-            console.log('[store] restoring existing tab state')
             tab_state = merge_deep(copy_object(this.templates.tab), copy_object(restored_state.tab))
         }
 

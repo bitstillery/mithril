@@ -35,6 +35,11 @@ export interface SSRAccessContext {
     sessionData?: any
     /** Per-request EventEmitter; prevents event listeners from persisting between requests. */
     events?: any
+    /**
+     * Optional metadata merged into `#__SSR_STATE__` as top-level `__meta` when serializing.
+     * Consumers should strip `__meta` before `deserializeAllStates`. Set during SSR app init.
+     */
+    ssrStateMeta?: Record<string, unknown>
     /** Per-request watcher cleanup functions; prevents watchers from persisting between requests. */
     watchers?: Array<() => void>
 }

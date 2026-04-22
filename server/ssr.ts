@@ -3,6 +3,7 @@ import {readFile} from 'fs/promises'
 import m from '../server'
 import {runWithContextAsync} from '../ssrContext'
 
+import {formatSsrPageSummaryLine, utf8ByteLength} from './logger'
 import {extractSessionId} from './session'
 import {logger} from './ssrLogger'
 
@@ -17,6 +18,10 @@ declare global {
 }
 
 globalThis.__SSR_MODE__ = true
+
+function ssrMetricsBreakdownEnabled(): boolean {
+    return process.env.MITHRIL_SSR_METRICS === '1'
+}
 
 export interface SSROptions {
     routes: Record<string, any>
@@ -91,7 +96,9 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 
     return runWithContextAsync(context, async () => {
         try {
+            const t0 = performance.now()
             await options.initRequestContext(context)
+            const t1 = performance.now()
 
             globalThis.__SSR_URL__ = req.url
 
@@ -99,20 +106,24 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             logger.debug('resolving route', {pathname, routeCount, routeExists: !!options.routes[pathname]})
 
             const result = await m.route.resolve(pathname, options.routes, m.renderToString)
+            const t2 = performance.now()
 
             const appHtml = typeof result === 'string' ? result : result.html
-            const serializedState = typeof result === 'string' ? {} : result.state
+            const baseSerializedState = typeof result === 'string' ? {} : result.state
+            const meta = context.ssrStateMeta
+            const serializedState =
+                meta && Object.keys(meta).length > 0 ? {...baseSerializedState, __meta: meta} : baseSerializedState
             const htmlLength = appHtml?.length || 0
 
             logger.debug('route resolved', {pathname, htmlLength, resultType: typeof result === 'string' ? 'string' : 'object'})
 
-            if (!appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>') {
+            const emptyHtml = !appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>'
+            if (emptyHtml) {
                 logger.warn('empty html rendered', {pathname})
-            } else {
-                logger.info(`get ${pathname} → ${htmlLength} chars`)
             }
 
             let html = await options.getHtmlTemplate()
+            const t3 = performance.now()
 
             const appSelector = options.appSelector || '#app'
 
@@ -135,8 +146,35 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             })
 
             const stateScriptId = options.stateScriptId || '__SSR_STATE__'
-            const stateScript = `<script id="${stateScriptId}" type="application/json">${JSON.stringify(serializedState)}</script>`
+            const stateJson = JSON.stringify(serializedState)
+            const stateScript = `<script id="${stateScriptId}" type="application/json">${stateJson}</script>`
             html = html.replace('</head>', `${stateScript}</head>`)
+
+            const t4 = performance.now()
+
+            if (!emptyHtml) {
+                const msTotal = t4 - t0
+                const bytesHtml = utf8ByteLength(html)
+                const bytesState = utf8ByteLength(stateJson)
+                logger.infoRaw(
+                    formatSsrPageSummaryLine({
+                        bytesHtml,
+                        bytesState,
+                        method: req.method,
+                        msTotal,
+                        pathname,
+                    }),
+                )
+                if (ssrMetricsBreakdownEnabled()) {
+                    logger.debug('ssr phases', {
+                        ms_init_context: Math.round((t1 - t0) * 100) / 100,
+                        ms_route_render: Math.round((t2 - t1) * 100) / 100,
+                        ms_template_fetch: Math.round((t3 - t2) * 100) / 100,
+                        ms_template_merge: Math.round((t4 - t3) * 100) / 100,
+                        pathname,
+                    })
+                }
+            }
 
             const sessionId = context.sessionId ?? ''
 

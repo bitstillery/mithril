@@ -617,7 +617,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                     const result = await renderToString(renderedVnode)
                                     const html = typeof result === 'string' ? result : result.html
                                     if (html) {
-                                        logger.info(`rendered route component`, {
+                                        logger.debug(`rendered route component`, {
                                             pathname,
                                             route: matchedRoute,
                                             htmlSize: html.length,

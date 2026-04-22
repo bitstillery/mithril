@@ -55,11 +55,45 @@ function getTimestamp(): string {
 function formatLevel(level: 'info' | 'debug' | 'warn' | 'error'): string {
     const levelMap = {
         info: colorize('info', colors.bright + colors.cyan),
-        debug: colorize('debug', colors.bright + colors.blue),
+        debug: colorize('debug', colors.dim + colors.blue),
         warn: colorize('warn', colors.bright + colors.yellow),
         error: colorize('error', colors.bright + colors.red),
     }
     return levelMap[level]
+}
+
+function formatPrefixForServer(prefix: string): string {
+    if (prefix === '[ssr]') {
+        return colorize(prefix, colors.bright + colors.magenta)
+    }
+    return colorize(prefix, colors.dim + colors.cyan)
+}
+
+const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null
+
+/** UTF-8 byte length of a string (for SSR response size). */
+export function utf8ByteLength(s: string): number {
+    return textEncoder ? textEncoder.encode(s).length : s.length
+}
+
+export interface SsrPageSummaryFields {
+    bytesHtml: number
+    bytesState: number
+    method: string
+    msTotal: number
+    pathname: string
+}
+
+/**
+ * One-line SSR summary for the terminal: dim labels, bright path, yellow numbers.
+ * Use with {@link Logger.infoRaw} so the body is not flattened into dim context.
+ */
+export function formatSsrPageSummaryLine(fields: SsrPageSummaryFields): string {
+    const d = (s: string) => colorize(s, colors.dim + colors.white)
+    const n = (v: number) => colorize(String(Math.round(v * 100) / 100), colors.bright + colors.yellow)
+    const path = colorize(fields.pathname, colors.green)
+    const method = colorize(fields.method, colors.cyan)
+    return `${d('page')} ${method} ${path} ${d('ms')} ${n(fields.msTotal)} ${d('body')} ${n(fields.bytesHtml)}${d('B')} ${d('state')} ${n(fields.bytesState)}${d('B')}`
 }
 
 export interface LogContext {
@@ -102,38 +136,42 @@ class Logger {
         const timestamp = colorize(getTimestamp(), colors.dim + colors.white)
         const levelStr = formatLevel(level)
 
-        // Always use the set prefix (e.g., [app] or [ssr])
-        const prefixStr = colorize(
-            this.prefix,
-            this.prefix === '[ssr]' ? colors.bright + colors.magenta : colors.bright + colors.cyan,
-        )
+        const prefixStr = formatPrefixForServer(this.prefix)
+        const isDebug = level === 'debug'
 
         // Include module in message if provided
         let displayMessage = message
         if (context?.module) {
             displayMessage = `[${context.module}] ${message}`
         }
+        if (isDebug) {
+            displayMessage = colorize(displayMessage, colors.dim + colors.white)
+        }
 
         let contextStr = ''
         if (context) {
             const contextParts: string[] = []
+            const methodColor = isDebug ? colors.dim + colors.cyan : colors.cyan
+            const pathColor = isDebug ? colors.dim + colors.green : colors.green
+            const routeColor = isDebug ? colors.dim + colors.blue : colors.blue
+            const extraColor = isDebug ? colors.dim + colors.blue : colors.dim + colors.white
             if (context.method) {
-                contextParts.push(colorize(context.method, colors.cyan))
+                contextParts.push(colorize(context.method, methodColor))
             }
             if (context.pathname) {
-                contextParts.push(colorize(context.pathname, colors.green))
+                contextParts.push(colorize(context.pathname, pathColor))
             }
             if (context.route) {
-                contextParts.push(colorize(`route:${context.route}`, colors.blue))
+                contextParts.push(colorize(`route:${context.route}`, routeColor))
             }
             if (context.sessionId) {
-                contextParts.push(colorize(`session:${context.sessionId.slice(0, 8)}...`, colors.dim + colors.white))
+                contextParts.push(colorize(`session:${context.sessionId.slice(0, 8)}...`, extraColor))
             }
 
             // Add any additional context fields (excluding module which is shown in message)
             for (const [key, value] of Object.entries(context)) {
                 if (!RESERVED_CONTEXT_KEYS.has(key)) {
-                    contextParts.push(colorize(`${key}:${formatContextValueForServer(value)}`, colors.dim + colors.white))
+                    contextParts.push(colorize(`${key}:${formatContextValueForServer(value)}`, extraColor))
                 }
             }
 
@@ -173,17 +211,18 @@ class Logger {
         error?: Error | unknown,
     ): void {
         const displayMessage = context?.module ? `[${context.module}] ${message}` : message
-        const prefixStyle = this.prefix === '[ssr]' ? 'color: #d946ef; font-weight: bold' : 'color: #3b82f6; font-weight: bold'
+        const prefixStyle = this.prefix === '[ssr]' ? 'color: #d946ef; font-weight: bold' : 'color: #64748b; font-weight: normal'
         const levelStyles: Record<string, string> = {
             info: 'color: #22d3ee; font-weight: bold',
-            debug: 'color: #4ade80; font-weight: bold',
+            debug: 'color: #64748b; font-weight: normal',
             warn: 'color: #fbbf24; font-weight: bold',
             error: 'color: #ef4444; font-weight: bold',
         }
+        const bodyStyle = level === 'debug' ? 'color: #94a3b8; font-weight: normal' : 'color: inherit'
         const logFn = level === 'error' ? console.error : level === 'warn' ? console.warn : console.log
         const hasContext = context != null && Object.keys(context).length > 0
         if (hasContext || error) {
-            console.group(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], 'color: inherit')
+            console.group(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], bodyStyle)
             if (context && hasContext) {
                 this.logBrowserContext(logFn, context)
             }
@@ -192,7 +231,7 @@ class Logger {
             }
             console.groupEnd()
         } else {
-            logFn(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], 'color: inherit')
+            logFn(`%c${this.prefix}%c ${level}%c ${displayMessage}`, prefixStyle, levelStyles[level], bodyStyle)
         }
     }
 
@@ -202,6 +241,20 @@ class Logger {
         } else {
             console.log(this.formatMessage('info', message, context))
         }
+    }
+
+    /**
+     * Server only: log one info line whose body may already contain ANSI (e.g. {@link formatSsrPageSummaryLine}).
+     */
+    infoRaw(messageBody: string): void {
+        if (isBrowser) {
+            console.log(`${this.prefix} info ${messageBody}`)
+            return
+        }
+        const timestamp = colorize(getTimestamp(), colors.dim + colors.white)
+        const levelStr = formatLevel('info')
+        const prefixStr = formatPrefixForServer(this.prefix)
+        console.log(`${timestamp} ${prefixStr} ${levelStr} ${messageBody}`)
     }
 
     debug(message: string, context?: LogContext): void {
