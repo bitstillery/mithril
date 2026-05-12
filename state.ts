@@ -868,19 +868,20 @@ export type StateSignals<T extends Record<string, any>> = {
           ? Signal<State<T[K]>>
           : Signal<T[K]>
 }
+type StateElem<E> = E extends Record<string, any> ? State<E> : E
 
-/**
- * State type - reactive object with signal-based properties
- *
- * Supports:
- * - Regular access: `state.prop` returns unwrapped value
- * - Signal access: `state.$prop` returns Signal instance ($ prefix convention)
- * - Functions become computed signals
- * - Nested objects become State instances (recursively)
- */
-export type State<T extends Record<string, any>> = {
-    [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : T[K] extends Record<string, any> ? State<T[K]> : T[K]
-} & StateSignals<T>
+export type StateArray<Elem> = Omit<Array<StateElem<Elem>>, 'fill' | 'push' | 'splice' | 'unshift'> & {
+    fill(value: Elem, start?: number, end?: number): StateArray<Elem>
+    push(...items: Elem[]): number
+    splice(start: number, deleteCount?: number, ...items: Elem[]): StateElem<Elem>[]
+    unshift(...items: Elem[]): number
+}
+
+export type State<T extends Record<string, any>> = T extends (infer Elem)[]
+    ? StateArray<Elem>
+    : {
+          [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : T[K] extends Record<string, any> ? State<T[K]> : T[K]
+      } & StateSignals<T>
 
 /** Function returned by watch() to remove the watcher */
 export type Unwatch = () => void

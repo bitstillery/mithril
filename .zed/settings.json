@@ -1,0 +1,154 @@
+// Folder-specific settings
+//
+// For a full list of overridable settings, and general information on folder-specific settings,
+// see the documentation: https://zed.dev/docs/configuring-zed#settings-files
+{
+    "format_on_save": "on",
+    "remove_trailing_whitespace_on_save": false,
+    "ensure_final_newline_on_save": false,
+    "languages": {
+        "CSS": {
+            "code_actions_on_format": {
+                "source.fixAll.stylelint": true,
+            },
+        },
+        "HTML": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+            ],
+        },
+        "JavaScript": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+                {
+                    "code_action": "source.fixAll.oxc",
+                },
+            ],
+        },
+        "JSON": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+            ],
+        },
+        "TypeScript": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+                {
+                    "code_action": "source.fixAll.oxc",
+                },
+            ],
+            "language_servers": ["tsgo", "vtsls", "oxfmt", "oxlint"],
+        },
+        "SCSS": {
+            "code_actions_on_format": {
+                "source.fixAll.stylelint": true,
+            },
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "stylelint-lsp",
+                    },
+                },
+                {
+                    "code_action": "source.fixAll.stylelint",
+                },
+            ],
+        },
+        "TSX": {
+            "format_on_save": "on",
+            "prettier": {
+                "allowed": false,
+            },
+            "formatter": [
+                {
+                    "language_server": {
+                        "name": "oxfmt",
+                    },
+                },
+                {
+                    "code_action": "source.fixAll.oxc",
+                },
+            ],
+        },
+    },
+    "lsp": {
+        "oxfmt": {
+            "initialization_options": {
+                "settings": {
+                    "fmt.configPath": null,
+                    "run": "onSave",
+                },
+            },
+        },
+        "oxlint": {
+            "initialization_options": {
+                "settings": {
+                    "configPath": null,
+                    "disableNestedConfig": false,
+                    "fixKind": "safe_fix",
+                    "run": "onType",
+                    "unusedDisableDirectives": "deny",
+                },
+            },
+        },
+        "stylelint-lsp": {
+            "settings": {
+                "stylelint": {
+                    // these are the default settings, you shouldn't need to set most of them, only add them as needed
+                    "config": null,
+                    "configFile": "",
+                    "configBasedir": "",
+                    "customSyntax": "",
+                    "ignoreDisables": false,
+                    "packageManager": "npm",
+                    "reportDescriptionlessDisables": false,
+                    "reportInvalidScopeDisables": false,
+                    "reportNeedlessDisables": false,
+                    "snippet": ["css", "postcss", "scss"],
+                    "stylelintPath": "",
+                    // if you are using a plugin to process other syntaxes (for instance scss, or css-in-js)
+                    // you also need to set the syntax in your stylelint config or in the `customSyntax` setting above
+                    // then specify the language identifier related to your custom syntax (for instance `javascript` for `css-in-js`)
+                    // for more info refer to: https://github.com/stylelint/vscode-stylelint?tab=readme-ov-file#%EF%B8%8F-only-css-and-postcss-are-validated-by-default
+                    "validate": ["css", "postcss", "scss"],
+                },
+            },
+        },
+    },
+}

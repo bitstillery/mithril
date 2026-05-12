@@ -11,9 +11,7 @@ import type {SessionStore} from './session'
 import type {SSRAccessContext} from '../ssrContext'
 
 declare global {
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     var __SSR_MODE__: boolean | undefined
-    // eslint-disable-next-line @typescript-eslint/naming-convention
     var __SSR_URL__: string | undefined
 }
 
@@ -52,9 +50,9 @@ export async function getBunProcessedTemplate(
 ): Promise<string> {
     // Fetch from Bun's route handler to get processed template with HMR scripts
     // Use a special route that Bun processes but we don't use for SSR
-    const templateUrl = `http://localhost:${port}${templateRoute}`
+    const template_url = `http://localhost:${port}${templateRoute}`
     try {
-        const response = await fetch(templateUrl)
+        const response = await fetch(template_url)
         if (response.ok) {
             return await response.text()
         }
@@ -103,7 +101,11 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             globalThis.__SSR_URL__ = req.url
 
             const routeCount = Object.keys(options.routes).length
-            logger.debug('resolving route', {pathname, routeCount, routeExists: !!options.routes[pathname]})
+            logger.debug('resolving route', {
+                pathname,
+                routeCount,
+                routeExists: !!options.routes[pathname],
+            })
 
             const result = await m.route.resolve(pathname, options.routes, m.renderToString)
             const t2 = performance.now()
@@ -115,7 +117,11 @@ export async function createSSRResponse(pathname: string, req: Request, options:
                 meta && Object.keys(meta).length > 0 ? {...baseSerializedState, __meta: meta} : baseSerializedState
             const htmlLength = appHtml?.length || 0
 
-            logger.debug('route resolved', {pathname, htmlLength, resultType: typeof result === 'string' ? 'string' : 'object'})
+            logger.debug('route resolved', {
+                pathname,
+                htmlLength,
+                resultType: typeof result === 'string' ? 'string' : 'object',
+            })
 
             const emptyHtml = !appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>'
             if (emptyHtml) {
@@ -180,9 +186,9 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 
             return new Response(html, {
                 headers: {
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    //
                     'Content-Type': 'text/html; charset=utf-8',
-                    // eslint-disable-next-line @typescript-eslint/naming-convention
+                    //
                     'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
                 },
             })
@@ -198,7 +204,7 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 }
 
 /**
- * Create session update API handler factory
+ * Create se
  * Returns a handler function for POST /api/session requests
  */
 export function createSessionUpdateHandler(
@@ -229,7 +235,6 @@ export function createSessionUpdateHandler(
             })
 
             return new Response(JSON.stringify({success: true}), {
-                // eslint-disable-next-line @typescript-eslint/naming-convention
                 headers: {'Content-Type': 'application/json'},
             })
         } catch (error) {
