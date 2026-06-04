@@ -63,10 +63,40 @@ function formatLevel(level: 'info' | 'debug' | 'warn' | 'error'): string {
 }
 
 function formatPrefixForServer(prefix: string): string {
-    if (prefix === '[ssr]') {
-        return colorize(prefix, colors.bright + colors.magenta)
+    return colorize(prefix, getColorByHash(prefix))
+}
+
+/** Simple hash function for string to generate a consistent number. */
+function hashString(str: string): number {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = (hash << 5) - hash + char
+        hash = hash & hash // Convert to 32bit integer
     }
-    return colorize(prefix, colors.dim + colors.cyan)
+    return Math.abs(hash)
+}
+
+/** Get a color based on hash of the input string. */
+function getColorByHash(text: string): string {
+    const colorOptions = [
+        // Bright variants
+        colors.bright + colors.red,
+        colors.bright + colors.green,
+        colors.bright + colors.yellow,
+        colors.bright + colors.blue,
+        colors.bright + colors.magenta,
+        colors.bright + colors.cyan,
+        // Regular variants
+        colors.red,
+        colors.green,
+        colors.yellow,
+        colors.blue,
+        colors.magenta,
+        colors.cyan,
+    ]
+    const hash = hashString(text)
+    return colorOptions[hash % colorOptions.length]
 }
 
 const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null
