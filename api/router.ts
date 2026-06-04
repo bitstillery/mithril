@@ -615,14 +615,6 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                     // resolver.render does: m(layout, null, componentVnode)
                                     const renderedVnode = resolver.render(componentVnode)
                                     const result = await renderToString(renderedVnode)
-                                    const html = typeof result === 'string' ? result : result.html
-                                    if (html) {
-                                        logger.debug(`rendered route component`, {
-                                            pathname,
-                                            route: matchedRoute,
-                                            htmlSize: html.length,
-                                        })
-                                    }
                                     return result
                                 } catch (error) {
                                     logger.error('route render failed', error, {

@@ -100,13 +100,6 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 
             globalThis.__SSR_URL__ = req.url
 
-            const routeCount = Object.keys(options.routes).length
-            logger.debug('resolving route', {
-                pathname,
-                routeCount,
-                routeExists: !!options.routes[pathname],
-            })
-
             const result = await m.route.resolve(pathname, options.routes, m.renderToString)
             const t2 = performance.now()
 
@@ -115,13 +108,6 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             const meta = context.ssrStateMeta
             const serializedState =
                 meta && Object.keys(meta).length > 0 ? {...baseSerializedState, __meta: meta} : baseSerializedState
-            const htmlLength = appHtml?.length || 0
-
-            logger.debug('route resolved', {
-                pathname,
-                htmlLength,
-                resultType: typeof result === 'string' ? 'string' : 'object',
-            })
 
             const emptyHtml = !appHtml || appHtml.trim() === '' || appHtml.trim() === '<div></div>'
             if (emptyHtml) {
