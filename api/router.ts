@@ -365,9 +365,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     }
     route.get = function (): string {
         // If currentPath is not set (e.g., during SSR before route.resolve is called),
-        // fall back to extracting pathname from __SSR_URL__ using the isomorphic URI API
+        // fall back to extracting pathname + search from __SSR_URL__ using the isomorphic URI API
         if (currentPath === undefined) {
-            return getPathname()
+            return getPathname() + getSearch()
         }
         return currentPath ?? ''
     }

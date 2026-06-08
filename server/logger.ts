@@ -120,10 +120,10 @@ export interface SsrPageSummaryFields {
  */
 export function formatSsrPageSummaryLine(fields: SsrPageSummaryFields): string {
     const d = (s: string) => colorize(s, colors.dim + colors.white)
-    const n = (v: number) => colorize(String(Math.round(v * 100) / 100), colors.bright + colors.yellow)
+    const n = (v: number) => String(Math.round(v))
     const path = colorize(fields.pathname, colors.green)
     const method = colorize(fields.method, colors.cyan)
-    return `${d('page')} ${method} ${path} ${d('ms')} ${n(fields.msTotal)} ${d('body')} ${n(fields.bytesHtml)}${d('B')} ${d('state')} ${n(fields.bytesState)}${d('B')}`
+    return `${d('page')} ${method} ${path} ${n(fields.msTotal)}ms ${d('body')} ${n(fields.bytesHtml / 1024)}KB ${d('state')} ${n(fields.bytesState / 1024)}KB`
 }
 
 export interface LogContext {

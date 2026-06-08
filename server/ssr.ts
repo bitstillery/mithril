@@ -94,11 +94,11 @@ export async function createSSRResponse(pathname: string, req: Request, options:
 
     return runWithContextAsync(context, async () => {
         try {
+            globalThis.__SSR_URL__ = req.url
+
             const t0 = performance.now()
             await options.initRequestContext(context)
             const t1 = performance.now()
-
-            globalThis.__SSR_URL__ = req.url
 
             const result = await m.route.resolve(pathname, options.routes, m.renderToString)
             const t2 = performance.now()
