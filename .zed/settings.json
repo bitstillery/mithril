@@ -9,112 +9,112 @@
     "languages": {
         "CSS": {
             "code_actions_on_format": {
-                "source.fixAll.stylelint": true,
-            },
+                "source.fixAll.stylelint": true
+            }
         },
         "HTML": {
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "oxfmt",
-                    },
-                },
-            ],
+                        "name": "oxfmt"
+                    }
+                }
+            ]
         },
         "JavaScript": {
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "oxfmt",
-                    },
+                        "name": "oxfmt"
+                    }
                 },
                 {
-                    "code_action": "source.fixAll.oxc",
-                },
-            ],
+                    "code_action": "source.fixAll.oxc"
+                }
+            ]
         },
         "JSON": {
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "oxfmt",
-                    },
-                },
-            ],
+                        "name": "oxfmt"
+                    }
+                }
+            ]
         },
         "TypeScript": {
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "oxfmt",
-                    },
+                        "name": "oxfmt"
+                    }
                 },
                 {
-                    "code_action": "source.fixAll.oxc",
-                },
+                    "code_action": "source.fixAll.oxc"
+                }
             ],
-            "language_servers": ["tsgo", "vtsls", "oxfmt", "oxlint"],
+            "language_servers": ["tsgo", "vtsls", "oxfmt", "oxlint"]
         },
         "SCSS": {
             "code_actions_on_format": {
-                "source.fixAll.stylelint": true,
+                "source.fixAll.stylelint": true
             },
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "stylelint-lsp",
-                    },
+                        "name": "stylelint-lsp"
+                    }
                 },
                 {
-                    "code_action": "source.fixAll.stylelint",
-                },
-            ],
+                    "code_action": "source.fixAll.stylelint"
+                }
+            ]
         },
         "TSX": {
             "format_on_save": "on",
             "prettier": {
-                "allowed": false,
+                "allowed": false
             },
             "formatter": [
                 {
                     "language_server": {
-                        "name": "oxfmt",
-                    },
+                        "name": "oxfmt"
+                    }
                 },
                 {
-                    "code_action": "source.fixAll.oxc",
-                },
-            ],
-        },
+                    "code_action": "source.fixAll.oxc"
+                }
+            ]
+        }
     },
     "lsp": {
         "oxfmt": {
             "initialization_options": {
                 "settings": {
                     "fmt.configPath": null,
-                    "run": "onSave",
-                },
-            },
+                    "run": "onSave"
+                }
+            }
         },
         "oxlint": {
             "initialization_options": {
@@ -123,9 +123,9 @@
                     "disableNestedConfig": false,
                     "fixKind": "safe_fix",
                     "run": "onType",
-                    "unusedDisableDirectives": "deny",
-                },
-            },
+                    "unusedDisableDirectives": "deny"
+                }
+            }
         },
         "stylelint-lsp": {
             "settings": {
@@ -146,9 +146,9 @@
                     // you also need to set the syntax in your stylelint config or in the `customSyntax` setting above
                     // then specify the language identifier related to your custom syntax (for instance `javascript` for `css-in-js`)
                     // for more info refer to: https://github.com/stylelint/vscode-stylelint?tab=readme-ov-file#%EF%B8%8F-only-css-and-postcss-are-validated-by-default
-                    "validate": ["css", "postcss", "scss"],
-                },
-            },
-        },
-    },
+                    "validate": ["css", "postcss", "scss"]
+                }
+            }
+        }
+    }
 }

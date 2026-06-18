@@ -118,6 +118,10 @@ function merge_deep(target: any, ...sources: any[]): any {
 
 const DEFAULT_LOOKUP_VERIFY_INTERVAL = 1000 * 10 // 10 seconds
 const DEFAULT_LOOKUP_TTL = 1000 * 60 * 60 * 24 // 1 day
+const DEFAULT_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year, in seconds
+// Browsers cap a single cookie at ~4KB; stay well under so we never silently drop a write
+// or bloat every request. The cookie tier is for small, render-affecting preferences only.
+const MAX_COOKIE_BYTES = 3500
 
 // Counter for generating unique store instance names
 let storeInstanceCounter = 0
@@ -131,6 +135,10 @@ let storeInstanceCounter = 0
  * - temporary: not persisted (resets on reload)
  * - tab: sessionStorage (survives page reloads, clears when tab closes)
  * - session: server-side session storage (optional, off by default; requires backend, hydrated via SSR)
+ * - cookie: a single JSON cookie (optional, off by default). Unlike localStorage, a cookie is sent
+ *   on the SSR document request, so the server can render with these values and avoid a hydration
+ *   flash. For small, render-affecting preferences only (≤MAX_COOKIE_BYTES) — never large or
+ *   growing data (it ships on every request).
  */
 export class Store<T extends Record<string, any> = Record<string, any>> {
     private stateInstance: State<T>
@@ -139,17 +147,30 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         temporary: {} as Partial<T>,
         tab: {} as Partial<T>,
         session: {} as Partial<T>,
+        cookie: {} as Partial<T>,
     }
     private lookup_verify_interval: number | null = null
     private lookup_ttl: number
     private computedPropertiesSetup?: () => void
     private storageKey: string
     private tabStorageKey: string
+    private cookieKey: string
+    private cookieMaxAge: number
 
-    constructor(options: {lookup_ttl?: number; storageKey?: string; tabStorageKey?: string} = {lookup_ttl: DEFAULT_LOOKUP_TTL}) {
+    constructor(
+        options: {
+            lookup_ttl?: number
+            storageKey?: string
+            tabStorageKey?: string
+            cookieKey?: string
+            cookieMaxAge?: number
+        } = {lookup_ttl: DEFAULT_LOOKUP_TTL},
+    ) {
         this.lookup_ttl = options.lookup_ttl || DEFAULT_LOOKUP_TTL
         this.storageKey = options.storageKey ?? 'store'
         this.tabStorageKey = options.tabStorageKey ?? this.storageKey
+        this.cookieKey = options.cookieKey ?? 'store_prefs'
+        this.cookieMaxAge = options.cookieMaxAge ?? DEFAULT_COOKIE_MAX_AGE
         // Initialize with empty state, will be loaded later (ADR-0013: defer computeds until ready() is called)
         const instanceName = `store.instance.${storeInstanceCounter++}`
         this.stateInstance = state({} as T, instanceName, {deferComputed: true})
@@ -275,7 +296,13 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         }
     }
 
-    load(saved: Partial<T>, temporary: Partial<T>, tab: Partial<T> = {} as Partial<T>, session: Partial<T> = {} as Partial<T>) {
+    load(
+        saved: Partial<T>,
+        temporary: Partial<T>,
+        tab: Partial<T> = {} as Partial<T>,
+        session: Partial<T> = {} as Partial<T>,
+        cookie: Partial<T> = {} as Partial<T>,
+    ) {
         const restored_state = {
             tab: this.get_tab_storage(this.tabStorageKey),
             store: this.get(this.storageKey),
@@ -286,6 +313,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
             temporary,
             tab,
             session,
+            cookie,
         }
 
         try {
@@ -321,6 +349,12 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         // Session state comes from server (SSR), not localStorage
         const final_state = merge_deep(temp_state, copy_object(session))
 
+        // Merge cookie state last so it wins for its keys. On the client we read the actual cookie
+        // from document.cookie; during SSR there is no document, so the caller passes the
+        // request-derived values as the `cookie` template (same pattern as session/sessionTemplate).
+        const cookie_state = merge_deep(copy_object(cookie), this.get_cookie(this.cookieKey))
+        merge_deep(final_state, cookie_state)
+
         // Merge templates (including computed properties) into "merged initial state"
         // This will be stored in registry so computed properties can be automatically restored
         // Use copy_object_preserve_functions to deep copy while preserving functions
@@ -331,7 +365,15 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         const mergedInitialTab = tab && Object.keys(tab).length > 0 ? {tab: copy_object_preserve_functions(tab)} : {}
         // Session template is merged directly (no nesting needed, structure matches final_state)
         const mergedInitialSession = copy_object_preserve_functions(session)
-        const mergedInitial = merge_deep(mergedInitialSaved, mergedInitialTemporary, mergedInitialTab, mergedInitialSession)
+        // Cookie template is merged directly too (structure matches final_state)
+        const mergedInitialCookie = copy_object_preserve_functions(cookie)
+        const mergedInitial = merge_deep(
+            mergedInitialSaved,
+            mergedInitialTemporary,
+            mergedInitialTab,
+            mergedInitialSession,
+            mergedInitialCookie,
+        )
 
         // Update registry entry to store merged templates as "initial" state
         // This allows deserializeAllStates() to automatically restore computed properties
@@ -365,19 +407,21 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
     }
 
     /**
-     * Persist state to storage. When no options are passed, saves to localStorage (saved) and
-     * sessionStorage (tab). Session (server-side) is off by default; pass { session: true } to persist it.
+     * Persist state to storage. When no options are passed, saves to localStorage (saved),
+     * sessionStorage (tab), and the cookie tier (when a cookie template is registered). Session
+     * (server-side) is off by default; pass { session: true } to persist it.
      */
-    async save(options?: {saved?: boolean; tab?: boolean; session?: boolean}): Promise<void> {
+    async save(options?: {saved?: boolean; tab?: boolean; session?: boolean; cookie?: boolean}): Promise<void> {
         // Skip saving during SSR (server-side rendering in Bun)
         // On the server, there's no localStorage/sessionStorage and no need to persist state
         if (globalThis.__SSR_MODE__) {
             return
         }
 
-        // Default: write to localStorage and sessionStorage when no options; session is opt-in
+        // Default: write to localStorage, sessionStorage and cookie when no options; session is opt-in
         const writeLocalStorage = options?.saved ?? options === undefined
         const writeSessionStorage = options?.tab ?? options === undefined
+        const writeCookie = options?.cookie ?? options === undefined
         const writeSessionApi = options?.session === true
 
         const statePlain = serializeStore(this.stateInstance)
@@ -391,6 +435,12 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         // This ensures cached values (e.g. filter/sort state) are never lost when save() is called.
         if ((statePlain as any).lookup) {
             this.persist_lookup_to_local_storage(statePlain)
+        }
+
+        // Write cookie-backed preferences (small, SSR-visible). Only when a cookie template is
+        // registered, so consumers that don't opt in never get an empty cookie written.
+        if (writeCookie && this.templates.cookie && Object.keys(this.templates.cookie).length > 0) {
+            this.set_cookie(this.cookieKey, this.blueprint(statePlain, copy_object(this.templates.cookie)))
         }
 
         // Write to sessionStorage (tab-scoped, cleared when tab closes)
@@ -473,6 +523,43 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
             return window.localStorage.setItem(key, JSON.stringify(item))
         } catch (err) {
             console.error('Cannot use Local Storage; continue without.', err)
+        }
+    }
+
+    /**
+     * Read and parse the JSON cookie tier. Returns {} when there is no document (SSR), the cookie
+     * is absent, or it cannot be parsed. During SSR the request cookie is injected via the `cookie`
+     * template in load() instead, so this only does real work in the browser.
+     */
+    get_cookie(key: string): Record<string, any> {
+        if (typeof document === 'undefined') return {}
+        try {
+            const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${key}=([^;]*)`))
+            if (!match) return {}
+            const parsed = JSON.parse(decodeURIComponent(match[1]))
+            return parsed && typeof parsed === 'object' ? parsed : {}
+        } catch {
+            return {}
+        }
+    }
+
+    /**
+     * Write the cookie tier as a single JSON cookie. Skips the write (with a warning) when the
+     * serialized value would exceed MAX_COOKIE_BYTES, so we never silently corrupt requests.
+     */
+    set_cookie(key: string, item: object): void {
+        if (typeof document === 'undefined') return
+        try {
+            const value = encodeURIComponent(JSON.stringify(item))
+            if (value.length > MAX_COOKIE_BYTES) {
+                console.warn(
+                    `[store] cookie '${key}' is ${value.length} bytes, over the ${MAX_COOKIE_BYTES} limit; skipping write. Keep the cookie tier small.`,
+                )
+                return
+            }
+            document.cookie = `${key}=${value}; Path=/; SameSite=Lax; Max-Age=${this.cookieMaxAge}`
+        } catch (err) {
+            console.error('Cannot write cookie; continue without.', err)
         }
     }
 

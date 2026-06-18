@@ -4,26 +4,23 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.6.0](https://github.com/bitstillery/mithril/compare/v3.4.2...v3.6.0) (2026-06-09)
 
-
 ### Features
 
-* **render:** improve hydration mismatch diagnostics and structured logging ([fbb47a1](https://github.com/bitstillery/mithril/commit/fbb47a133acc27f2ce85a92da173a118f7718249))
-* **server:** add ssr summary logging and fix store blueprint for proxies ([8c71b45](https://github.com/bitstillery/mithril/commit/8c71b45721e024c872dd3697333c511b84bc5672))
-
+- **render:** improve hydration mismatch diagnostics and structured logging ([fbb47a1](https://github.com/bitstillery/mithril/commit/fbb47a133acc27f2ce85a92da173a118f7718249))
+- **server:** add ssr summary logging and fix store blueprint for proxies ([8c71b45](https://github.com/bitstillery/mithril/commit/8c71b45721e024c872dd3697333c511b84bc5672))
 
 ### Bug Fixes
 
-* **core:** mirror dynamic nested keys on state proxy target ([d041120](https://github.com/bitstillery/mithril/commit/d04112006caf50fd7d09fda2102b2ae45de219d3))
-* **render:** deserialize nested state via proxy setter ([5aae7c8](https://github.com/bitstillery/mithril/commit/5aae7c8bbc8e702f710c31c026bf73dff1fd582c))
-* **render:** share cachedAttrsIsStaticMap across bundles and capture redraw for async oninit ([43e5c91](https://github.com/bitstillery/mithril/commit/43e5c912784e3e1372e9e7436458b380e9a57417))
-* **render:** skip fragment wrapper during hydration for SSR parity ([090ba29](https://github.com/bitstillery/mithril/commit/090ba2966b406ac69b419a04966da0202018a6b4))
-* ssr query params ([ac4ce21](https://github.com/bitstillery/mithril/commit/ac4ce21fe7732c4b59e64334ae567fd284a5a9b2))
-
+- **core:** mirror dynamic nested keys on state proxy target ([d041120](https://github.com/bitstillery/mithril/commit/d04112006caf50fd7d09fda2102b2ae45de219d3))
+- **render:** deserialize nested state via proxy setter ([5aae7c8](https://github.com/bitstillery/mithril/commit/5aae7c8bbc8e702f710c31c026bf73dff1fd582c))
+- **render:** share cachedAttrsIsStaticMap across bundles and capture redraw for async oninit ([43e5c91](https://github.com/bitstillery/mithril/commit/43e5c912784e3e1372e9e7436458b380e9a57417))
+- **render:** skip fragment wrapper during hydration for SSR parity ([090ba29](https://github.com/bitstillery/mithril/commit/090ba2966b406ac69b419a04966da0202018a6b4))
+- ssr query params ([ac4ce21](https://github.com/bitstillery/mithril/commit/ac4ce21fe7732c4b59e64334ae567fd284a5a9b2))
 
 ### Code Refactoring
 
-* **render:** replace content-matching hydration with positional adoption ([3fe7459](https://github.com/bitstillery/mithril/commit/3fe74598bcecd5192c2a1361c6223ca382560baf))
-* **render:** use module-scoped cached attrs static map ([25dd994](https://github.com/bitstillery/mithril/commit/25dd994d2ab083568caf999eb085eb73e6714783))
+- **render:** replace content-matching hydration with positional adoption ([3fe7459](https://github.com/bitstillery/mithril/commit/3fe74598bcecd5192c2a1361c6223ca382560baf))
+- **render:** use module-scoped cached attrs static map ([25dd994](https://github.com/bitstillery/mithril/commit/25dd994d2ab083568caf999eb085eb73e6714783))
 
 ### [3.4.2](https://github.com/bitstillery/mithril/compare/v3.4.1...v3.4.2) (2026-03-30)
 
