@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.7.0](https://github.com/bitstillery/mithril/compare/v3.6.0...v3.7.0) (2026-06-18)
+
+
+### Features
+
+* add cookie store variant ([2ceb9d0](https://github.com/bitstillery/mithril/commit/2ceb9d084db9689b524bb2cfb87a583d84a969bf))
+
 ## [3.6.0](https://github.com/bitstillery/mithril/compare/v3.4.2...v3.6.0) (2026-06-09)
 
 ### Features
