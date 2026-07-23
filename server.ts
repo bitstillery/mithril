@@ -14,7 +14,10 @@ import censor from './util/censor'
 import type {MithrilStatic, Hyperscript} from './index'
 import type {Redraw} from './api/mount-redraw'
 
-logger.debug(`mithril ssr v${version}`)
+// `process.env.MSI_BUILD_COMMIT` is inlined by the SSR bundle's `define` (see frontend/cli/tasks.ts).
+// It is undefined when running unbundled (e.g. mithril's own tests), hence the fallback.
+const buildCommit = process.env.MSI_BUILD_COMMIT || 'dev'
+logger.debug(`mithril ssr v${version} (commit ${buildCommit})`)
 
 // Create server-side renderer
 const {renderToString, renderToStringSync} = renderToStringFactory()
