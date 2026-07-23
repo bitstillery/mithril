@@ -691,7 +691,11 @@ export default function renderFactory() {
                     const originalNextSibling = nextSibling
                     let pos = 2147483647,
                         matched = 0
-                    const oldIndices = Array.from({length: end - start + 1}, () => -1)
+                    // See the note in vnode.ts's normalizeChildren: `Array.from({length: n}, () => -1)`
+                    // is ~14x slower than this on V8 (~146ms vs ~10ms for 200k calls at 24 entries),
+                    // since it adds a per-element mapper call on top of the slower allocation path.
+                    // oxlint-disable-next-line no-new-array
+                    const oldIndices = new Array(end - start + 1).fill(-1)
                     const map: Record<string, number> = Object.create(null)
                     for (let i = start; i <= end; i++) {
                         if (vnodes[i] != null) map[vnodes[i]!.key!] = i

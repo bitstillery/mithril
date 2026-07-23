@@ -102,7 +102,13 @@ const normalize = function (node: any): Vnode | null {
 const normalizeChildren = function (input: any[]): (Vnode | null)[] {
     // Preallocate the array length (initially holey) and fill every index immediately in order.
     // Benchmarking shows better performance on V8.
-    const children = Array.from({length: input.length}) as (Vnode | null)[]
+    //
+    // Do NOT let a linter rewrite this to `Array.from({length: n})`: that is not holey, it walks the
+    // array-like/iterator path, and on V8 it is ~15x slower here (measured on node 22: ~98ms vs ~6.4ms
+    // for 200k calls at 12 children). This is the hottest function in a portal render profile, so the
+    // difference is not academic — it was silently lost once already to an oxlint autofix.
+    // oxlint-disable-next-line no-new-array
+    const children = new Array(input.length) as (Vnode | null)[]
     // Count the number of keyed normalized vnodes for consistency check.
     // Note: this is a perf-sensitive check.
     // Fun fact: merging the loop like this is somehow faster than splitting
