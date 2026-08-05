@@ -557,7 +557,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 )
                 return
             }
-            document.cookie = `${key}=${value}; Path=/; SameSite=Lax; Max-Age=${this.cookieMaxAge}`
+            // Conditional so plain-http dev hosts can still write the cookie at all.
+            const secure = location.protocol === 'https:' ? '; Secure' : ''
+            document.cookie = `${key}=${value}; Path=/; SameSite=Lax${secure}; Max-Age=${this.cookieMaxAge}`
         } catch (err) {
             console.error('Cannot write cookie; continue without.', err)
         }
