@@ -619,12 +619,22 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
         }
 
         const ensurePropertySignal = (target: any, prop: string | symbol, key: string) => {
-            if (!nestedSignalMap.has(key)) {
-                const originalValue = Reflect.get(target, prop)
-                if (originalValue === undefined) return undefined
-                nestedSignalMap.set(key, createPropertySignal(originalValue))
+            // One Map lookup, not two. This runs on EVERY property read of every state object — the
+            // hottest path in the framework — and after the first access the signal always exists, so the
+            // old `has()` + `get()` pair doubled the cost of the common case.
+            //
+            // `get()` returning undefined is an exact substitute for `!has()`: createPropertySignal never
+            // returns undefined (it always yields a Signal, falling back to `signal(undefined)`), and the
+            // early return below stores nothing.
+            const existing = nestedSignalMap.get(key)
+            if (existing !== undefined) {
+                return existing
             }
-            return nestedSignalMap.get(key)
+            const originalValue = Reflect.get(target, prop)
+            if (originalValue === undefined) return undefined
+            const created = createPropertySignal(originalValue)
+            nestedSignalMap.set(key, created)
+            return created
         }
         wrapped = new Proxy(obj, {
             get(target, prop) {
@@ -647,7 +657,9 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                     }
                 }
 
-                const propStr = String(prop)
+                // Property keys are already strings in virtually every access; `String()` on a symbol is
+                // the rare path, so don't make the common one pay for the conversion.
+                const propStr = typeof prop === 'string' ? prop : String(prop)
 
                 // Check for $ prefix convention (deepsignal-style: returns raw signal)
                 if (propStr.startsWith('$') && propStr.length > 1) {

@@ -1,7 +1,7 @@
 /**
  * Mithril benchmarking suite.
  * Run: bun run bench [topic]
- * Topics: hyperscript | render | signal | state | vnode-alloc
+ * Topics: hyperscript | render | signal | state | store-hot-path | vnode-alloc
  * Omit topic to run all benchmarks.
  */
 import {run} from 'mitata'
@@ -21,6 +21,9 @@ switch (topic) {
     case 'state':
         await import('./scenarios/state')
         break
+    case 'store-hot-path':
+        await import('./scenarios/store-hot-path')
+        break
     case 'vnode-alloc':
         await import('./scenarios/vnode-alloc')
         break
@@ -30,11 +33,12 @@ switch (topic) {
         await import('./scenarios/render')
         await import('./scenarios/signal')
         await import('./scenarios/state')
+        await import('./scenarios/store-hot-path')
         await import('./scenarios/vnode-alloc')
         break
     default:
         console.error(`Unknown topic: ${topic}`)
-        console.error('Topics: hyperscript, render, signal, state, vnode-alloc')
+        console.error('Topics: hyperscript, render, signal, state, store-hot-path, vnode-alloc')
         process.exit(1)
 }
 
