@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.7.1](https://github.com/bitstillery/mithril/compare/v3.7.0...v3.7.1) (2026-08-06)
+
+
+### Bug Fixes
+
+* **store:** mark the prefs cookie Secure on https ([ae214a4](https://github.com/bitstillery/mithril/commit/ae214a4278beebe79a9b1879002ddd9b75e7bff9))
+
+
+### Performance Improvements
+
+* **render:** restore new Array preallocation in hot paths ([bf84708](https://github.com/bitstillery/mithril/commit/bf84708e79c20b1db37b802371d533abadb7ac9f))
+* **state:** collapse the property-signal lookup on the hot read path ([f6d7a8c](https://github.com/bitstillery/mithril/commit/f6d7a8c6452ab2b68ecb35ff0f253f0a6fd62189))
+
 ## [3.7.0](https://github.com/bitstillery/mithril/compare/v3.6.0...v3.7.0) (2026-06-18)
 
 ### Features
