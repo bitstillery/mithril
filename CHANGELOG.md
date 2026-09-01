@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.8.0](https://github.com/bitstillery/mithril/compare/v3.7.1...v3.8.0) (2026-09-01)
+
+
+### Features
+
+* **querystring:** serialize arrays as a comma list ([adba5e4](https://github.com/bitstillery/mithril/commit/adba5e4fa5ef74315d869673d34086e61a627e4c))
+
 ### [3.7.1](https://github.com/bitstillery/mithril/compare/v3.7.0...v3.7.1) (2026-08-06)
 
 ### Bug Fixes
