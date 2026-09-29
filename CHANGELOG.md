@@ -4,16 +4,14 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [3.9.0](https://github.com/bitstillery/mithril/compare/v3.8.0...v3.9.0) (2026-09-29)
 
-
 ### Features
 
-* **state:** type computed signals, tier partials and allowComputed ([a065522](https://github.com/bitstillery/mithril/commit/a065522467016d31d733fedbad99f16393c2a474))
-
+- **state:** type computed signals, tier partials and allowComputed ([a065522](https://github.com/bitstillery/mithril/commit/a065522467016d31d733fedbad99f16393c2a474))
 
 ### Bug Fixes
 
-* **render:** accept null as a JSX key ([fe4e2e1](https://github.com/bitstillery/mithril/commit/fe4e2e1e6affb5904a8853957b75de296c6534b6))
-* **state:** give records no `$` signals for their index signature ([30abdc6](https://github.com/bitstillery/mithril/commit/30abdc6d1ca6c3bfd54b1f722b29474f16ea8e9a))
+- **render:** accept null as a JSX key ([fe4e2e1](https://github.com/bitstillery/mithril/commit/fe4e2e1e6affb5904a8853957b75de296c6534b6))
+- **state:** give records no `$` signals for their index signature ([30abdc6](https://github.com/bitstillery/mithril/commit/30abdc6d1ca6c3bfd54b1f722b29474f16ea8e9a))
 
 ## [3.8.0](https://github.com/bitstillery/mithril/compare/v3.7.1...v3.8.0) (2026-09-01)
 
