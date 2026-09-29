@@ -10,9 +10,7 @@ export default function buildQueryString(object: Record<string, any>): string {
             // and the list still splits unambiguously.
             if (value.length === 0) return
             args.push(
-                encodeURIComponent(key) +
-                    '=' +
-                    value.map((item) => (item == null ? '' : encodeURIComponent(item))).join(','),
+                encodeURIComponent(key) + '=' + value.map((item) => (item == null ? '' : encodeURIComponent(item))).join(','),
             )
         } else if (Object.prototype.toString.call(value) === '[object Object]') {
             for (const i in value) {
