@@ -26,7 +26,7 @@ jobs:
               run: bun run lint
 
             - name: Run type check
-              run: bun run tsgo
+              run: bun run lint:ts-types
 
             - name: Run tests
               run: bun test 2>&1
