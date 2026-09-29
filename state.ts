@@ -874,7 +874,9 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
  * - Functions: $prop => ComputedSignal of the getter's return type
  */
 export type StateSignals<T extends Record<string, any>> = {
-    [K in keyof T as K extends string ? `$${K}` : never]: T[K] extends (...args: any[]) => infer R
+    // Only for declared keys: a record's index signature would otherwise gain a `$${string}` twin, and every
+    // lookup by a `string` key would read as `Value | Signal<Value>`.
+    [K in keyof T as K extends string ? (string extends K ? never : `$${K}`) : never]: T[K] extends (...args: any[]) => infer R
         ? ComputedSignal<R>
         : T[K] extends object
           ? Signal<State<T[K]>>
