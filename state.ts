@@ -871,11 +871,11 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
  * Mapped type that adds $prop for each key, returning the Signal for that property.
  * - Primitives: $prop => Signal<T[K]>
  * - Nested objects: $prop => Signal<State<T[K]>>
- * - Functions: $prop => ComputedSignal (computed from getter)
+ * - Functions: $prop => ComputedSignal of the getter's return type
  */
 export type StateSignals<T extends Record<string, any>> = {
-    [K in keyof T as K extends string ? `$${K}` : never]: T[K] extends (...args: any[]) => any
-        ? ComputedSignal<any>
+    [K in keyof T as K extends string ? `$${K}` : never]: T[K] extends (...args: any[]) => infer R
+        ? ComputedSignal<R>
         : T[K] extends object
           ? Signal<State<T[K]>>
           : Signal<T[K]>
@@ -894,6 +894,27 @@ export type State<T extends Record<string, any>> = T extends (infer Elem)[]
     : {
           [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : T[K] extends Record<string, any> ? State<T[K]> : T[K]
       } & StateSignals<T>
+
+/**
+ * A partial of a state shape at every depth, for the persistence tiers of a Store: each tier fills in
+ * part of a nested object (`saved` some keys of `exact`, `temporary` the rest). Arrays and computed
+ * getters are replaced wholesale, never merged element-wise.
+ */
+export type DeepPartial<T> = T extends (...args: any[]) => any
+    ? T
+    : T extends readonly unknown[]
+      ? T
+      : T extends object
+        ? {[K in keyof T]?: DeepPartial<T[K]>}
+        : T
+
+/**
+ * Opens the deferred-computed gate of a state built with `deferComputed` (ADR-0013) and marks its
+ * computeds dirty. The gate is a proxy trap rather than a key of the state, so it isn't on `State<T>`.
+ */
+export function allowComputed(stateInstance: State<any>): void {
+    ;(stateInstance as unknown as {allowComputed?: () => void}).allowComputed?.()
+}
 
 /** Function returned by watch() to remove the watcher */
 export type Unwatch = () => void

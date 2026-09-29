@@ -216,7 +216,7 @@ const server = serve({
                             sessionId,
                             sessionData,
                             stateRegistry: new Map(),
-                            store: null,
+                            store: undefined,
                         }
                     },
                     initRequestContext: async (context) => {

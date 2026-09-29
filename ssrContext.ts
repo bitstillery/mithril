@@ -5,6 +5,8 @@
  * request's context. No globals, safe under concurrent requests.
  * In the browser, getSSRContext() returns undefined and runWithContext just runs fn.
  */
+import type {Store} from './store'
+
 type StorageLike = {
     getStore(): SSRAccessContext | undefined
     run<T>(context: SSRAccessContext, fn: () => T): T
@@ -28,7 +30,7 @@ try {
  * that runs inside the same runWithContext() call.
  */
 export interface SSRAccessContext {
-    store?: any
+    store?: Store
     /** Per-request state registry for serialization; fresh Map per request. */
     stateRegistry: Map<string, {state: any; initial: any}>
     sessionId?: string

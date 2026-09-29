@@ -1,4 +1,4 @@
-import {state, State, updateStateRegistry} from './state'
+import {allowComputed, state, State, updateStateRegistry, type DeepPartial} from './state'
 import {serializeStore, deserializeStore} from './render/ssrState'
 
 // Helper function to restore computed properties (same as in ssrState.ts)
@@ -143,11 +143,11 @@ let storeInstanceCounter = 0
 export class Store<T extends Record<string, any> = Record<string, any>> {
     private stateInstance: State<T>
     private templates = {
-        saved: {} as Partial<T>,
-        temporary: {} as Partial<T>,
-        tab: {} as Partial<T>,
-        session: {} as Partial<T>,
-        cookie: {} as Partial<T>,
+        saved: {} as DeepPartial<T>,
+        temporary: {} as DeepPartial<T>,
+        tab: {} as DeepPartial<T>,
+        session: {} as DeepPartial<T>,
+        cookie: {} as DeepPartial<T>,
     }
     private lookup_verify_interval: number | null = null
     private lookup_ttl: number
@@ -193,15 +193,15 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
      * (e.g. after $s, context, or route are ready) so computeds that depend on them can run.
      */
     ready(): void {
-        ;(this.stateInstance as any).allowComputed?.()
+        allowComputed(this.stateInstance)
     }
 
     /**
      * Merge deep on object `state`, but only the key/values in `blueprint`.
      */
-    blueprint(state: T, blueprint: Partial<T>): Partial<T> {
+    blueprint(state: T, blueprint: DeepPartial<T>): DeepPartial<T> {
         if (state == null || typeof state !== 'object') {
-            return {} as Partial<T>
+            return {} as DeepPartial<T>
         }
         const result: any = {}
         for (const key of Object.keys(blueprint)) {
@@ -227,7 +227,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 result[key] = stateValue
             }
         }
-        return result as Partial<T>
+        return result as DeepPartial<T>
     }
 
     clean_lookup() {
@@ -297,11 +297,11 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
     }
 
     load(
-        saved: Partial<T>,
-        temporary: Partial<T>,
-        tab: Partial<T> = {} as Partial<T>,
-        session: Partial<T> = {} as Partial<T>,
-        cookie: Partial<T> = {} as Partial<T>,
+        saved: DeepPartial<T>,
+        temporary: DeepPartial<T>,
+        tab: DeepPartial<T> = {} as DeepPartial<T>,
+        session: DeepPartial<T> = {} as DeepPartial<T>,
+        cookie: DeepPartial<T> = {} as DeepPartial<T>,
     ) {
         const restored_state = {
             tab: this.get_tab_storage(this.tabStorageKey),

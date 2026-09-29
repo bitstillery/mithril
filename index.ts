@@ -12,7 +12,7 @@ import censor from './util/censor'
 import nextTick from './util/next_tick'
 import domFor from './render/domFor'
 import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './signal'
-import {state, watch, registerState, getRegisteredStates, clearStateRegistry, copyGlobalStatesToContext} from './state'
+import {state, watch, registerState, getRegisteredStates, clearStateRegistry, copyGlobalStatesToContext, allowComputed} from './state'
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
@@ -101,8 +101,8 @@ setSignalRedrawCallback((sig: Signal<any>) => {
 })
 
 // Export signals API
-export {signal, computed, effect, Signal, ComputedSignal, state, watch, registerState, getRegisteredStates, clearStateRegistry}
-export type {State, StateArray, StateOptions, StateSignals, Unwatch} from './state'
+export {signal, computed, effect, Signal, ComputedSignal, state, watch, registerState, getRegisteredStates, clearStateRegistry, allowComputed}
+export type {DeepPartial, State, StateArray, StateOptions, StateSignals, Unwatch} from './state'
 
 // Export Store class
 export {Store} from './store'
