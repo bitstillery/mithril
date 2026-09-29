@@ -1,4 +1,7 @@
 {
+    "scripts": {
+        "postchangelog": "oxfmt CHANGELOG.md package.json"
+    },
     "types": [
         {"type": "feat", "section": "Features"},
         {"type": "feature", "section": "Features"},

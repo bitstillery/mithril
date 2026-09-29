@@ -60,7 +60,7 @@
         "bench:signal": "NODE_ENV=production bun run bench/index.ts signal",
         "bench:state": "NODE_ENV=production bun run bench/index.ts state",
         "bench:profile": "bun --cpu-prof-md run bench/index.ts",
-        "prepublishOnly": "bun run lint:ts",
+        "prepublishOnly": "oxfmt --check && bun run lint:ts-syntax && bun run lint:ts-types",
         "pack:dry-run": "npm pack --dry-run",
         "release": "./scripts/release.sh",
         "release:patch": "./scripts/release.sh --release-as patch",
