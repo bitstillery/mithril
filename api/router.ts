@@ -26,6 +26,15 @@ export interface RouteResolver<Attrs = Record<string, any>, State = any> {
 export type SSRState = Record<string, any>
 export type SSRResult = string | {html: string; state: SSRState}
 
+/**
+ * A route parameter as the URL can carry it. Path params are always strings; the querystring parser
+ * also turns `true`/`false` into booleans and `a[]=`/`a[b]=` keys into arrays and objects. A plain
+ * object in `history.state` is merged over the params too, so values put there must keep to this
+ * shape for the type to hold.
+ */
+export type RouteParamValue = string | boolean | RouteParamValue[] | {[key: string]: RouteParamValue}
+export type RouteParams = Record<string, RouteParamValue>
+
 export interface Route {
     (path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
     (path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
@@ -33,7 +42,10 @@ export interface Route {
     get: () => string
     prefix: string
     link: (vnode: VnodeType) => string
-    param: (key?: string) => any
+    param: {
+        (key: string): RouteParamValue | undefined
+        (): RouteParams
+    }
     params: Record<string, any>
     Link: ComponentType
     SKIP: {}

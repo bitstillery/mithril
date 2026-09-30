@@ -160,7 +160,7 @@ export type {
 } from './render/vnode'
 export {MithrilComponent}
 export type {Hyperscript} from './render/hyperscript'
-export type {Route, RouteResolver, RedirectObject} from './api/router'
+export type {Route, RouteParams, RouteParamValue, RouteResolver, RedirectObject} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'
 
 // Namespace merge: enables m.Vnode<Attrs> and m.Children when using import m from '@bitstillery/mithril'
