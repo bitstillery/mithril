@@ -437,9 +437,11 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                     const fillValue = args[0]
                                     const start = args[1] ?? 0
                                     const end = args[2] ?? signals.length
-                                    const fillSignal = toSignal(fillValue)
+                                    // A wrap per slot, so no two slots share a signal. An object fill value still reads
+                                    // back as one shared element in every slot, as native fill shares the reference:
+                                    // `toElement` returns the cached proxy for the same object.
                                     for (let i = start; i < end; i++) {
-                                        signals[i] = fillSignal
+                                        signals[i] = toElement(fillValue)
                                     }
                                     result = signals.length
                                 } else {

@@ -411,6 +411,39 @@ describe('state', () => {
         })
     })
 
+    describe('array fill', () => {
+        test('filled primitive slots each get their own signal', () => {
+            const s = state({items: [1, 2, 3]}, 'testState.fillPrimitive')
+
+            s.items.fill(0)
+            s.items[1] = 5
+
+            expect(s.items).toEqual([0, 5, 0])
+            expect(s.items.$0).not.toBe(s.items.$2)
+        })
+
+        test('an object fill value becomes one state element shared by every slot, as native fill shares it', () => {
+            const s = state({rows: [{qty: 1}, {qty: 2}, {qty: 3}]}, 'testState.fillObject')
+
+            s.rows.fill({qty: 0}, 1)
+
+            expect(s.rows[1].__isState).toBe(true)
+            expect(s.rows[1].$qty).toBeInstanceOf(Signal)
+            expect(s.rows[2]).toBe(s.rows[1])
+            s.rows[1].qty = 4
+            expect(s.rows).toEqual([{qty: 1}, {qty: 4}, {qty: 4}])
+        })
+
+        test('replacing one filled object slot leaves the others', () => {
+            const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.fillObjectReplace')
+
+            s.rows.fill({qty: 0})
+            s.rows[0] = {qty: 9}
+
+            expect(s.rows).toEqual([{qty: 9}, {qty: 0}])
+        })
+    })
+
     describe('dynamic properties', () => {
         test('accessing non-existent property returns undefined', () => {
             const s = state({items: {}}, 'testState.dynamicProps')
