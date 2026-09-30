@@ -28,19 +28,26 @@ export type VnodeDOM<Attrs = Record<string, any>, State = any> = ComponentVnode<
  */
 export type ComponentVnode<Attrs = Record<string, any>, State = any> = Omit<Vnode<Attrs, State>, 'attrs'> & {attrs: Attrs}
 
+/**
+ * The hooks are declared as methods, not function-typed properties: under `strictFunctionTypes` a
+ * property's parameters are checked contravariantly, so `Component<{name: string}>` would not be a
+ * `Component<Record<string, any>>` and `m(Icon, attrs)` could not be passed where `Children` is expected.
+ * Method parameters are bivariant, which matches how Mithril really calls them — with the vnode it
+ * built for that component.
+ */
 export interface Component<Attrs = Record<string, any>, State = any> {
-    oninit?: (vnode: ComponentVnode<Attrs, State>) => void
-    oncreate?: (vnode: ComponentVnode<Attrs, State>) => void
-    onbeforeupdate?: (vnode: ComponentVnode<Attrs, State>, old: ComponentVnode<Attrs, State>) => boolean | void
-    onupdate?: (vnode: ComponentVnode<Attrs, State>) => void
-    onbeforeremove?: (vnode: ComponentVnode<Attrs, State>) => Promise<any> | void
-    onremove?: (vnode: ComponentVnode<Attrs, State>) => void
-    view: (vnode: ComponentVnode<Attrs, State>) => Children | Vnode | null
+    oninit?(vnode: ComponentVnode<Attrs, State>): void
+    oncreate?(vnode: ComponentVnode<Attrs, State>): void
+    onbeforeupdate?(vnode: ComponentVnode<Attrs, State>, old: ComponentVnode<Attrs, State>): boolean | void
+    onupdate?(vnode: ComponentVnode<Attrs, State>): void
+    onbeforeremove?(vnode: ComponentVnode<Attrs, State>): Promise<any> | void
+    onremove?(vnode: ComponentVnode<Attrs, State>): void
+    view(vnode: ComponentVnode<Attrs, State>): Children | Vnode | null
 }
 
 export interface ComponentFactory<Attrs = Record<string, any>, State = any> {
     (...args: any[]): Component<Attrs, State>
-    view?: (vnode: ComponentVnode<Attrs, State>) => Children | Vnode | null
+    view?(vnode: ComponentVnode<Attrs, State>): Children | Vnode | null
 }
 
 export type ComponentType<Attrs = Record<string, any>, State = any> =
