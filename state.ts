@@ -512,9 +512,13 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                 }
                             }
                             return true
-                        } else if (prop === 'length') {
-                            signals.length = Number(value)
-                            // Trigger parent signal on length change (look up when called)
+                        }
+                    }
+                    if (prop === 'length') {
+                        const previousLength = signals.length
+                        const result = Reflect.set(target, prop, value)
+                        // Resizing adds or drops elements without going through a mutator, so it notifies like splice.
+                        if (signals.length !== previousLength) {
                             const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
                             if (parentSignal) {
                                 // Notify subscribers directly since the array reference hasn't changed
@@ -533,8 +537,8 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                     ;(signal as any).__redrawCallback(parentSignal)
                                 }
                             }
-                            return true
                         }
+                        return result
                     }
                     return Reflect.set(target, prop, value)
                 },

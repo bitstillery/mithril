@@ -866,4 +866,54 @@ describe('watch API', () => {
             unwatch()
         })
     })
+
+    describe('array length and fill', () => {
+        test('truncating via length should trigger watcher', () => {
+            const $state = state({ids: [1, 2, 3]}, 'watch.lengthTruncate')
+            let watchCount = 0
+
+            const unwatch = watch($state.$ids, () => {
+                watchCount++
+            })
+
+            $state.ids.length = 1
+
+            expect(watchCount).toBe(1)
+            expect($state.ids).toEqual([1])
+
+            unwatch()
+        })
+
+        test('setting length to the current length should not trigger watcher', () => {
+            const $state = state({ids: [1, 2, 3]}, 'watch.lengthUnchanged')
+            let watchCount = 0
+
+            const unwatch = watch($state.$ids, () => {
+                watchCount++
+            })
+
+            $state.ids.length = 3
+
+            expect(watchCount).toBe(0)
+            expect($state.ids).toEqual([1, 2, 3])
+
+            unwatch()
+        })
+
+        test('fill should trigger watcher', () => {
+            const $state = state({rows: [{qty: 1}, {qty: 2}]}, 'watch.fill')
+            let watchCount = 0
+
+            const unwatch = watch($state.$rows, () => {
+                watchCount++
+            })
+
+            $state.rows.fill({qty: 0})
+
+            expect(watchCount).toBe(1)
+            expect($state.rows).toEqual([{qty: 0}, {qty: 0}])
+
+            unwatch()
+        })
+    })
 })
