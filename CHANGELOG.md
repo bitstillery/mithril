@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.1](https://github.com/bitstillery/mithril/compare/v3.9.0...v3.9.1) (2026-09-30)
+
+### Bug Fixes
+
+- **render:** declare component hooks as methods ([b0dd6a9](https://github.com/bitstillery/mithril/commit/b0dd6a93defe20b1f8c8a975087e106c0556e05f))
+- **router:** type route.param by what the router can return ([6bfde3f](https://github.com/bitstillery/mithril/commit/6bfde3f026149d97432ea305d8da20fdc06c3671))
+- **state:** give each slot of a filled state array its own element ([41cda2c](https://github.com/bitstillery/mithril/commit/41cda2cc867ce5027028b335d10d1f28d35790fb))
+- **state:** notify watchers when a state array's length changes ([7dc8a17](https://github.com/bitstillery/mithril/commit/7dc8a17b399b66f4184288b8e59f574876774bb2))
+- **state:** wrap objects assigned to a state array index ([20e5a3f](https://github.com/bitstillery/mithril/commit/20e5a3ffda195b0a6e9a17347488d93551877fa3))
+
 ## [3.9.0](https://github.com/bitstillery/mithril/compare/v3.8.0...v3.9.0) (2026-09-29)
 
 ### Features
