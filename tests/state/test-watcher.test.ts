@@ -816,4 +816,54 @@ describe('watch API', () => {
             expect($filters.availability.options[1][0]).toBe('tbo')
         })
     })
+
+    describe('array index assignment', () => {
+        test('assigning an object to an index should trigger watcher', () => {
+            const $state = state({rows: [{qty: 1}, {qty: 2}]}, 'watch.indexAssignObject')
+            let watchCount = 0
+
+            const unwatch = watch($state.$rows, () => {
+                watchCount++
+            })
+
+            $state.rows[0] = {qty: 5}
+
+            expect(watchCount).toBe(1)
+            expect($state.rows[0].qty).toBe(5)
+
+            unwatch()
+        })
+
+        test('assigning a primitive to an index should trigger watcher', () => {
+            const $state = state({ids: [1, 2, 3]}, 'watch.indexAssignPrimitive')
+            let watchCount = 0
+
+            const unwatch = watch($state.$ids, () => {
+                watchCount++
+            })
+
+            $state.ids[1] = 20
+
+            expect(watchCount).toBe(1)
+            expect($state.ids).toEqual([1, 20, 3])
+
+            unwatch()
+        })
+
+        test('assigning past the end should trigger watcher', () => {
+            const $state = state({ids: [1, 2]}, 'watch.indexAssignAppend')
+            let watchCount = 0
+
+            const unwatch = watch($state.$ids, () => {
+                watchCount++
+            })
+
+            $state.ids[2] = 3
+
+            expect(watchCount).toBe(1)
+            expect($state.ids).toEqual([1, 2, 3])
+
+            unwatch()
+        })
+    })
 })

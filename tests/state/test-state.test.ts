@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
-import {state} from '../../state'
+import {state, watch} from '../../state'
 import {Signal} from '../../signal'
 
 describe('state', () => {
@@ -312,6 +312,102 @@ describe('state', () => {
 
             expect(shifted).toBe(1)
             expect(s.items).toEqual([2, 3])
+        })
+    })
+
+    describe('array index assignment', () => {
+        test('a plain object assigned to an index becomes a state element, like push', () => {
+            const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.indexAssignObject')
+
+            s.rows[0] = {qty: 5}
+            s.rows.push({qty: 7})
+
+            for (const row of [s.rows[0], s.rows[2]]) {
+                expect(row.__isState).toBe(true)
+                expect(row.$qty).toBeInstanceOf(Signal)
+            }
+            expect(s.rows[0].qty).toBe(5)
+            expect(s.rows).toEqual([{qty: 5}, {qty: 2}, {qty: 7}])
+        })
+
+        test("an index-assigned element's fields are reactive", () => {
+            const s = state(
+                {
+                    rows: [{qty: 1}],
+                    total: () => s.rows.reduce((sum: number, row: {qty: number}) => sum + row.qty, 0),
+                },
+                'testState.indexAssignReactive',
+            )
+            expect(s.total).toBe(1)
+
+            s.rows[0] = {qty: 5}
+            expect(s.total).toBe(5)
+
+            const qtyChanges: number[] = []
+            const unwatch = watch(s.rows[0].$qty, (qty: number) => qtyChanges.push(qty))
+            s.rows[0].qty = 9
+
+            expect(qtyChanges).toEqual([9])
+            expect(s.total).toBe(9)
+            unwatch()
+        })
+
+        test('assigning past the end appends a state element', () => {
+            const s = state({rows: [{qty: 1}]}, 'testState.indexAssignAppend')
+
+            s.rows[s.rows.length] = {qty: 2}
+
+            expect(s.rows.length).toBe(2)
+            expect(s.rows[1].$qty).toBeInstanceOf(Signal)
+        })
+
+        test('an existing state element is stored as-is, not re-wrapped', () => {
+            const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.indexAssignState')
+            const second = s.rows[1]
+
+            s.rows[0] = second
+
+            expect(s.rows[0]).toBe(second)
+            second.qty = 3
+            expect(s.rows[0].qty).toBe(3)
+        })
+
+        test('a nested array assigned to an index becomes a state array', () => {
+            const s = state({options: [['a', 'A']]}, 'testState.indexAssignNestedArray')
+
+            s.options[0] = ['b', 'B']
+
+            expect(s.options[0].__isState).toBe(true)
+            expect(s.options[0]).toEqual(['b', 'B'])
+        })
+
+        test("a primitive keeps the element's signal", () => {
+            const s = state({items: [1, 2, 3]}, 'testState.indexAssignPrimitive')
+            const first = s.items.$0
+
+            s.items[0] = 10
+
+            expect(s.items.$0).toBe(first)
+            expect(first.value).toBe(10)
+            expect(s.items).toEqual([10, 2, 3])
+        })
+
+        test('a primitive over an object element replaces it with a signal', () => {
+            const s = state({rows: [{qty: 1}] as any[]}, 'testState.indexAssignObjectToPrimitive')
+
+            s.rows[0] = 4
+
+            expect(s.rows[0]).toBe(4)
+            expect(s.rows.$0).toBeInstanceOf(Signal)
+        })
+
+        test('length truncation still works', () => {
+            const s = state({items: [1, 2, 3, 4]}, 'testState.lengthTruncate')
+
+            s.items.length = 2
+
+            expect(s.items.length).toBe(2)
+            expect(s.items).toEqual([1, 2])
         })
     })
 

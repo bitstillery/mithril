@@ -232,15 +232,17 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 
         // Handle arrays
         if (Array.isArray(obj)) {
-            // Arrays don't get their own signalMap - they use the parent's
-            // Nested objects AND arrays should be recursively wrapped
-            const signals = obj.map((item: any) => {
+            // Init, push/unshift, splice and index assignment all wrap through here, so an element typed as
+            // `State<E>` is one: objects and arrays become their own state proxy (the proxy is the element, not a
+            // signal around it), everything else a signal.
+            const toElement = (item: any) => {
                 if (typeof item === 'object' && item !== null) {
-                    // Recursively wrap nested objects AND arrays in Proxies
                     return initializeSignals(item, undefined, context)
                 }
                 return toSignal(item)
-            })
+            }
+            // Arrays don't get their own signalMap - they use the parent's
+            const signals = obj.map(toElement)
 
             // List of mutating array methods that should trigger the parent signal
             const mutatingMethods = new Set([
@@ -354,14 +356,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                 const deleteCount = args[1] ?? signals.length - start
                                 const newItems = args.slice(2)
 
-                                // Convert new items - nested arrays/objects become Proxies, primitives become Signals
-                                const newSignals = newItems.map((item: any) => {
-                                    if (typeof item === 'object' && item !== null) {
-                                        // Wrap objects/arrays in Proxies (NOT in Signals - the Proxy IS the value)
-                                        return initializeSignals(item, undefined, context)
-                                    }
-                                    return toSignal(item)
-                                })
+                                const newSignals = newItems.map(toElement)
 
                                 // Update the signals array (target is signals array)
                                 const removed = signals.splice(start, deleteCount, ...newSignals)
@@ -399,14 +394,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                                 let result
                                 if (propStr === 'push' || propStr === 'unshift') {
                                     const newItems = args
-                                    // Convert new items - nested arrays/objects become Proxies, primitives become Signals
-                                    const newSignals = newItems.map((item: any) => {
-                                        if (typeof item === 'object' && item !== null) {
-                                            // Wrap objects/arrays in Proxies (NOT in Signals - the Proxy IS the value)
-                                            return initializeSignals(item, undefined, context)
-                                        }
-                                        return toSignal(item)
-                                    })
+                                    const newSignals = newItems.map(toElement)
                                     if (propStr === 'push') {
                                         result = signals.push(...newSignals)
                                     } else {
@@ -493,12 +481,14 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
                 set(target, prop, value) {
                     if (typeof prop === 'string' && !isNaN(Number(prop))) {
                         const index = Number(prop)
-                        if (index >= 0 && index < signals.length) {
+                        // Assigning past the end (`arr[arr.length] = x`) appends, so it wraps and notifies like push.
+                        if ((index >= 0 && index < signals.length) || (Number.isInteger(index) && index >= signals.length)) {
                             const sig = signals[index]
-                            if (isSignal(sig)) {
+                            // A primitive over a primitive keeps the element's signal, so `arr.$i` subscribers see it.
+                            if (isSignal(sig) && (typeof value !== 'object' || value === null)) {
                                 sig.value = value
                             } else {
-                                signals[index] = toSignal(value)
+                                signals[index] = toElement(value)
                             }
                             // Trigger parent signal on element assignment (look up when called)
                             const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as any)._parentSignal
