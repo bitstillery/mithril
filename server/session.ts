@@ -83,5 +83,5 @@ export class MemorySessionStore implements SessionStore {
 export function extractSessionId(req: Request): string | null {
     const cookies = req.headers.get('cookie') || ''
     const sessionIdMatch = cookies.match(/sessionId=([^;]+)/)
-    return sessionIdMatch ? sessionIdMatch[1] : null
+    return sessionIdMatch ? sessionIdMatch[1]! : null
 }

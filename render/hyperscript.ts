@@ -31,25 +31,27 @@ function isFormAttributeKey(key: string): boolean {
     return key === 'value' || key === 'checked' || key === 'selectedIndex' || key === 'selected'
 }
 
+// A match fills groups 1-2 (tag/#id/.class) or groups 3-4 ([attr]), never both; group 6
+// is absent for a bare `[attr]`, so a bare `[class]` joins in as an empty class.
 function compileSelector(selector: string): {tag: string; attrs: Record<string, any>; is?: string} {
     let match: RegExpExecArray | null
     let tag = 'div'
-    const classes: string[] = []
+    const classes: (string | undefined)[] = []
     let attrs: Record<string, any> = {}
     let isStatic = true
     while ((match = selectorParser.exec(selector)) !== null) {
         const type = match[1]
         const value = match[2]
-        if (type === '' && value !== '') tag = value
+        if (type === '' && value !== '') tag = value!
         else if (type === '#') attrs.id = value
         else if (type === '.') classes.push(value)
-        else if (match[3][0] === '[') {
+        else if (match[3]![0] === '[') {
             let attrValue = match[6]
             if (attrValue) attrValue = attrValue.replace(/\\(["'])/g, '$1').replace(/\\\\/g, '\\')
             if (match[4] === 'class') classes.push(attrValue)
             else {
-                attrs[match[4]] = attrValue === '' ? attrValue : attrValue || true
-                if (isFormAttributeKey(match[4])) isStatic = false
+                attrs[match[4]!] = attrValue === '' ? attrValue : attrValue || true
+                if (isFormAttributeKey(match[4]!)) isStatic = false
             }
         }
     }

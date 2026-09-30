@@ -140,7 +140,7 @@ const server = serve({
         // API: serve doc content for client-side loading (when SSR data isn't available)
         const apiDocsMatch = pathname.match(/^\/api\/docs\/([^/]+)$/)
         if (apiDocsMatch) {
-            const docName = apiDocsMatch[1]
+            const docName = apiDocsMatch[1]!
             try {
                 const [page, navGuides, navMethods, navGuidesStructure, navMethodsStructure] = await Promise.all([
                     loadMarkdownFromDocs(docName, docName === 'index' ? '/' : `/${docName}`),

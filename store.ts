@@ -21,11 +21,11 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
                     const keys = prefix ? prefix.split('.').filter((k) => k) : []
                     let targetState = target
                     for (let i = 0; i < keys.length; i++) {
-                        if (!targetState || !targetState[keys[i]]) {
+                        if (!targetState || !targetState[keys[i]!]) {
                             // Nested state doesn't exist yet, skip
                             return
                         }
-                        targetState = targetState[keys[i]]
+                        targetState = targetState[keys[i]!]
                     }
                     if (targetState) {
                         // Clear any existing signal in signalMap so function is re-initialized as ComputedSignal
@@ -536,7 +536,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         try {
             const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${key}=([^;]*)`))
             if (!match) return {}
-            const parsed = JSON.parse(decodeURIComponent(match[1]))
+            const parsed = JSON.parse(decodeURIComponent(match[1]!))
             return parsed && typeof parsed === 'object' ? parsed : {}
         } catch {
             return {}

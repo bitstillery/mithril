@@ -16,7 +16,7 @@ interface NavSectionsAttrs {
 const RouteLink = m.route.Link as any
 
 function normalizePath(p: string): string {
-    const path = (p || '/').split('#')[0]
+    const path = (p || '/').split('#')[0]!
     return path.replace(/\/$/, '') || '/'
 }
 

@@ -895,16 +895,18 @@ export default function renderFactory() {
     // of the items that are part of the longest increasing
     // subsequence
     const lisTemp: number[] = []
+    // Every index read below is in range: i < a.length, `result` is never empty and holds
+    // indices into `a`, and `lisTemp` mirrors `a`'s length.
     function makeLisIndices(a: number[]): number[] {
         const result = [0]
         let u = 0,
             v = 0
         const il = (lisTemp.length = a.length)
-        for (let i = 0; i < il; i++) lisTemp[i] = a[i]
+        for (let i = 0; i < il; i++) lisTemp[i] = a[i]!
         for (let i = 0; i < il; ++i) {
             if (a[i] === -1) continue
-            const j = result[result.length - 1]
-            if (a[j] < a[i]) {
+            const j = result[result.length - 1]!
+            if (a[j]! < a[i]!) {
                 lisTemp[i] = j
                 result.push(i)
                 continue
@@ -915,22 +917,22 @@ export default function renderFactory() {
                 // Fast integer average without overflow.
 
                 const c = (u >>> 1) + (v >>> 1) + (u & v & 1)
-                if (a[result[c]] < a[i]) {
+                if (a[result[c]!]! < a[i]!) {
                     u = c + 1
                 } else {
                     v = c
                 }
             }
-            if (a[i] < a[result[u]]) {
-                if (u > 0) lisTemp[i] = result[u - 1]
+            if (a[i]! < a[result[u]!]!) {
+                if (u > 0) lisTemp[i] = result[u - 1]!
                 result[u] = i
             }
         }
         u = result.length
-        v = result[u - 1]
+        v = result[u - 1]!
         while (u-- > 0) {
             result[u] = v
-            v = lisTemp[v]
+            v = lisTemp[v]!
         }
         lisTemp.length = 0
         return result
@@ -1453,14 +1455,14 @@ export default function renderFactory() {
                     false,
                 )
                 // Execute hooks from override render
-                for (let i = 0; i < overrideHooks.length; i++) overrideHooks[i]()
+                for (let i = 0; i < overrideHooks.length; i++) overrideHooks[i]!()
             }
 
             ;(dom as any).vnodes = normalized
             // `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
             if (active != null && activeElement(dom) !== active && typeof (active as any).focus === 'function')
                 (active as any).focus()
-            for (let i = 0; i < hooks.length; i++) hooks[i]()
+            for (let i = 0; i < hooks.length; i++) hooks[i]!()
         } finally {
             currentRedraw = prevRedraw
             currentDOM = prevDOM

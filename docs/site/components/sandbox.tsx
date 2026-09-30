@@ -38,7 +38,7 @@ function prepareCodeForPreview(code: string): string {
     // m.route fragment: stub route components that aren't defined in this block
     const routeMatch = out.match(/m\.route\s*\(\s*\w+\s*,\s*[^,]+,\s*\{([^}]+)\}/s)
     if (routeMatch) {
-        const routeBody = routeMatch[1]
+        const routeBody = routeMatch[1]!
         const refs = [...routeBody.matchAll(/['"][^'"]*['"]\s*:\s*(\w+)/g)].map((m) => m[1])
         const defined = new Set([...out.matchAll(/\b(?:var|let|const|function)\s+(\w+)/g)].map((m) => m[1]))
         const stubs: string[] = []
@@ -76,7 +76,7 @@ function prepareCodeForPreview(code: string): string {
             // Semicolon-separated: add return before last statement if it's m(
             const semicolonSplit = out.split(/\s*;\s*(?=\s*(?:var|let|const|function|[\w.]+\s*=\s*\{|\bm\s*\())/)
             if (semicolonSplit.length > 1) {
-                const lastPart = semicolonSplit[semicolonSplit.length - 1].trim()
+                const lastPart = semicolonSplit[semicolonSplit.length - 1]!.trim()
                 body = /^\s*m\s*\(/.test(lastPart)
                     ? semicolonSplit.slice(0, -1).join('; ') + '; return ' + lastPart
                     : 'return ' + out.trim()
@@ -86,15 +86,15 @@ function prepareCodeForPreview(code: string): string {
                 let bestIdx = -1
                 let bestIndent = Infinity
                 for (let i = lines.length - 1; i >= 0; i--) {
-                    const m = lines[i].match(/^(\s*)(m\s*\()/)
-                    if (m && m[1].length <= bestIndent) {
-                        bestIndent = m[1].length
+                    const m = lines[i]!.match(/^(\s*)(m\s*\()/)
+                    if (m && m[1]!.length <= bestIndent) {
+                        bestIndent = m[1]!.length
                         bestIdx = i
                         break
                     }
                 }
                 if (bestIdx >= 0) {
-                    const line = lines[bestIdx]
+                    const line = lines[bestIdx]!
                     const indent = line.match(/^\s*/)?.[0] ?? ''
                     lines[bestIdx] = indent + 'return ' + line.trimStart()
                     body = lines.join('\n')

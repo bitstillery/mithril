@@ -167,7 +167,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     function getRedirectPath(redirectObj: RedirectObject): string {
         // First try our REDIRECT symbol
         if (REDIRECT in redirectObj) {
-            return redirectObj[REDIRECT]
+            return redirectObj[REDIRECT]!
         }
         // Otherwise, check all symbol keys
         const symbolKeys = Object.getOwnPropertySymbols(redirectObj)
@@ -215,9 +215,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         function loop(i: number) {
             if (!compiled) return
             for (; i < compiled.length; i++) {
-                if (compiled[i].check(data)) {
-                    let payload = compiled[i].component
-                    const matchedRoute = compiled[i].route
+                if (compiled[i]!.check(data)) {
+                    let payload = compiled[i]!.component
+                    const matchedRoute = compiled[i]!.route
                     const localComp = payload
                     // Store the RouteResolver if payload has both onmatch and render
                     // This allows us to preserve the resolver even after onmatch returns a component
@@ -237,7 +237,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         // Handle redirect objects: explicit redirect signal
                         if (isRedirect(comp)) {
                             // Extract redirect target path
-                            const redirectPath = comp[REDIRECT]
+                            const redirectPath = comp[REDIRECT]!
                             const resolve = routeSetResolve
                             routeSetResolve = null
                             // Trigger navigation to redirect target; resolve original Promise when redirect completes

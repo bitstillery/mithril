@@ -306,11 +306,11 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
                     const keys = prefix ? prefix.split('.').filter((k) => k) : []
                     let targetState = target
                     for (let i = 0; i < keys.length; i++) {
-                        if (!targetState[keys[i]]) {
+                        if (!targetState[keys[i]!]) {
                             // Nested state doesn't exist yet, skip
                             return
                         }
-                        targetState = targetState[keys[i]]
+                        targetState = targetState[keys[i]!]
                     }
                     // Clear any existing signal in signalMap so function is re-initialized as ComputedSignal
                     if (targetState && typeof targetState === 'object' && (targetState as any).__isState) {

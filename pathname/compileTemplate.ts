@@ -38,14 +38,15 @@ export default function compileTemplate(template: string): CompiledTemplate {
         // First, check the params. Usually, there isn't any, and it's just
         // checking a static set.
         for (let i = 0; i < templateKeys.length; i++) {
-            if (templateData.params[templateKeys[i]] !== data.params[templateKeys[i]]) return false
+            if (templateData.params[templateKeys[i]!] !== data.params[templateKeys[i]!]) return false
         }
         // If no interpolations exist, let's skip all the ceremony
         if (!keys.length) return regexp.test(data.path)
         const values = regexp.exec(data.path)
         if (values == null) return false
         for (let i = 0; i < keys.length; i++) {
-            data.params[keys[i].k] = keys[i].r ? values[i + 1] : decodeURIComponent(values[i + 1])
+            // Every key is a non-optional capture group, so a match fills all of them.
+            data.params[keys[i]!.k] = keys[i]!.r ? values[i + 1] : decodeURIComponent(values[i + 1]!)
         }
         return true
     }

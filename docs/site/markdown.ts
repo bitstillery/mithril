@@ -44,12 +44,12 @@ const metaDescriptionRegex = /<!--meta-description\n([\s\S]+?)\n-->/m
 
 function extractMetaDescription(markdown: string, defaultDesc: string = 'Mithril.js Documentation'): string {
     const match = markdown.match(metaDescriptionRegex)
-    return match ? match[1].trim() : defaultDesc
+    return match ? match[1]!.trim() : defaultDesc
 }
 
 function extractTitle(markdown: string): string {
     const h1Match = markdown.match(/^#\s+(.+)$/m)
-    return h1Match ? h1Match[1] : 'Mithril.js'
+    return h1Match ? h1Match[1]! : 'Mithril.js'
 }
 
 const h1UlHrPattern = /(<h1[^>]*>[\s\S]*?<\/h1>\s*)(<ul[^>]*>[\s\S]*?<\/ul>)(\s*<hr\/?>)/

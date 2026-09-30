@@ -198,7 +198,7 @@ function formatCombinedStructure(parent: Element | Node | null, vnode: any, maxP
 
     // Closing tags for DOM parents (in reverse order)
     for (let i = domElements.length - 1; i >= 0; i--) {
-        lines.push('  '.repeat(i) + domElements[i].closeTag)
+        lines.push('  '.repeat(i) + domElements[i]!.closeTag)
     }
 
     return lines.join('\n')

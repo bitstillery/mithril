@@ -8,9 +8,9 @@ export default function parseQueryString(string: string | null | undefined): Rec
     const counters: Record<string, number> = {}
     const data: Record<string, any> = {}
     for (let i = 0; i < entries.length; i++) {
-        const entry = entries[i].split('=')
-        const key = decodeURIComponentSafe(entry[0])
-        let value: any = entry.length === 2 ? decodeURIComponentSafe(entry[1]) : ''
+        const entry = entries[i]!.split('=')
+        const key = decodeURIComponentSafe(entry[0]!)
+        let value: any = entry.length === 2 ? decodeURIComponentSafe(entry[1]!) : ''
 
         if (value === 'true') value = true
         else if (value === 'false') value = false
@@ -19,9 +19,10 @@ export default function parseQueryString(string: string | null | undefined): Rec
         let cursor: any = data
         if (key.indexOf('[') > -1) levels.pop()
         for (let j = 0; j < levels.length; j++) {
-            const level = levels[j]
+            const level = levels[j]!
             const nextLevel = levels[j + 1]
-            const isNumber = nextLevel == '' || !isNaN(parseInt(nextLevel, 10))
+            // Past the last level nextLevel is undefined, which parseInt reads as NaN.
+            const isNumber = nextLevel == '' || !isNaN(parseInt(nextLevel as string, 10))
             let finalLevel: string | number
             if (level === '') {
                 const key = levels.slice(0, j).join()

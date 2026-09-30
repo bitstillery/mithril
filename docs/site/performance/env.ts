@@ -5,7 +5,7 @@ function formatElapsed(value: number): string {
     if (value > 60) {
         const minutes = Math.floor(value / 60)
         const comps = (value % 60).toFixed(2).split('.')
-        const seconds = comps[0].padStart(2, '0')
+        const seconds = comps[0]!.padStart(2, '0')
         const ms = comps[1]
         str = `${minutes}:${seconds}.${ms}`
     }
@@ -85,7 +85,7 @@ function generateRow(object: DbRow | null, keepIdentity: boolean, mutCounter: nu
             }
         }
         for (let j = 0; j < obj.lastSample!.queries!.length; j++) {
-            const value = obj.lastSample!.queries![j]
+            const value = obj.lastSample!.queries![j]!
             if (j <= nbQueries) {
                 obj.lastSample!.queries![j] = updateQuery(value)
             } else {
@@ -152,9 +152,9 @@ export function createEnv(rows = 15, depth = 10): EnvConfig {
 
         const changedIndices: number[] = []
         for (let i = 0; i < data!.length; i++) {
-            const row = data![i]
+            const row = data![i]!
             if (!keep && oldData && oldData[i]) {
-                row.lastSample = oldData[i].lastSample
+                row.lastSample = oldData[i]!.lastSample
             }
             if (!row.lastSample || Math.random() < mutationsValue) {
                 counter++
@@ -164,7 +164,7 @@ export function createEnv(rows = 15, depth = 10): EnvConfig {
                 generateRow(row, keep, counter)
                 changedIndices.push(i)
             } else {
-                data![i] = oldData![i]
+                data![i] = oldData![i]!
             }
         }
         oldData = data

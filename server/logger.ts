@@ -96,7 +96,7 @@ function getColorByHash(text: string): string {
         colors.cyan,
     ]
     const hash = hashString(text)
-    return colorOptions[hash % colorOptions.length]
+    return colorOptions[hash % colorOptions.length]!
 }
 
 const textEncoder = typeof TextEncoder !== 'undefined' ? new TextEncoder() : null

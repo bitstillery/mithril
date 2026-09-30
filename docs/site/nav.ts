@@ -37,7 +37,8 @@ function parseNavToStructure(markdown: string): NavSection[] {
         const isNested = line.startsWith('\t') || line.startsWith('  ')
 
         if (linkMatch) {
-            const [, text, href] = linkMatch
+            // Both groups of linkRegex are mandatory, so a match always fills them.
+            const [, text, href] = linkMatch as [string, string, string]
             const external = href.startsWith('http')
             if (isNested && currentSection) {
                 currentSection.links.push({text, href, external})
