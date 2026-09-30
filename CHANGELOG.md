@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.2](https://github.com/bitstillery/mithril/compare/v3.9.1...v3.9.2) (2026-09-30)
+
+### Bug Fixes
+
+- **router:** resolve client-side redirects the way SSR does ([680ce0c](https://github.com/bitstillery/mithril/commit/680ce0c0acfc7a476646fec8c2fee0b9287e887e))
+
 ### [3.9.1](https://github.com/bitstillery/mithril/compare/v3.9.0...v3.9.1) (2026-09-30)
 
 ### Bug Fixes
