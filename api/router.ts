@@ -237,7 +237,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         // Handle redirect objects: explicit redirect signal
                         if (isRedirect(comp)) {
                             // Extract redirect target path
-                            const redirectPath = comp[REDIRECT]!
+                            const redirectPath = getRedirectPath(comp)
                             const resolve = routeSetResolve
                             routeSetResolve = null
                             // Trigger navigation to redirect target; resolve original Promise when redirect completes
