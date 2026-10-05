@@ -9,7 +9,7 @@ interface DocLoaderAttrs {
 }
 
 export class DocLoader extends MithrilComponent<DocLoaderAttrs> {
-    async oninit(vnode: Vnode<DocLoaderAttrs>) {
+    override async oninit(vnode: Vnode<DocLoaderAttrs>) {
         const attrs = vnode.attrs!
         const isServer = typeof window === 'undefined'
 

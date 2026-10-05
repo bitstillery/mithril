@@ -94,17 +94,17 @@ export class Layout extends MithrilComponent<LayoutAttrs> {
     private scrollSpyBound: (() => void) | null = null
     private lastHashChangeAt = 0
 
-    oncreate(vnode: Vnode<LayoutAttrs>) {
+    override oncreate(vnode: Vnode<LayoutAttrs>) {
         this.setupScrollSpy()
         this.highlightCode(vnode)
     }
 
-    onupdate(vnode: Vnode<LayoutAttrs>) {
+    override onupdate(vnode: Vnode<LayoutAttrs>) {
         this.setupScrollSpy()
         this.highlightCode(vnode)
     }
 
-    onremove() {
+    override onremove() {
         if (this.scrollSpyBound) {
             window.removeEventListener('scroll', this.scrollSpyBound)
         }

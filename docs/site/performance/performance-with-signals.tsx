@@ -48,7 +48,7 @@ const StatsOverlay = {
 }
 
 export class PerformanceWithSignals extends MithrilComponent {
-    oncreate(vnode: Vnode) {
+    override oncreate(vnode: Vnode) {
         const compState = vnode.state as State
         const rows = $perfRows.rows
         const depth = $perfDepth.depth
@@ -100,7 +100,7 @@ export class PerformanceWithSignals extends MithrilComponent {
         compState.unmountVisibility = () => document.removeEventListener('visibilitychange', handleVisibility)
     }
 
-    onupdate(vnode: Vnode) {
+    override onupdate(vnode: Vnode) {
         const compState = vnode.state as State
         const rows = $perfRows.rows
         const depth = $perfDepth.depth
@@ -116,7 +116,7 @@ export class PerformanceWithSignals extends MithrilComponent {
         }
     }
 
-    onremove(vnode: Vnode) {
+    override onremove(vnode: Vnode) {
         const compState = vnode.state as State
         if (compState.rafId != null) {
             cancelAnimationFrame(compState.rafId)

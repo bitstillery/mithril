@@ -18,7 +18,7 @@ export class Tippy extends MithrilComponent<TippyAttrs> {
     id = 'docs-tippy-' + Math.random().toString(36).slice(2, 11)
     tippyInstance: any = null
 
-    oncreate(vn: Vnode<TippyAttrs>) {
+    override oncreate(vn: Vnode<TippyAttrs>) {
         const attrs = vn.attrs
         if (!attrs) return
         const tid = attrs.id ?? this.id
@@ -34,7 +34,7 @@ export class Tippy extends MithrilComponent<TippyAttrs> {
         }
     }
 
-    onremove() {
+    override onremove() {
         if (this.tippyInstance) {
             this.tippyInstance.destroy()
             this.tippyInstance = null

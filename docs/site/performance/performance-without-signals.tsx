@@ -9,7 +9,7 @@ interface State {
 }
 
 export class PerformanceWithoutSignals extends MithrilComponent {
-    oncreate(vnode: Vnode) {
+    override oncreate(vnode: Vnode) {
         const state = vnode.state as State
         state.data = []
     }

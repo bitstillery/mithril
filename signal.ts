@@ -188,7 +188,7 @@ export class ComputedSignal<T> extends Signal<T> {
         this._compute = compute
     }
 
-    get value(): T {
+    override get value(): T {
         // Track access by other computed signals - this enables computed-to-computed dependency chains
         // When computed B accesses computed A, A should notify B when A's dependencies change
         if (currentEffect) {
@@ -259,7 +259,7 @@ export class ComputedSignal<T> extends Signal<T> {
         this._markDirty()
     }
 
-    set value(_newValue: T) {
+    override set value(_newValue: T) {
         throw new Error('Computed signals are read-only')
     }
 }
