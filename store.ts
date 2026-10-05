@@ -1,4 +1,5 @@
-import {allowComputed, state, State, updateStateRegistry, type DeepPartial} from './state'
+import {allowComputed, state, updateStateRegistry} from './state'
+import type {State, DeepPartial} from './state'
 import {serializeStore, deserializeStore} from './render/ssrState'
 
 // Helper function to restore computed properties (same as in ssrState.ts)

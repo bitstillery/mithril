@@ -1,5 +1,6 @@
 import m from '../../../index'
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 
 import {svg} from './icons'
 

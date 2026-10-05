@@ -1,7 +1,8 @@
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {Layout} from './layout'
-import {DocPage} from '../markdown'
+import type {DocPage} from '../markdown'
 
 interface DocPageAttrs {
     page: DocPage

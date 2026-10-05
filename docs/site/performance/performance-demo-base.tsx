@@ -3,10 +3,12 @@
  * Each demo (with/without signals) provides data and onFrame callback.
  */
 
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {createEnv} from './env'
-import {createPerformanceMonitor, type PerfStats} from './performance-monitor'
+import {createPerformanceMonitor} from './performance-monitor'
+import type {PerfStats} from './performance-monitor'
 import {mountPerformanceStats} from './performance-stats'
 import {TableRow} from './table-row'
 import {$perfRows, $perfDepth, savePerfSettings, ROWS_MAX, ROWS_MIN, DEPTH_MAX, DEPTH_MIN} from './performance-config'

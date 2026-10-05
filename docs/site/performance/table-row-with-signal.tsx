@@ -3,7 +3,8 @@
  * Used by the "with signals" demo for fair comparison (targeted updates vs full tree walk).
  */
 
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {recordComponentRender} from './performance-monitor'
 import {QueryCell} from './query-cell'

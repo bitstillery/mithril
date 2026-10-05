@@ -1,4 +1,5 @@
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {PerformanceWithoutSignals} from './performance-without-signals'
 import {PerformanceWithSignals} from './performance-with-signals'

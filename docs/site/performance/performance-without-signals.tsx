@@ -1,4 +1,5 @@
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {PerformanceDemoBase} from './performance-demo-base'
 import {$perfRows} from './performance-config'

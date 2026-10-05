@@ -1,7 +1,8 @@
-import {MithrilComponent, Vnode} from '../../../index'
+import {MithrilComponent} from '../../../index'
+import type {Vnode} from '../../../index'
 import m from '../../../index'
 import {version as mithrilVersion} from '../../../version'
-import {DocPage} from '../markdown'
+import type {DocPage} from '../markdown'
 
 import {CodeBlock} from './code-block'
 import {DocsSidebar} from './docs-sidebar'
