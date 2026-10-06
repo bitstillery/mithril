@@ -888,6 +888,39 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
     return wrapped
 }
 
+/** The built-ins `isOpaqueObject` keeps out of the proxy: state holds them as they are. */
+type OpaqueObject = Date | Map<any, any> | Set<any> | WeakMap<any, any> | WeakSet<any> | RegExp | Promise<any> | ArrayBuffer | ArrayBufferView
+
+/**
+ * A value as state hands it out: a function reads as its computed result, an object (or array) as its
+ * own State. Distributes over a union, so a nullable object (`Foo | null`) is still a State with its
+ * `$` signals once it is set.
+ */
+type StateValue<V> = V extends (...args: any[]) => infer R
+    ? R
+    : V extends OpaqueObject
+      ? V
+      : V extends Record<string, any>
+        ? State<V>
+        : V
+
+/**
+ * A property as state hands it out. Unlike an array element it doesn't distribute over a union, so a
+ * nullable object (`Foo | null`) stays its plain shape and a plain `Foo` can be written to it, as in 3.9.
+ * A `{get, set}` descriptor reads as its computed value.
+ */
+type StateProp<V> = [V] extends [never]
+    ? V
+    : [V] extends [(...args: any[]) => infer R]
+      ? R
+      : [V] extends [{get: () => infer R; set: (value: never) => void}]
+        ? R
+        : [V] extends [OpaqueObject]
+          ? V
+          : [V] extends [Record<string, any>]
+            ? State<V>
+            : V
+
 /**
  * Mapped type that adds $prop for each key, returning the Signal for that property.
  * - Primitives: $prop => Signal<T[K]>
@@ -899,24 +932,19 @@ export type StateSignals<T extends Record<string, any>> = {
     // lookup by a `string` key would read as `Value | Signal<Value>`.
     [K in keyof T as K extends string ? (string extends K ? never : `$${K}`) : never]: T[K] extends (...args: any[]) => infer R
         ? ComputedSignal<R>
-        : T[K] extends object
-          ? Signal<State<T[K]>>
-          : Signal<T[K]>
+        : Signal<StateProp<T[K]>>
 }
-type StateElem<E> = E extends Record<string, any> ? State<E> : E
 
-export type StateArray<Elem> = Omit<Array<StateElem<Elem>>, 'fill' | 'push' | 'splice' | 'unshift'> & {
+export type StateArray<Elem> = Omit<Array<StateValue<Elem>>, 'fill' | 'push' | 'splice' | 'unshift'> & {
     fill(value: Elem, start?: number, end?: number): StateArray<Elem>
     push(...items: Elem[]): number
-    splice(start: number, deleteCount?: number, ...items: Elem[]): StateElem<Elem>[]
+    splice(start: number, deleteCount?: number, ...items: Elem[]): StateValue<Elem>[]
     unshift(...items: Elem[]): number
 }
 
 export type State<T extends Record<string, any>> = T extends (infer Elem)[]
     ? StateArray<Elem>
-    : {
-          [K in keyof T]: T[K] extends (...args: any[]) => infer R ? R : T[K] extends Record<string, any> ? State<T[K]> : T[K]
-      } & StateSignals<T>
+    : {[K in keyof T]: StateProp<T[K]>} & StateSignals<T>
 
 /**
  * A partial of a state shape at every depth, for the persistence tiers of a Store: each tier fills in
