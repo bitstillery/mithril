@@ -46,13 +46,13 @@ export interface Route {
     set: (path: string, params?: object | null, options?: RouteOptions) => Promise<void>
     get: () => string
     prefix: string
-    link: (vnode: VnodeType) => VnodeType
+    link: (vnode: VnodeType<LinkAttrs>) => VnodeType
     param: {
         (key: string): RouteParamValue | undefined
         (): RouteParams
     }
     readonly params: RouteParams
-    Link: ComponentType
+    Link: ComponentType<LinkAttrs>
     SKIP: object
     REDIRECT: symbol
     redirect: (path: string) => RedirectObject
@@ -76,6 +76,7 @@ export interface LinkAttrs {
     disabled?: unknown
     onclick?: unknown
     onafternavigate?: () => void
+    [attr: string]: unknown
 }
 
 /** A click on a Link: `redraw` as Mithril reads it, `originalEvent` when another library wrapped the event. */
@@ -417,7 +418,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
         return currentPath ?? ''
     }
     route.prefix = '#!'
-    route.link = function (vnode: VnodeType) {
+    route.link = function (vnode: VnodeType<LinkAttrs>) {
         return route.Link.view(vnode)
     }
     route.Link = {
