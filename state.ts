@@ -81,6 +81,20 @@ function notifyArrayParent(array: object): void {
     if (parentSignal) parentSignal.trigger()
 }
 
+/** Links a nested state or array to the signal holding it, which it notifies when it changes in place. */
+function linkArrayParentSignal(value: unknown, sig: AnySignal): void {
+    if (!value || typeof value !== 'object') return
+    if ((value as StateInternals).__isState === true && Array.isArray((value as StateInternals).__signals)) {
+        arrayParentSignalMap.set(value, sig)
+        ;(value as StateInternals)._parentSignal = sig
+    } else if (Array.isArray(value)) {
+        arrayParentSignalMap.set(value, sig)
+    } else if ((value as StateInternals).__isState === true) {
+        // Nested object proxies: notify parent when keys are added/removed
+        arrayParentSignalMap.set(value, sig)
+    }
+}
+
 // Type guard to check if value is a Signal
 function isSignal<T>(value: unknown): value is Signal<T> {
     // A ComputedSignal is a Signal too.
@@ -111,6 +125,9 @@ const copyingArrayMethods = new Set([
 /** The callback's array argument is the state array itself, not the copy, as with the native method. */
 const elementCallbackMethods = new Set(['map', 'filter', 'forEach', 'flatMap'])
 const accumulatorCallbackMethods = new Set(['reduce', 'reduceRight'])
+
+// Mutating array methods, which notify the signal holding the array.
+const mutatingArrayMethods = new Set(['splice', 'push', 'pop', 'shift', 'unshift', 'reverse', 'sort', 'fill', 'copyWithin'])
 
 /**
  * Array methods bound to the state array's proxy, so the elements they read come through the get
@@ -315,19 +332,6 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
             return stateCache.get(obj)
         }
 
-        const linkArrayParentSignal = (value: unknown, sig: AnySignal) => {
-            if (!value || typeof value !== 'object') return
-            if ((value as StateInternals).__isState === true && Array.isArray((value as StateInternals).__signals)) {
-                arrayParentSignalMap.set(value, sig)
-                ;(value as StateInternals)._parentSignal = sig
-            } else if (Array.isArray(value)) {
-                arrayParentSignalMap.set(value, sig)
-            } else if ((value as StateInternals).__isState === true) {
-                // Nested object proxies: notify parent when keys are added/removed
-                arrayParentSignalMap.set(value, sig)
-            }
-        }
-
         // Handle arrays
         if (Array.isArray(obj)) {
             // Init, push/unshift, splice and index assignment all wrap through here, so an element typed as
@@ -341,19 +345,6 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
             }
             // Arrays don't get their own signalMap - they use the parent's
             const signals: unknown[] = obj.map(toElement)
-
-            // List of mutating array methods that should trigger the parent signal
-            const mutatingMethods = new Set([
-                'splice',
-                'push',
-                'pop',
-                'shift',
-                'unshift',
-                'reverse',
-                'sort',
-                'fill',
-                'copyWithin',
-            ])
 
             // Wrap the signals array directly (not a copy) so mutations stay in sync
             // Store parent signal reference directly on the Proxy for reliable lookup
@@ -444,7 +435,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     }
 
                     // Intercept mutating methods to trigger parent signal
-                    if (typeof value === 'function' && mutatingMethods.has(propStr)) {
+                    if (typeof value === 'function' && mutatingArrayMethods.has(propStr)) {
                         return function (...args: unknown[]) {
                             // For splice, we need to handle it specially to convert new items to signals
                             if (propStr === 'splice') {
