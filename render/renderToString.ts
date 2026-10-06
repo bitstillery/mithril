@@ -1,5 +1,3 @@
-import {setCurrentComponent, clearCurrentComponent} from '../signal'
-
 import {serializeAllStates} from './ssrState'
 import Vnode from './vnode'
 
@@ -360,37 +358,30 @@ async function serializeComponent(
 
     vnode.state = state
 
-    // Set current component for signal tracking (needed for store access during SSR)
-    // This ensures store properties can track component dependencies correctly
-    setCurrentComponent(state)
+    // No component tracking: nothing redraws on the server, and a long-lived signal would keep every
+    // rendered component reachable through its tracking set, one more per request.
 
-    let instance: RenderVnode | null
-    try {
-        // Call oninit with context if on server
-        if (isServer && typeof state.oninit === 'function') {
-            const context = {
-                isSSR: true,
-                isHydrating: false,
-            }
-            try {
-                const result = (state.oninit as Hook)(vnode, context)
-                // If oninit returns a promise, await it
-                if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-                    await (result as PromiseLike<unknown>)
-                }
-            } catch (_e) {
-                // Ignore errors in oninit for now
-            }
+    // Call oninit with context if on server
+    if (isServer && typeof state.oninit === 'function') {
+        const context = {
+            isSSR: true,
+            isHydrating: false,
         }
+        try {
+            const result = (state.oninit as Hook)(vnode, context)
+            // If oninit returns a promise, await it
+            if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
+                await (result as PromiseLike<unknown>)
+            }
+        } catch (_e) {
+            // Ignore errors in oninit for now
+        }
+    }
 
-        // Call view (bind this to state)
-        instance = Vnode.normalize(view.call(state, vnode))
-        if (instance === vnode) {
-            throw Error('A view cannot return the vnode it received as argument')
-        }
-    } finally {
-        // Clear current component after rendering
-        clearCurrentComponent()
+    // Call view (bind this to state)
+    const instance = Vnode.normalize(view.call(state, vnode))
+    if (instance === vnode) {
+        throw Error('A view cannot return the vnode it received as argument')
     }
 
     vnode.instance = instance
