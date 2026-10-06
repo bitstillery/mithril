@@ -87,6 +87,33 @@ describe('ComputedSignal', () => {
         expect(doubled.value).toBe(4) // Should recompute
         expect(computeCount).toBe(2)
     })
+
+    test('peek returns the computed value without subscribing', () => {
+        const a = signal(1)
+        const doubled = computed(() => a.value * 2)
+        let runs = 0
+        effect(() => {
+            runs++
+            doubled.peek()
+        })
+        expect(doubled.peek()).toBe(2)
+        a.value = 2
+        expect(doubled.peek()).toBe(4)
+        expect(runs).toBe(1)
+    })
+
+    test('watch reports the new and old computed values on every change', () => {
+        const a = signal(1)
+        const doubled = computed(() => a.value * 2)
+        const seen: [number, number][] = []
+        doubled.watch((newValue, oldValue) => seen.push([newValue, oldValue]))
+        a.value = 2
+        a.value = 3
+        expect(seen).toEqual([
+            [4, 2],
+            [6, 4],
+        ])
+    })
 })
 
 describe('effect', () => {

@@ -189,6 +189,12 @@ export class ComputedSignal<T> extends Signal<T> {
     private _dependencies: Set<Signal<unknown>> = new Set()
     private _isDirty = true
     private _cachedValue!: T
+    // One closure for the computed's whole life: a dependency holds its subscribers in a Set, so
+    // re-subscribing on every recompute is a no-op instead of another entry the Set keeps (and that
+    // a notification in progress would also visit).
+    private _markDirtyEffect = () => {
+        this._markDirty()
+    }
 
     constructor(compute: () => T) {
         super(null as T) // Will be computed on first access
@@ -215,9 +221,7 @@ export class ComputedSignal<T> extends Signal<T> {
 
             // Track dependencies during computation
             const previousEffect = currentEffect
-            currentEffect = () => {
-                this._markDirty()
-            }
+            currentEffect = this._markDirtyEffect
 
             try {
                 this._cachedValue = this._compute()
@@ -256,6 +260,36 @@ export class ComputedSignal<T> extends Signal<T> {
                 }
             })
         }
+    }
+
+    /**
+     * The current value, without subscribing the running effect or component: computes it when a
+     * dependency changed. The base class's `_value` is never set on a computed.
+     */
+    override peek(): T {
+        const previousEffect = currentEffect
+        const previousComponent = currentComponent
+        currentEffect = null
+        currentComponent = null
+        try {
+            return this.value
+        } finally {
+            currentEffect = previousEffect
+            currentComponent = previousComponent
+        }
+    }
+
+    /**
+     * Calls back when a dependency changes. Reading the value there recomputes it, which also lets the
+     * next change notify again: a computed only notifies on going from clean to dirty.
+     */
+    override watch(callback: (newValue: T, oldValue: T) => void): () => void {
+        let oldValue = this.peek()
+        return this.subscribe(() => {
+            const newValue = this.peek()
+            callback(newValue, oldValue)
+            oldValue = newValue
+        })
     }
 
     /**
