@@ -61,11 +61,36 @@ function isState(value: any): boolean {
 }
 
 /**
+ * Built-ins whose methods need their internal slots. A proxy has none, and the get trap calls a
+ * function-valued property with the proxy as `this`, so a proxied Date or Map throws on every method
+ * call (and a Map's `get`/`set` read as a get/set descriptor). They are held as a signal's value
+ * instead, and replaced wholesale to notify.
+ */
+function isOpaqueObject(value: object): boolean {
+    return (
+        value instanceof Date ||
+        value instanceof Map ||
+        value instanceof Set ||
+        value instanceof WeakMap ||
+        value instanceof WeakSet ||
+        value instanceof RegExp ||
+        value instanceof Promise ||
+        value instanceof ArrayBuffer ||
+        ArrayBuffer.isView(value)
+    )
+}
+
+/**
  * Check if a value is a get/set descriptor object (like JavaScript property descriptors)
  * Used to detect computed properties defined as { get: () => T, set?: (value: T) => void }
  */
 function isGetSetDescriptor(value: any): boolean {
-    return value && typeof value === 'object' && (typeof value.get === 'function' || typeof value.set === 'function')
+    return (
+        value &&
+        typeof value === 'object' &&
+        !isOpaqueObject(value) &&
+        (typeof value.get === 'function' || typeof value.set === 'function')
+    )
 }
 
 /**
@@ -203,7 +228,7 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
         parentSignalMap?: Map<string, Signal<any> | ComputedSignal<any>>,
         context?: InitContext,
     ): any {
-        if (obj === null || typeof obj !== 'object') {
+        if (obj === null || typeof obj !== 'object' || isOpaqueObject(obj)) {
             return obj
         }
 
