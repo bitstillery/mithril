@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.4](https://github.com/bitstillery/mithril/compare/v3.9.3...v3.9.4) (2026-10-06)
+
+### Bug Fixes
+
+- **types:** accept any component class as a ComponentType ([2682882](https://github.com/bitstillery/mithril/commit/2682882ff748434f3c2ead1f64ea596f74d78517))
+
 ### [3.9.3](https://github.com/bitstillery/mithril/compare/v3.9.2...v3.9.3) (2026-10-06)
 
 ### Bug Fixes
