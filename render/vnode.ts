@@ -55,6 +55,7 @@ export type ComponentType<Attrs = Record<string, any>, State = any> =
     | ComponentFactory<Attrs, State>
     | (() => Component<Attrs, State>)
     | (new (...args: any[]) => MithrilComponent<Attrs>)
+    | (new (...args: any[]) => Component<Attrs, State>)
 
 /**
  * Abstract base class for TSX/JSX class-based components.
