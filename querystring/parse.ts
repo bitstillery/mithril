@@ -24,6 +24,12 @@ export default function parseQueryString(string: string | null | undefined): Rou
         if (value === 'true') value = true
         else if (value === 'false') value = false
 
+        // Most keys name a plain property; only bracketed, empty and `__proto__` keys need the walk below.
+        if (key !== '' && key !== '__proto__' && key.indexOf('[') < 0 && key.indexOf(']') < 0) {
+            data[key] = value
+            continue
+        }
+
         const levels = key.split(/\]\[?|\[/)
         // The object or array the next level is written into: `a[b][]=` walks data.a, then data.a.b.
         let cursor: ParamContainer = data
