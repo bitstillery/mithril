@@ -118,28 +118,30 @@ class PromiseTracker {
     }
 }
 
-// Serialize attributes to HTML string
+// Serialize attributes to HTML string, each with its leading space
 function serializeAttributes(
     attrs: Record<string, unknown> | null | undefined,
     options: Required<RenderToStringOptions>,
 ): string {
     if (!attrs) return ''
 
-    const parts: string[] = []
+    let html = ''
 
     for (const key in attrs) {
         const value = attrs[key]
 
-        // Skip lifecycle hooks and special attributes
+        // Skip the key, lifecycle hooks and event handlers
+        if (key === 'key') continue
         if (
-            key === 'key' ||
-            key === 'oninit' ||
-            key === 'oncreate' ||
-            key === 'onupdate' ||
-            key === 'onremove' ||
-            key === 'onbeforeremove' ||
-            key === 'onbeforeupdate' ||
-            (key.startsWith('on') && typeof value === 'function')
+            key.charCodeAt(0) === 111 && // o
+            key.charCodeAt(1) === 110 && // n
+            (typeof value === 'function' ||
+                key === 'oninit' ||
+                key === 'oncreate' ||
+                key === 'onupdate' ||
+                key === 'onremove' ||
+                key === 'onbeforeremove' ||
+                key === 'onbeforeupdate')
         ) {
             continue
         }
@@ -151,7 +153,7 @@ function serializeAttributes(
 
         if (typeof value === 'boolean') {
             if (value) {
-                parts.push(attrName)
+                html += ` ${attrName}`
             }
         } else if (typeof value === 'object') {
             // Handle style objects
@@ -159,17 +161,17 @@ function serializeAttributes(
                 const styleStr = Object.entries(value)
                     .map(([k, v]) => `${k.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${v}`)
                     .join('; ')
-                parts.push(`${attrName}="${options.escapeAttribute(styleStr)}"`)
+                html += ` ${attrName}="${options.escapeAttribute(styleStr)}"`
             } else {
                 // For other objects, stringify
-                parts.push(`${attrName}="${options.escapeAttribute(JSON.stringify(value))}"`)
+                html += ` ${attrName}="${options.escapeAttribute(JSON.stringify(value))}"`
             }
         } else {
-            parts.push(`${attrName}="${options.escapeAttribute(value)}"`)
+            html += ` ${attrName}="${options.escapeAttribute(value)}"`
         }
     }
 
-    return parts.length > 0 ? ' ' + parts.join(' ') : ''
+    return html
 }
 
 // Serialize text node
