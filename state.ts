@@ -604,8 +604,10 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         }
 
         // Handle objects
-        // Store original keys for SSR serialization (to distinguish nested state keys from parent keys)
-        const originalKeys = new Set(Object.keys(obj))
+        // Store original keys for SSR serialization (to distinguish nested state keys from parent keys).
+        // Kept as the array, and made a Set only when asked for: a Set costs several times the memory.
+        const originalKeyList = Object.keys(obj)
+        let originalKeys: Set<string> | undefined
         // Each nested state gets its own signalMap (unless parentSignalMap is explicitly provided)
         // This prevents nested states from sharing the parent's signalMap
         const nestedSignalMap = parentSignalMap || new Map<string, AnySignal>()
@@ -662,7 +664,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     const existing = nestedSignalMap.get(prop)
                     if (existing !== undefined) return existing.value
                 }
-                if (prop === '__originalKeys') return originalKeys
+                if (prop === '__originalKeys') return (originalKeys ??= new Set(originalKeyList))
                 if (prop === '__isState') return true
                 // Check if __signalMap was explicitly set to null (for error testing)
                 // If so, return null; otherwise return the nestedSignalMap
@@ -872,7 +874,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
 
         stateRootMap.set(wrapped, context?.rootState ?? wrapped)
         stateCache.set(obj, wrapped)
-        for (const key of originalKeys) {
+        for (const key of originalKeyList) {
             if (!nestedSignalMap.has(key)) {
                 nestedSignalMap.set(key, createPropertySignal((obj as Record<string, unknown>)[key]))
             }
