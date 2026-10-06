@@ -261,9 +261,9 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     redraw.signal = function (signal: Signal<unknown>) {
         const components = getSignalComponents(signal)
         if (components) {
-            components.forEach((component) => {
-                redrawComponent(component)
-            })
+            // A copy: each redraw re-registers its component with the signals it reads, which would
+            // otherwise add it back to the set being walked.
+            for (const component of Array.from(components)) redrawComponent(component)
         }
     }
 

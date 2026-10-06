@@ -68,6 +68,19 @@ export function clearComponentDependencies(component: object) {
     }
 }
 
+/**
+ * Unregisters a component from the signals it read, before it renders again and registers what it
+ * reads then. Unlike clearComponentDependencies() it keeps the sets: the next render mostly reads
+ * the same signals, and reusing them saves allocating new ones on every redraw.
+ */
+export function resetComponentDependencies(component: object) {
+    const signals = componentSignalMap.get(component)
+    if (signals) {
+        for (const signal of signals) signalComponentMap.get(signal)?.delete(component)
+        signals.clear()
+    }
+}
+
 // Set up callback for signal-to-component redraw integration
 export function setSignalRedrawCallback(callback: (signal: Signal<unknown>) => void) {
     redrawCallback = callback

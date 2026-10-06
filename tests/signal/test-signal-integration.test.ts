@@ -174,6 +174,48 @@ describe('Signal Integration - Component Redraws', () => {
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('12')
     })
 
+    test('m.redraw.signal redraws each mounted component that read the signal once', () => {
+        const count = signal(0)
+        const renders = {a: 0, b: 0}
+        const counter = (name: 'a' | 'b') => ({
+            view() {
+                renders[name]++
+                return m('span', String(count.value))
+            },
+        })
+        const otherRoot = $window.document.createElement('div')
+        m.mount(root, counter('a'))
+        m.mount(otherRoot, counter('b'))
+        m.redraw.signal!(count)
+        expect(renders).toEqual({a: 2, b: 2})
+        m.mount(otherRoot, null)
+    })
+
+    test('a component is not redrawn by a signal its last render no longer read', async () => {
+        const showCount = signal(true)
+        const count = signal(0)
+        let renderCount = 0
+        m.mount(root, {
+            view() {
+                renderCount++
+                return m('div', showCount.value ? String(count.value) : 'hidden')
+            },
+        })
+
+        showCount.value = false
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+
+        count.value = 1
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+
+        showCount.value = true
+        await m.nextTick()
+        expect(renderCount).toBe(3)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('1')
+    })
+
     test('computed already cached when a component reads it still redraws the component', async () => {
         const a = signal(1)
         const doubled = computed(() => a.value * 2)
