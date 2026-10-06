@@ -64,6 +64,10 @@ bench('state-array-map (100 items)', () => {
     const _ = s.items.map((x: number) => x * 2)
 })
 
+// Iterating an existing state array, as a view does on every render: element reads only.
+const iterated = state({items: Array.from({length: 100}, (_, i) => i)})
+bench('state-array-iterate (map over 100 items)', () => iterated.items.map((x: number) => x * 2))
+
 bench('watch-subscribe (setup + notify)', () => {
     const sig = state({x: 0}).$x
     const cb = () => {}

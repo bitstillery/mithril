@@ -73,8 +73,53 @@ function markAllComputedsDirty(stateObj: StateInternals | undefined): void {
 
 // Type guard to check if value is a Signal
 function isSignal<T>(value: unknown): value is Signal<T> {
-    return value instanceof Signal || value instanceof ComputedSignal
+    // A ComputedSignal is a Signal too.
+    return value instanceof Signal
 }
+
+/**
+ * Array methods that read every element run on a plain array of the unwrapped values: a native
+ * method walking the proxy instead pays a trap per index, five times the cost of the whole copy.
+ */
+const copyingArrayMethods = new Set([
+    'map',
+    'filter',
+    'forEach',
+    'reduce',
+    'reduceRight',
+    'flatMap',
+    'concat',
+    'flat',
+    'join',
+    'toString',
+    'toLocaleString',
+    // ES2023 copy-with-mutate methods
+    'toSorted',
+    'toReversed',
+    'toSpliced',
+])
+/** The callback's array argument is the state array itself, not the copy, as with the native method. */
+const elementCallbackMethods = new Set(['map', 'filter', 'forEach', 'flatMap'])
+const accumulatorCallbackMethods = new Set(['reduce', 'reduceRight'])
+
+/**
+ * Array methods bound to the state array's proxy, so the elements they read come through the get
+ * trap unwrapped. They stop early or read a range, so a copy of every element would also track
+ * the elements they never read.
+ */
+const proxiedArrayMethods = new Set([
+    'some',
+    'every',
+    'find',
+    'findIndex',
+    'includes',
+    'indexOf',
+    'lastIndexOf',
+    'slice',
+    'entries',
+    'keys',
+    'values',
+])
 
 // Type guard to check if value is already a state (has been wrapped)
 function isState(value: unknown): boolean {
@@ -304,6 +349,18 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
             // Store parent signal reference directly on the Proxy for reliable lookup
             const wrapped = new Proxy(signals, {
                 get(target, prop) {
+                    // The common read: an element by index, as every iteration does. A key past the
+                    // end, or not a number after all, falls through to the handling below.
+                    if (typeof prop === 'string') {
+                        const first = prop.charCodeAt(0)
+                        if (first >= 48 && first <= 57) {
+                            const index = Number(prop)
+                            if (index < signals.length) {
+                                const sig = signals[index]
+                                return isSignal(sig) ? sig.value : sig
+                            }
+                        }
+                    }
                     if (prop === '__isState') return true
                     if (prop === '__signals') return signals
                     if (prop === '__parentSignal') {
@@ -349,45 +406,31 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
 
                     // For array methods that iterate (map, filter, forEach, etc.), bind to wrapped Proxy
                     // so they go through our get trap for element access
-                    if (typeof value === 'function' && Array.isArray(target)) {
-                        // Array iteration methods need to use the Proxy so element access is unwrapped
-                        const iterationMethods = [
-                            'map',
-                            'filter',
-                            'forEach',
-                            'some',
-                            'every',
-                            'find',
-                            'findIndex',
-                            'reduce',
-                            'reduceRight',
-                        ]
-                        // Search methods also need unwrapped values for comparison
-                        const searchMethods = ['includes', 'indexOf', 'lastIndexOf']
-                        // Methods that return new arrays or strings need unwrapped values
-                        const returnMethods = [
-                            'slice',
-                            'concat',
-                            'flat',
-                            'flatMap',
-                            'join',
-                            'toString',
-                            'toLocaleString',
-                            // ES2023 copy-with-mutate methods - bind to proxy so iteration unwraps signals
-                            'toSorted',
-                            'toReversed',
-                            'toSpliced',
-                        ]
-                        // Iterator methods need unwrapped values
-                        const iteratorMethods = ['entries', 'keys', 'values']
-                        if (
-                            iterationMethods.includes(propStr) ||
-                            searchMethods.includes(propStr) ||
-                            returnMethods.includes(propStr) ||
-                            iteratorMethods.includes(propStr)
-                        ) {
-                            return (value as Hook).bind(wrapped)
+                    if (typeof value === 'function' && copyingArrayMethods.has(propStr)) {
+                        return function (...args: unknown[]) {
+                            // Preallocated and filled in order, as in vnode.ts's normalizeChildren.
+                            // oxlint-disable-next-line no-new-array
+                            const plain = new Array(signals.length) as unknown[]
+                            for (let i = 0; i < signals.length; i++) {
+                                const sig = signals[i]
+                                plain[i] = isSignal(sig) ? sig.value : sig
+                            }
+                            const callback = args[0]
+                            if (typeof callback === 'function') {
+                                if (elementCallbackMethods.has(propStr)) {
+                                    args[0] = function (this: unknown, element: unknown, index: number) {
+                                        return (callback as Hook).call(this, element, index, wrapped)
+                                    }
+                                } else if (accumulatorCallbackMethods.has(propStr)) {
+                                    args[0] = (accumulator: unknown, element: unknown, index: number) =>
+                                        (callback as Hook)(accumulator, element, index, wrapped)
+                                }
+                            }
+                            return (value as Hook).apply(plain, args)
                         }
+                    }
+                    if (typeof value === 'function' && proxiedArrayMethods.has(propStr)) {
+                        return (value as Hook).bind(wrapped)
                     }
 
                     // Intercept mutating methods to trigger parent signal

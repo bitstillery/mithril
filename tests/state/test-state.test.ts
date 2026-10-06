@@ -633,3 +633,49 @@ describe('state', () => {
         expect(s.options[2]._disabled).toBe(0)
     })
 })
+
+describe('state array methods', () => {
+    test('callbacks get the state array as their array argument', () => {
+        const s = state({items: [1, 2, 3]})
+        const seen: unknown[] = []
+        s.items.map((_x: number, _i: number, array: unknown) => seen.push(array))
+        s.items.filter((_x: number, _i: number, array: unknown) => seen.push(array))
+        s.items.forEach((_x: number, _i: number, array: unknown) => seen.push(array))
+        s.items.reduce((acc: number, _x: number, _i: number, array: unknown) => (seen.push(array), acc), 0)
+        expect(seen.length).toBe(12)
+        expect(seen.every((array) => array === s.items)).toBe(true)
+    })
+
+    test('a write through the callback array argument reaches the state', () => {
+        const s = state({items: [1, 2, 3]})
+        s.items.forEach((x: number, i: number, array: number[]) => {
+            array[i] = x * 10
+        })
+        expect([...s.items]).toEqual([10, 20, 30])
+    })
+
+    test('map and filter call the callback with the given thisArg', () => {
+        const s = state({items: [1, 2]})
+        const context = {factor: 3}
+        expect(
+            s.items.map(function (this: typeof context, x: number) {
+                return x * this.factor
+            }, context),
+        ).toEqual([3, 6])
+        expect(
+            s.items.filter(function (this: typeof context, x: number) {
+                return x * this.factor > 3
+            }, context),
+        ).toEqual([2])
+    })
+
+    test('copying and joining methods return the unwrapped values', () => {
+        const s = state({items: [3, 1, 2], nested: [[1], [2]]})
+        expect(s.items.join('-')).toBe('3-1-2')
+        expect(s.items.concat([4])).toEqual([3, 1, 2, 4])
+        expect(s.items.toSorted((a: number, b: number) => a - b)).toEqual([1, 2, 3])
+        expect(s.items.toReversed()).toEqual([2, 1, 3])
+        expect(s.items.flatMap((x: number) => [x, x])).toEqual([3, 3, 1, 1, 2, 2])
+        expect(s.nested.flat().length).toBe(2)
+    })
+})
