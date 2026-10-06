@@ -25,8 +25,8 @@ describe('decodeURIComponentSafe', () => {
     test('percent-encoded ASCII', () => {
         for (let i = 0; i < 128; i++) {
             const char = String.fromCharCode(i)
-            const uenc = '%' + Number(i).toString(16).padStart(2, '0').toUpperCase()
-            const lenc = '%' + Number(i).toString(16).padStart(2, '0').toLowerCase()
+            const uenc = '%' + i.toString(16).padStart(2, '0').toUpperCase()
+            const lenc = '%' + i.toString(16).padStart(2, '0').toLowerCase()
             const uout = decodeURIComponentSafe(uenc)
             const lout = decodeURIComponentSafe(lenc)
             expect(char).toBe(uout)

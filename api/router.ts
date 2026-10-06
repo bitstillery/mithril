@@ -151,7 +151,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
 
     // Helper function to create redirect objects
     route.redirect = function (path: string) {
-        return {[REDIRECT]: path} as RedirectObject
+        return {[REDIRECT]: path}
     }
 
     // Type guard to check if value is a redirect object
@@ -217,7 +217,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
         const path = decodeURIComponentSafe(prefix).slice(route.prefix.length)
         const data = parsePathname(path)
 
-        const histState = $window?.history?.state
+        const histState: unknown = $window?.history?.state
         if (histState != null && typeof histState === 'object' && !Array.isArray(histState)) {
             Object.assign(data.params, histState)
         }
@@ -226,7 +226,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
             console.error(e)
             const resolve = routeSetResolve
             routeSetResolve = null
-            route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
+            void route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
         }
 
         loop(0)
@@ -259,7 +259,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
                             const resolve = routeSetResolve
                             routeSetResolve = null
                             // Trigger navigation to redirect target; resolve original Promise when redirect completes
-                            route.set(redirectPath, null).then(() => resolve?.())
+                            void route.set(redirectPath, null).then(() => resolve?.())
                             // Skip rendering current route - new route resolution will handle redirect target
                             return
                         }
@@ -280,7 +280,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
                             !(comp as RouteTargetShape).view &&
                             typeof comp !== 'function'
                         ) {
-                            currentResolver = comp as RouteResolver
+                            currentResolver = comp
                             component = 'div' // Placeholder, won't be used since currentResolver.render will be called
                         } else {
                             currentResolver = null
@@ -307,9 +307,11 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
                         payload = {}
                         update(localComp)
                     } else if ((payload as RouteTargetShape).onmatch) {
-                        p.then(function () {
-                            return (payload as RouteResolver).onmatch!(data.params, path, matchedRoute)
-                        }).then(update, path === fallbackRoute ? null : reject)
+                        void p
+                            .then(function () {
+                                return (payload as RouteResolver).onmatch!(data.params, path, matchedRoute)
+                            })
+                            .then(update, path === fallbackRoute ? null : reject)
                     } else if ((payload as RouteTargetShape).render) {
                         // RouteResolver with render method - update with resolver itself
                         update(payload)
@@ -323,7 +325,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
             }
             const resolve = routeSetResolve
             routeSetResolve = null
-            route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
+            void route.set(fallbackRoute!, null, {replace: true}).then(() => resolve?.())
         }
     }
 
@@ -356,7 +358,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
             const defaultData = parsePathname(defaultRoute)
 
             if (
-                !compiled!.some(function (i) {
+                !compiled.some(function (i) {
                     return i.check(defaultData)
                 })
             ) {
@@ -499,7 +501,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
                             e.originalEvent.preventDefault()
                         }
                         e.redraw = false
-                        route.set(href, null, options).then(onafternavigate ?? (() => {}))
+                        void route.set(href, null, options).then(onafternavigate ?? (() => {}))
                     }
                 }
             }
@@ -546,7 +548,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
                 const routeValue = routes[routePath]
                 const component =
                     routeValue && typeof routeValue === 'object' && 'component' in routeValue
-                        ? (routeValue as {component: ComponentType | RouteResolver}).component
+                        ? routeValue.component
                         : (routeValue as ComponentType | RouteResolver)
                 return {
                     route: routePath,
@@ -569,7 +571,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
 
                     // Handle RouteResolver
                     if (payload && typeof payload === 'object' && ('onmatch' in payload || 'render' in payload)) {
-                        const resolver = payload as RouteResolver
+                        const resolver = payload
                         if (resolver.onmatch) {
                             const result = resolver.onmatch(data.params, pathname, matchedRoute)
                             if (result instanceof Promise) {

@@ -138,6 +138,8 @@ export default function xhrMock() {
                         parseQueryString(urlData.search)
                         callAsync(function () {
                             if (data.status === 200) {
+                                // A JSONP response is a script; the mock runs it against the fake window.
+                                // oxlint-disable-next-line typescript/no-implied-eval
                                 new Function('$window', 'with ($window) return ' + data.responseText).call($window, $window)
                             } else if (typeof element.onerror === 'function') {
                                 element.onerror({type: 'error'})

@@ -234,12 +234,7 @@ class Logger {
         }
     }
 
-    private logBrowser(
-        level: 'info' | 'debug' | 'warn' | 'error',
-        message: string,
-        context?: LogContext,
-        error?: Error | unknown,
-    ): void {
+    private logBrowser(level: 'info' | 'debug' | 'warn' | 'error', message: string, context?: LogContext, error?: unknown): void {
         const displayMessage = context?.module ? `[${context.module}] ${message}` : message
         const prefixStyle = this.prefix === '[ssr]' ? 'color: #d946ef; font-weight: bold' : 'color: #64748b; font-weight: normal'
         const levelStyles: Record<string, string> = {
@@ -307,7 +302,7 @@ class Logger {
         }
     }
 
-    error(message: string, error?: Error | unknown, context?: LogContext): void {
+    error(message: string, error?: unknown, context?: LogContext): void {
         const errorMessage = error instanceof Error ? error.message : String(error)
         const baseMessage = error ? `${message}: ${errorMessage}` : message
 

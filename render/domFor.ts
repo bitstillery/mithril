@@ -16,7 +16,7 @@ function* domFor(vnode: Vnode): Generator<Node, void, unknown> {
             domSize!--
         }
 
-        dom = nextSibling as Node | null
+        dom = nextSibling
     } while (domSize)
 }
 

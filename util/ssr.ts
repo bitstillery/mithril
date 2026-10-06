@@ -96,13 +96,13 @@ export function formatVDOMTree(
     }
 
     const isComponent = typeof vnode.tag !== 'string'
-    const tagName = isComponent ? getComponentName(vnode) : vnode.tag
+    const tagName = isComponent ? getComponentName(vnode) : (vnode.tag as string)
 
     let result = `${indent}<${tagName}`
 
     // Add key if present
     if (vnode.attrs?.key) {
-        result += ` key="${vnode.attrs.key}"`
+        result += ` key="${String(vnode.attrs.key)}"`
     }
 
     // Add a few important attributes for debugging
@@ -388,7 +388,7 @@ export function logHydrationError(
     }
 
     if (context?.node) {
-        logContext.affectedNode = context.node.nodeType === 1 ? `${(context.node as Element).tagName.toLowerCase()}` : 'text'
+        logContext.affectedNode = context.node.nodeType === 1 ? (context.node as Element).tagName.toLowerCase() : 'text'
     }
 
     // Include structure info in debug mode

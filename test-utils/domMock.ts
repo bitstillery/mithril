@@ -52,6 +52,8 @@ export default function domMock(options?: DomMockOptions) {
             '$',
     )
 
+    // Always called as hasOwn.call(object, key), with the object as `this`.
+    // oxlint-disable-next-line typescript/unbound-method
     const hasOwn = {}.hasOwnProperty
 
     function registerSpies(element: any, spies: Record<string, any>) {
@@ -68,6 +70,7 @@ export default function domMock(options?: DomMockOptions) {
     function getSpies(element: any) {
         if (element == null || typeof element !== 'object') throw new Error('Element expected')
         if (options.spy) return spymap[spymap.indexOf(element) + 1]
+        return undefined
     }
 
     function isModernEvent(type: string): boolean {
@@ -643,7 +646,7 @@ export default function domMock(options?: DomMockOptions) {
                                     valueSetter.call(this, isNaN(num) ? '' : new Date(num).toUTCString())
                                     break
                                 case 'number':
-                                    valueSetter.call(this, String(value))
+                                    valueSetter.call(this, value)
                                     break
                                 default:
                                     throw new Error('invalid state')

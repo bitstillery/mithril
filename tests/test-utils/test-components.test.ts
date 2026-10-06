@@ -41,7 +41,10 @@ describe('test-utils/components', () => {
                 } else {
                     // deepEquals doesn't search the prototype, do it manually
                     expect(cmp2 != null).toBe(true)
+                    // Compares the method references themselves; they aren't called.
+                    // oxlint-disable-next-line typescript/unbound-method
                     expect(cmp2.view).toBe(methods.view)
+                    // oxlint-disable-next-line typescript/unbound-method
                     expect(cmp2.oninit).toBe(methods.oninit)
                 }
             })

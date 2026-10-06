@@ -26,7 +26,7 @@ export default function compileTemplate(template: string): CompiledTemplate {
                 // don't also accidentally escape `-` and make it harder to detect it to
                 // ban it from template parameters.
                 TEMPLATE_PATH_TO_REGEXP,
-                function (m, key, extra) {
+                function (m: string, key: string | undefined, extra: string | undefined) {
                     if (key == null) return '\\' + m
                     keys.push({k: key, r: extra === '...'})
                     if (extra === '...') return '(.*)'

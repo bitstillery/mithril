@@ -51,7 +51,7 @@ export default function parseQueryString(string: string | null | undefined): Rou
                 // Read own properties exclusively to disallow indirect
                 // prototype pollution
                 const desc = Object.getOwnPropertyDescriptor(cursor, finalLevel)
-                let descValue = desc != null ? desc.value : undefined
+                let descValue: unknown = desc != null ? desc.value : undefined
                 if (descValue == null) cursor[finalLevel] = descValue = isNumber ? [] : {}
                 cursor = descValue as ParamContainer
             }

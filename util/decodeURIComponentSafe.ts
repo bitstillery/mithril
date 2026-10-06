@@ -29,6 +29,7 @@ The regexp just tries to match this as compactly as possible.
 const validUtf8Encodings =
     /%(?:[0-7]|(?!c[01]|e0%[89]|ed%[ab]|f0%8|f4%[9ab])(?:c|d|(?:e|f[0-4]%[89ab])[\da-f]%[89ab])[\da-f]%[89ab])[\da-f]/gi
 
-export default function decodeURIComponentSafe(str: string): string {
+// Coerces its argument to a string first, as decodeURIComponent() does.
+export default function decodeURIComponentSafe(str: unknown): string {
     return String(str).replace(validUtf8Encodings, decodeURIComponent)
 }

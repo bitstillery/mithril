@@ -37,7 +37,7 @@ async function nextTick(): Promise<void> {
 
     // If nothing is available, resolve immediately
     // This should never happen in practice, but TypeScript needs a return
-    return Promise.resolve() as Promise<void>
+    return Promise.resolve()
 }
 
 export default nextTick

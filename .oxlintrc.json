@@ -1,5 +1,8 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
+    "options": {
+        "typeAware": true
+    },
     "categories": {
         "correctness": "error",
         "suspicious": "error",
@@ -32,7 +35,17 @@
         "no-this-alias": "off",
         "no-unnecessary-type-constraint": "off",
         "typescript/require-array-sort-compare": "off",
-        "typescript/no-explicit-any": "error"
+        "typescript/no-explicit-any": "error",
+        "typescript/no-unsafe-argument": "error",
+        "typescript/no-unsafe-assignment": "error",
+        "typescript/no-unsafe-call": "error",
+        "typescript/no-unsafe-member-access": "error",
+        "typescript/no-unsafe-return": "error",
+        "typescript/no-unnecessary-type-assertion": "error",
+        "typescript/no-floating-promises": "error",
+        "typescript/no-unsafe-type-assertion": "off",
+        "typescript/no-base-to-string": "off",
+        "eslint/no-underscore-dangle": "off"
     },
     "ignorePatterns": ["node_modules", "**/.build-*", "**/*.js", "**/index.d.ts", "**/mithril.js", "**/mithril.min.js"],
     "env": {
@@ -48,7 +61,14 @@
         {
             "files": ["tests/**", "test-utils/**", "bench/**", "docs/**", "examples/**"],
             "rules": {
-                "typescript/no-explicit-any": "off"
+                "typescript/no-explicit-any": "off",
+                "typescript/no-unsafe-argument": "off",
+                "typescript/no-unsafe-assignment": "off",
+                "typescript/no-unsafe-call": "off",
+                "typescript/no-unsafe-member-access": "off",
+                "typescript/no-unsafe-return": "off",
+                "typescript/no-unnecessary-type-assertion": "off",
+                "typescript/no-floating-promises": "off"
             }
         }
     ]

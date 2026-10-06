@@ -14,6 +14,8 @@
         "noUncheckedIndexedAccess": true,
         "noImplicitOverride": true,
         "exactOptionalPropertyTypes": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
         "verbatimModuleSyntax": true,
         "esModuleInterop": true,
         "skipLibCheck": true,

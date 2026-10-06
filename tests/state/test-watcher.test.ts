@@ -908,6 +908,7 @@ describe('watch API', () => {
                 watchCount++
             })
 
+            // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
             $state.rows.fill({qty: 0})
 
             expect(watchCount).toBe(1)

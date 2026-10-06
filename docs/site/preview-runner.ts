@@ -39,6 +39,8 @@ addEventListener('message', (e: MessageEvent) => {
     try {
         root.innerHTML = ''
         // Indirect eval runs in global scope where m and html are defined
+        // The playground runs the reader's edited example; indirect eval keeps it out of this scope.
+        // oxlint-disable-next-line eslint/no-eval
         ;(0, eval)(code)
     } catch (err) {
         const msg = err instanceof Error ? (err.stack ?? err.message) : String(err)

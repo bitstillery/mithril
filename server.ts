@@ -65,7 +65,7 @@ const mServer: MithrilServer = function m(this: unknown) {
     return hyperscript.apply(this, arguments as unknown as Parameters<typeof hyperscript>)
 } as unknown as MithrilServer
 
-mServer.m = hyperscript as Hyperscript
+mServer.m = hyperscript
 mServer.trust = hyperscript.trust
 mServer.fragment = hyperscript.fragment
 mServer.Fragment = '['
@@ -95,7 +95,7 @@ mServer.redraw = Object.assign(
             throw new Error('m.redraw.sync is not available on server.')
         },
     },
-) as Redraw
+)
 
 export default mServer
 

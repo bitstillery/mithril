@@ -80,7 +80,7 @@ describe('SSR Routing', () => {
             const Search: ComponentType = {
                 view: () => {
                     const query = mServer.route.param('q')
-                    return mServer('div', `Search: ${query || 'empty'}`)
+                    return mServer('div', `Search: ${String(query || 'empty')}`)
                 },
             }
 
@@ -248,7 +248,7 @@ describe('SSR Routing', () => {
             const Login: ComponentType = {
                 view: () => {
                     const redirect = mServer.route.param('redirect')
-                    return mServer('div', `Login (redirect: ${redirect || 'none'})`)
+                    return mServer('div', `Login (redirect: ${String(redirect || 'none')})`)
                 },
             }
 
@@ -320,6 +320,8 @@ describe('SSR Routing', () => {
             }
 
             // Should throw error after max redirect depth
+            // bun-types declares rejects.toThrow() void, but it returns the promise the test must await.
+            // oxlint-disable-next-line typescript/await-thenable
             await expect(mServer.route.resolve('/route1', routes, mServer.renderToString)).rejects.toThrow(
                 'Maximum redirect depth',
             )
@@ -413,7 +415,7 @@ describe('SSR Routing', () => {
                 view: () => {
                     const q = mServer.route.param('q')
                     const page = mServer.route.param('page')
-                    return mServer('div', `Search: ${q}, Page: ${page || '1'}`)
+                    return mServer('div', `Search: ${String(q)}, Page: ${String(page || '1')}`)
                 },
             }
 
@@ -432,7 +434,7 @@ describe('SSR Routing', () => {
             const Login: ComponentType = {
                 view: () => {
                     const redirect = mServer.route.param('redirect')
-                    return mServer('div', `Login (from: ${redirect || 'none'})`)
+                    return mServer('div', `Login (from: ${String(redirect || 'none')})`)
                 },
             }
 
@@ -508,6 +510,8 @@ describe('SSR Routing', () => {
                 '/': {view: () => mServer('div', 'Home')},
             }
 
+            // bun-types declares rejects.toThrow() void, but it returns the promise the test must await.
+            // oxlint-disable-next-line typescript/await-thenable
             await expect(mServer.route.resolve('/nonexistent', routes, mServer.renderToString)).rejects.toThrow('No route found')
         })
 
@@ -522,6 +526,8 @@ describe('SSR Routing', () => {
             }
 
             // hyperscript throws when selector is undefined (not a string or component)
+            // bun-types declares rejects.toThrow() void, but it returns the promise the test must await.
+            // oxlint-disable-next-line typescript/await-thenable
             await expect(mServer.route.resolve('/', routes, mServer.renderToString)).rejects.toThrow(
                 'The selector must be either a string or a component.',
             )
@@ -551,7 +557,7 @@ describe('SSR Routing', () => {
             const User: ComponentType<{id: string}> = {
                 view: () => {
                     const id = mServer.route.param('id')
-                    return mServer('div', `ID from param(): ${id}`)
+                    return mServer('div', `ID from param(): ${String(id)}`)
                 },
             }
 
@@ -572,7 +578,7 @@ describe('SSR Routing', () => {
                     // During SSR, attrs are set from route params
                     const id = vnode.attrs.id
                     const params = mServer.route.params
-                    return mServer('div', `ID: ${id}, Params has id: ${params && 'id' in params ? params.id : 'no'}`)
+                    return mServer('div', `ID: ${id}, Params has id: ${params && 'id' in params ? String(params.id) : 'no'}`)
                 },
             }
 
@@ -630,7 +636,7 @@ describe('SSR Routing', () => {
                 view: () => {
                     const id = mServer.route.param('id')
                     const color = mServer.route.param('color')
-                    return mServer('div', `Product ${id}, Color: ${color || 'default'}`)
+                    return mServer('div', `Product ${String(id)}, Color: ${String(color || 'default')}`)
                 },
             }
 

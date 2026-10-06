@@ -64,7 +64,7 @@ function is_object(v: unknown): v is PlainObject {
 }
 
 function copy_object<T>(obj: T): T {
-    return JSON.parse(JSON.stringify(obj))
+    return JSON.parse(JSON.stringify(obj)) as T
 }
 
 /**
@@ -77,11 +77,11 @@ function copy_object_preserve_functions<T>(obj: T): T {
     }
 
     if (Array.isArray(obj)) {
-        return obj.map((item) => copy_object_preserve_functions(item)) as T
+        return (obj as unknown[]).map((item) => copy_object_preserve_functions(item)) as T
     }
 
     if (typeof obj === 'function') {
-        return obj as T
+        return obj
     }
 
     const result: PlainObject = {}
@@ -213,7 +213,7 @@ export class Store<T extends object = PlainObject> {
         for (const key of Object.keys(blueprint)) {
             // Use `in` so Mithril state proxies (signal-backed roots) are not skipped; `hasOwnProperty`
             // can be false for keys that only exist on the proxy’s `has` / signal map.
-            if (!(key in (state as object))) {
+            if (!(key in state)) {
                 continue
             }
             const blueprintValue = (blueprint as PlainObject)[key]
@@ -276,7 +276,7 @@ export class Store<T extends object = PlainObject> {
         if (store_modified) {
             // Replace lookup with cleaned version
             ;(this.stateInstance as PlainObject).lookup = newLookup
-            this.save()
+            void this.save()
         }
     }
 
@@ -327,12 +327,12 @@ export class Store<T extends object = PlainObject> {
             restored_state.store = JSON.parse(restored_state.store as string)
             restored_state.tab = JSON.parse(restored_state.tab as string)
         } catch (err) {
-            console.log(`[store] failed to parse store/tab: ${err}`)
+            console.log(`[store] failed to parse store/tab: ${String(err)}`)
         }
 
         const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store ?? {}))
         // override with previous identity for a better version bump experience.
-        if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in (restored_state.store as object)) {
+        if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in restored_state.store) {
             store_state.identity = (restored_state.store as PlainObject).identity
         }
         let tab_state: PlainObject
@@ -513,7 +513,7 @@ export class Store<T extends object = PlainObject> {
             const existing = this.get(this.storageKey)
             let storeData: PlainObject = {}
             try {
-                storeData = JSON.parse(existing) || {}
+                storeData = (JSON.parse(existing) as PlainObject | null) || {}
             } catch {
                 storeData = {}
             }
@@ -543,8 +543,8 @@ export class Store<T extends object = PlainObject> {
         try {
             const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${key}=([^;]*)`))
             if (!match) return {}
-            const parsed = JSON.parse(decodeURIComponent(match[1]!))
-            return parsed && typeof parsed === 'object' ? parsed : {}
+            const parsed: unknown = JSON.parse(decodeURIComponent(match[1]!))
+            return parsed && typeof parsed === 'object' ? (parsed as PlainObject) : {}
         } catch {
             return {}
         }

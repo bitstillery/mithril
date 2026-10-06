@@ -130,7 +130,7 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             }
 
             const fullPattern = new RegExp(`(${openingTagPattern})\\s*</([a-zA-Z][a-zA-Z0-9]*)>`, 'i')
-            html = html.replace(fullPattern, (_match, openingTag, closingTagName) => {
+            html = html.replace(fullPattern, (_match: string, openingTag: string, closingTagName: string | undefined) => {
                 const tagMatch = openingTag.match(/^<([a-zA-Z][a-zA-Z0-9]*)/)
                 const elementName = tagMatch ? tagMatch[1] : closingTagName || 'div'
                 return `${openingTag}${appHtml}</${elementName}>`
@@ -204,7 +204,7 @@ export function createSessionUpdateHandler(
         }
 
         try {
-            const body = await req.json()
+            const body = (await req.json()) as {session_data?: unknown; session?: unknown}
             // Blueprint extracts { session: {...} }, so body.session contains the actual session data
             // body structure: { session: { user: {...}, serverData: '...', lastServerUpdate: ... } }
             const sessionData = body.session_data || body.session || {} // Support both session_data and session for compatibility

@@ -60,7 +60,7 @@ const m: MithrilStatic & Hyperscript = function m(this: unknown) {
     return hyperscript.apply(this, arguments as unknown as Parameters<typeof hyperscript>)
 } as unknown as MithrilStatic & Hyperscript
 
-m.m = hyperscript as Hyperscript
+m.m = hyperscript
 m.trust = hyperscript.trust
 m.fragment = hyperscript.fragment
 m.Fragment = '['

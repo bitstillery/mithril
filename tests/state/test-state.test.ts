@@ -425,6 +425,8 @@ describe('state', () => {
         test('an object fill value becomes one state element shared by every slot, as native fill shares it', () => {
             const s = state({rows: [{qty: 1}, {qty: 2}, {qty: 3}]}, 'testState.fillObject')
 
+            // One shared object on purpose: native fill shares the reference, and so must state.
+            // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
             s.rows.fill({qty: 0}, 1)
 
             expect(s.rows[1].__isState).toBe(true)
@@ -437,6 +439,7 @@ describe('state', () => {
         test('replacing one filled object slot leaves the others', () => {
             const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.fillObjectReplace')
 
+            // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
             s.rows.fill({qty: 0})
             s.rows[0] = {qty: 9}
 

@@ -53,7 +53,7 @@ function markAllComputedsDirty(stateObj: StateInternals | undefined): void {
             if (sig instanceof ComputedSignal) {
                 sig.markDirty()
             } else if (sig && typeof sig === 'object' && sig.value && (sig.value as StateInternals).__isState) {
-                markAllComputedsDirty(sig.value as StateInternals)
+                markAllComputedsDirty(sig.value)
             }
         })
     }
@@ -263,13 +263,13 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         const linkArrayParentSignal = (value: unknown, sig: AnySignal) => {
             if (!value || typeof value !== 'object') return
             if ((value as StateInternals).__isState === true && Array.isArray((value as StateInternals).__signals)) {
-                arrayParentSignalMap.set(value, sig as Signal<unknown>)
-                ;(value as StateInternals)._parentSignal = sig as Signal<unknown>
+                arrayParentSignalMap.set(value, sig)
+                ;(value as StateInternals)._parentSignal = sig
             } else if (Array.isArray(value)) {
-                arrayParentSignalMap.set(value, sig as Signal<unknown>)
+                arrayParentSignalMap.set(value, sig)
             } else if ((value as StateInternals).__isState === true) {
                 // Nested object proxies: notify parent when keys are added/removed
-                arrayParentSignalMap.set(value, sig as Signal<unknown>)
+                arrayParentSignalMap.set(value, sig)
             }
         }
 
@@ -386,7 +386,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                             returnMethods.includes(propStr) ||
                             iteratorMethods.includes(propStr)
                         ) {
-                            return value.bind(wrapped)
+                            return (value as Hook).bind(wrapped)
                         }
                     }
 
@@ -520,7 +520,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     }
 
                     if (typeof value === 'function') {
-                        return value.bind(target)
+                        return (value as Hook).bind(target)
                     }
                     return value
                 },
@@ -680,7 +680,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                 // Check if __signalMap was explicitly set to null (for error testing)
                 // If so, return null; otherwise return the nestedSignalMap
                 if (prop === '__signalMap') {
-                    const explicitValue = Reflect.get(target, '__signalMap')
+                    const explicitValue: unknown = Reflect.get(target, '__signalMap')
                     return explicitValue !== undefined ? explicitValue : nestedSignalMap
                 }
                 if (prop === '__rootState') return stateRootMap.get(wrapped!) ?? wrapped
@@ -690,7 +690,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                         const root = (this && (stateRootMap.get(this) ?? this)) || this
                         const flags = root ? stateDeferredFlags.get(root) : undefined
                         if (flags) flags.allowed = true
-                        markAllComputedsDirty(root as StateInternals | undefined)
+                        markAllComputedsDirty(root)
                     }
                 }
 
@@ -708,7 +708,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     // Re-link array-backed values so mutations (splice, push) notify subscribers.
                     // Needed when $prop is accessed before .prop (e.g. watcher setup before render).
                     if (sig && !(sig instanceof ComputedSignal)) {
-                        linkArrayParentSignal((sig as Signal<unknown>).peek(), sig)
+                        linkArrayParentSignal(sig.peek(), sig)
                     }
 
                     // Return raw signal object (not the value)
@@ -724,7 +724,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                 }
 
                 // Fallback to original property
-                return Reflect.get(target, prop)
+                return Reflect.get(target, prop) as unknown
             },
             set(target, prop, value) {
                 const key = String(prop)
@@ -798,9 +798,9 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                                 stateRootMap.set(nestedState, stateRootMap.get(wrapped!) ?? wrapped!)
                             }
                             linkArrayParentSignal(nestedState, sig)
-                            ;(sig as Signal<unknown>).value = nestedState
+                            sig.value = nestedState
                         } else {
-                            ;(sig as Signal<unknown>).value = value
+                            sig.value = value
                         }
                     } else {
                         // Replace computed with regular signal
@@ -867,7 +867,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     const sig = nestedSignalMap.get(key)
                     if (sig && !(sig instanceof ComputedSignal)) {
                         // Set signal value to undefined to notify subscribers
-                        ;(sig as Signal<unknown>).value = undefined
+                        sig.value = undefined
                     }
                     // Remove from the signal map
                     nestedSignalMap.delete(key)
@@ -1014,7 +1014,7 @@ export function watch<T>(signal: Signal<T> | ComputedSignal<T>, callback: (newVa
             // that happened before watcher registration (e.g., from restore_filters_sort)
             // Use Promise.resolve().then() to defer execution until after unwatch is returned,
             // so callbacks that reference unwatch won't cause ReferenceError
-            Promise.resolve().then(() => {
+            void Promise.resolve().then(() => {
                 try {
                     const currentValue = signal.peek()
                     callback(currentValue, currentValue)

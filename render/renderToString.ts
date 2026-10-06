@@ -245,7 +245,7 @@ function serializeNodeSync(
         } else if (typeof children === 'string' || typeof children === 'number') {
             html += serializeText(children, options)
         } else if (children != null) {
-            html += serializeNodeSync(children as RenderVnode, options, promiseTracker)
+            html += serializeNodeSync(children, options, promiseTracker)
         }
     }
 
@@ -315,7 +315,7 @@ async function serializeNode(
         } else if (typeof children === 'string' || typeof children === 'number') {
             html += serializeText(children, options)
         } else if (children != null) {
-            html += await serializeNode(children as RenderVnode, options, promiseTracker, isServer)
+            html += await serializeNode(children, options, promiseTracker, isServer)
         }
     }
 
@@ -376,7 +376,7 @@ async function serializeComponent(
                 const result = (state.oninit as Hook)(vnode, context)
                 // If oninit returns a promise, await it
                 if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-                    await result
+                    await (result as PromiseLike<unknown>)
                 }
             } catch (_e) {
                 // Ignore errors in oninit for now

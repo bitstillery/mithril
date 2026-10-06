@@ -86,7 +86,7 @@ export default function renderFactory() {
         if (this == null || typeof (this as Hook).apply !== 'function') {
             const tagName = typeof vnode?.tag === 'function' ? vnode.tag?.name : vnode?.tag
             throw new TypeError(
-                `callHook: expected a function with .apply (e.g. component.view), got ${tagName ?? vnode?.tag}. Check that the component has a view.`,
+                `callHook: expected a function with .apply (e.g. component.view), got ${String(tagName ?? vnode?.tag)}. Check that the component has a view.`,
             )
         }
         const original = vnode.state
@@ -128,7 +128,7 @@ export default function renderFactory() {
                     const expected = String(vnode.children)
                     if (cursor && cursor.nodeType === 3) {
                         // Reuse existing text node; patch value if it differs
-                        vnode.dom = cursor as Text
+                        vnode.dom = cursor
                         if ((cursor as Text).nodeValue !== expected) {
                             ;(cursor as Text).nodeValue = expected
                         }
@@ -141,7 +141,7 @@ export default function renderFactory() {
                         if (full.startsWith(expected)) {
                             // Split: take our portion, leave the rest for the next vnode
                             ;(cursor as Text).splitText(expected.length)
-                            vnode.dom = cursor as Text
+                            vnode.dom = cursor
                             return cursor.nextSibling
                         }
                     }
@@ -367,11 +367,11 @@ export default function renderFactory() {
             }
             // If no matching text node found, create new one
             if (!textNode!) {
-                textNode = getDocument(parent as Element).createTextNode(vnode.children as string)
+                textNode = getDocument(parent).createTextNode(vnode.children as string)
                 insertDOM(parent, textNode, nextSibling)
             }
         } else {
-            textNode = getDocument(parent as Element).createTextNode(vnode.children as string)
+            textNode = getDocument(parent).createTextNode(vnode.children as string)
             insertDOM(parent, textNode, nextSibling)
         }
         vnode.dom = textNode
@@ -408,7 +408,7 @@ export default function renderFactory() {
         }
         vnode.dom = temp.firstChild
         vnode.domSize = temp.childNodes.length
-        const fragment = getDocument(parent as Element).createDocumentFragment()
+        const fragment = getDocument(parent).createDocumentFragment()
         let child: Node | null
         while ((child = temp.firstChild) != null) {
             fragment.appendChild(child)
@@ -444,7 +444,7 @@ export default function renderFactory() {
             }
             vnode.domSize = size
         } else {
-            const fragment = getDocument(parent as Element).createDocumentFragment()
+            const fragment = getDocument(parent).createDocumentFragment()
             if (vnode.children != null) {
                 const children = vnode.children as RenderChildren
                 createNodes(fragment, children, 0, children.length, hooks, null, ns, isHydrating, matchedNodes)
@@ -631,8 +631,8 @@ export default function renderFactory() {
             createNodes(parent, vnodes!, 0, vnodes!.length, hooks, nextSibling, ns, isHydrating)
         else if (vnodes == null || vnodes.length === 0) removeNodes(parent, old, 0, old.length)
         else {
-            const isOldKeyed = old[0] != null && old[0]!.key != null
-            const isKeyed = vnodes[0] != null && vnodes[0]!.key != null
+            const isOldKeyed = old[0] != null && old[0].key != null
+            const isKeyed = vnodes[0] != null && vnodes[0].key != null
             let start = 0,
                 oldStart = 0,
                 o: RenderVnode | null | undefined,
@@ -730,8 +730,8 @@ export default function renderFactory() {
                     // is ~14x slower than this on V8 (~146ms vs ~10ms for 200k calls at 24 entries),
                     // since it adds a per-element mapper call on top of the slower allocation path.
                     // oxlint-disable-next-line no-new-array
-                    const oldIndices = new Array(end - start + 1).fill(-1)
-                    const map: Record<string, number> = Object.create(null)
+                    const oldIndices = new Array(end - start + 1).fill(-1) as number[]
+                    const map = Object.create(null) as Record<string, number>
                     for (let i = start; i <= end; i++) {
                         if (vnodes[i] != null) map[vnodes[i]!.key!] = i
                     }
@@ -994,7 +994,7 @@ export default function renderFactory() {
                 // don't allocate for the common case
                 target = vnode.dom
             } else {
-                target = getDocument(parent as Element).createDocumentFragment()
+                target = getDocument(parent).createDocumentFragment()
                 for (const dom of domFor(vnode)) target.appendChild(dom)
             }
             insertDOM(parent, target, nextSibling)
@@ -1042,7 +1042,7 @@ export default function renderFactory() {
         for (const dom of domFor(vnode)) delayedRemoval.set(dom, generation)
         counter.v++
 
-        Promise.resolve(result).finally(function () {
+        void Promise.resolve(result).finally(function () {
             checkState(vnode, original)
             tryResumeRemove(parent, vnode, counter)
         })
@@ -1236,7 +1236,7 @@ export default function renderFactory() {
         // so removal should be done first to prevent accidental removal for newly setting values.
         let val: unknown
         if (old != null) {
-            if (old === attrs && !cachedAttrsIsStaticMap.has(attrs!)) {
+            if (old === attrs && !cachedAttrsIsStaticMap.has(attrs)) {
                 // Diagnostic: log element tag and attrs to identify the source
                 console.warn(
                     "Don't reuse attrs object, use new object for every redraw, this will throw in next major",
@@ -1350,9 +1350,9 @@ export default function renderFactory() {
         // Save this, so the current redraw is correctly tracked.
         this._ = currentRedraw
     }
-    EventDict.prototype = Object.create(null)
+    EventDict.prototype = Object.create(null) as EventDict
     EventDict.prototype.handleEvent = function (this: EventDict, ev: Event & {redraw?: boolean}) {
-        const handler = this['on' + ev.type]
+        const handler: unknown = this['on' + ev.type]
         let result: unknown
         if (typeof handler === 'function') result = handler.call(ev.currentTarget, ev)
         else if (typeof (handler as EventListenerObject).handleEvent === 'function')
@@ -1361,7 +1361,7 @@ export default function renderFactory() {
         if (self._ != null) {
             if (ev.redraw !== false) (0, self._)()
             if (result != null && typeof (result as PromiseLike<unknown>).then === 'function') {
-                Promise.resolve(result).then(function () {
+                void Promise.resolve(result).then(function () {
                     if (self._ != null && ev.redraw !== false) (0, self._)()
                 })
             }
@@ -1406,7 +1406,7 @@ export default function renderFactory() {
             // render()'s finally block before the microtask fires.
             if (result != null && typeof (result as PromiseLike<unknown>).then === 'function' && currentRedraw != null) {
                 const capturedRedraw = currentRedraw
-                Promise.resolve(result).then(function () {
+                void Promise.resolve(result).then(function () {
                     capturedRedraw()
                 })
             }
@@ -1470,7 +1470,7 @@ export default function renderFactory() {
                 (dom as RenderRoot).vnodes == null &&
                 dom.nodeType === 1 && // Element node
                 'children' in dom &&
-                (dom as Element).children.length > 0
+                dom.children.length > 0
 
             // First time rendering into a node clears it out (unless hydrating)
             if (!isHydrating && (dom as RenderRoot).vnodes == null) dom.textContent = ''

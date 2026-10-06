@@ -28,7 +28,7 @@ interface CompiledSelector {
     is?: string | undefined
 }
 
-const selectorCache: Record<string, CompiledSelector> = Object.create(null)
+const selectorCache = Object.create(null) as Record<string, CompiledSelector>
 
 function isEmpty(object: Record<string, unknown>): boolean {
     for (const key in object) if (hasOwn.call(object, key)) return false

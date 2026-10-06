@@ -83,7 +83,8 @@
         "marked-gfm-heading-id": "^4.0.0",
         "mitata": "^1.0.34",
         "oxfmt": "^0.32.0",
-        "oxlint": "^1.30.0",
+        "oxlint": "^1.74.0",
+        "oxlint-tsgolint": "^7.0.2003",
         "standard-version": "^9.5.0",
         "tippy.js": "^6.3.7",
         "typescript": "^7.0.2"
