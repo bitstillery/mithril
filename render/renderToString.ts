@@ -3,7 +3,7 @@ import {setCurrentComponent, clearCurrentComponent} from '../signal'
 import {serializeAllStates} from './ssrState'
 import Vnode from './vnode'
 
-import type {Vnode as VnodeType, Children} from '../index'
+import type {Children, ComponentTag, Hook, LifecycleSource, RenderChildren, RenderVnode, Vnode as VnodeType} from './vnode'
 
 // Void elements that don't have closing tags
 const VOID_ELEMENTS = new Set([
@@ -24,19 +24,19 @@ const VOID_ELEMENTS = new Set([
 ])
 
 export interface RenderToStringOptions {
-    escapeAttribute?: (value: any) => string
-    escapeText?: (value: any) => string
+    escapeAttribute?: (value: unknown) => string
+    escapeText?: (value: unknown) => string
     strict?: boolean // Close all empty tags
     xml?: boolean // XML mode (implies strict)
 }
 
 // Default escape functions
-function escapeAttributeDefault(value: any): string {
+function escapeAttributeDefault(value: unknown): string {
     const str = String(value)
     return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 
-function escapeTextDefault(value: any): string {
+function escapeTextDefault(value: unknown): string {
     const str = String(value)
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
@@ -47,9 +47,9 @@ function isVoidElement(tag: string): boolean {
 
 // Promise tracker for async data fetching
 class PromiseTracker {
-    private promises: Promise<any>[] = []
+    private promises: Promise<unknown>[] = []
 
-    waitFor(promise: Promise<any>) {
+    waitFor(promise: Promise<unknown>) {
         this.promises.push(promise)
     }
 
@@ -70,7 +70,10 @@ class PromiseTracker {
 }
 
 // Serialize attributes to HTML string
-function serializeAttributes(attrs: Record<string, any> | null | undefined, options: Required<RenderToStringOptions>): string {
+function serializeAttributes(
+    attrs: Record<string, unknown> | null | undefined,
+    options: Required<RenderToStringOptions>,
+): string {
     if (!attrs) return ''
 
     const parts: string[] = []
@@ -127,20 +130,20 @@ function serializeText(text: string | number, options: Required<RenderToStringOp
 
 // Serialize component (sync version - no async handling)
 function serializeComponentSync(
-    vnode: VnodeType,
+    vnode: RenderVnode,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
 ): string {
-    const component = vnode.tag as any
+    const component = vnode.tag as ComponentTag
 
     // Initialize component state
-    let state: any
-    let view: ((vnode: any) => any) | undefined
+    let state: LifecycleSource
+    let view: Hook | undefined
 
     if (typeof component.view === 'function') {
         // Component object
-        state = Object.create(component)
-        view = state.view
+        state = Object.create(component) as LifecycleSource
+        view = state.view as Hook | undefined
     } else {
         // Component factory/class
         if (component.prototype && typeof component.prototype.view === 'function') {
@@ -148,7 +151,7 @@ function serializeComponentSync(
         } else {
             state = component(vnode)
         }
-        view = state.view
+        view = state.view as Hook | undefined
     }
 
     if (!view) {
@@ -165,7 +168,7 @@ function serializeComponentSync(
                 isHydrating: false,
             }
             // Call oninit but don't wait for it (sync mode)
-            state.oninit(vnode, context)
+            ;(state.oninit as Hook)(vnode, context)
         } catch (_e) {
             // Ignore errors
         }
@@ -189,7 +192,7 @@ function serializeComponentSync(
 
 // Serialize a single vnode to HTML string (sync version)
 function serializeNodeSync(
-    vnode: VnodeType | null,
+    vnode: RenderVnode | null,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
 ): string {
@@ -209,7 +212,7 @@ function serializeNodeSync(
 
     // Fragment
     if (tag === '[') {
-        const children = vnode.children as (VnodeType | null)[]
+        const children = vnode.children as RenderChildren
         if (!children) return ''
         return children.map((child) => serializeNodeSync(child, options, promiseTracker)).join('')
     }
@@ -221,7 +224,7 @@ function serializeNodeSync(
 
     // Element
     const attrs = serializeAttributes(vnode.attrs, options)
-    const children = vnode.children as Children
+    const children = vnode.children
 
     let html = `<${tag}${attrs}`
 
@@ -238,11 +241,11 @@ function serializeNodeSync(
     // Serialize children
     if (children != null) {
         if (Array.isArray(children)) {
-            html += children.map((child) => serializeNodeSync(child as VnodeType | null, options, promiseTracker)).join('')
+            html += children.map((child) => serializeNodeSync(child, options, promiseTracker)).join('')
         } else if (typeof children === 'string' || typeof children === 'number') {
             html += serializeText(children, options)
         } else if (children != null) {
-            html += serializeNodeSync(children as unknown as VnodeType, options, promiseTracker)
+            html += serializeNodeSync(children as RenderVnode, options, promiseTracker)
         }
     }
 
@@ -256,7 +259,7 @@ function serializeNodeSync(
 
 // Serialize a single vnode to HTML string
 async function serializeNode(
-    vnode: VnodeType | null,
+    vnode: RenderVnode | null,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
     isServer: boolean,
@@ -277,7 +280,7 @@ async function serializeNode(
 
     // Fragment
     if (tag === '[') {
-        const children = vnode.children as (VnodeType | null)[]
+        const children = vnode.children as RenderChildren
         if (!children) return ''
         const results = await Promise.all(children.map((child) => serializeNode(child, options, promiseTracker, isServer)))
         return results.join('')
@@ -290,7 +293,7 @@ async function serializeNode(
 
     // Element
     const attrs = serializeAttributes(vnode.attrs, options)
-    const children = vnode.children as Children
+    const children = vnode.children
 
     let html = `<${tag}${attrs}`
 
@@ -307,14 +310,12 @@ async function serializeNode(
     // Serialize children
     if (children != null) {
         if (Array.isArray(children)) {
-            const results = await Promise.all(
-                children.map((child) => serializeNode(child as VnodeType | null, options, promiseTracker, isServer)),
-            )
+            const results = await Promise.all(children.map((child) => serializeNode(child, options, promiseTracker, isServer)))
             html += results.join('')
         } else if (typeof children === 'string' || typeof children === 'number') {
             html += serializeText(children, options)
         } else if (children != null) {
-            html += await serializeNode(children as unknown as VnodeType, options, promiseTracker, isServer)
+            html += await serializeNode(children as RenderVnode, options, promiseTracker, isServer)
         }
     }
 
@@ -328,21 +329,21 @@ async function serializeNode(
 
 // Serialize component
 async function serializeComponent(
-    vnode: VnodeType,
+    vnode: RenderVnode,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
     isServer: boolean,
 ): Promise<string> {
-    const component = vnode.tag as any
+    const component = vnode.tag as ComponentTag
 
     // Initialize component state
-    let state: any
-    let view: ((vnode: any) => any) | undefined
+    let state: LifecycleSource
+    let view: Hook | undefined
 
     if (typeof component.view === 'function') {
         // Component object
-        state = Object.create(component)
-        view = state.view
+        state = Object.create(component) as LifecycleSource
+        view = state.view as Hook | undefined
     } else {
         // Component factory/class
         if (component.prototype && typeof component.prototype.view === 'function') {
@@ -350,7 +351,7 @@ async function serializeComponent(
         } else {
             state = component(vnode)
         }
-        view = state.view
+        view = state.view as Hook | undefined
     }
 
     if (!view) {
@@ -363,7 +364,7 @@ async function serializeComponent(
     // This ensures store properties can track component dependencies correctly
     setCurrentComponent(state)
 
-    let instance: any
+    let instance: RenderVnode | null
     try {
         // Call oninit with context if on server
         if (isServer && typeof state.oninit === 'function') {
@@ -372,9 +373,9 @@ async function serializeComponent(
                 isHydrating: false,
             }
             try {
-                const result = state.oninit(vnode, context)
+                const result = (state.oninit as Hook)(vnode, context)
                 // If oninit returns a promise, await it
-                if (result && typeof result.then === 'function') {
+                if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
                     await result
                 }
             } catch (_e) {
@@ -414,7 +415,7 @@ export function renderToStringFactory() {
     async function renderToString(
         vnodes: Children | VnodeType | null,
         options?: RenderToStringOptions,
-    ): Promise<{html: string; state: Record<string, any>}> {
+    ): Promise<{html: string; state: Record<string, unknown>}> {
         const opts: Required<RenderToStringOptions> = {
             ...defaultOptions,
             ...options,

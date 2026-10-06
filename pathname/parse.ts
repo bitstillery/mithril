@@ -1,7 +1,9 @@
 import parseQueryString from '../querystring/parse'
 
+import type {RouteParams} from '../querystring/parse'
+
 // Returns `{path, params}` from `url`
-export default function parsePathname(url: string): {path: string; params: Record<string, any>} {
+export default function parsePathname(url: string): {path: string; params: RouteParams} {
     const queryIndex = url.indexOf('?')
     const hashIndex = url.indexOf('#')
     const queryEnd = hashIndex < 0 ? url.length : hashIndex

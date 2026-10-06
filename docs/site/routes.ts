@@ -41,7 +41,7 @@ const routeMap: Record<string, string> = {
 
 function createRoute(routePath: string, docName: string): RouteResolver {
     return {
-        render: (vnode: Vnode) => {
+        render: (vnode: Vnode<{routePath?: string}>) => {
             const actualRoutePath = vnode.attrs?.routePath || routePath
             const result = m(DocLoader as unknown as any, {
                 key: actualRoutePath,

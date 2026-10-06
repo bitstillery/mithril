@@ -2,16 +2,19 @@ import Vnode from '../render/vnode'
 import {getSignalComponents, type Signal} from '../signal'
 import {getStateMaps} from '../render/render'
 
-import type {ComponentType, Children, Vnode as VnodeType} from '../render/vnode'
+import type {ComponentType, Children, RenderRoot, RenderVnode, Vnode as VnodeType} from '../render/vnode'
 
 export interface Render {
     (root: Element, vnodes: Children | VnodeType | null, redraw?: () => void): void
 }
 
+/** A component to redraw is given by the component, or by the state of a vnode it rendered. */
 export interface Redraw {
-    (component?: ComponentType): void
+    (component?: object): void
     sync(): void
-    signal?: (signal: Signal<any>) => void
+    signal?: (signal: Signal<unknown>) => void
+    /** Redraws several components in one pass, grouped by parent element. */
+    redrawComponents?: (components: Set<object>) => void
 }
 
 export interface Mount {
@@ -23,7 +26,7 @@ interface Schedule {
 }
 
 interface Console {
-    error: (e: any) => void
+    error: (e: unknown) => void
 }
 
 interface MountRedraw {
@@ -33,7 +36,7 @@ interface MountRedraw {
 
 export default function mountRedrawFactory(render: Render, schedule: Schedule, console: Console): MountRedraw {
     const subscriptions: Array<Element | ComponentType> = []
-    const componentToElement = new WeakMap<ComponentType, Element>()
+    const componentToElement = new WeakMap<object, Element>()
     let pending = false
     let offset = -1
 
@@ -52,7 +55,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         offset = -1
     }
 
-    function redrawComponent(componentOrState: ComponentType) {
+    function redrawComponent(componentOrState: object) {
         // componentOrState might be vnode.state (from signal tracking) or component object
         // Try to find the actual component object if it's vnode.state
         const {stateToComponentMap, stateToDomMap, stateToVnodeMap} = getStateMaps()
@@ -64,7 +67,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         const element = componentToElement.get(component)
         if (element) {
             try {
-                render(element, Vnode(component, null, null, null, null, null), redraw)
+                render(element, Vnode(component as ComponentType, null, null, null, null, null), redraw)
                 // If render succeeds, we're done
                 return
             } catch (e) {
@@ -80,13 +83,13 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
             const vnodeInfo = stateToVnodeMap.get(componentOrState)
             if (nestedElement?.isConnected && component != null && vnodeInfo != null) {
                 const parent = nestedElement.parentElement
-                const oldVnodes = parent != null ? (parent as any).vnodes : null
+                const oldVnodes = parent != null ? (parent as RenderRoot).vnodes : null
                 if (parent != null && Array.isArray(oldVnodes) && oldVnodes.length > 0) {
-                    const i = oldVnodes.findIndex((v: any) => v?.state === componentOrState)
+                    const i = oldVnodes.findIndex((v) => v?.state === componentOrState)
                     if (i >= 0) {
                         const {key, attrs} = vnodeInfo
                         const newVnodes = [...oldVnodes]
-                        newVnodes[i] = Vnode(component, key ?? null, attrs ?? null, null, null, null)
+                        newVnodes[i] = Vnode(component as ComponentType, key ?? null, attrs ?? null, null, null, null)
                         try {
                             render(parent, newVnodes, redraw)
                             return
@@ -109,11 +112,11 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         }
 
         // Third try: find element in subscriptions
-        const index = subscriptions.indexOf(component)
+        const index = subscriptions.indexOf(component as ComponentType)
         if (index >= 0 && index % 2 === 1) {
             const rootElement = subscriptions[index - 1] as Element
             try {
-                render(rootElement, Vnode(component, null, null, null, null, null), redraw)
+                render(rootElement, Vnode(component as ComponentType, null, null, null, null, null), redraw)
                 // If render succeeds, we're done
                 return
             } catch (e) {
@@ -133,10 +136,10 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         }
     }
 
-    function redrawComponents(components: Set<ComponentType>) {
+    function redrawComponents(components: Set<object>) {
         const {stateToComponentMap, stateToDomMap, stateToVnodeMap} = getStateMaps()
-        const mountRoots: ComponentType[] = []
-        const nested = new Set<ComponentType>()
+        const mountRoots: object[] = []
+        const nested = new Set<object>()
 
         for (const c of components) {
             const component = stateToComponentMap.get(c) ?? c
@@ -154,7 +157,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         if (nested.size === 0) return
 
         // Group nested components by parent element
-        const parentToStates = new Map<Element, Set<ComponentType>>()
+        const parentToStates = new Map<Element, Set<object>>()
         for (const state of nested) {
             const el = stateToDomMap.get(state)
             const parent = el?.parentElement
@@ -178,7 +181,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         }
 
         for (const [parent, states] of parentToStates) {
-            const oldVnodes = (parent as any).vnodes
+            const oldVnodes = (parent as RenderRoot).vnodes
             if (!Array.isArray(oldVnodes) || oldVnodes.length === 0) {
                 if (!pending) {
                     pending = true
@@ -193,7 +196,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
             const newVnodes = [...oldVnodes]
             let allFound = true
             for (const state of states) {
-                const i = oldVnodes.findIndex((v: any) => v?.state === state)
+                const i = oldVnodes.findIndex((v) => v?.state === state)
                 if (i < 0) {
                     allFound = false
                     break
@@ -205,7 +208,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
                     break
                 }
                 const {key, attrs} = vnodeInfo
-                newVnodes[i] = Vnode(component, key ?? null, attrs ?? null, null, null, null)
+                newVnodes[i] = Vnode(component as ComponentType, key ?? null, attrs ?? null, null, null, null)
             }
 
             if (!allFound) {
@@ -234,7 +237,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         }
     }
 
-    function redraw(component?: ComponentType) {
+    function redraw(component?: object) {
         // Component-level redraw
         if (component !== undefined) {
             redrawComponent(component)
@@ -252,10 +255,10 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     }
 
     redraw.sync = sync
-    ;(redraw as any).redrawComponents = redrawComponents
+    redraw.redrawComponents = redrawComponents
 
     // Export function to redraw components affected by signal changes
-    ;(redraw as any).signal = function (signal: Signal<any>) {
+    redraw.signal = function (signal: Signal<unknown>) {
         const components = getSignalComponents(signal)
         if (components) {
             components.forEach((component) => {
@@ -265,7 +268,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
     }
 
     function mount(root: Element, component: ComponentType | null) {
-        if (component != null && (component as any).view == null && typeof component !== 'function') {
+        if (component != null && (component as {view?: unknown}).view == null && typeof component !== 'function') {
             throw new TypeError('m.mount expects a component, not a vnode.')
         }
 

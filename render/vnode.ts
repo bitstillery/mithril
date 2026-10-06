@@ -1,7 +1,7 @@
 // Type definitions for Mithril components and vnodes
 
-export interface Vnode<Attrs = Record<string, any>, State = any> {
-    tag: string | Component<Attrs, State> | (() => Component<Attrs, State>)
+export interface Vnode<Attrs = object, State = unknown> {
+    tag: string | ComponentType<Attrs, State>
     key?: string | number | null | undefined
     attrs?: Attrs | undefined
     children?: Children | undefined
@@ -10,8 +10,9 @@ export interface Vnode<Attrs = Record<string, any>, State = any> {
     is?: string | undefined
     domSize?: number | undefined
     state?: State | undefined
-    events?: Record<string, any> | undefined
-    instance?: any
+    events?: Record<string, unknown> | undefined
+    /** A component's rendered tree. */
+    instance?: Vnode | null | undefined
 }
 
 /** Single child - Vnode/Element, primitives, or null/undefined */
@@ -20,13 +21,13 @@ export type Child = Vnode | string | number | boolean | null | undefined
 export type Children = Child | Child[]
 
 /** Vnode with dom guaranteed (oncreate/onupdate lifecycle) */
-export type VnodeDOM<Attrs = Record<string, any>, State = any> = ComponentVnode<Attrs, State> & {dom: Element}
+export type VnodeDOM<Attrs = object, State = unknown> = ComponentVnode<Attrs, State> & {dom: Element}
 
 /**
  * Vnode passed to component lifecycle methods - attrs is always defined (Mithril passes at least {}).
  * Use this so vnode.attrs is never undefined in view/oninit/oncreate etc.
  */
-export type ComponentVnode<Attrs = Record<string, any>, State = any> = Omit<Vnode<Attrs, State>, 'attrs'> & {attrs: Attrs}
+export type ComponentVnode<Attrs = object, State = unknown> = Omit<Vnode<Attrs, State>, 'attrs'> & {attrs: Attrs}
 
 /**
  * The hooks are declared as methods, not function-typed properties: under `strictFunctionTypes` a
@@ -35,41 +36,41 @@ export type ComponentVnode<Attrs = Record<string, any>, State = any> = Omit<Vnod
  * Method parameters are bivariant, which matches how Mithril really calls them — with the vnode it
  * built for that component.
  */
-export interface Component<Attrs = Record<string, any>, State = any> {
+export interface Component<Attrs = object, State = unknown> {
     oninit?(vnode: ComponentVnode<Attrs, State>): void
     oncreate?(vnode: ComponentVnode<Attrs, State>): void
     onbeforeupdate?(vnode: ComponentVnode<Attrs, State>, old: ComponentVnode<Attrs, State>): boolean | void
     onupdate?(vnode: ComponentVnode<Attrs, State>): void
-    onbeforeremove?(vnode: ComponentVnode<Attrs, State>): Promise<any> | void
+    onbeforeremove?(vnode: ComponentVnode<Attrs, State>): Promise<unknown> | void
     onremove?(vnode: ComponentVnode<Attrs, State>): void
     view(vnode: ComponentVnode<Attrs, State>): Children | Vnode | null
 }
 
-export interface ComponentFactory<Attrs = Record<string, any>, State = any> {
-    (...args: any[]): Component<Attrs, State>
+export interface ComponentFactory<Attrs = object, State = unknown> {
+    (...args: never[]): Component<Attrs, State>
     view?(vnode: ComponentVnode<Attrs, State>): Children | Vnode | null
 }
 
-export type ComponentType<Attrs = Record<string, any>, State = any> =
+export type ComponentType<Attrs = object, State = unknown> =
     | Component<Attrs, State>
     | ComponentFactory<Attrs, State>
     | (() => Component<Attrs, State>)
-    | (new (...args: any[]) => MithrilComponent<Attrs>)
-    | (new (...args: any[]) => Component<Attrs, State>)
+    | (new (...args: never[]) => MithrilComponent<Attrs>)
+    | (new (...args: never[]) => Component<Attrs, State>)
 
 /**
  * Abstract base class for TSX/JSX class-based components.
  * Assign view as a property so TypeScript infers vnode from the template: view = (vnode) => { ... }
  */
-export abstract class MithrilComponent<Attrs = Record<string, any>> {
+export abstract class MithrilComponent<Attrs = object> {
     /** Required for JSX attribute type-checking - do not use directly */
-    private readonly __tsx_attrs!: (unknown extends Attrs ? Record<string, any> : Attrs) & {key?: string | number | null}
+    private readonly __tsx_attrs!: (unknown extends Attrs ? Record<string, unknown> : Attrs) & {key?: string | number | null}
 
     oninit?(vnode: ComponentVnode<Attrs>): void
     oncreate?(vnode: ComponentVnode<Attrs>): void
     onbeforeupdate?(vnode: ComponentVnode<Attrs>, old: ComponentVnode<Attrs>): boolean | void
     onupdate?(vnode: ComponentVnode<Attrs>): void
-    onbeforeremove?(vnode: ComponentVnode<Attrs>): Promise<any> | void
+    onbeforeremove?(vnode: ComponentVnode<Attrs>): Promise<unknown> | void
     onremove?(vnode: ComponentVnode<Attrs>): void
     /** Implement in subclass: view(vnode) { ... } - annotate vnode as m.Vnode<Attrs> */
     abstract view(vnode: ComponentVnode<Attrs>): Children | Vnode | null
@@ -78,14 +79,70 @@ export abstract class MithrilComponent<Attrs = Record<string, any>> {
 /** Helper type for Vnode of a component - use when this['Vnode'] is not available */
 export type VnodeOf<T> = T extends MithrilComponent<infer A> ? ComponentVnode<A> : never
 
+/** A view or lifecycle hook as the renderer calls it: on the vnode's state, with the vnode first. */
+export type Hook = (this: unknown, ...args: unknown[]) => unknown
+
+/**
+ * What the renderer reads off a vnode's state, or off its attrs: the hooks a component or element may
+ * define. Each is checked to be a function before it is called. An element's state is an empty object.
+ */
+export interface LifecycleSource {
+    view?: unknown
+    oninit?: unknown
+    oncreate?: unknown
+    onbeforeupdate?: unknown
+    onupdate?: unknown
+    onbeforeremove?: unknown
+    onremove?: unknown
+}
+
+/**
+ * An element's event listener: one object registered for all its `on*` handlers, holding them by
+ * attribute name, plus the redraw of the render that set them.
+ */
+export type EventDict = {_: (() => void) | null | undefined; handleEvent(ev: Event): void} & {[handler: string]: unknown}
+
+/**
+ * A vnode as the renderer handles it. Hyperscript normalizes an element's or fragment's children into
+ * `RenderChildren`, and text and trusted-HTML vnodes carry their content as a string. A component's
+ * children stay as the caller passed them, for its view; the renderer never reads those.
+ */
+export interface RenderVnode {
+    tag: string | ComponentType
+    key?: string | number | null | undefined
+    attrs?: Record<string, unknown> | undefined
+    children?: RenderChildren | string | undefined
+    text?: string | number | undefined
+    dom?: Node | null | undefined
+    is?: string | undefined
+    domSize?: number | undefined
+    state?: LifecycleSource | undefined
+    events?: EventDict | undefined
+    instance?: RenderVnode | null | undefined
+}
+
+/** A component as the renderer instantiates it: an object with a view, a class, or a closure returning one. */
+export type ComponentTag = {
+    view?: unknown
+    prototype?: {view?: unknown}
+    (vnode: RenderVnode): LifecycleSource
+    new (vnode: RenderVnode): LifecycleSource
+}
+
+/** An element's or fragment's children once normalized; a hole stays null. */
+export type RenderChildren = (RenderVnode | null)[]
+
+/** A DOM node the renderer has rendered into, holding the vnodes it rendered there. */
+export type RenderRoot = Element & {vnodes?: RenderChildren | null}
+
 function Vnode(
-    tag: any,
+    tag: string | ComponentType,
     key: string | number | null | undefined,
-    attrs: Record<string, any> | null | undefined,
-    children: Children | null | undefined,
+    attrs: Record<string, unknown> | null | undefined,
+    children: RenderChildren | string | null | undefined,
     text: string | number | null | undefined,
     dom: Node | null | undefined,
-): Vnode {
+): RenderVnode {
     return {
         tag: tag,
         key: key ?? undefined,
@@ -100,14 +157,15 @@ function Vnode(
         instance: undefined,
     }
 }
-const normalize = function (node: any): Vnode | null {
-    if (Array.isArray(node)) return Vnode('[', undefined, undefined, normalizeChildren(node) as Children, undefined, undefined)
+// An object is taken to be a vnode: that is what a view or child may return besides primitives and arrays.
+const normalize = function (node: unknown): RenderVnode | null {
+    if (Array.isArray(node)) return Vnode('[', undefined, undefined, normalizeChildren(node), undefined, undefined)
     if (node == null || typeof node === 'boolean') return null
-    if (typeof node === 'object') return node
+    if (typeof node === 'object') return node as RenderVnode
     return Vnode('#', undefined, undefined, String(node), undefined, undefined)
 }
 
-const normalizeChildren = function (input: any[]): (Vnode | null)[] {
+const normalizeChildren = function (input: readonly unknown[]): RenderChildren {
     // Preallocate the array length (initially holey) and fill every index immediately in order.
     // Benchmarking shows better performance on V8.
     //
@@ -116,7 +174,7 @@ const normalizeChildren = function (input: any[]): (Vnode | null)[] {
     // for 200k calls at 12 children). This is the hottest function in a portal render profile, so the
     // difference is not academic — it was silently lost once already to an oxlint autofix.
     // oxlint-disable-next-line no-new-array
-    const children = new Array(input.length) as (Vnode | null)[]
+    const children = new Array(input.length) as RenderChildren
     // Count the number of keyed normalized vnodes for consistency check.
     // Note: this is a perf-sensitive check.
     // Fun fact: merging the loop like this is somehow faster than splitting
@@ -136,10 +194,4 @@ const normalizeChildren = function (input: any[]): (Vnode | null)[] {
     return children
 }
 
-;(Vnode as any).normalize = normalize
-;(Vnode as any).normalizeChildren = normalizeChildren
-
-export default Vnode as typeof Vnode & {
-    normalize: typeof normalize
-    normalizeChildren: typeof normalizeChildren
-}
+export default Object.assign(Vnode, {normalize, normalizeChildren})

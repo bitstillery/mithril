@@ -7,13 +7,12 @@ import {formatSsrPageSummaryLine, utf8ByteLength} from './logger'
 import {extractSessionId} from './session'
 import {logger} from './ssrLogger'
 
-import type {SessionStore} from './session'
-import type {SSRAccessContext} from '../ssrContext'
+import type {HTMLBundle} from 'bun'
 
-declare global {
-    var __SSR_MODE__: boolean | undefined
-    var __SSR_URL__: string | undefined
-}
+import type {SessionStore} from './session'
+import type {ComponentType} from '../render/vnode'
+import type {RouteResolver} from '../api/router'
+import type {SSRAccessContext} from '../ssrContext'
 
 globalThis.__SSR_MODE__ = true
 
@@ -22,7 +21,7 @@ function ssrMetricsBreakdownEnabled(): boolean {
 }
 
 export interface SSROptions {
-    routes: Record<string, any>
+    routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>
     /** Create per-request context (store, stateRegistry, sessionId, sessionData). */
     createRequestContext: (req: Request) => SSRAccessContext
     /** Load store and register state for this request; runs inside request context. */
@@ -36,7 +35,7 @@ export interface BunSSRConfig {
     port: number
     templatePath: string
     templateRoute?: string // Default: '/__template__'
-    htmlTemplate: any // Bun route handler
+    htmlTemplate: HTMLBundle
 }
 
 /**

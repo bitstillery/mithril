@@ -5,14 +5,17 @@ import {getSSRContext, runWithContext} from './ssrContext'
 // Current effect context for dependency tracking
 let currentEffect: (() => void) | null = null
 
-// Component-to-signal dependency tracking
-const componentSignalMap = new WeakMap<any, Set<Signal<any>>>()
-const signalComponentMap = new WeakMap<Signal<any>, Set<any>>()
+// Component-to-signal dependency tracking. A component is identified by its vnode state.
+const componentSignalMap = new WeakMap<object, Set<Signal<unknown>>>()
+const signalComponentMap = new WeakMap<Signal<unknown>, Set<object>>()
 
 // Current component context for component-to-signal dependency tracking
-let currentComponent: any = null
+let currentComponent: object | null = null
 
-export function setCurrentComponent(component: any) {
+// Redraws the components that read a signal; index.ts sets it up once m.redraw exists.
+let redrawCallback: ((signal: Signal<unknown>) => void) | null = null
+
+export function setCurrentComponent(component: object) {
     currentComponent = component
 }
 
@@ -24,7 +27,7 @@ export function getCurrentComponent() {
     return currentComponent
 }
 
-export function trackComponentSignal(component: any, signal: Signal<any>) {
+export function trackComponentSignal(component: object, signal: Signal<unknown>) {
     let set = componentSignalMap.get(component)
     if (!set) {
         set = new Set()
@@ -41,15 +44,15 @@ export function trackComponentSignal(component: any, signal: Signal<any>) {
     compSet.add(component)
 }
 
-export function getComponentSignals(component: any): Set<Signal<any>> | undefined {
+export function getComponentSignals(component: object): Set<Signal<unknown>> | undefined {
     return componentSignalMap.get(component)
 }
 
-export function getSignalComponents(signal: Signal<any>): Set<any> | undefined {
+export function getSignalComponents(signal: Signal<unknown>): Set<object> | undefined {
     return signalComponentMap.get(signal)
 }
 
-export function clearComponentDependencies(component: any) {
+export function clearComponentDependencies(component: object) {
     const signals = componentSignalMap.get(component)
     if (signals) {
         signals.forEach((signal) => {
@@ -66,8 +69,13 @@ export function clearComponentDependencies(component: any) {
 }
 
 // Set up callback for signal-to-component redraw integration
-export function setSignalRedrawCallback(callback: (signal: Signal<any>) => void) {
-    ;(signal as any).__redrawCallback = callback
+export function setSignalRedrawCallback(callback: (signal: Signal<unknown>) => void) {
+    redrawCallback = callback
+}
+
+/** Redraws the components that read `signal`, once redrawing is set up. */
+export function requestSignalRedraw(signal: Signal<unknown>): void {
+    if (redrawCallback) redrawCallback(signal)
 }
 
 /**
@@ -75,7 +83,8 @@ export function setSignalRedrawCallback(callback: (signal: Signal<any>) => void)
  */
 export class Signal<T> {
     private _value: T
-    private _subscribers: Set<() => void> = new Set()
+    /** Internal: state.ts notifies these directly when an array it holds mutates in place. */
+    _subscribers: Set<() => void> = new Set()
 
     constructor(initial: T) {
         this._value = initial
@@ -132,9 +141,7 @@ export class Signal<T> {
         })
         // Trigger component redraws for affected components
         // This is set up in index.ts after m.redraw is created
-        if ((signal as any).__redrawCallback) {
-            ;(signal as any).__redrawCallback(this)
-        }
+        if (redrawCallback) redrawCallback(this)
     }
 
     /**
@@ -179,12 +186,12 @@ export class Signal<T> {
  */
 export class ComputedSignal<T> extends Signal<T> {
     private _compute: () => T
-    private _dependencies: Set<Signal<any>> = new Set()
+    private _dependencies: Set<Signal<unknown>> = new Set()
     private _isDirty = true
     private _cachedValue!: T
 
     constructor(compute: () => T) {
-        super(null as any) // Will be computed on first access
+        super(null as T) // Will be computed on first access
         this._compute = compute
     }
 
@@ -193,10 +200,10 @@ export class ComputedSignal<T> extends Signal<T> {
         // When computed B accesses computed A, A should notify B when A's dependencies change
         if (currentEffect) {
             // Ensure _subscribers is initialized (defensive check)
-            if (!(this as any)._subscribers) {
-                ;(this as any)._subscribers = new Set()
+            if (!this._subscribers) {
+                this._subscribers = new Set()
             }
-            ;(this as any)._subscribers.add(currentEffect)
+            this._subscribers.add(currentEffect)
         }
 
         if (this._isDirty) {
@@ -229,12 +236,12 @@ export class ComputedSignal<T> extends Signal<T> {
         if (!this._isDirty) {
             this._isDirty = true
             // Ensure _subscribers is initialized (defensive check)
-            if (!(this as any)._subscribers) {
-                ;(this as any)._subscribers = new Set()
+            if (!this._subscribers) {
+                this._subscribers = new Set()
             }
             // Notify subscribers that computed value changed
             const context = getSSRContext()
-            ;(this as any)._subscribers.forEach((fn: () => void) => {
+            this._subscribers.forEach((fn: () => void) => {
                 try {
                     if (context) {
                         // Run watcher inside SSR context, similar to events

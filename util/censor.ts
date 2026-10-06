@@ -25,22 +25,23 @@ import hasOwn from './hasOwn'
 
 const magic = /^(?:key|oninit|oncreate|onbeforeupdate|onupdate|onbeforeremove|onremove)$/
 
-export default function censor(attrs: Record<string, any>, extras?: string[]): Record<string, any> {
-    const result: Record<string, any> = {}
+// The result holds a subset of attrs' own keys: the lifecycle hooks, `key` and `extras` are left out.
+export default function censor<T extends object>(attrs: T, extras?: string[]): Partial<T> {
+    const result: Record<string, unknown> = {}
 
     if (extras != null) {
         for (const key in attrs) {
             if (hasOwn.call(attrs, key) && !magic.test(key) && extras.indexOf(key) < 0) {
-                result[key] = attrs[key]
+                result[key] = (attrs as Record<string, unknown>)[key]
             }
         }
     } else {
         for (const key in attrs) {
             if (hasOwn.call(attrs, key) && !magic.test(key)) {
-                result[key] = attrs[key]
+                result[key] = (attrs as Record<string, unknown>)[key]
             }
         }
     }
 
-    return result
+    return result as Partial<T>
 }

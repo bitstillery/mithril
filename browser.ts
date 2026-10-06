@@ -1,10 +1,9 @@
-// @ts-nocheck
 import m from './index'
 
 if (typeof module !== 'undefined') {
-    ;(module as any)['exports'] = m
+    module['exports'] = m
 } else {
-    ;(window as any).m = m
+    ;(window as Window & {m?: typeof m}).m = m
 }
 
 export default m

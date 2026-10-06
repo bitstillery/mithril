@@ -5,7 +5,14 @@
  * request's context. No globals, safe under concurrent requests.
  * In the browser, getSSRContext() returns undefined and runWithContext just runs fn.
  */
+import type {StateRegistryEntry} from './state'
 import type {Store} from './store'
+
+declare global {
+    // Set by the SSR server (server/ssr.ts): SSR mode for the process, the request URL while one renders.
+    var __SSR_MODE__: boolean | undefined
+    var __SSR_URL__: string | undefined
+}
 
 type StorageLike = {
     getStore(): SSRAccessContext | undefined
@@ -32,11 +39,11 @@ try {
 export interface SSRAccessContext {
     store?: Store | undefined
     /** Per-request state registry for serialization; fresh Map per request. */
-    stateRegistry: Map<string, {state: any; initial: any}>
+    stateRegistry: Map<string, StateRegistryEntry>
     sessionId?: string | undefined
-    sessionData?: any
+    sessionData?: unknown
     /** Per-request EventEmitter; prevents event listeners from persisting between requests. */
-    events?: any
+    events?: unknown
     /**
      * Optional metadata merged into `#__SSR_STATE__` as top-level `__meta` when serializing.
      * Consumers should strip `__meta` before `deserializeAllStates`. Set during SSR app init.

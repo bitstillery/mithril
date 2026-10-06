@@ -8,13 +8,14 @@ import censor from '../util/censor'
 import {getPathname, getSearch, getHash} from '../util/uri'
 import {logger} from '../server/ssrLogger'
 
-import type {ComponentType, Vnode as VnodeType} from '../render/vnode'
+import type {Children, ComponentType, Vnode as VnodeType} from '../render/vnode'
+import type {RouteParamValue, RouteParams} from '../querystring/parse'
 
 // RedirectObject will be defined after REDIRECT symbol is created
 // Using a type that references the symbol indirectly
 export type RedirectObject = {[key: symbol]: string}
 
-export interface RouteResolver<Attrs = Record<string, any>, State = any> {
+export interface RouteResolver<Attrs = object, State = unknown> {
     onmatch?: (
         args: Attrs,
         requestedPath: string,
@@ -23,56 +24,69 @@ export interface RouteResolver<Attrs = Record<string, any>, State = any> {
     render?: (vnode: VnodeType<Attrs, State>) => VnodeType
 }
 
-export type SSRState = Record<string, any>
+export type SSRState = Record<string, unknown>
 export type SSRResult = string | {html: string; state: SSRState}
 
 /**
- * A route parameter as the URL can carry it. Path params are always strings; the querystring parser
- * also turns `true`/`false` into booleans and `a[]=`/`a[b]=` keys into arrays and objects. A plain
- * object in `history.state` is merged over the params too, so values put there must keep to this
- * shape for the type to hold.
+ * The params a route carries: see `RouteParamValue`. A plain object in `history.state` is merged over
+ * them too, so values put there must keep to this shape for the type to hold.
  */
-export type RouteParamValue = string | boolean | RouteParamValue[] | {[key: string]: RouteParamValue}
-export type RouteParams = Record<string, RouteParamValue>
+export type {RouteParamValue, RouteParams}
+
+export interface RouteOptions {
+    /** When true, bumps remountNonce once so the resolver fragment key changes for that navigation (e.g. Link). */
+    remount?: boolean
+    replace?: boolean
+    state?: unknown
+    title?: string | null
+}
 
 export interface Route {
-    (path: string, params?: Record<string, any>, shouldReplaceHistory?: boolean): void
-    (path: string, component: ComponentType, shouldReplaceHistory?: boolean): void
-    set: (path: string, params?: Record<string, any>, data?: any) => Promise<void>
+    (root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>): void
+    set: (path: string, params?: object | null, options?: RouteOptions) => Promise<void>
     get: () => string
     prefix: string
-    link: (vnode: VnodeType) => string
+    link: (vnode: VnodeType) => VnodeType
     param: {
         (key: string): RouteParamValue | undefined
         (): RouteParams
     }
-    params: Record<string, any>
+    readonly params: RouteParams
     Link: ComponentType
-    SKIP: {}
+    SKIP: object
     REDIRECT: symbol
     redirect: (path: string) => RedirectObject
     resolve: (
         pathname: string,
         routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
-        renderToString: (vnodes: any) => Promise<SSRResult>,
+        renderToString: (vnodes: Children) => Promise<SSRResult>,
         prefix?: string,
     ) => Promise<SSRResult>
 }
+
+/** A route's target inspected before it is known whether it is a component (`view`) or a resolver. */
+type RouteTargetShape = {view?: unknown; onmatch?: RouteResolver['onmatch']; render?: RouteResolver['render']}
+
+/** The attrs `m.route.Link` reads itself; any others go to the element it renders. */
+export interface LinkAttrs {
+    href?: string
+    selector?: string | ComponentType
+    options?: RouteOptions
+    params?: Record<string, unknown>
+    disabled?: unknown
+    onclick?: unknown
+    onafternavigate?: () => void
+}
+
+/** A click on a Link: `redraw` as Mithril reads it, `originalEvent` when another library wrapped the event. */
+type LinkClick = MouseEvent & {redraw?: boolean; originalEvent?: Event}
 
 interface MountRedraw {
     mount: (root: Element, component: ComponentType | null) => void
     redraw: () => void
 }
 
-interface RouteOptions {
-    /** When true, bumps remountNonce once so the resolver fragment key changes for that navigation (e.g. Link). */
-    remount?: boolean
-    replace?: boolean
-    state?: any
-    title?: string | null
-}
-
-export default function router($window: any, mountRedraw: MountRedraw) {
+export default function router($window: Window | null, mountRedraw: MountRedraw) {
     let p = Promise.resolve()
 
     let scheduled = false
@@ -82,15 +96,19 @@ export default function router($window: any, mountRedraw: MountRedraw) {
 
     let dom: Element | undefined
     let compiled:
-        | Array<{route: string; component: any; check: (data: {path: string; params: Record<string, any>}) => boolean}>
+        | Array<{
+              route: string
+              component: ComponentType | RouteResolver
+              check: (data: {path: string; params: RouteParams}) => boolean
+          }>
         | undefined
     let fallbackRoute: string | undefined
 
     let currentResolver: RouteResolver | null = null
     let component: ComponentType | string = 'div'
-    let attrs: Record<string, any> = {}
+    let attrs: RouteParams = {}
     let currentPath: string | undefined
-    let lastUpdate: ((comp: any) => void) | null = null
+    let lastUpdate: ((comp: unknown) => void) | null = null
     let routeSetResolve: (() => void) | null = null
     /** Incremented only when route.set(..., { remount: true }); fragment key is m-route-${remountNonce}. */
     let remountNonce = 0
@@ -98,7 +116,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     const RouterRoot: ComponentType = {
         onremove: function () {
             ready = hasBeenResolved = false
-            $window.removeEventListener('popstate', fireAsync, false)
+            $window!.removeEventListener('popstate', fireAsync, false)
         },
         view: function () {
             // The route has already been resolved.
@@ -111,7 +129,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             const routeAttrs = {...attrs, routePath: currentPath || attrs.routePath}
             const vnode = Vnode(component, undefined, routeAttrs, null, null, null)
             if (currentResolver) {
-                const result = currentResolver.render!(vnode as any)
+                const result = currentResolver.render!(vnode)
                 // SSR `renderToString(resolver.render(...))` has no outer fragment. Wrapping here breaks
                 // hydration: `createFragment` uses an empty DocumentFragment as parent, so descendant
                 // nodes never match `#app`'s existing SSR children (blank tree / mismatch recovery).
@@ -139,7 +157,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     // Type guard to check if value is a redirect object
     // Note: We check for any Symbol key that might be a redirect, not just our specific REDIRECT symbol
     // This allows redirect objects created by different router instances to be detected
-    function isRedirect(value: any): value is RedirectObject {
+    function isRedirect(value: unknown): value is RedirectObject {
         if (value == null || typeof value !== 'object') return false
         // Check if this object has our REDIRECT symbol
         if (REDIRECT in value) return true
@@ -153,7 +171,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             for (const sym of symbolKeys) {
                 const desc = sym.description || ''
                 if (desc.includes('REDIRECT') || desc === 'REDIRECT') {
-                    const path = value[sym]
+                    const path = (value as RedirectObject)[sym]
                     if (typeof path === 'string' && path.startsWith('/')) {
                         return true
                     }
@@ -204,7 +222,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             Object.assign(data.params, histState)
         }
 
-        function reject(e: any) {
+        function reject(e: unknown) {
             console.error(e)
             const resolve = routeSetResolve
             routeSetResolve = null
@@ -224,14 +242,14 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                     const resolverWithRender =
                         payload &&
                         typeof payload === 'object' &&
-                        payload.onmatch &&
-                        payload.render &&
-                        !payload.view &&
+                        (payload as RouteTargetShape).onmatch &&
+                        (payload as RouteTargetShape).render &&
+                        !(payload as RouteTargetShape).view &&
                         typeof payload !== 'function'
-                            ? payload
+                            ? (payload as RouteResolver)
                             : null
 
-                    const update = (lastUpdate = function (comp: any) {
+                    const update = (lastUpdate = function (comp: unknown) {
                         if (update !== lastUpdate) return
                         if (comp === SKIP) return loop(i + 1)
                         // Handle redirect objects: explicit redirect signal
@@ -249,16 +267,28 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         if (resolverWithRender) {
                             currentResolver = resolverWithRender
                             component =
-                                comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
+                                comp != null &&
+                                (typeof (comp as RouteTargetShape).view === 'function' || typeof comp === 'function')
+                                    ? (comp as ComponentType)
+                                    : 'div'
                         }
                         // If comp is a RouteResolver with render, set currentResolver instead of component
-                        else if (comp && typeof comp === 'object' && comp.render && !comp.view && typeof comp !== 'function') {
-                            currentResolver = comp
+                        else if (
+                            comp &&
+                            typeof comp === 'object' &&
+                            (comp as RouteTargetShape).render &&
+                            !(comp as RouteTargetShape).view &&
+                            typeof comp !== 'function'
+                        ) {
+                            currentResolver = comp as RouteResolver
                             component = 'div' // Placeholder, won't be used since currentResolver.render will be called
                         } else {
                             currentResolver = null
                             component =
-                                comp != null && (typeof comp.view === 'function' || typeof comp === 'function') ? comp : 'div'
+                                comp != null &&
+                                (typeof (comp as RouteTargetShape).view === 'function' || typeof comp === 'function')
+                                    ? (comp as ComponentType)
+                                    : 'div'
                         }
                         attrs = data.params
                         currentPath = path
@@ -273,14 +303,14 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                     })
                     // There's no understating how much I *wish* I could
                     // use `async`/`await` here...
-                    if (payload.view || typeof payload === 'function') {
+                    if ((payload as RouteTargetShape).view || typeof payload === 'function') {
                         payload = {}
                         update(localComp)
-                    } else if (payload.onmatch) {
+                    } else if ((payload as RouteTargetShape).onmatch) {
                         p.then(function () {
-                            return payload.onmatch!(data.params, path, matchedRoute)
+                            return (payload as RouteResolver).onmatch!(data.params, path, matchedRoute)
                         }).then(update, path === fallbackRoute ? null : reject)
-                    } else if (payload.render) {
+                    } else if ((payload as RouteTargetShape).render) {
                         // RouteResolver with render method - update with resolver itself
                         update(payload)
                     } else update('div')
@@ -317,7 +347,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             }
             return {
                 route: routePath,
-                component: routes[routePath],
+                component: routes[routePath]!,
                 check: compileTemplate(routePath),
             }
         })
@@ -326,7 +356,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             const defaultData = parsePathname(defaultRoute)
 
             if (
-                !compiled.some(function (i) {
+                !compiled!.some(function (i) {
                     return i.check(defaultData)
                 })
             ) {
@@ -335,14 +365,14 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         }
         dom = root
 
-        $window.addEventListener('popstate', fireAsync, false)
+        $window!.addEventListener('popstate', fireAsync, false)
 
         ready = true
 
         // The RouterRoot component is mounted when the route is first resolved.
         resolveRoute()
     }
-    route.set = function (path: string, data: Record<string, any> | null, options?: RouteOptions): Promise<void> {
+    route.set = function (path: string, data?: object | null, options?: RouteOptions): Promise<void> {
         if (lastUpdate != null) {
             options = options || {}
             options.replace = true
@@ -365,8 +395,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         const state = options ? options.state : null
         const title = options ? options.title : null
         if ($window.history) {
-            if (options && options.replace) $window.history.replaceState(state, title, route.prefix + path)
-            else $window.history.pushState(state, title, route.prefix + path)
+            // The title argument is unused by browsers.
+            if (options && options.replace) $window.history.replaceState(state, title as string, route.prefix + path)
+            else $window.history.pushState(state, title as string, route.prefix + path)
         }
         const promise = new Promise<void>((resolve) => {
             routeSetResolve = resolve
@@ -388,7 +419,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         return route.Link.view(vnode)
     }
     route.Link = {
-        view: function (vnode: VnodeType) {
+        view: function (vnode: VnodeType<LinkAttrs>) {
             // Omit the used parameters from the rendered element - they are
             // internal. Also, censor the various lifecycle methods.
             //
@@ -400,7 +431,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                 vnode.children,
             )
             let options: RouteOptions | undefined
-            let onclick: any
+            let onclick: unknown
             let onafternavigate: (() => void) | undefined
             let href: string
 
@@ -420,21 +451,21 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                 onclick = vnode.attrs?.onclick
                 onafternavigate = vnode.attrs?.onafternavigate
                 // Easier to build it now to keep it isomorphic.
-                href = buildPathname(child.attrs!.href || '', vnode.attrs?.params || {})
+                href = buildPathname((child.attrs!.href as string) || '', vnode.attrs?.params || {})
                 // Make Link isomorphic - use empty prefix on server for pathname routing
                 // On server ($window is null): always use empty prefix for clean URLs
                 // On client: use route.prefix (which may be '#!' for hash routing or '' for pathname routing)
                 // This ensures SSR generates clean pathname URLs while client can use hash routing if configured
                 const linkPrefix = $window == null ? '' : route.prefix
                 child.attrs!.href = linkPrefix + href
-                child.attrs!.onclick = function (e: any) {
-                    let result: any
+                child.attrs!.onclick = function (e: LinkClick) {
+                    let result: unknown
                     if (typeof onclick === 'function') {
                         result = onclick.call(e.currentTarget, e)
                     } else if (onclick == null || typeof onclick !== 'object') {
                         // do nothing
-                    } else if (typeof onclick.handleEvent === 'function') {
-                        onclick.handleEvent(e)
+                    } else if (typeof (onclick as EventListenerObject).handleEvent === 'function') {
+                        ;(onclick as EventListenerObject).handleEvent(e)
                     }
 
                     // Adapted from React Router's implementation:
@@ -453,7 +484,8 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         // Ignore everything but left clicks
                         (e.button === 0 || e.which === 0 || e.which === 1) &&
                         // Let the browser handle `target=_blank`, etc.
-                        (!e.currentTarget.target || e.currentTarget.target === '_self') &&
+                        (!(e.currentTarget as HTMLAnchorElement).target ||
+                            (e.currentTarget as HTMLAnchorElement).target === '_self') &&
                         // No modifier keys
                         !e.ctrlKey &&
                         !e.metaKey &&
@@ -466,7 +498,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                         } else if (e.originalEvent && typeof e.originalEvent.preventDefault === 'function') {
                             e.originalEvent.preventDefault()
                         }
-                        ;(e as any).redraw = false
+                        e.redraw = false
                         route.set(href, null, options).then(onafternavigate ?? (() => {}))
                     }
                 }
@@ -476,14 +508,14 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     }
     route.param = function (key?: string) {
         return attrs && key != null ? attrs[key] : attrs
-    }
+    } as Route['param']
     Object.defineProperty(route, 'params', {get: () => attrs, enumerable: true})
 
     // Server-side route resolution (isomorphic)
     route.resolve = async function (
         pathname: string,
         routes: Record<string, ComponentType | RouteResolver | {component: ComponentType | RouteResolver}>,
-        renderToString: (vnodes: any) => Promise<SSRResult>,
+        renderToString: (vnodes: Children) => Promise<SSRResult>,
         prefix: string = '',
         redirectDepth: number = 0,
     ): Promise<SSRResult> {
@@ -533,7 +565,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
             // Find matching route
             for (const {route: matchedRoute, component, check} of compiled) {
                 if (check(data)) {
-                    let payload = component
+                    let payload: ComponentType | RouteResolver | RedirectObject = component
 
                     // Handle RouteResolver
                     if (payload && typeof payload === 'object' && ('onmatch' in payload || 'render' in payload)) {
@@ -543,7 +575,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                             if (result instanceof Promise) {
                                 payload = await result
                             } else if (result !== undefined) {
-                                payload = result as any
+                                payload = result
                             }
                             // Note: If onmatch returns undefined, payload remains as the RouteResolver
                         }
@@ -616,7 +648,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                                 (typeof payload === 'function' ||
                                     (typeof payload === 'object' &&
                                         'view' in payload &&
-                                        typeof (payload as any).view === 'function'))
+                                        typeof (payload as RouteTargetShape).view === 'function'))
 
                             if (isComponentType) {
                                 try {
@@ -643,9 +675,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                             if (!resolver.onmatch || payload === resolver) {
                                 try {
                                     // Create a vnode with the resolver as tag and routePath in attrs
-                                    // Use Vnode() directly since resolver is not a component
+                                    // Use Vnode() directly since resolver is not a component; render() only reads it
                                     const resolverVnode = Vnode(
-                                        resolver as any,
+                                        resolver as ComponentType,
                                         pathname,
                                         {
                                             ...data.params,
@@ -678,7 +710,9 @@ export default function router($window: any, mountRedraw: MountRedraw) {
                     const isComponentType =
                         payload != null &&
                         (typeof payload === 'function' ||
-                            (typeof payload === 'object' && 'view' in payload && typeof (payload as any).view === 'function'))
+                            (typeof payload === 'object' &&
+                                'view' in payload &&
+                                typeof (payload as RouteTargetShape).view === 'function'))
                     if (isComponentType) {
                         const vnode = hyperscript(payload as ComponentType, data.params)
                         const result = await renderToString(vnode)
@@ -701,8 +735,6 @@ export default function router($window: any, mountRedraw: MountRedraw) {
         }
     }
 
-    return route as unknown as Route &
-        ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void) & {
-            redirect: (path: string) => RedirectObject
-        }
+    // `params` is the getter defined above, which the function's inferred type can't see.
+    return route as typeof route & Pick<Route, 'params'>
 }

@@ -8,7 +8,7 @@ import emptyAttrs from './emptyAttrs'
 // Since the attrs used as keys in this map are not released from the selectorCache object,
 // there is no risk of memory leaks. Therefore, Map is used here instead of WeakMap.
 
-const map = new Map<Record<string, any>, boolean>()
+const map = new Map<Record<string, unknown>, boolean>()
 // Each Mithril instance registers its own emptyAttrs as static.
 map.set(emptyAttrs, true)
 export default map

@@ -31,17 +31,10 @@
         "no-duplicate-enum-values": "off",
         "no-this-alias": "off",
         "no-unnecessary-type-constraint": "off",
-        "typescript/require-array-sort-compare": "off"
+        "typescript/require-array-sort-compare": "off",
+        "typescript/no-explicit-any": "error"
     },
-    "ignorePatterns": [
-        "node_modules",
-        "**/.build-*",
-        "**/*.js",
-        "**/index.d.ts",
-        "**/mithril.js",
-        "**/mithril.min.js",
-        "store.ts"
-    ],
+    "ignorePatterns": ["node_modules", "**/.build-*", "**/*.js", "**/index.d.ts", "**/mithril.js", "**/mithril.min.js"],
     "env": {
         "browser": true,
         "node": true,
@@ -50,5 +43,13 @@
     "globals": {
         "Bun": "readonly",
         "globalThis": "readonly"
-    }
+    },
+    "overrides": [
+        {
+            "files": ["tests/**", "test-utils/**", "bench/**", "docs/**", "examples/**"],
+            "rules": {
+                "typescript/no-explicit-any": "off"
+            }
+        }
+    ]
 }

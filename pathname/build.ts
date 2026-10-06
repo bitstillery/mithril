@@ -1,7 +1,7 @@
 import buildQueryString from '../querystring/build'
 
 // Returns `path` from `template` + `params`
-export default function buildPathname(template: string, params: Record<string, any>): string {
+export default function buildPathname(template: string, params: object): string {
     if (/:([^/.-]+)(\.{3})?:/.test(template)) {
         throw new SyntaxError("Template parameter names must be separated by either a '/', '-', or '.'.")
     }
@@ -11,16 +11,18 @@ export default function buildPathname(template: string, params: Record<string, a
     const queryEnd = hashIndex < 0 ? template.length : hashIndex
     const pathEnd = queryIndex < 0 ? queryEnd : queryIndex
     const path = template.slice(0, pathEnd)
-    const query: Record<string, any> = {}
+    const query: Record<string, unknown> = {}
 
     Object.assign(query, params)
 
-    const resolved = path.replace(/:([^/.-]+)(\.{3})?/g, function (m, key, variadic) {
+    const resolved = path.replace(/:([^/.-]+)(\.{3})?/g, function (m: string, key: string, variadic: string | undefined) {
         delete query[key]
         // If no such parameter exists, don't interpolate it.
-        if (params[key] == null) return m
-        // Escape normal parameters, but not variadic ones.
-        return variadic ? params[key] : encodeURIComponent(String(params[key]))
+        if ((params as Record<string, unknown>)[key] == null) return m
+        // Escape normal parameters, but not variadic ones; replace() coerces a variadic one to a string.
+        return variadic
+            ? ((params as Record<string, unknown>)[key] as string)
+            : encodeURIComponent(String((params as Record<string, unknown>)[key]))
     })
 
     // In case the template substitution adds new query/hash parameters.

@@ -1,18 +1,22 @@
 import {allowComputed, state, updateStateRegistry} from './state'
-import type {State, DeepPartial} from './state'
+import type {State, DeepPartial, StateInternals} from './state'
 import {serializeStore, deserializeStore} from './render/ssrState'
 
+/** A JSON-like object the store copies, merges and persists. */
+type PlainObject = Record<string, unknown>
+
 // Helper function to restore computed properties (same as in ssrState.ts)
-function restoreComputedProperties(state: State<any>, initial: any): void {
+function restoreComputedProperties(state: object, initial: unknown): void {
     if (!initial || typeof initial !== 'object') {
         return
     }
 
-    function is_object(v: any): boolean {
-        return v && typeof v === 'object' && !Array.isArray(v)
+    function is_object(v: unknown): v is PlainObject {
+        return (v && typeof v === 'object' && !Array.isArray(v)) as boolean
     }
 
-    function restore(obj: any, target: any, prefix: string = ''): void {
+    // `obj` is a part of the initial state; `target` is always the root state, walked by `prefix`.
+    function restore(obj: PlainObject, target: PlainObject, prefix: string = ''): void {
         for (const key in obj) {
             if (Object.prototype.hasOwnProperty.call(obj, key)) {
                 const value = obj[key]
@@ -26,12 +30,12 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
                             // Nested state doesn't exist yet, skip
                             return
                         }
-                        targetState = targetState[keys[i]!]
+                        targetState = targetState[keys[i]!] as PlainObject
                     }
                     if (targetState) {
                         // Clear any existing signal in signalMap so function is re-initialized as ComputedSignal
-                        if (typeof targetState === 'object' && (targetState as any).__isState) {
-                            const signalMap = (targetState as any).__signalMap
+                        if (typeof targetState === 'object' && (targetState as StateInternals).__isState) {
+                            const signalMap = (targetState as StateInternals).__signalMap
                             if (signalMap && signalMap instanceof Map) {
                                 signalMap.delete(key)
                             }
@@ -47,16 +51,16 @@ function restoreComputedProperties(state: State<any>, initial: any): void {
         }
     }
 
-    restore(initial, state)
+    restore(initial as PlainObject, state as PlainObject)
 }
 
 // Utility functions for Store class
-function isState(value: any): boolean {
-    return value && typeof value === 'object' && (value as any).__isState === true
+function isState(value: unknown): boolean {
+    return (value && typeof value === 'object' && (value as StateInternals).__isState === true) as boolean
 }
 
-function is_object(v: any): boolean {
-    return v && typeof v === 'object' && !Array.isArray(v)
+function is_object(v: unknown): v is PlainObject {
+    return (v && typeof v === 'object' && !Array.isArray(v)) as boolean
 }
 
 function copy_object<T>(obj: T): T {
@@ -80,10 +84,10 @@ function copy_object_preserve_functions<T>(obj: T): T {
         return obj as T
     }
 
-    const result: any = {}
+    const result: PlainObject = {}
     for (const key in obj) {
         if (Object.prototype.hasOwnProperty.call(obj, key)) {
-            const value = (obj as any)[key]
+            const value: unknown = obj[key]
             if (typeof value === 'function') {
                 // Preserve functions (computed properties)
                 result[key] = value
@@ -96,18 +100,19 @@ function copy_object_preserve_functions<T>(obj: T): T {
     return result as T
 }
 
-function merge_deep(target: any, ...sources: any[]): any {
-    if (!sources.length) return target
+// Merges each source into `target` in place and returns it; a non-object source is skipped.
+function merge_deep(target: object, ...sources: unknown[]): PlainObject {
+    if (!sources.length) return target as PlainObject
     const source = sources.shift()
 
     if (is_object(target) && is_object(source)) {
         for (const key in source) {
             if (Array.isArray(source[key]) && Array.isArray(target[key])) {
                 // Splice the contents of source[key] into target[key]
-                target[key].splice(0, target[key].length, ...source[key])
+                ;(target[key] as unknown[]).splice(0, (target[key] as unknown[]).length, ...(source[key] as unknown[]))
             } else if (is_object(source[key])) {
                 if (!target[key]) Object.assign(target, {[key]: {}})
-                merge_deep(target[key], source[key])
+                merge_deep(target[key] as object, source[key])
             } else {
                 Object.assign(target, {[key]: source[key]})
             }
@@ -141,7 +146,7 @@ let storeInstanceCounter = 0
  *   flash. For small, render-affecting preferences only (≤MAX_COOKIE_BYTES) — never large or
  *   growing data (it ships on every request).
  */
-export class Store<T extends Record<string, any> = Record<string, any>> {
+export class Store<T extends object = PlainObject> {
     private stateInstance: State<T>
     private templates = {
         saved: {} as DeepPartial<T>,
@@ -200,19 +205,19 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
     /**
      * Merge deep on object `state`, but only the key/values in `blueprint`.
      */
-    blueprint(state: T, blueprint: DeepPartial<T>): DeepPartial<T> {
+    blueprint<B extends object>(state: unknown, blueprint: B): DeepPartial<B> {
         if (state == null || typeof state !== 'object') {
-            return {} as DeepPartial<T>
+            return {} as DeepPartial<B>
         }
-        const result: any = {}
+        const result: PlainObject = {}
         for (const key of Object.keys(blueprint)) {
             // Use `in` so Mithril state proxies (signal-backed roots) are not skipped; `hasOwnProperty`
             // can be false for keys that only exist on the proxy’s `has` / signal map.
             if (!(key in (state as object))) {
                 continue
             }
-            const blueprintValue = (blueprint as any)[key]
-            const stateValue = (state as any)[key]
+            const blueprintValue = (blueprint as PlainObject)[key]
+            const stateValue = (state as PlainObject)[key]
             if (!Array.isArray(blueprintValue) && blueprintValue !== null && is_object(blueprintValue)) {
                 // (!) Convention: The contents of a state key with the name 'lookup' is
                 // always one-one copied from the state, instead of being
@@ -228,7 +233,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 result[key] = stateValue
             }
         }
-        return result as DeepPartial<T>
+        return result as DeepPartial<B>
     }
 
     clean_lookup() {
@@ -239,11 +244,11 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         }
 
         let store_modified = false
-        const lookup = (this.stateInstance as any).lookup
+        const lookup = (this.stateInstance as PlainObject).lookup as PlainObject | undefined
         if (!lookup) return
 
         // Build a new lookup object with only valid entries
-        const newLookup: Record<string, any> = {}
+        const newLookup: PlainObject = {}
         // Get keys first to avoid iteration issues when deleting
         // Filter out $ prefix keys added by reactive proxy
         const keys = Object.keys(lookup).filter((k) => !k.startsWith('$') && k !== '__isState' && k !== '__signalMap')
@@ -255,11 +260,11 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 // Skip invalid entries
                 store_modified = true
             } else {
-                if (!(value as any).modified) {
-                    ;(value as any).modified = Date.now()
+                if (!value.modified) {
+                    value.modified = Date.now()
                     store_modified = true
                 }
-                if ((value as any).modified >= Date.now() - this.lookup_ttl) {
+                if ((value.modified as number) >= Date.now() - this.lookup_ttl) {
                     // Keep entries that are not expired
                     newLookup[key] = value
                 } else {
@@ -270,7 +275,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         }
         if (store_modified) {
             // Replace lookup with cleaned version
-            ;(this.stateInstance as any).lookup = newLookup
+            ;(this.stateInstance as PlainObject).lookup = newLookup
             this.save()
         }
     }
@@ -304,7 +309,8 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         session: DeepPartial<T> = {} as DeepPartial<T>,
         cookie: DeepPartial<T> = {} as DeepPartial<T>,
     ) {
-        const restored_state = {
+        // The raw JSON strings, replaced by what they parse to.
+        const restored_state: {tab: unknown; store: unknown} = {
             tab: this.get_tab_storage(this.tabStorageKey),
             store: this.get(this.storageKey),
         }
@@ -318,8 +324,8 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         }
 
         try {
-            restored_state.store = JSON.parse(restored_state.store)
-            restored_state.tab = JSON.parse(restored_state.tab)
+            restored_state.store = JSON.parse(restored_state.store as string)
+            restored_state.tab = JSON.parse(restored_state.tab as string)
         } catch (err) {
             console.log(`[store] failed to parse store/tab: ${err}`)
         }
@@ -327,9 +333,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
         const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store ?? {}))
         // override with previous identity for a better version bump experience.
         if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in (restored_state.store as object)) {
-            store_state.identity = (restored_state.store as any).identity
+            store_state.identity = (restored_state.store as PlainObject).identity
         }
-        let tab_state
+        let tab_state: PlainObject
 
         if (!restored_state.tab) {
             console.log('[store] loading tab state from local store')
@@ -434,7 +440,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 
         // Lookup is always persisted to localStorage when present, regardless of writeLocalStorage.
         // This ensures cached values (e.g. filter/sort state) are never lost when save() is called.
-        if ((statePlain as any).lookup) {
+        if (statePlain.lookup) {
             this.persist_lookup_to_local_storage(statePlain)
         }
 
@@ -446,12 +452,12 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
 
         // Write to sessionStorage (tab-scoped, cleared when tab closes)
         if (writeSessionStorage && this.templates.tab) {
-            const tabState = (this.stateInstance as any).tab
+            const tabState = (this.stateInstance as PlainObject).tab as object | undefined
             if (tabState) {
                 // Get the tab template - unwrap if it's nested under a 'tab' key
                 // The template might be: { tab: { sessionId, ... } } or { sessionId, ... }
                 // The state is always: { sessionId, ... }
-                const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+                const tabTemplate = ((this.templates.tab as PlainObject).tab as object | undefined) || this.templates.tab
 
                 // Check if tab is a State object
                 if (isState(tabState)) {
@@ -464,9 +470,9 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
                 }
             } else {
                 // No tab state - save empty tab based on template structure
-                const tabTemplate = (this.templates.tab as any).tab || this.templates.tab
+                const tabTemplate = ((this.templates.tab as PlainObject).tab as object | undefined) || this.templates.tab
                 if (tabTemplate && Object.keys(tabTemplate).length > 0) {
-                    this.set_tab(this.tabStorageKey, this.blueprint({} as any, copy_object(tabTemplate)))
+                    this.set_tab(this.tabStorageKey, this.blueprint({}, copy_object(tabTemplate)))
                 } else {
                     this.set_tab(this.tabStorageKey, {})
                 }
@@ -501,11 +507,11 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
      * Merge lookup from state into localStorage and write. Ensures lookup is always persisted
      * whenever save() is called and state contains lookup.
      */
-    private persist_lookup_to_local_storage(statePlain: Record<string, any>): void {
+    private persist_lookup_to_local_storage(statePlain: PlainObject): void {
         if (typeof window === 'undefined') return
         try {
             const existing = this.get(this.storageKey)
-            let storeData: Record<string, any> = {}
+            let storeData: PlainObject = {}
             try {
                 storeData = JSON.parse(existing) || {}
             } catch {
@@ -532,7 +538,7 @@ export class Store<T extends Record<string, any> = Record<string, any>> {
      * is absent, or it cannot be parsed. During SSR the request cookie is injected via the `cookie`
      * template in load() instead, so this only does real work in the browser.
      */
-    get_cookie(key: string): Record<string, any> {
+    get_cookie(key: string): Record<string, unknown> {
         if (typeof document === 'undefined') return {}
         try {
             const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${key}=([^;]*)`))

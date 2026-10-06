@@ -132,7 +132,7 @@ export interface LogContext {
     sessionId?: string | undefined
     route?: string | undefined
     module?: string | undefined // Module name (e.g., 'identity', 'order') - will be shown as [module] prefix
-    [key: string]: any
+    [key: string]: unknown
 }
 
 const RESERVED_CONTEXT_KEYS = new Set(['method', 'pathname', 'route', 'sessionId', 'module'])

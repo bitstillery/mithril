@@ -7,22 +7,30 @@ import cachedAttrsIsStaticMap from './cachedAttrsIsStaticMap'
 import trust from './trust'
 import fragment from './fragment'
 
-import type {ComponentType, Children, Vnode as VnodeType} from './vnode'
+import type {ComponentType, Children, RenderChildren, RenderVnode, Vnode as VnodeType} from './vnode'
+import type {FragmentAttrs} from '../jsx.d.ts'
 
 export interface Hyperscript {
     (selector: string, ...children: Children[]): VnodeType
-    (selector: string, attrs: Record<string, any>, ...children: Children[]): VnodeType
+    (selector: string, attrs: object, ...children: Children[]): VnodeType
     <Attrs, State>(component: ComponentType<Attrs, State>, ...children: Children[]): VnodeType<Attrs, State>
     <Attrs, State>(component: ComponentType<Attrs, State>, attrs: Attrs, ...children: Children[]): VnodeType<Attrs, State>
     trust(html: string): VnodeType
-    fragment(attrs: Record<string, any> | null, ...children: Children[]): VnodeType
+    fragment(attrs: FragmentAttrs | null, ...children: Children[]): VnodeType
     Fragment: string
 }
 
 const selectorParser = /(?:(^|#|\.)([^#.[\]]+))|(\[(.+?)(?:\s*=\s*("|'|)((?:\\["'\]]|.)*?)\5)?\])/g
-const selectorCache: Record<string, {tag: string; attrs: Record<string, any>; is?: string}> = Object.create(null)
+/** A selector compiled to its tag and the attrs (id, classes, `[attr]`s) it sets. */
+interface CompiledSelector {
+    tag: string
+    attrs: Record<string, unknown>
+    is?: string | undefined
+}
 
-function isEmpty(object: Record<string, any>): boolean {
+const selectorCache: Record<string, CompiledSelector> = Object.create(null)
+
+function isEmpty(object: Record<string, unknown>): boolean {
     for (const key in object) if (hasOwn.call(object, key)) return false
     return true
 }
@@ -33,11 +41,11 @@ function isFormAttributeKey(key: string): boolean {
 
 // A match fills groups 1-2 (tag/#id/.class) or groups 3-4 ([attr]), never both; group 6
 // is absent for a bare `[attr]`, so a bare `[class]` joins in as an empty class.
-function compileSelector(selector: string): {tag: string; attrs: Record<string, any>; is?: string} {
+function compileSelector(selector: string): CompiledSelector {
     let match: RegExpExecArray | null
     let tag = 'div'
     const classes: (string | undefined)[] = []
-    let attrs: Record<string, any> = {}
+    let attrs: Record<string, unknown> = {}
     let isStatic = true
     while ((match = selectorParser.exec(selector)) !== null) {
         const type = match[1]
@@ -58,10 +66,10 @@ function compileSelector(selector: string): {tag: string; attrs: Record<string, 
     if (classes.length > 0) attrs.className = classes.join(' ')
     if (isEmpty(attrs)) attrs = emptyAttrs
     else cachedAttrsIsStaticMap.set(attrs, isStatic)
-    return (selectorCache[selector] = {tag: tag, attrs: attrs, is: attrs.is})
+    return (selectorCache[selector] = {tag: tag, attrs: attrs, is: attrs.is as string | undefined})
 }
 
-function execSelector(state: {tag: string; attrs: Record<string, any>; is?: string}, vnode: any): any {
+function execSelector(state: CompiledSelector, vnode: RenderVnode): RenderVnode {
     vnode.tag = state.tag
 
     let attrs = vnode.attrs
@@ -92,17 +100,17 @@ function execSelector(state: {tag: string; attrs: Record<string, any>; is?: stri
     }
 
     // This reduces the complexity of the evaluation of "is" within the render function.
-    vnode.is = attrs.is
+    vnode.is = attrs.is as string | undefined
 
     vnode.attrs = attrs
 
     return vnode
 }
 
-function hyperscript(selector: string | ComponentType, attrs?: Record<string, any> | null, ...children: Children[]): any {
+function hyperscript(selector: string | ComponentType, attrs?: unknown, ...children: Children[]): RenderVnode {
     if (
         selector == null ||
-        (typeof selector !== 'string' && typeof selector !== 'function' && typeof (selector as any).view !== 'function')
+        (typeof selector !== 'string' && typeof selector !== 'function' && typeof selector.view !== 'function')
     ) {
         throw Error('The selector must be either a string or a component.')
     }
@@ -110,7 +118,7 @@ function hyperscript(selector: string | ComponentType, attrs?: Record<string, an
     const vnode = hyperscriptVnode(attrs, children)
 
     if (typeof selector === 'string') {
-        vnode.children = Vnode.normalizeChildren(vnode.children)
+        vnode.children = Vnode.normalizeChildren(vnode.children as RenderChildren)
         if (selector !== '[') return execSelector(selectorCache[selector] || compileSelector(selector), vnode)
     }
 

@@ -1,10 +1,12 @@
 import parsePathname from './parse'
 
+import type {RouteParams} from '../querystring/parse'
+
 /** Path segments, :params, and regexp escapes (shared by compileTemplate). */
 const TEMPLATE_PATH_TO_REGEXP = /:([^/.-]+)(\.{3}|\.(?!\.)|-)?|[\\^$*+.()|[\]{}]/g
 
 interface CompiledTemplate {
-    (data: {path: string; params: Record<string, any>}): boolean
+    (data: {path: string; params: RouteParams}): boolean
 }
 
 // Compiles a template into a function that takes a resolved path (without query
@@ -34,7 +36,7 @@ export default function compileTemplate(template: string): CompiledTemplate {
             ) +
             '\\/?$',
     )
-    return function (data: {path: string; params: Record<string, any>}): boolean {
+    return function (data: {path: string; params: RouteParams}): boolean {
         // First, check the params. Usually, there isn't any, and it's just
         // checking a static set.
         for (let i = 0; i < templateKeys.length; i++) {
@@ -46,7 +48,7 @@ export default function compileTemplate(template: string): CompiledTemplate {
         if (values == null) return false
         for (let i = 0; i < keys.length; i++) {
             // Every key is a non-optional capture group, so a match fills all of them.
-            data.params[keys[i]!.k] = keys[i]!.r ? values[i + 1] : decodeURIComponent(values[i + 1]!)
+            data.params[keys[i]!.k] = keys[i]!.r ? values[i + 1]! : decodeURIComponent(values[i + 1]!)
         }
         return true
     }

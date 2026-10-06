@@ -10,7 +10,7 @@
  */
 async function nextTick(): Promise<void> {
     // Check if we're in SSR mode
-    if (typeof globalThis !== 'undefined' && (globalThis as any).__SSR_MODE__) {
+    if (typeof globalThis !== 'undefined' && globalThis.__SSR_MODE__) {
         // In SSR mode, resolve immediately since SSR rendering is synchronous
         // and there's no event loop to defer to
         return Promise.resolve()

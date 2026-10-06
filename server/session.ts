@@ -2,14 +2,14 @@
 
 export interface SessionData {
     userId: string | null
-    data: Record<string, any>
+    data: Record<string, unknown>
     createdAt: Date
     expiresAt: Date
 }
 
 export interface SessionStore {
     getSession(sessionId: string): SessionData | null
-    updateSession(sessionId: string, data: Record<string, any>): void
+    updateSession(sessionId: string, data: Record<string, unknown>): void
     createSession(userId: string | null): string
 }
 
@@ -55,7 +55,7 @@ export class MemorySessionStore implements SessionStore {
         return null
     }
 
-    updateSession(sessionId: string, data: Record<string, any>): void {
+    updateSession(sessionId: string, data: Record<string, unknown>): void {
         const session = this.sessions.get(sessionId)
         if (session) {
             // Merge data with existing session data

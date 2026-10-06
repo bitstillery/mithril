@@ -53,19 +53,17 @@ const routerServer = {
 }
 
 // Server-side Mithril instance
-const mServer: MithrilStatic &
-    Hyperscript & {
-        renderToString: typeof renderToString
-        renderToStringSync: typeof renderToStringSync
-        route: typeof routerServer
-    } = function m(this: any) {
-    return hyperscript.apply(this, arguments as any)
-} as unknown as MithrilStatic &
+// The server's m.route resolves routes; it has no client routing call signature.
+type MithrilServer = Omit<MithrilStatic, 'route'> &
     Hyperscript & {
         renderToString: typeof renderToString
         renderToStringSync: typeof renderToStringSync
         route: typeof routerServer
     }
+
+const mServer: MithrilServer = function m(this: unknown) {
+    return hyperscript.apply(this, arguments as unknown as Parameters<typeof hyperscript>)
+} as unknown as MithrilServer
 
 mServer.m = hyperscript as Hyperscript
 mServer.trust = hyperscript.trust
@@ -73,7 +71,7 @@ mServer.fragment = hyperscript.fragment
 mServer.Fragment = '['
 mServer.renderToString = renderToString
 mServer.renderToStringSync = renderToStringSync
-mServer.route = routerServer as any
+mServer.route = routerServer
 mServer.parseQueryString = parseQueryString
 mServer.buildQueryString = buildQueryString
 mServer.parsePathname = parsePathname

@@ -2,6 +2,11 @@
 
 import {logger} from '../server/logger'
 
+import type {LogContext} from '../server/logger'
+import type {RenderVnode} from '../render/vnode'
+
+type MaybeVnode = RenderVnode | null | undefined
+
 // Development-only hydration debugging
 export const HYDRATION_DEBUG = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production'
 
@@ -25,11 +30,11 @@ export function resetHydrationErrorCount(): void {
     hydrationMismatchSummaries.length = 0
 }
 
-export function getComponentName(vnode: any): string {
+export function getComponentName(vnode: MaybeVnode): string {
     if (!vnode) return 'Unknown'
     if (typeof vnode.tag === 'string') return vnode.tag
-    if (vnode.tag?.name) return vnode.tag.name
-    if (vnode.tag?.displayName) return vnode.tag.displayName
+    if ((vnode.tag as {name?: string})?.name) return (vnode.tag as {name?: string}).name!
+    if ((vnode.tag as {displayName?: string})?.displayName) return (vnode.tag as {displayName?: string}).displayName!
     if (vnode.state?.constructor?.name) return vnode.state.constructor.name
     return 'Unknown'
 }
@@ -59,7 +64,7 @@ function formatDOMElement(el: Element): {tagName: string; openTag: string; close
 }
 
 export function formatVDOMTree(
-    vnode: any,
+    vnode: MaybeVnode,
     maxDepth: number = 6,
     currentDepth: number = 0,
     showComponentInstance: boolean = true,
@@ -79,13 +84,13 @@ export function formatVDOMTree(
         if (!vnode.children || !Array.isArray(vnode.children) || vnode.children.length === 0) {
             return `${indent}[fragment]`
         }
-        const validChildren = vnode.children.filter((c: any) => c != null).slice(0, 8)
+        const validChildren = vnode.children.filter((c) => c != null).slice(0, 8)
         let result = `${indent}[fragment]\n`
         for (const child of validChildren) {
             result += formatVDOMTree(child, maxDepth, currentDepth + 1, showComponentInstance) + '\n'
         }
-        if (vnode.children.filter((c: any) => c != null).length > 8) {
-            result += `${indent}  ... (${vnode.children.filter((c: any) => c != null).length - 8} more)\n`
+        if (vnode.children.filter((c) => c != null).length > 8) {
+            result += `${indent}  ... (${vnode.children.filter((c) => c != null).length - 8} more)\n`
         }
         return result.trimEnd()
     }
@@ -125,7 +130,7 @@ export function formatVDOMTree(
 
     // Add children
     if (vnode.children && Array.isArray(vnode.children) && currentDepth < maxDepth - 1) {
-        const validChildren = vnode.children.filter((c: any) => c != null).slice(0, 10)
+        const validChildren = vnode.children.filter((c) => c != null).slice(0, 10)
         if (validChildren.length > 0) {
             result += '\n'
             for (const child of validChildren) {
@@ -139,8 +144,8 @@ export function formatVDOMTree(
                     }
                 }
             }
-            if (vnode.children.filter((c: any) => c != null).length > 10) {
-                result += `${indent}  ... (${vnode.children.filter((c: any) => c != null).length - 10} more children)\n`
+            if (vnode.children.filter((c) => c != null).length > 10) {
+                result += `${indent}  ... (${vnode.children.filter((c) => c != null).length - 10} more children)\n`
             }
         }
     } else if (vnode.text != null) {
@@ -154,7 +159,7 @@ export function formatVDOMTree(
 }
 
 // Combine DOM parent chain with VDOM structure into a single HTML-like tree
-function formatCombinedStructure(parent: Element | Node | null, vnode: any, maxParents: number = 4): string {
+function formatCombinedStructure(parent: Element | Node | null, vnode: MaybeVnode, maxParents: number = 4): string {
     if (!parent && !vnode) return ''
 
     // Collect DOM parents (from outermost to innermost)
@@ -204,10 +209,10 @@ function formatCombinedStructure(parent: Element | Node | null, vnode: any, maxP
     return lines.join('\n')
 }
 
-function buildComponentPath(vnode: any, context?: {oldVnode?: any; newVnode?: any}): string[] {
+function buildComponentPath(vnode: MaybeVnode, context?: VnodeChange): string[] {
     const path: string[] = []
 
-    const traverseVnode = (v: any, depth: number = 0): boolean => {
+    const traverseVnode = (v: MaybeVnode, depth: number = 0): boolean => {
         if (!v || depth > 10) return false
 
         const name = getComponentName(v)
@@ -283,7 +288,7 @@ export function describeHydrationParentElement(el: Element): string {
 
 export function recordHydrationMismatchSummary(
     kind: HydrationMismatchSummary['kind'],
-    parentVnode: any,
+    parentVnode: MaybeVnode,
     parentEl: Element,
     removed: Node,
     updateStats: boolean,
@@ -309,7 +314,13 @@ export function takeHydrationMismatchSummaries(): HydrationMismatchSummary[] {
     return out
 }
 
-export function formatComponentHierarchy(vnode: any, context?: {oldVnode?: any; newVnode?: any}): string {
+/** The vnode being replaced and the one replacing it, when a removal happens during an update. */
+interface VnodeChange {
+    oldVnode?: MaybeVnode
+    newVnode?: MaybeVnode
+}
+
+export function formatComponentHierarchy(vnode: MaybeVnode, context?: VnodeChange): string {
     if (!vnode) return 'Unknown'
 
     const path = buildComponentPath(vnode, context)
@@ -332,13 +343,13 @@ export interface HydrationErrorContext {
     parent?: Element | undefined
     node?: Node | undefined
     matchedNodes?: Set<Node> | undefined
-    oldVnode?: any
-    newVnode?: any
+    oldVnode?: MaybeVnode
+    newVnode?: MaybeVnode
 }
 
 export function logHydrationError(
     operation: string,
-    vnode: any,
+    vnode: MaybeVnode,
     _element: Element | null,
     error: Error,
     context?: HydrationErrorContext,
@@ -371,7 +382,7 @@ export function logHydrationError(
     const componentHierarchy = formatComponentHierarchy(vnode, context)
 
     // Log hydration error with structured context
-    const logContext: Record<string, any> = {
+    const logContext: LogContext = {
         componentPath: componentHierarchy,
         operation,
     }
@@ -448,7 +459,7 @@ export function resetHydrationStats(): void {
 }
 
 // Update stats when hydration error occurs
-function updateHydrationStats(vnode: any): void {
+function updateHydrationStats(vnode: MaybeVnode): void {
     hydrationStats.totalMismatches++
     hydrationStats.lastMismatchTime = Date.now()
     const componentName = getComponentName(vnode)

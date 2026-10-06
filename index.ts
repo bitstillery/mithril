@@ -24,27 +24,25 @@ import {
 
 import type {Vnode, Children, ComponentType} from './render/vnode'
 import type {Hyperscript} from './render/hyperscript'
-import type {Route, RouteResolver, RedirectObject} from './api/router'
+import type {Route, RouteParams} from './api/router'
 import type {Render, Redraw, Mount} from './api/mount-redraw'
+import type {FragmentAttrs} from './jsx.d.ts'
 
 export interface MithrilStatic {
     m: Hyperscript
     trust: (html: string) => Vnode
-    fragment: (attrs: Record<string, any> | null, ...children: Children[]) => Vnode
+    fragment: (attrs: FragmentAttrs | null, ...children: Children[]) => Vnode
     Fragment: string
     mount: Mount
-    route: Route &
-        ((root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>) => void) & {
-            redirect: (path: string) => RedirectObject
-        }
+    route: Route
     render: Render
     redraw: Redraw
-    parseQueryString: (queryString: string) => Record<string, any>
-    buildQueryString: (values: Record<string, any>) => string
-    parsePathname: (pathname: string) => {path: string; params: Record<string, any>}
-    buildPathname: (template: string, params: Record<string, any>) => string
+    parseQueryString: (queryString: string) => RouteParams
+    buildQueryString: (values: object) => string
+    parsePathname: (pathname: string) => {path: string; params: RouteParams}
+    buildPathname: (template: string, params: object) => string
     vnode: typeof VnodeFactory
-    censor: (attrs: Record<string, any>, extras?: string[]) => Record<string, any>
+    censor: <T extends object>(attrs: T, extras?: string[]) => Partial<T>
     nextTick: () => Promise<void>
     domFor: (vnode: Vnode) => Generator<Node, void, unknown>
 }
@@ -57,8 +55,9 @@ const mountRedrawInstance = mountRedrawFactory(
 
 const router = routerFactory(typeof window !== 'undefined' ? window : null, mountRedrawInstance)
 
-const m: MithrilStatic & Hyperscript = function m(this: any) {
-    return hyperscript.apply(this, arguments as any)
+// `arguments` rather than a rest parameter: m() is the hottest call, and this keeps it allocation-free.
+const m: MithrilStatic & Hyperscript = function m(this: unknown) {
+    return hyperscript.apply(this, arguments as unknown as Parameters<typeof hyperscript>)
 } as unknown as MithrilStatic & Hyperscript
 
 m.m = hyperscript as Hyperscript
@@ -66,7 +65,7 @@ m.trust = hyperscript.trust
 m.fragment = hyperscript.fragment
 m.Fragment = '['
 m.mount = mountRedrawInstance.mount
-m.route = router as Route & typeof router & {redirect: (path: string) => RedirectObject}
+m.route = router
 m.render = renderFactory()
 m.redraw = mountRedrawInstance.redraw
 m.parseQueryString = parseQueryString
@@ -81,7 +80,7 @@ m.domFor = domFor
 // Set up signal-to-component redraw integration with batching.
 // Collects all components needing redraw in the current tick, then flushes once via queueMicrotask.
 // Avoids N synchronous redraws when many signals fire (e.g. 50% of 800 rows).
-let pendingRedrawComponents = new Set<any>()
+let pendingRedrawComponents = new Set<object>()
 let redrawScheduled = false
 
 function flushPendingRedraws() {
@@ -91,13 +90,13 @@ function flushPendingRedraws() {
     if (components.size === 1) {
         m.redraw(components.values().next().value)
     } else if (components.size > 1) {
-        const fn = (m.redraw as any).redrawComponents
+        const fn = m.redraw.redrawComponents
         if (fn) fn(components)
         else m.redraw()
     }
 }
 
-setSignalRedrawCallback((sig: Signal<any>) => {
+setSignalRedrawCallback((sig: Signal<unknown>) => {
     const components = getSignalComponents(sig)
     if (components && components.size > 0) {
         components.forEach((c) => pendingRedrawComponents.add(c))
@@ -160,14 +159,15 @@ export type {
 } from './render/vnode'
 export {MithrilComponent}
 export type {Hyperscript} from './render/hyperscript'
-export type {Route, RouteParams, RouteParamValue, RouteResolver, RedirectObject} from './api/router'
+export type {ElementAttrs, ElementEvent} from './jsx.d.ts'
+export type {Route, RouteOptions, RouteParams, RouteParamValue, RouteResolver, RedirectObject} from './api/router'
 export type {Render, Redraw, Mount} from './api/mount-redraw'
 
 // Namespace merge: enables m.Vnode<Attrs> and m.Children when using import m from '@bitstillery/mithril'
 // m.Vnode uses ComponentVnode so vnode.attrs is always defined in component lifecycle methods
 declare namespace m {
-    type Vnode<Attrs = Record<string, any>, State = any> = import('./render/vnode').ComponentVnode<Attrs, State>
-    type VnodeDOM<Attrs = Record<string, any>, State = any> = import('./render/vnode').VnodeDOM<Attrs, State>
+    type Vnode<Attrs = object, State = unknown> = import('./render/vnode').ComponentVnode<Attrs, State>
+    type VnodeDOM<Attrs = object, State = unknown> = import('./render/vnode').VnodeDOM<Attrs, State>
     type Children = import('./render/vnode').Children
     type ChildArray = import('./render/vnode').Child[]
 }

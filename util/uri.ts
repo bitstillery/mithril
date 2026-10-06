@@ -13,8 +13,8 @@ export function getCurrentUrl(): string {
     }
 
     // Fall back to SSR server URL (when client code runs on server)
-    if (typeof globalThis !== 'undefined' && (globalThis as any).__SSR_URL__) {
-        return (globalThis as any).__SSR_URL__
+    if (typeof globalThis !== 'undefined' && globalThis.__SSR_URL__) {
+        return globalThis.__SSR_URL__
     }
 
     // Fallback (shouldn't happen)
