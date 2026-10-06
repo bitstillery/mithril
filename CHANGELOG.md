@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.10.0](https://github.com/bitstillery/mithril/compare/v3.9.4...v3.10.0) (2026-10-06)
+
+### Features
+
+- **types:** type JSX element attrs and remove any from the library ([3d4cfda](https://github.com/bitstillery/mithril/commit/3d4cfdab23281b44362b26c838a9f53975b56881))
+
+### Bug Fixes
+
+- **router:** keep m.route.params in step with the current route ([fd312bb](https://github.com/bitstillery/mithril/commit/fd312bb8de321ddcc40e05eb6454a6cfe06ab861))
+
+### Code Refactoring
+
+- **router:** remove the unused server-side router ([f2b0a86](https://github.com/bitstillery/mithril/commit/f2b0a864430ba91871c99adbfa06619b2c0bb293))
+
 ### [3.9.4](https://github.com/bitstillery/mithril/compare/v3.9.3...v3.9.4) (2026-10-06)
 
 ### Bug Fixes
