@@ -889,7 +889,16 @@ export function state<T extends Record<string, any>>(initial: T, name?: string, 
 }
 
 /** The built-ins `isOpaqueObject` keeps out of the proxy: state holds them as they are. */
-type OpaqueObject = Date | Map<any, any> | Set<any> | WeakMap<any, any> | WeakSet<any> | RegExp | Promise<any> | ArrayBuffer | ArrayBufferView
+type OpaqueObject =
+    | Date
+    | Map<any, any>
+    | Set<any>
+    | WeakMap<any, any>
+    | WeakSet<any>
+    | RegExp
+    | Promise<any>
+    | ArrayBuffer
+    | ArrayBufferView
 
 /**
  * A value as state hands it out: a function reads as its computed result, an object (or array) as its
