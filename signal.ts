@@ -83,21 +83,20 @@ export function requestSignalRedraw(signal: Signal<unknown>): void {
  */
 export class Signal<T> {
     private _value: T
-    /** Internal: state.ts notifies these directly when an array it holds mutates in place. */
-    _subscribers: Set<() => void> = new Set()
+    /**
+     * Internal: state.ts notifies these directly when an array it holds mutates in place. Created on
+     * the first subscription: most signals never get one, and state() makes a signal per key.
+     */
+    _subscribers: Set<() => void> | null = null
 
     constructor(initial: T) {
         this._value = initial
     }
 
     get value(): T {
-        // Ensure _subscribers is initialized (defensive check)
-        if (!this._subscribers) {
-            this._subscribers = new Set()
-        }
         // Track access during render/effect
         if (currentEffect) {
-            this._subscribers.add(currentEffect)
+            ;(this._subscribers ??= new Set()).add(currentEffect)
         }
         // Track component dependency
         if (currentComponent) {
@@ -118,13 +117,10 @@ export class Signal<T> {
      * Use when the value is an object/array that was mutated in place (e.g. keys added/removed).
      */
     trigger(): void {
-        // Ensure _subscribers is initialized (defensive check)
-        if (!this._subscribers) {
-            this._subscribers = new Set()
-        }
-        // Notify all subscribers
-        const context = getSSRContext()
-        this._subscribers.forEach((fn) => {
+        // Notify all subscribers; the SSR context is only looked up when there is one to run.
+        const subscribers = this._subscribers
+        const context = subscribers && subscribers.size > 0 ? getSSRContext() : undefined
+        subscribers?.forEach((fn) => {
             try {
                 // Always run watchers - wrap in SSR context if available
                 if (context) {
@@ -148,11 +144,7 @@ export class Signal<T> {
      * Subscribe to signal changes
      */
     subscribe(callback: () => void): () => void {
-        // Ensure _subscribers is initialized (defensive check)
-        if (!this._subscribers) {
-            this._subscribers = new Set()
-        }
-        this._subscribers.add(callback)
+        ;(this._subscribers ??= new Set()).add(callback)
         return () => {
             if (this._subscribers) {
                 this._subscribers.delete(callback)
@@ -205,11 +197,7 @@ export class ComputedSignal<T> extends Signal<T> {
         // Track access by other computed signals - this enables computed-to-computed dependency chains
         // When computed B accesses computed A, A should notify B when A's dependencies change
         if (currentEffect) {
-            // Ensure _subscribers is initialized (defensive check)
-            if (!this._subscribers) {
-                this._subscribers = new Set()
-            }
-            this._subscribers.add(currentEffect)
+            ;(this._subscribers ??= new Set()).add(currentEffect)
         }
 
         if (this._isDirty) {
@@ -239,13 +227,10 @@ export class ComputedSignal<T> extends Signal<T> {
     private _markDirty() {
         if (!this._isDirty) {
             this._isDirty = true
-            // Ensure _subscribers is initialized (defensive check)
-            if (!this._subscribers) {
-                this._subscribers = new Set()
-            }
             // Notify subscribers that computed value changed
-            const context = getSSRContext()
-            this._subscribers.forEach((fn: () => void) => {
+            const subscribers = this._subscribers
+            const context = subscribers && subscribers.size > 0 ? getSSRContext() : undefined
+            subscribers?.forEach((fn: () => void) => {
                 try {
                     if (context) {
                         // Run watcher inside SSR context, similar to events
