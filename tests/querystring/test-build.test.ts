@@ -51,6 +51,27 @@ describe('buildQueryString', () => {
         input.a = 1
         expect(buildQueryString(input)).toBe('a=1')
     })
+    test('an empty key still gets its separator', () => {
+        expect(buildQueryString({'': null, a: 1})).toBe('&a=1')
+        expect(buildQueryString({a: 1, '': null})).toBe('a=1&')
+        expect(buildQueryString({'': null})).toBe('')
+        expect(buildQueryString({'': [null]})).toBe('=')
+    })
+    test('a lone surrogate throws', () => {
+        expect(() => buildQueryString({a: '\ud800'})).toThrow(URIError)
+        expect(() => buildQueryString({a: ['x', '\ud800']})).toThrow(URIError)
+    })
+    test('converts an object value to a string once', () => {
+        let calls = 0
+        const value = {
+            toString() {
+                calls++
+                return 'x y'
+            },
+        }
+        expect(buildQueryString({a: [value]})).toBe('a=x%20y')
+        expect(calls).toBe(1)
+    })
     test('a class instance is not a plain object', () => {
         class Params {
             a = 1
