@@ -675,6 +675,12 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         }
         wrapped = new Proxy(obj, {
             get(target, prop) {
+                // The common read: a data property whose signal exists. The internal names below are
+                // never data keys, so looking this up first doesn't shadow them.
+                if (typeof prop === 'string') {
+                    const existing = nestedSignalMap.get(prop)
+                    if (existing !== undefined) return existing.value
+                }
                 if (prop === '__originalKeys') return originalKeys
                 if (prop === '__isState') return true
                 // Check if __signalMap was explicitly set to null (for error testing)
