@@ -1,4 +1,4 @@
-import {signal, computed, requestSignalRedraw, Signal, ComputedSignal} from './signal'
+import {signal, computed, Signal, ComputedSignal} from './signal'
 import {getSSRContext} from './ssrContext'
 
 import type {Hook} from './render/vnode'
@@ -69,6 +69,16 @@ function markAllComputedsDirty(stateObj: StateInternals | undefined): void {
             }
         }
     }
+}
+
+/**
+ * Notifies the signal holding a state array that the array changed in place: its reference didn't,
+ * so the signal can't tell by itself. Through `trigger()`, so a collected computed's subscription is
+ * dropped as on any other change.
+ */
+function notifyArrayParent(array: object): void {
+    const parentSignal = arrayParentSignalMap.get(array) || (array as StateInternals)._parentSignal
+    if (parentSignal) parentSignal.trigger()
 }
 
 // Type guard to check if value is a Signal
@@ -447,29 +457,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                                 // Update the signals array (target is signals array)
                                 const removed = signals.splice(start, deleteCount, ...newSignals)
 
-                                // Look up parent signal AFTER mutation to ensure we have the latest reference
-                                // This ensures we get the signal even if it was stored after accessing the method
-                                // Try WeakMap first, then fallback to direct property access
-                                const parentSignal =
-                                    arrayParentSignalMap.get(wrapped) || (wrapped as StateInternals)._parentSignal
-
-                                // Trigger parent signal if it exists
-                                // Notify subscribers directly since the array reference hasn't changed
-                                if (parentSignal) {
-                                    // Access the signal's internal subscribers and notify them
-                                    const subscribers = parentSignal._subscribers
-                                    if (subscribers) {
-                                        subscribers.forEach((fn: () => void) => {
-                                            try {
-                                                fn()
-                                            } catch (e) {
-                                                console.error('Error in signal subscriber:', e)
-                                            }
-                                        })
-                                    }
-                                    // Also trigger component redraws
-                                    requestSignalRedraw(parentSignal)
-                                }
+                                notifyArrayParent(wrapped)
 
                                 // Return removed items (unwrapped)
                                 return removed.map((sig) => (isSignal(sig) ? sig.value : sig))
@@ -538,24 +526,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                                     result = value.apply(target, args)
                                 }
 
-                                // Trigger parent signal if it exists (look up again in case it was stored)
-                                const currentParentSignal =
-                                    arrayParentSignalMap.get(wrapped) || (wrapped as StateInternals)._parentSignal
-                                if (currentParentSignal) {
-                                    // Notify subscribers directly since the array reference hasn't changed
-                                    const subscribers = currentParentSignal._subscribers
-                                    if (subscribers) {
-                                        subscribers.forEach((fn: () => void) => {
-                                            try {
-                                                fn()
-                                            } catch (e) {
-                                                console.error('Error in signal subscriber:', e)
-                                            }
-                                        })
-                                    }
-                                    // Also trigger component redraws
-                                    requestSignalRedraw(currentParentSignal)
-                                }
+                                notifyArrayParent(wrapped)
 
                                 return result
                             }
@@ -579,23 +550,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                             } else {
                                 signals[index] = toElement(value)
                             }
-                            // Trigger parent signal on element assignment (look up when called)
-                            const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as StateInternals)._parentSignal
-                            if (parentSignal) {
-                                // Notify subscribers directly since the array reference hasn't changed
-                                const subscribers = parentSignal._subscribers
-                                if (subscribers) {
-                                    subscribers.forEach((fn: () => void) => {
-                                        try {
-                                            fn()
-                                        } catch (e) {
-                                            console.error('Error in signal subscriber:', e)
-                                        }
-                                    })
-                                }
-                                // Also trigger component redraws
-                                requestSignalRedraw(parentSignal)
-                            }
+                            notifyArrayParent(wrapped)
                             return true
                         }
                     }
@@ -603,24 +558,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                         const previousLength = signals.length
                         const result = Reflect.set(target, prop, value)
                         // Resizing adds or drops elements without going through a mutator, so it notifies like splice.
-                        if (signals.length !== previousLength) {
-                            const parentSignal = arrayParentSignalMap.get(wrapped) || (wrapped as StateInternals)._parentSignal
-                            if (parentSignal) {
-                                // Notify subscribers directly since the array reference hasn't changed
-                                const subscribers = parentSignal._subscribers
-                                if (subscribers) {
-                                    subscribers.forEach((fn: () => void) => {
-                                        try {
-                                            fn()
-                                        } catch (e) {
-                                            console.error('Error in signal subscriber:', e)
-                                        }
-                                    })
-                                }
-                                // Also trigger component redraws
-                                requestSignalRedraw(parentSignal)
-                            }
-                        }
+                        if (signals.length !== previousLength) notifyArrayParent(wrapped)
                         return result
                     }
                     return Reflect.set(target, prop, value)

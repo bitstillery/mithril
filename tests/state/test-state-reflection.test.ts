@@ -146,4 +146,28 @@ describe('state array notifications', () => {
             expect(calls).toBe(1)
         })
     }
+
+    test('a collected computed that read an array is dropped by its next mutation', async () => {
+        const s = state({items: [1, 2, 3]})
+        const sig = s.$items
+        const before = sig._subscribers?.size ?? 0
+        const computeds: WeakRef<object>[] = []
+        ;(() => {
+            for (let i = 0; i < 10; i++) {
+                const s2 = state({total: () => s.items.length})
+                void s2.total
+                computeds.push(new WeakRef(s2.$total))
+            }
+        })()
+        for (let i = 0; i < 5; i++) Bun.gc(true)
+        await new Promise((resolve) => setTimeout(resolve, 0))
+        for (let i = 0; i < 5; i++) Bun.gc(true)
+        // The engine may keep one alive a while; whatever it collected must be gone after the push.
+        const alive = computeds.filter((ref) => ref.deref() !== undefined).length
+        expect(alive).toBeLessThan(10)
+
+        s.items.push(4)
+
+        expect(sig._subscribers?.size ?? 0).toBe(before + alive)
+    })
 })
