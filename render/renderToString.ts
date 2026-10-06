@@ -263,7 +263,9 @@ function serializeNodeSync(
     if (tag === '[') {
         const children = vnode.children as RenderChildren
         if (!children) return ''
-        return children.map((child) => serializeNodeSync(child, options, promiseTracker)).join('')
+        let html = ''
+        for (let i = 0; i < children.length; i++) html += serializeNodeSync(children[i] ?? null, options, promiseTracker)
+        return html
     }
 
     // Component
@@ -290,7 +292,7 @@ function serializeNodeSync(
     // Serialize children
     if (children != null) {
         if (Array.isArray(children)) {
-            html += children.map((child) => serializeNodeSync(child, options, promiseTracker)).join('')
+            for (let i = 0; i < children.length; i++) html += serializeNodeSync(children[i] ?? null, options, promiseTracker)
         } else if (typeof children === 'string' || typeof children === 'number') {
             html += serializeText(children, options)
         } else if (children != null) {
