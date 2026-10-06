@@ -477,7 +477,7 @@ export default function router($window: any, mountRedraw: MountRedraw) {
     route.param = function (key?: string) {
         return attrs && key != null ? attrs[key] : attrs
     }
-    route.params = attrs
+    Object.defineProperty(route, 'params', {get: () => attrs, enumerable: true})
 
     // Server-side route resolution (isomorphic)
     route.resolve = async function (

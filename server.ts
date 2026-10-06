@@ -43,7 +43,9 @@ const routerServer = {
     get: router.get.bind(router),
     set: router.set.bind(router),
     param: router.param.bind(router),
-    params: router.params,
+    get params() {
+        return router.params
+    },
     link: router.link.bind(router),
     redirect: router.redirect.bind(router),
     REDIRECT: router.REDIRECT,

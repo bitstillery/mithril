@@ -583,9 +583,7 @@ describe('SSR Routing', () => {
             const result = await mServer.route.resolve('/user/777', routes, mServer.renderToString)
             const html = typeof result === 'string' ? result : result.html
 
-            expect(html).toContain('ID: 777')
-            // route.params should be available (may be empty object if not properly set)
-            expect(html).toBeDefined()
+            expect(html).toContain('ID: 777, Params has id: 777')
         })
     })
 
