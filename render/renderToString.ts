@@ -28,15 +28,66 @@ export interface RenderToStringOptions {
     xml?: boolean // XML mode (implies strict)
 }
 
-// Default escape functions
+// Default escape functions. A single scan that copies runs of safe characters beats one regex
+// replace per character class, and returns the string itself when nothing needs escaping.
 function escapeAttributeDefault(value: unknown): string {
     const str = String(value)
-    return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    let out = ''
+    let last = 0
+    for (let i = 0; i < str.length; i++) {
+        let entity: string
+        switch (str.charCodeAt(i)) {
+            case 38:
+                entity = '&amp;'
+                break
+            case 34:
+                entity = '&quot;'
+                break
+            case 39:
+                entity = '&#39;'
+                break
+            case 60:
+                entity = '&lt;'
+                break
+            case 62:
+                entity = '&gt;'
+                break
+            default:
+                continue
+        }
+        if (last !== i) out += str.slice(last, i)
+        out += entity
+        last = i + 1
+    }
+    if (last === 0) return str
+    return last === str.length ? out : out + str.slice(last)
 }
 
 function escapeTextDefault(value: unknown): string {
     const str = String(value)
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    let out = ''
+    let last = 0
+    for (let i = 0; i < str.length; i++) {
+        let entity: string
+        switch (str.charCodeAt(i)) {
+            case 38:
+                entity = '&amp;'
+                break
+            case 60:
+                entity = '&lt;'
+                break
+            case 62:
+                entity = '&gt;'
+                break
+            default:
+                continue
+        }
+        if (last !== i) out += str.slice(last, i)
+        out += entity
+        last = i + 1
+    }
+    if (last === 0) return str
+    return last === str.length ? out : out + str.slice(last)
 }
 
 function isVoidElement(tag: string): boolean {
