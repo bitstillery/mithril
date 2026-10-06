@@ -178,7 +178,6 @@ export class Signal<T> {
  */
 export class ComputedSignal<T> extends Signal<T> {
     private _compute: () => T
-    private _dependencies: Set<Signal<unknown>> = new Set()
     private _isDirty = true
     private _cachedValue!: T
     // One closure for the computed's whole life: a dependency holds its subscribers in a Set, so
@@ -199,24 +198,25 @@ export class ComputedSignal<T> extends Signal<T> {
         if (currentEffect) {
             ;(this._subscribers ??= new Set()).add(currentEffect)
         }
+        // A component reading this computed redraws when it goes dirty, whether or not this read
+        // recomputes it: a cached read touches none of the dependencies.
+        if (currentComponent) {
+            trackComponentSignal(currentComponent, this)
+        }
 
         if (this._isDirty) {
-            // Clear old dependencies
-            this._dependencies.forEach((dep) => {
-                dep.subscribe(() => this._markDirty())?.() // Unsubscribe old
-            })
-            this._dependencies.clear()
-
-            // Track dependencies during computation
+            // The dependencies the computation reads mark this computed dirty; the component reading
+            // it is tracked on the computed above, not on them.
             const previousEffect = currentEffect
+            const previousComponent = currentComponent
             currentEffect = this._markDirtyEffect
+            currentComponent = null
 
             try {
                 this._cachedValue = this._compute()
-                // Re-subscribe to new dependencies
-                // Dependencies are tracked via the compute function accessing signals
             } finally {
                 currentEffect = previousEffect
+                currentComponent = previousComponent
             }
 
             this._isDirty = false
@@ -244,6 +244,7 @@ export class ComputedSignal<T> extends Signal<T> {
                     console.error('Error in computed signal subscriber:', e)
                 }
             })
+            if (redrawCallback) redrawCallback(this)
         }
     }
 

@@ -173,6 +173,26 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount).toBe(2)
         expect(root.childNodes[0].childNodes[0].nodeValue).toBe('12')
     })
+
+    test('computed already cached when a component reads it still redraws the component', async () => {
+        const a = signal(1)
+        const doubled = computed(() => a.value * 2)
+        expect(doubled.value).toBe(2) // cached before any component reads it
+
+        let renderCount = 0
+        m.mount(root, {
+            view() {
+                renderCount++
+                return m('div', doubled.value)
+            },
+        })
+        expect(renderCount).toBe(1)
+
+        a.value = 5
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
+    })
 })
 
 describe('Store Integration - Component Redraws', () => {

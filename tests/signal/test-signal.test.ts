@@ -151,6 +151,18 @@ describe('effect', () => {
         expect(cleanupRan).toBe(true)
     })
 
+    test('a disposed effect no longer runs', () => {
+        const a = signal(1)
+        let runs = 0
+        const dispose = effect(() => {
+            runs++
+            void a.value
+        })
+        dispose()
+        a.value = 2
+        expect(runs).toBe(1)
+    })
+
     test('cleanup function runs on dispose', () => {
         const s = signal(0)
         let cleanupRan = false
