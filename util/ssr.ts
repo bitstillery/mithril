@@ -329,9 +329,9 @@ export function formatComponentHierarchy(vnode: any, context?: {oldVnode?: any; 
 }
 
 export interface HydrationErrorContext {
-    parent?: Element
-    node?: Node
-    matchedNodes?: Set<Node>
+    parent?: Element | undefined
+    node?: Node | undefined
+    matchedNodes?: Set<Node> | undefined
     oldVnode?: any
     newVnode?: any
 }

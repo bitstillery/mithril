@@ -8,10 +8,10 @@ import type {NavSection} from '../store'
 
 interface DocsSidebarAttrs {
     sections: NavSection[]
-    pageToc?: string
-    pageTocHeadings?: Array<{id: string; raw: string}>
-    routePath?: string
-    activeAnchorId?: string
+    pageToc?: string | undefined
+    pageTocHeadings?: Array<{id: string; raw: string}> | undefined
+    routePath?: string | undefined
+    activeAnchorId?: string | undefined
 }
 
 /**

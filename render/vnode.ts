@@ -2,15 +2,15 @@
 
 export interface Vnode<Attrs = Record<string, any>, State = any> {
     tag: string | Component<Attrs, State> | (() => Component<Attrs, State>)
-    key?: string | number | null
-    attrs?: Attrs
-    children?: Children
-    text?: string | number
-    dom?: Node | null
-    is?: string
-    domSize?: number
-    state?: State
-    events?: Record<string, any>
+    key?: string | number | null | undefined
+    attrs?: Attrs | undefined
+    children?: Children | undefined
+    text?: string | number | undefined
+    dom?: Node | null | undefined
+    is?: string | undefined
+    domSize?: number | undefined
+    state?: State | undefined
+    events?: Record<string, any> | undefined
     instance?: any
 }
 

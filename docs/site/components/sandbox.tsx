@@ -120,12 +120,12 @@ type SandboxTab = 'code' | 'preview'
 
 interface SandboxState {
     editorView?: import('@codemirror/view').EditorView
-    iframeRef?: HTMLIFrameElement
+    iframeRef?: HTMLIFrameElement | undefined
     debounceTimer?: ReturnType<typeof setTimeout>
     runId?: number
     activeTab?: SandboxTab
     /** Parent wrapper element - used to re-render since we're m.render'd, not in mount tree */
-    wrapper?: HTMLElement
+    wrapper?: HTMLElement | undefined
 }
 
 /**

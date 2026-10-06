@@ -16,5 +16,5 @@ export interface LastSample {
 export interface DbRow {
     dbname: string
     depth?: number
-    lastSample?: LastSample
+    lastSample?: LastSample | undefined
 }

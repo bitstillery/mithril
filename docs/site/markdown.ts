@@ -10,7 +10,7 @@ marked.use({
     gfm: true,
     breaks: false,
     renderer: {
-        code(token: {text: string; lang?: string}) {
+        code(token: {text: string; lang?: string | undefined}) {
             const lang = token.lang || ''
             const langClass = lang ? `language-${lang}` : ''
             const escaped = (token.text || '')
@@ -35,9 +35,9 @@ export interface DocPage {
     content: string
     metaDescription: string
     /** Table of contents for sidebar - generated from headings */
-    pageToc?: string
+    pageToc?: string | undefined
     /** Headings for TOC with scroll-spy active state */
-    pageTocHeadings?: TocHeading[]
+    pageTocHeadings?: TocHeading[] | undefined
 }
 
 const metaDescriptionRegex = /<!--meta-description\n([\s\S]+?)\n-->/m

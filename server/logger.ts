@@ -127,11 +127,11 @@ export function formatSsrPageSummaryLine(fields: SsrPageSummaryFields): string {
 }
 
 export interface LogContext {
-    pathname?: string
-    method?: string
-    sessionId?: string
-    route?: string
-    module?: string // Module name (e.g., 'identity', 'order') - will be shown as [module] prefix
+    pathname?: string | undefined
+    method?: string | undefined
+    sessionId?: string | undefined
+    route?: string | undefined
+    module?: string | undefined // Module name (e.g., 'identity', 'order') - will be shown as [module] prefix
     [key: string]: any
 }
 

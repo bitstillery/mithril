@@ -30,10 +30,10 @@ try {
  * that runs inside the same runWithContext() call.
  */
 export interface SSRAccessContext {
-    store?: Store
+    store?: Store | undefined
     /** Per-request state registry for serialization; fresh Map per request. */
     stateRegistry: Map<string, {state: any; initial: any}>
-    sessionId?: string
+    sessionId?: string | undefined
     sessionData?: any
     /** Per-request EventEmitter; prevents event listeners from persisting between requests. */
     events?: any
