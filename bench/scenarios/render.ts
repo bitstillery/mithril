@@ -61,3 +61,28 @@ bench('full-redraw (10x10 table)', () => {
     const rows = Array.from({length: 10}, (_, r) => Array.from({length: 10}, (_, c) => `r${r}-c${c}-${Date.now()}`))
     render(root, m(TableComponent as any, {rows}))
 })
+
+// A redraw whose output didn't change, the common case: the cost is the diff itself, no DOM writes.
+const unchangedRows = Array.from({length: 20}, (_, r) => Array.from({length: 10}, (_, c) => `r${r}-c${c}`))
+const onCellClick = () => {}
+const UnchangedTable = {
+    view: () =>
+        m(
+            'table.data',
+            m(
+                'tbody',
+                unchangedRows.map((cells, r) =>
+                    m(
+                        'tr.row',
+                        {key: r, className: r % 2 ? 'odd' : 'even'},
+                        cells.map((text, c) => m('td.cell', {key: c, title: text, onclick: onCellClick}, text)),
+                    ),
+                ),
+            ),
+        ),
+}
+const unchangedRoot = $window.document.createElement('div')
+render(unchangedRoot, m(UnchangedTable))
+bench('redraw-unchanged (20x10 table with attrs)', () => {
+    render(unchangedRoot, m(UnchangedTable))
+})
