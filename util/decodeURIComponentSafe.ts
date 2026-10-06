@@ -31,5 +31,7 @@ const validUtf8Encodings =
 
 // Coerces its argument to a string first, as decodeURIComponent() does.
 export default function decodeURIComponentSafe(str: unknown): string {
+    // Most URL parts carry no escapes, and scanning one with the regexp costs far more than this check.
+    if (typeof str === 'string' && str.indexOf('%') < 0) return str
     return String(str).replace(validUtf8Encodings, decodeURIComponent)
 }
