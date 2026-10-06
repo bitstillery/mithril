@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.9.3](https://github.com/bitstillery/mithril/compare/v3.9.2...v3.9.3) (2026-10-06)
+
+### Bug Fixes
+
+- **state:** hold built-in objects as values instead of proxying them ([b5ff844](https://github.com/bitstillery/mithril/commit/b5ff844c123cc7d22b2c7f4292d8e0f1fbc3d825))
+- **types:** type state properties without distributing over unions ([a8d49f9](https://github.com/bitstillery/mithril/commit/a8d49f94f19e30fdbd5edba4d54e61bda1a3a7ac))
+
 ### [3.9.2](https://github.com/bitstillery/mithril/compare/v3.9.1...v3.9.2) (2026-09-30)
 
 ### Bug Fixes
