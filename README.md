@@ -1,118 +1,55 @@
 # Mithril Bitstillery
 
-Mithril Bitstillery extends Mithril with integrated state management, SSR hydration, watchers, and a signal/proxy store. Drop-in compatible with Mithril v2.x.
+A small, fast framework for building web apps — [Mithril.js](https://mithril.js.org), with state
+that keeps the page up to date by itself.
 
-```bash
-bun add @bitstillery/mithril
-```
+Mithril Bitstillery keeps what Mithril already does well — a tiny footprint, plain JavaScript, a
+built-in router — and adds the pieces most apps end up building on their own:
 
-## Strengths
+- **The page follows your data.** Change a value and every part of the screen that shows it
+  updates. No manual redraws, no subscriptions to wire up.
+- **Pages rendered on the server.** Send finished HTML for a fast first paint and for search
+  engines; the browser picks up right where the server left off, data included.
+- **Values that survive a reload.** Choose which settings to remember, and they are saved in the
+  browser and restored on the next visit.
 
-Mithril Bitstillery focuses on **state management**, **SSR**, **watchers**, and **developer experience** around its signal/proxy store:
+Mithril v2 apps carry over as they are, except for `m.request` and streams, which give way to the
+browser's own `fetch()`. From there you can adopt the new pieces one component at a time.
 
-| Feature          | Description                                                         |
-| ---------------- | ------------------------------------------------------------------- |
-| Proxy State      | Reactive objects with nested objects, arrays, computeds             |
-| State Management | `state()` + `Store` for persistence (localStorage, session)         |
-| SSR              | Full server-side rendering with state serialization + hydration     |
-| Watchers         | `watch()` for observing signal changes; `effect()` for side effects |
-| DX               | Automatic dependency tracking, no manual redraw for signals         |
-
-**Docs**: [mithril.garage44.org](https://mithril.garage44.org)
-
-## Signals
-
-Zero-dependency reactive primitives with automatic dependency tracking:
-
-```typescript
-import {signal, computed, effect} from '@bitstillery/mithril'
-
-const count = signal(0)
-const doubled = computed(() => count() * 2)
-
-effect(() => console.log(`${count()} × 2 = ${doubled()}`))
-count(5) // Logs: 5 × 2 = 10
-```
-
-## Proxy State
-
-`state()` creates reactive objects. Components track which properties they read and only re-render when those change. **Function properties become computed values**—they re-evaluate when their dependencies change.
+## A first look
 
 ```tsx
-import m, {state, MithrilComponent} from '@bitstillery/mithril'
+import m, {state} from '@bitstillery/mithril'
 
-const $s = state({count: 0, todos: [], totalTodos: () => $s.todos.length}, 'app')
+const $s = state({count: 0})
 
-class Counter extends MithrilComponent {
-    view() {
-        return (
-            <div>
-                <p>
-                    {$s.count} / {$s.totalTodos}
-                </p>
-                <button onclick={() => $s.count++}>+</button>
-            </div>
-        )
-    }
+const Counter = {
+    view: () => <button onclick={() => $s.count++}>Clicked {$s.count} times</button>,
 }
 
 m.mount(document.body, Counter)
 ```
 
-- **Computed properties**: Any function in state (e.g. `totalTodos: () => $s.todos.length`) is a computed—read it like a normal property, it updates when dependencies change.
-- **`$` prefix**: Use `$s.$count` for the raw signal (e.g. for `watch()`).
-- The second argument is a name used for SSR serialization.
+Clicking the button changes `$s.count`, and the button redraws because it shows that value.
+Nothing else is needed.
 
-## Watchers
+## Getting started
 
-`watch()` observes signal changes:
-
-```typescript
-import {state, watch} from '@bitstillery/mithril'
-
-const $s = state({count: 0}, 'app')
-const unwatch = watch($s.$count, (newVal, oldVal) => console.log(`${oldVal} → ${newVal}`))
-$s.count++ // triggers callback
-unwatch() // stop observing
+```bash
+bun add @bitstillery/mithril
 ```
 
-## SSR Hydration
+Then read the [setup guide](docs/site/content/index.md), followed by the guides on
+[state](docs/site/content/state.md), [server rendering](docs/site/content/ssr.md) and
+[saved settings](docs/site/content/store.md). The rest of
+[`docs/site/content/`](docs/site/content/) covers everything Mithril already offers.
 
-```typescript
-// Server
-const {html, state} = await m.renderToString(App)
-// Inject: <script id="__SSR_STATE__">${JSON.stringify(state)}</script>
+Prefer reading working code? Two small example apps live in this repository:
 
-// Client
-import {deserializeAllStates} from '@bitstillery/mithril'
+- [`examples/state/`](examples/state/) — keeping state, derived values and saved settings
+- [`examples/ssr/`](examples/ssr/) — rendering on the server and continuing in the browser
 
-const el = document.getElementById('__SSR_STATE__')
-if (el?.textContent) deserializeAllStates(JSON.parse(el.textContent))
-m.mount(root, App)
-```
-
-## Persistent Store
-
-`Store` wraps `state()` with localStorage/sessionStorage. Define a blueprint with defaults and which keys persist:
-
-```typescript
-import {Store} from '@bitstillery/mithril'
-
-const store = new Store<{user: {name: string}; preferences: Record<string, any>}>()
-store.blueprint(
-    {user: {name: ''}, preferences: {}},
-    {user: {name: ''}, preferences: {}}, // Keys here persist to storage
-)
-store.load({user: {name: 'John'}, preferences: {theme: 'dark'}})
-store.state.user.name = 'Jane' // Auto-saves
-```
-
-## Examples
-
-- [`examples/ssr/`](examples/ssr/) — Server-side rendering with hydration
-- [`examples/state/`](examples/state/) — Signals, state, and Store patterns
-
-## Development
+## Contributing
 
 ```bash
 bun install
@@ -125,4 +62,6 @@ MIT — see [LICENSE](LICENSE).
 
 ## Credits
 
-Originally created by Leo Horie. See the [Mithril.js contributors](https://github.com/MithrilJS/mithril.js/graphs/contributors) for the many people who made Mithril what it is.
+Mithril was created by Leo Horie. Thanks to all the
+[Mithril.js contributors](https://github.com/MithrilJS/mithril.js/graphs/contributors) who made it
+what it is.
