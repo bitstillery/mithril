@@ -68,9 +68,11 @@ const $s = state(
 **Deferred evaluation.** When state depends on app context (routes, store, other globals) that is not ready at creation time, use `{ deferComputed: true }` and call `allowComputed()` when ready:
 
 ```tsx
+import {allowComputed, state} from '@bitstillery/mithril'
+
 const $s = state({step: 0, canProceed: () => $s.step > 0}, 'app', {deferComputed: true})
 // ... after routes/context are ready:
-;($s as any).allowComputed()
+allowComputed($s)
 ```
 
-Until `allowComputed()` is called, computed properties return `undefined`. See [ADR-0013](../architecture/adr/0013-deferred-computed-evaluation.md) for details.
+Until `allowComputed()` is called, computed properties return `undefined`.

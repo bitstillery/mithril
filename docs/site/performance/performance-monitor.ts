@@ -1,7 +1,6 @@
 /**
  * Lightweight performance monitor for the signals vs no-signals demo.
  * Uses native browser APIs only (no dependencies).
- * ADR-0015: Performance Demo Monitoring and Comparison
  *
  * Measures full frame duration (time between rAF callbacks) because m.redraw()
  * schedules the actual DOM work for the next frame—measuring inside our callback

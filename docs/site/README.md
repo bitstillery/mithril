@@ -1,6 +1,6 @@
 # Mithril Docs Site
 
-A minimal SSR-based documentation site for Mithril.js, built using Bun and Mithril SSR patterns.
+The documentation site for Mithril, Bitstillery edition — server-rendered with this library and Bun.
 
 ## Setup
 
@@ -46,9 +46,9 @@ bun run start
 - Server-side rendering (SSR) with hydration
 - Markdown to HTML conversion
 - Navigation menus (guides and API)
-- Responsive design matching the Mithril.js website
 - Hot module reloading in development
 
 ## Notes
 
-The site expects markdown files to be in `/home/jeroen/code/docs/docs/`. If files are not found, a 404 page will be displayed.
+Pages are the Markdown files in `content/`; the sidebar is parsed from `content/nav-guides.md` and
+`content/nav-methods.md`. A path with no matching file renders the 404 page.

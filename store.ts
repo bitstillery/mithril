@@ -177,7 +177,7 @@ export class Store<T extends object = PlainObject> {
         this.tabStorageKey = options.tabStorageKey ?? this.storageKey
         this.cookieKey = options.cookieKey ?? 'store_prefs'
         this.cookieMaxAge = options.cookieMaxAge ?? DEFAULT_COOKIE_MAX_AGE
-        // Initialize with empty state, will be loaded later (ADR-0013: defer computeds until ready() is called)
+        // Initialize with empty state, will be loaded later (computeds stay deferred until ready() is called)
         const instanceName = `store.instance.${storeInstanceCounter++}`
         this.stateInstance = state({} as T, instanceName, {deferComputed: true})
 
@@ -195,7 +195,7 @@ export class Store<T extends object = PlainObject> {
     }
 
     /**
-     * Allow evaluation of computed properties (ADR-0013). Call after load() and app setup
+     * Allow evaluation of computed properties. Call after load() and app setup
      * (e.g. after $s, context, or route are ready) so computeds that depend on them can run.
      */
     ready(): void {
@@ -399,7 +399,7 @@ export class Store<T extends object = PlainObject> {
         if (this.computedPropertiesSetup) {
             this.computedPropertiesSetup()
         }
-        // ADR-0013: open deferred-computed gate so computeds can run after load
+        // Open the deferred-computed gate so computeds can run after load
         this.ready()
     }
 

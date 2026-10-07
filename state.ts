@@ -25,7 +25,7 @@ interface GetSetDescriptor {
 // WeakMap to store parent signal references for arrays
 const arrayParentSignalMap = new WeakMap<object, Signal<unknown>>()
 
-// Deferred computed evaluation (ADR-0013): gate computeds until allowComputed() is called
+// Deferred computed evaluation: gate computeds until allowComputed() is called
 const stateDeferredFlags = new WeakMap<object, {allowed: boolean}>()
 // Store __rootState in a WeakMap to avoid proxy get recursion when reading it off the proxy
 const stateRootMap = new WeakMap<object, object>()
@@ -291,7 +291,7 @@ export function clearStateRegistry(): void {
 }
 
 export interface StateOptions {
-    /** When true, computed properties are not evaluated until allowComputed() is called (ADR-0013). */
+    /** When true, computed properties are not evaluated until allowComputed() is called. */
     deferComputed?: boolean
 }
 
@@ -664,7 +664,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                     return explicitValue !== undefined ? explicitValue : nestedSignalMap
                 }
                 if (prop === '__rootState') return stateRootMap.get(wrapped!) ?? wrapped
-                // ADR-0013: allowComputed() opens the deferred-computed gate and marks all computeds dirty
+                // allowComputed() opens the deferred-computed gate and marks all computeds dirty
                 if (prop === 'allowComputed') {
                     return function allowComputed(this: object | undefined) {
                         const root = (this && (stateRootMap.get(this) ?? this)) || this
@@ -963,7 +963,7 @@ export type DeepPartial<T> = T extends (...args: never[]) => unknown
         : T
 
 /**
- * Opens the deferred-computed gate of a state built with `deferComputed` (ADR-0013) and marks its
+ * Opens the deferred-computed gate of a state built with `deferComputed` and marks its
  * computeds dirty. The gate is a proxy trap rather than a key of the state, so it isn't on `State<T>`.
  */
 export function allowComputed(stateInstance: object): void {

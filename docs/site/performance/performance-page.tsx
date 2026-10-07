@@ -11,7 +11,7 @@ const DEMO_COMPONENTS = {
     'with-signals': PerformanceWithSignals,
 } as const
 
-/** Mounts the active demo via m.mount so signal updates trigger synchronous redraw (ADR-0015). */
+/** Mounts the active demo with its own m.mount, so redraws of the docs layout don't reach inside it. */
 const PerformanceMount = {
     onbeforeupdate(vnode: Vnode<{activeTab: TabId}>, old: Vnode<{activeTab: TabId}>) {
         const tab = vnode.attrs?.activeTab ?? 'without-signals'

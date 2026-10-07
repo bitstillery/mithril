@@ -596,7 +596,7 @@ describe('state', () => {
         expect(s.count).toBe(1)
     })
 
-    test('deferComputed: computeds return undefined until allowComputed() (ADR-0013)', () => {
+    test('deferComputed: computeds return undefined until allowComputed()', () => {
         const s = state(
             {
                 count: 1,

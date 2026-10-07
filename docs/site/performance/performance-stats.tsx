@@ -1,7 +1,6 @@
 /**
  * Stats overlay for the performance demo.
  * Updates via direct DOM writes (throttled to 500ms) to avoid measuring our own overhead.
- * ADR-0015: Performance Demo Monitoring and Comparison
  */
 
 import type {PerfStats} from './performance-monitor'
