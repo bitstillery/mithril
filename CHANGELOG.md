@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.12.1](https://github.com/bitstillery/mithril/compare/v3.12.0...v3.12.1) (2026-10-07)
+
+### Bug Fixes
+
+- **types:** infer m.route.Link's attrs as LinkAttrs in m() ([19c35e7](https://github.com/bitstillery/mithril/commit/19c35e7a9e0edc09912acc9df37a3d1cc74a9247))
+
 ## [3.12.0](https://github.com/bitstillery/mithril/compare/v3.11.3...v3.12.0) (2026-10-07)
 
 ### Features
