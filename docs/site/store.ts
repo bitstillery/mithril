@@ -48,7 +48,7 @@ const temporary: Partial<SiteStoreState> = {
 /** SessionStorage — survives reload, clears when tab closes. */
 const tab: Partial<SiteStoreState> = {}
 
-/** Docs-specific key to avoid collision with other apps (e.g. discover portal) on same origin. */
+/** Docs-specific key so other apps on the same origin keep their own storage. */
 const DOCS_STORAGE_KEY = 'mithril-docs-store'
 
 export const $s = new Store<SiteStoreState>({storageKey: DOCS_STORAGE_KEY})

@@ -11,9 +11,7 @@ export interface IconAttrs {
     size?: number
 }
 
-/**
- * Renders an SVG icon by name. Uses the same pattern as discover/common Icon.
- */
+/** Renders an SVG icon by name. */
 export class Icon extends MithrilComponent<IconAttrs> {
     view(vnode: Vnode<IconAttrs>) {
         const {name, class: cls, size = 16} = vnode.attrs ?? {}
