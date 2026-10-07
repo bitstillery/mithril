@@ -192,6 +192,34 @@ describe('SSR Hydration Mismatch Recovery', () => {
         })
     })
 
+    describe('Structural mismatch', () => {
+        test('client vdom replaces server children that match nothing', () => {
+            for (let i = 0; i < 10; i++) {
+                const span = $window.document.createElement('span')
+                span.textContent = `Server ${i}`
+                root.appendChild(span)
+            }
+
+            render(root, m('div', [m('p', 'Client 1'), m('p', 'Client 2')]))
+
+            const children = getChildren(root)
+            expect(children.length).toBe(1)
+            expect(children[0].nodeName).toBe('DIV')
+            expect(getTextContent(root)).toBe('Client 1Client 2')
+        })
+
+        test('client text replaces a server root that matches nothing', () => {
+            const span = $window.document.createElement('span')
+            span.textContent = 'Server'
+            root.appendChild(span)
+
+            render(root, ['Client'])
+
+            expect(root.childNodes.length).toBe(1)
+            expect(root.childNodes[0].nodeValue).toBe('Client')
+        })
+    })
+
     describe('Lenient Node Matching', () => {
         test('matches text nodes with whitespace differences', () => {
             // Create server-rendered text node with extra whitespace

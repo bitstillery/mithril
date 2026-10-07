@@ -345,10 +345,11 @@ export default function renderFactory() {
                 }
                 candidate = candidate.nextSibling
             }
-            // If no matching text node found, create new one
+            // If no matching text node found, create new one; mark it matched so root cleanup keeps it
             if (!textNode!) {
                 textNode = getDocument(parent).createTextNode(vnode.children as string)
                 insertDOM(parent, textNode, nextSibling)
+                matchedNodes.add(textNode)
             }
         } else {
             textNode = getDocument(parent).createTextNode(vnode.children as string)
@@ -486,7 +487,7 @@ export default function renderFactory() {
                 element = fallbackCandidate
                 matchedNodes.add(element)
             }
-            // If still no matching element found, create new one
+            // If still no matching element found, create new one; mark it matched so root cleanup keeps it
             if (!element!) {
                 element = ns
                     ? is
@@ -496,6 +497,7 @@ export default function renderFactory() {
                       ? getDocument(parent as Element).createElement(tag, {is: is})
                       : getDocument(parent as Element).createElement(tag)
                 insertDOM(parent, element, nextSibling)
+                matchedNodes.add(element)
             }
         } else {
             // Normal creation path
