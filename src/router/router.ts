@@ -15,13 +15,17 @@ import type {RouteParamValue, RouteParams} from './querystring/parse'
 // Using a type that references the symbol indirectly
 export type RedirectObject = {[key: symbol]: string}
 
+/**
+ * The hooks are methods, as on `Component`, so their parameters are bivariant and a
+ * `RouteResolver<{id: string}>` still fits a route table of `RouteResolver`s.
+ */
 export interface RouteResolver<Attrs = object, State = unknown> {
-    onmatch?: (
+    onmatch?(
         args: Attrs,
         requestedPath: string,
         route: string,
-    ) => ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | RedirectObject | Promise<RedirectObject> | void
-    render?: (vnode: VnodeType<Attrs, State>) => VnodeType
+    ): ComponentType<Attrs, State> | Promise<ComponentType<Attrs, State>> | RedirectObject | Promise<RedirectObject> | void
+    render?(vnode: VnodeType<Attrs, State>): VnodeType
 }
 
 export type SSRState = Record<string, unknown>

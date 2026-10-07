@@ -150,8 +150,7 @@ describe('SSR Routing', () => {
             }
 
             const routes = {
-                // onmatch is a function-typed property, so a resolver typed for its attrs is not a RouteResolver<object>.
-                '/user/:id': resolver as RouteResolver,
+                '/user/:id': resolver,
             }
 
             const result = await mServer.route.resolve('/user/456', routes, mServer.renderToString)
@@ -400,8 +399,7 @@ describe('SSR Routing', () => {
             }
 
             const routes = {
-                // onmatch is a function-typed property, so a resolver typed for its attrs is not a RouteResolver<object>.
-                '/user/:id': resolver as RouteResolver,
+                '/user/:id': resolver,
             }
 
             const result = await mServer.route.resolve('/user/999', routes, mServer.renderToString)
