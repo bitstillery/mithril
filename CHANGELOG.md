@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.2](https://github.com/bitstillery/mithril/compare/v3.11.1...v3.11.2) (2026-10-07)
+
+### Code Refactoring
+
+- move the library into src/ grouped by area ([df5852a](https://github.com/bitstillery/mithril/commit/df5852a4ecc224eaa086598c8d4892fa05859352))
+
 ### [3.11.1](https://github.com/bitstillery/mithril/compare/v3.11.0...v3.11.1) (2026-10-07)
 
 ### Bug Fixes
