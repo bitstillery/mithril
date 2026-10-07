@@ -1,14 +1,10 @@
 {
-    "name": "mithril-ssr-test",
+    "name": "mithril-ssr-example",
     "version": "1.0.0",
     "type": "module",
     "scripts": {
         "build": "bun run build.ts",
         "dev": "bun --hot server.ts",
         "start": "bun run server.ts"
-    },
-    "dependencies": {},
-    "devDependencies": {
-        "@types/bun": "latest"
     }
 }

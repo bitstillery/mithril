@@ -20,4 +20,3 @@
     - [Autoredraw system](/autoredraw)
 - Misc
     - [Credits](/credits)
-    - [Code of Conduct](/code-of-conduct)

@@ -12,7 +12,7 @@ With `state()`, you define one reactive object. Mutate `$s.form.terms = true` or
 
 Arrays are handled too. `$s.items.push(x)`, `$s.breadcrumbs.splice(0, n, ...newItems)`, and index assignment all trigger updates; nested arrays and objects stay reactive.
 
-Use `signal()` for a single reactive primitive; use `state()` for the object-shaped state that components typically have. [SolidJS](https://www.solidjs.com/)'s `createStore` uses a similar pattern. See the [state implementation](https://github.com/bitstillery/mithril/blob/main/state.ts) for details.
+Use `signal()` for a single reactive primitive; use `state()` for the object-shaped state that components typically have. [SolidJS](https://www.solidjs.com/)'s `createStore` uses a similar pattern. See the [state implementation](https://github.com/bitstillery/mithril/blob/main/src/state/state.ts) for details.
 
 ```tsx
 import m, {state, MithrilComponent} from '@bitstillery/mithril'

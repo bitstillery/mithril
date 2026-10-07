@@ -1,9 +1,9 @@
 <!--meta-description
-Where to find help with this Mithril fork
+Where to find help with Mithril, Bitstillery edition
 -->
 
 # Getting Help
 
-This fork builds on [Mithril](https://mithril.js.org/). For core Mithril concepts—components, routing, lifecycle—the [Zulip](https://mithril.zulipchat.com/) community is welcoming, and modern AI assistants are familiar with Mithril too.
+Start with this documentation; the guides on [signals](/signals), [state](/state), [server rendering](/ssr) and [the store](/store) cover what this edition adds. For questions and bugs, open an issue on [GitHub](https://github.com/bitstillery/mithril).
 
-For fork-specific features (Signals, Store, SSR, htm), use this documentation or open an issue on [GitHub](https://github.com/bitstillery/mithril).
+Core concepts such as components, routing and lifecycle methods work as in [Mithril.js](https://mithril.js.org/), so its community and most of its material still apply.

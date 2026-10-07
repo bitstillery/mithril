@@ -38,7 +38,8 @@ bun run start
 - `components/` - React-like components using Mithril TSX
 - `markdown.ts` - Markdown parsing utilities
 - `nav.ts` - Navigation menu loading
-- `public/` - Static assets (CSS, images, HTML template)
+- `assets/` - Static source assets (logo, the sandbox preview page)
+- `public/` - Build output (`bun run build`), not tracked
 - `build.ts` - Build script for client bundle
 
 ## Features

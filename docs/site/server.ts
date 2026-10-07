@@ -12,7 +12,6 @@ import {
 import {copyGlobalStatesToContext} from '../../src/state/state'
 
 import sourceTemplate from './index.html'
-import builtTemplate from './public/index.html'
 import {getRoutes} from './routes'
 import {loadMarkdownFromDocs} from './markdown'
 import {getNavGuides, getNavMethods, getNavGuidesStructure, getNavMethodsStructure} from './nav'
@@ -20,7 +19,8 @@ import type {SSRAccessContext} from '../../src/ssr/context'
 
 // In dev: use source HTML so Bun can serve client.tsx with HMR. In prod: use built output.
 const isDev = process.env.NODE_ENV !== 'production'
-const htmlTemplate = isDev ? sourceTemplate : builtTemplate
+// The built template only exists after `bun run build`, so production imports it lazily.
+const htmlTemplate = isDev ? sourceTemplate : (await import('./public/index.html')).default
 
 const PORT = 3000
 
@@ -55,6 +55,7 @@ async function getProcessedTemplate(): Promise<string> {
 const routes = getRoutes()
 
 const staticAssetsDir = join(import.meta.dir, 'public')
+const sourceAssetsDir = join(import.meta.dir, 'assets')
 const bunConfig = createBunSSRConfig({
     port: PORT,
     templatePath: isDev ? join(import.meta.dir, 'index.html') : join(import.meta.dir, 'public', 'index.html'),
@@ -70,8 +71,7 @@ const server = serve({
     routes: {
         ...bunConfig.routes,
         '/style.css': Bun.file(join(import.meta.dir, 'style.css')),
-        '/logo.svg': Bun.file(join(staticAssetsDir, 'logo.svg')),
-        '/app.js': Bun.file(join(staticAssetsDir, 'app.js')),
+        '/logo.svg': Bun.file(join(sourceAssetsDir, 'logo.svg')),
     },
     ...(isDev && {development: {hmr: true, console: true}}),
     async fetch(req) {
@@ -174,7 +174,8 @@ const server = serve({
 
         // Serve static files from public/ (chunk-*.js, chunk-*.css, etc from Bun HTML build)
         if (pathname.startsWith('/') && !pathname.includes('..') && pathname.length > 1) {
-            const staticPath = join(staticAssetsDir, pathname.slice(1))
+            const staticPath =
+                pathname === '/preview.html' ? join(sourceAssetsDir, 'preview.html') : join(staticAssetsDir, pathname.slice(1))
             try {
                 const file = Bun.file(staticPath)
                 const stat = await file.stat()
@@ -199,8 +200,8 @@ const server = serve({
             }
         }
 
-        // Static assets (style.css, logo.svg, app.js) are handled by routes
-        const staticAssets = ['/style.css', '/logo.svg', '/app.js']
+        // Static assets (style.css, logo.svg) are handled by routes
+        const staticAssets = ['/style.css', '/logo.svg']
         if (staticAssets.includes(pathname)) {
             return undefined // Let Bun handle via routes
         }

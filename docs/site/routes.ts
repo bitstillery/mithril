@@ -18,7 +18,6 @@ const routeMap: Record<string, string> = {
     '/keys': 'keys',
     '/autoredraw': 'autoredraw',
     '/credits': 'credits',
-    '/code-of-conduct': 'code-of-conduct',
     '/api': 'api',
     '/hyperscript': 'hyperscript',
     '/render': 'render',
