@@ -5,12 +5,12 @@ import {AsyncData} from './components/async_data'
 import {StoreDemo} from './components/store_demo'
 import {Layout} from './components/layout'
 
-import type {ComponentType, Vnode} from '../../src/index'
+import type {ComponentType} from '../../src/index'
 import type {RouteResolver} from '../../src/router/router'
 
-function createRoute(component: ComponentType, routePath: string): RouteResolver {
+function createRoute(component: ComponentType, routePath: string): RouteResolver<{routePath?: string}> {
     return {
-        render: (vnode: Vnode) => {
+        render: (vnode) => {
             // Use routePath from router's vnode attrs (passed by route.resolve)
             // Fallback to routePath parameter if not in vnode attrs
             const actualRoutePath = vnode.attrs?.routePath || routePath

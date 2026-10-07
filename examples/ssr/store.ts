@@ -3,7 +3,7 @@ import type {TabTemplate} from '../../src/index'
 import {registerState, getRegisteredStates} from '../../src/state/state'
 
 // Define the application state interface
-interface AppState {
+export interface AppState {
     // Saved state (localStorage) - survives browser restarts
     saved: {
         username: string

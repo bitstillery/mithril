@@ -22,7 +22,6 @@ const result = await build({
     minify: false,
     sourcemap: 'inline',
     naming: 'app.js',
-    outfile: join(publicDir, 'app.js'),
 })
 
 if (!result.success) {

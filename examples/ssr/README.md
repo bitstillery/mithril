@@ -21,14 +21,14 @@ Visit http://localhost:3000 to see the SSR in action.
 - ✅ Async data fetching with `waitFor`
 - ✅ TypeScript support
 - ✅ JSX/TSX support (using Bun's native JSX runtime)
-- ✅ Shared App component for server and client
+- ✅ Shared routes for server and client
 
 ## Project Structure
 
 - `server.ts` - Bun HTTP server with SSR
 - `index.tsx` - Document component that renders the full HTML structure
 - `components/` - Mithril components
-    - `app.tsx` - Main app component (shared between server and client)
+    - `layout.tsx` - Layout with navigation, shared between server and client
     - `home.tsx` - Home page component
     - `async_data.tsx` - Async data fetching example component
 - `routes.ts` - Route definitions

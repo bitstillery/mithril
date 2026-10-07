@@ -1,4 +1,4 @@
-import {MithrilComponent, Vnode} from '../../../src/index'
+import {MithrilComponent} from '../../../src/index'
 import m from '../../../src/index'
 
 interface LayoutAttrs {
@@ -7,7 +7,7 @@ interface LayoutAttrs {
 }
 
 export class Layout extends MithrilComponent<LayoutAttrs> {
-    view(vnode: Vnode<LayoutAttrs>) {
+    view(vnode: m.Vnode<LayoutAttrs>) {
         // Use routePath from attrs (passed by router) for SSR compatibility
         // On server, m.route.get() doesn't work, so we use routePath prop
         // On client, m.route.get() works, but routePath ensures consistency

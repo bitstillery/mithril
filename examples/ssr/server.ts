@@ -5,14 +5,15 @@ import {
     createSessionUpdateHandler,
     getBunProcessedTemplate,
     createBunSSRConfig,
-    shouldHandleBunAssets,
     MemorySessionStore,
     extractSessionId,
 } from '../../src/server'
+import {copyGlobalStatesToContext} from '../../src/state/state'
 
 import htmlTemplate from './public/index.html'
 import {routes} from './routes'
 import {initStore} from './store'
+import type {AppState} from './store'
 
 const PORT = 3000
 
@@ -29,40 +30,32 @@ if (typeof setInterval !== 'undefined') {
     )
 }
 
-// Helper function to get session data from request
-// Returns both session data and sessionId
-function getSessionData(req: Request): {sessionData: Partial<any>; sessionId: string} {
-    // Extract session ID from cookie or create new session
-    let sessionId = extractSessionId(req)
+/** What the session update handler stores under `session_data`: the client's session tier. */
+interface StoredSession {
+    user?: {id?: string | null; name?: string; role?: string}
+    serverData?: string
+    lastServerUpdate?: number
+}
 
-    // For demo purposes, simulate user authentication
-    // In production, decode JWT token to get user ID
-    const userId = sessionId ? sessionStore.getSession(sessionId)?.userId : null
+function resolveSessionId(req: Request): string {
+    const sessionId = extractSessionId(req)
+    return sessionId && sessionStore.getSession(sessionId) ? sessionId : sessionStore.createSession(null)
+}
 
-    // Create or retrieve session
-    if (!sessionId || !sessionStore.getSession(sessionId)) {
-        sessionId = sessionStore.createSession(userId || null)
-    }
+// For demo purposes the user is simulated; in production, decode a JWT to get the user ID.
+function getSessionData(sessionId: string | undefined): Partial<AppState> {
+    const session = sessionId ? sessionStore.getSession(sessionId) : null
+    const sessionData = (session?.data.session_data ?? {}) as StoredSession
 
-    const session = sessionStore.getSession(sessionId)
-
-    // Read session_data from sessionStore if it exists
-    // sessionData structure: { user: {...}, serverData: '...', lastServerUpdate: ... }
-    const sessionData = session?.data.session_data || {}
-
-    // Return session data for Store.load()
     return {
-        sessionId,
-        sessionData: {
-            session: {
-                user: {
-                    id: session?.userId || sessionData.user?.id || null,
-                    name: sessionData.user?.name || (session?.userId ? `User ${session.userId}` : ''),
-                    role: sessionData.user?.role || (session?.userId ? 'user' : ''),
-                },
-                serverData: sessionData.serverData || session?.data.serverData || '',
-                lastServerUpdate: sessionData.lastServerUpdate || Date.now(),
+        session: {
+            user: {
+                id: session?.userId || sessionData.user?.id || null,
+                name: sessionData.user?.name || (session?.userId ? `User ${session.userId}` : ''),
+                role: sessionData.user?.role || (session?.userId ? 'user' : ''),
             },
+            serverData: sessionData.serverData || '',
+            lastServerUpdate: sessionData.lastServerUpdate || Date.now(),
         },
     }
 }
@@ -90,11 +83,6 @@ const server = Bun.serve({
         const url = new URL(req.url)
         const pathname = url.pathname
 
-        // Handle Bun's internal assets (HMR, etc.)
-        if (shouldHandleBunAssets(pathname)) {
-            return undefined // Let Bun handle it
-        }
-
         // Handle API endpoints
         if (pathname === '/api/session' && req.method === 'POST') {
             return await handleSessionUpdate(req)
@@ -106,14 +94,18 @@ const server = Bun.serve({
         if (pathname === '/' || pathname === '/async' || pathname === '/store' || routes[pathname]) {
             return await createSSRResponse(pathname, req, {
                 routes,
-                initStore,
-                getSessionData,
+                createRequestContext: (req) => ({sessionId: resolveSessionId(req), stateRegistry: new Map()}),
+                initRequestContext: (context) => {
+                    // Module-level states register globally; copying them in puts them in this request's SSR state.
+                    copyGlobalStatesToContext(context)
+                    initStore(getSessionData(context.sessionId))
+                },
                 getHtmlTemplate: getProcessedTemplate,
             })
         }
 
-        // For other routes (like client.tsx, __template__), return undefined to let Bun handle them
-        return undefined
+        // Bun serves the template route and its bundled assets before fetch is called.
+        return new Response('Not Found', {status: 404})
     },
 })
 
