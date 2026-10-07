@@ -325,11 +325,13 @@ export class Store<T extends object = PlainObject> {
             cookie,
         }
 
-        try {
-            restored_state.store = JSON.parse(restored_state.store as string)
-            restored_state.tab = JSON.parse(restored_state.tab as string)
-        } catch (err) {
-            console.log(`[store] failed to parse store/tab: ${String(err)}`)
+        for (const tier of ['store', 'tab'] as const) {
+            try {
+                restored_state[tier] = JSON.parse(restored_state[tier] as string)
+            } catch (err) {
+                console.warn(`[store] ignoring unparsable ${tier} storage: ${String(err)}`)
+                restored_state[tier] = {}
+            }
         }
 
         const store_state = merge_deep(copy_object(this.templates.saved), copy_object(restored_state.store ?? {}))
