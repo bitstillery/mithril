@@ -68,7 +68,10 @@ concurrent renders; the per-request registry does not isolate its values.
 
 The `session` tier has no browser storage. Its values reach the client only through the SSR state,
 and `save({session: true})` sends them back with a POST to `/api/session`. The session id travels in
-an HttpOnly cookie that `createSSRResponse()` sets, so the client never handles it.
+an HttpOnly cookie that `createSSRResponse()` sets, so the client never handles it. It sets the
+cookie only when the request context carries a `sessionId` (an empty one used to wipe the
+browser's session), and marks it Secure when the request URL or `X-Forwarded-Proto` is https,
+like the cookie tier.
 
 - Off by default: a bare `save()` writes localStorage, sessionStorage and the cookie, never the
   network. The original design included the session tier in a bare `save()`.

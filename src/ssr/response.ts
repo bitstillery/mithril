@@ -84,6 +84,16 @@ export function createBunSSRConfig(config: BunSSRConfig) {
 }
 
 /**
+ * Whether the client reached the server over https. A TLS-terminating proxy forwards plain http, so
+ * its X-Forwarded-Proto counts too; a forged one only adds Secure, which cannot leak the cookie.
+ */
+function isHttpsRequest(req: Request): boolean {
+    if (new URL(req.url).protocol === 'https:') return true
+    const forwarded = req.headers.get('X-Forwarded-Proto')
+    return forwarded?.split(',')[0]?.trim().toLowerCase() === 'https'
+}
+
+/**
  * Create SSR response with serialized state and session cookie.
  * Runs the whole request inside runWithContextAsync so getSSRContext() returns
  * this request's context; initRequestContext then loads the store and registers state.
@@ -168,16 +178,14 @@ export async function createSSRResponse(pathname: string, req: Request, options:
                 }
             }
 
-            const sessionId = context.sessionId ?? ''
+            const headers: Record<string, string> = {'Content-Type': 'text/html; charset=utf-8'}
+            // An empty sessionId cookie would overwrite the browser's existing session, so none is sent.
+            if (context.sessionId) {
+                const secure = isHttpsRequest(req) ? '; Secure' : ''
+                headers['Set-Cookie'] = `sessionId=${context.sessionId}; Path=/; HttpOnly; SameSite=Lax${secure}`
+            }
 
-            return new Response(html, {
-                headers: {
-                    //
-                    'Content-Type': 'text/html; charset=utf-8',
-                    //
-                    'Set-Cookie': `sessionId=${sessionId}; Path=/; HttpOnly; SameSite=Lax`,
-                },
-            })
+            return new Response(html, {headers})
         } catch (error) {
             logger.error('ssr request failed', error, {
                 pathname,
