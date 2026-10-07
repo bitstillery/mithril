@@ -1,9 +1,4 @@
-import {
-    setCurrentComponent,
-    clearCurrentComponent,
-    clearComponentDependencies,
-    resetComponentDependencies,
-} from '../signal'
+import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies, resetComponentDependencies} from '../signal'
 import {
     logHydrationError,
     recordHydrationMismatchSummary,
