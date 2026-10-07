@@ -28,8 +28,14 @@ SolidJS-style path that writes signal values straight into DOM nodes, skipping t
 considered and never pursued; per-vnode tracking likewise.
 
 - A component subscribes to the signals its `view()` reads, and nothing else: reads in `oninit`,
-  `onbeforeupdate`, event handlers or other hooks don't register. Each update re-registers from
-  scratch, so a signal only an earlier render read stops redrawing it.
+  `onbeforeupdate`, event handlers or other hooks don't register. After each render a component is
+  linked to exactly what that render read, so a signal only an earlier render read stops redrawing
+  it. The links are not rebuilt: reads are compared by position with the last render's, and a
+  signal stamped with the current render's number is skipped, so a render that reads what the last
+  one did touches no Set. Clearing and re-adding them each update was ~27% of an unchanged redraw;
+  dropping it took `bench app` from 106.6 to 65.3 µs on V8 (Node 22) and 78 to 55 µs on Bun 1.4
+  (2026-10-07). Folding the three per-component WeakMaps in `render.ts` into one, and avoiding the
+  argument arrays in `callHook`, measured nothing on either engine.
 - Signal-driven redraws are coalesced per microtask (`index.ts`), while `m.redraw()` waits for an
   animation frame. `m.redraw()` with no argument still redraws everything, and is still what a
   change to non-signal data needs.

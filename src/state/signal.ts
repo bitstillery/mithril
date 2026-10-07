@@ -15,43 +15,54 @@ type Subscriber = (() => unknown) & {[WEAK]?: true}
 // Current effect context for dependency tracking
 let currentEffect: Subscriber | null = null
 /**
- * The signals an effect or computation read on its last run, overwritten in place by the next run so
- * it can unsubscribe from the ones it no longer reads. A run usually reads the same signals in the
+ * The signals an effect, computation or component view read on its last run, overwritten in place by
+ * the next run so it can unlink from the ones it no longer reads. A run usually reads the same signals in the
  * same order, so a read only compares with the entry at its position; what a run displaces is kept
  * aside and checked once it ends.
  */
-class Sources {
+class Sources<Owner = Subscriber> {
+    /** For a component: the render the sources are being recorded for, which its signals are stamped with. */
+    epoch = 0
     private items: Signal<unknown>[] = []
     private cursor = 0
     private displaced: Signal<unknown>[] | null = null
+
+    constructor(private readonly unlink: (source: Signal<unknown>, owner: Owner) => void) {}
 
     begin(): void {
         this.cursor = 0
         this.displaced = null
     }
 
-    record(source: Signal<unknown>): void {
+    /** Returns true when the read differs from the one at its position last run, so the caller links it. */
+    record(source: Signal<unknown>): boolean {
         const i = this.cursor
         const items = this.items
         // A repeat of the previous read, as in a loop over one signal, isn't recorded again.
-        if (i > 0 && items[i - 1] === source) return
+        if (i > 0 && items[i - 1] === source) return false
+        let changed = true
         if (i < items.length) {
             const previous = items[i]!
             if (previous !== source) {
                 ;(this.displaced ??= []).push(previous)
                 items[i] = source
-            }
+            } else changed = false
         } else {
             items.push(source)
         }
         this.cursor = i + 1
+        return changed
+    }
+
+    toSet(): Set<Signal<unknown>> {
+        return new Set(this.items)
     }
 
     /**
      * Unsubscribes from what the run displaced and didn't read anywhere else. Only removals:
      * re-adding to a set a notification may be walking would visit it again.
      */
-    end(subscriber: Subscriber): void {
+    end(owner: Owner): void {
         const items = this.items
         if (this.cursor < items.length) {
             const unread = items.splice(this.cursor)
@@ -60,17 +71,21 @@ class Sources {
         }
         if (this.displaced) {
             const kept = new Set(items)
-            for (const source of this.displaced) if (!kept.has(source)) source._unsubscribe(subscriber)
+            for (const source of this.displaced) if (!kept.has(source)) this.unlink(source, owner)
             this.displaced = null
         }
     }
 
     /** Unsubscribes from everything, as a disposed effect does. */
-    clear(subscriber: Subscriber): void {
-        for (const source of this.items) source._unsubscribe(subscriber)
+    clear(owner: Owner): void {
+        for (const source of this.items) this.unlink(source, owner)
         this.items = []
         this.cursor = 0
     }
+}
+
+function unsubscribe(source: Signal<unknown>, subscriber: Subscriber): void {
+    source._unsubscribe(subscriber)
 }
 
 // The sources of the running effect or computation.
@@ -80,47 +95,74 @@ let currentSources: Sources | null = null
 // one is kept here: dropping every other reference must not silence its observers.
 const observedComputeds = new Set<ComputedSignal<unknown>>()
 
-// Component-to-signal dependency tracking. A component is identified by its vnode state.
-const componentSignalMap = new WeakMap<object, Set<Signal<unknown>>>()
+// Component-to-signal dependency tracking. A component is identified by its vnode state. What a
+// component's view read is kept as Sources, so a render reading what the last one read costs a
+// comparison per read rather than re-adding the component to every signal's set.
+const componentSourcesMap = new WeakMap<object, Sources<object>>()
 const signalComponentMap = new WeakMap<Signal<unknown>, Set<object>>()
+
+function untrackComponent(signal: Signal<unknown>, component: object): void {
+    const components = signalComponentMap.get(signal)
+    if (components) {
+        components.delete(component)
+        if (components.size === 0) signalComponentMap.delete(signal)
+    }
+}
 
 // Current component context for component-to-signal dependency tracking
 let currentComponent: object | null = null
+let currentComponentSources: Sources<object> | null = null
+// Numbers each component render, so a signal read again in the same render is skipped by one compare.
+let currentEpoch = 0
+let lastEpoch = 0
+// The components whose view was rendering when a nested one started, as a view rendering another tree does.
+const componentStack: Array<object | null> = []
 
 // Redraws the components that read a signal; index.ts sets it up once m.redraw exists.
 let redrawCallback: ((signal: Signal<unknown>) => void) | null = null
 
+/** Starts recording the signals a component's view reads; clearCurrentComponent() ends it. */
 export function setCurrentComponent(component: object) {
+    componentStack.push(currentComponent)
     currentComponent = component
+    let sources = componentSourcesMap.get(component)
+    if (sources === undefined) {
+        sources = new Sources<object>(untrackComponent)
+        componentSourcesMap.set(component, sources)
+    }
+    sources.begin()
+    sources.epoch = currentEpoch = ++lastEpoch
+    currentComponentSources = sources
 }
 
+/** Ends the running view's recording: a signal only an earlier render read stops redrawing it. */
 export function clearCurrentComponent() {
-    currentComponent = null
+    if (currentComponent !== null) currentComponentSources!.end(currentComponent)
+    currentComponent = componentStack.pop() ?? null
+    currentComponentSources = currentComponent === null ? null : componentSourcesMap.get(currentComponent)!
+    currentEpoch = currentComponentSources === null ? 0 : currentComponentSources.epoch
 }
 
 export function getCurrentComponent() {
     return currentComponent
 }
 
-export function trackComponentSignal(component: object, signal: Signal<unknown>) {
-    let set = componentSignalMap.get(component)
-    if (!set) {
-        set = new Set()
-        componentSignalMap.set(component, set)
+/** Records a read by the rendering component; outside a component's view it does nothing. */
+function trackComponentRead(signal: Signal<unknown>) {
+    if (signal._epoch === currentEpoch) return
+    signal._epoch = currentEpoch
+    if (currentComponentSources!.record(signal)) {
+        let components = signalComponentMap.get(signal)
+        if (!components) {
+            components = new Set()
+            signalComponentMap.set(signal, components)
+        }
+        components.add(currentComponent!)
     }
-    if (set.has(signal)) return
-    set.add(signal)
-
-    let compSet = signalComponentMap.get(signal)
-    if (!compSet) {
-        compSet = new Set()
-        signalComponentMap.set(signal, compSet)
-    }
-    compSet.add(component)
 }
 
 export function getComponentSignals(component: object): Set<Signal<unknown>> | undefined {
-    return componentSignalMap.get(component)
+    return componentSourcesMap.get(component)?.toSet()
 }
 
 export function getSignalComponents(signal: Signal<unknown>): Set<object> | undefined {
@@ -128,31 +170,10 @@ export function getSignalComponents(signal: Signal<unknown>): Set<object> | unde
 }
 
 export function clearComponentDependencies(component: object) {
-    const signals = componentSignalMap.get(component)
-    if (signals) {
-        signals.forEach((signal) => {
-            const components = signalComponentMap.get(signal)
-            if (components) {
-                components.delete(component)
-                if (components.size === 0) {
-                    signalComponentMap.delete(signal)
-                }
-            }
-        })
-        componentSignalMap.delete(component)
-    }
-}
-
-/**
- * Unregisters a component from the signals it read, before it renders again and registers what it
- * reads then. Unlike clearComponentDependencies() it keeps the sets: the next render mostly reads
- * the same signals, and reusing them saves allocating new ones on every redraw.
- */
-export function resetComponentDependencies(component: object) {
-    const signals = componentSignalMap.get(component)
-    if (signals) {
-        for (const signal of signals) signalComponentMap.get(signal)?.delete(component)
-        signals.clear()
+    const sources = componentSourcesMap.get(component)
+    if (sources) {
+        sources.clear(component)
+        componentSourcesMap.delete(component)
     }
 }
 
@@ -189,6 +210,8 @@ export class Signal<T, W = T> {
      * the first subscription: most signals never get one, and state() makes a signal per key.
      */
     _subscribers: Set<Subscriber> | null = null
+    /** Internal: the component render that last recorded reading this signal. */
+    _epoch = 0
 
     constructor(initial: T) {
         this._value = initial
@@ -201,9 +224,7 @@ export class Signal<T, W = T> {
             currentSources?.record(this)
         }
         // Track component dependency
-        if (currentComponent) {
-            trackComponentSignal(currentComponent, this)
-        }
+        if (currentComponent) trackComponentRead(this)
         return this._value
     }
 
@@ -309,9 +330,7 @@ export class ComputedSignal<T> extends Signal<T> {
         }
         // A component reading this computed redraws when it goes dirty, whether or not this read
         // recomputes it: a cached read touches none of the dependencies.
-        if (currentComponent) {
-            trackComponentSignal(currentComponent, this)
-        }
+        if (currentComponent) trackComponentRead(this)
 
         if (this._isDirty) {
             // The dependencies the computation reads mark this computed dirty; the component reading
@@ -319,7 +338,8 @@ export class ComputedSignal<T> extends Signal<T> {
             const previousEffect = currentEffect
             const previousSources = currentSources
             const previousComponent = currentComponent
-            const sources = (this._sources ??= new Sources())
+            const previousComponentSources = currentComponentSources
+            const sources = (this._sources ??= new Sources(unsubscribe))
             const markDirtyEffect = (this._markDirtyEffect ??= this._createMarkDirtyEffect())
             sources.begin()
             currentEffect = markDirtyEffect
@@ -332,6 +352,7 @@ export class ComputedSignal<T> extends Signal<T> {
                 currentEffect = previousEffect
                 currentSources = previousSources
                 currentComponent = previousComponent
+                currentComponentSources = previousComponentSources
             }
             sources.end(markDirtyEffect)
 
@@ -426,7 +447,7 @@ export function effect(fn: () => void): () => void {
     let cleanup: (() => void) | null = null
     let isActive = true
     // The signals the last run read, so the next run (and disposal) can unsubscribe from them.
-    const sources = new Sources()
+    const sources = new Sources(unsubscribe)
 
     const effectFn = (): unknown => {
         if (!isActive) return DROP

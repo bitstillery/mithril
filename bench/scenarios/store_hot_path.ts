@@ -10,8 +10,9 @@
  * Per tracked property read the framework currently does, roughly:
  *   1. proxy `get` trap  — internal-name comparisons, `$`-prefix check
  *   2. `ensurePropertySignal` — Map lookup
- *   3. `signal.value` getter — subscriber check, then `trackComponentSignal`
- *   4. `trackComponentSignal` — WeakMap lookup + Set membership check (even when already tracked)
+ *   3. `signal.value` getter — subscriber check, then `trackComponentRead`
+ *   4. `trackComponentRead` — one compare when this render already read the signal, else a compare
+ *      with the read at the same position in the component's last render
  *
  * State is created OUTSIDE each benchmark body so these measure reads, not construction.
  *

@@ -1,6 +1,6 @@
 import {describe, test, expect, beforeEach} from 'bun:test'
 
-import {signal, computed} from '../../src/state/signal'
+import {signal, computed, getSignalComponents} from '../../src/state/signal'
 import {state, watch} from '../../src/state/state'
 import m from '../../src/index'
 import domMock from '../helpers/dom_mock'
@@ -213,6 +213,78 @@ describe('Signal Integration - Component Redraws', () => {
         await m.nextTick()
         expect(renderCount).toBe(3)
         expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('1')
+    })
+
+    test('a signal read repeatedly between other reads redraws once, until no render reads it', async () => {
+        const items = signal([1, 2, 3])
+        const label = signal('a')
+        const showLabel = signal(true)
+        let renderCount = 0
+        m.mount(root, {
+            view() {
+                renderCount++
+                return m(
+                    'ul',
+                    items.value.map((item) => m('li', showLabel.value ? `${label.value}${item}` : String(item))),
+                )
+            },
+        })
+        expect(root.childNodes[0]!.childNodes[2]!.childNodes[0]!.nodeValue).toBe('a3')
+
+        label.value = 'b'
+        await m.nextTick()
+        expect(renderCount).toBe(2)
+        expect(root.childNodes[0]!.childNodes[0]!.childNodes[0]!.nodeValue).toBe('b1')
+
+        showLabel.value = false
+        await m.nextTick()
+        expect(renderCount).toBe(3)
+
+        label.value = 'c'
+        await m.nextTick()
+        expect(renderCount).toBe(3)
+    })
+
+    test('a view that renders another tree keeps tracking what it reads afterwards', async () => {
+        const before = signal(0)
+        const after = signal(0)
+        const inner = signal(0)
+        const otherRoot = $window.document.createElement('div')
+        let outerRenders = 0
+        let innerRenders = 0
+        const Inner = {
+            view() {
+                innerRenders++
+                return m('i', inner.value)
+            },
+        }
+        m.mount(root, {
+            view() {
+                outerRenders++
+                const first = before.value
+                m.render(otherRoot, m(Inner))
+                return m('div', `${first}-${after.value}`)
+            },
+        })
+        expect(outerRenders).toBe(1)
+
+        after.value = 1
+        await m.nextTick()
+        expect(outerRenders).toBe(2)
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('0-1')
+
+        before.value = 1
+        await m.nextTick()
+        expect(outerRenders).toBe(3)
+
+        // Each signal links only the component whose view read it.
+        expect(innerRenders).toBe(3)
+        const [outerState] = getSignalComponents(after)!
+        const [innerState] = getSignalComponents(inner)!
+        expect(getSignalComponents(after)!.size).toBe(1)
+        expect(getSignalComponents(inner)!.size).toBe(1)
+        expect(outerState).not.toBe(innerState)
+        expect(getSignalComponents(before)!.has(outerState!)).toBe(true)
     })
 
     test('computed already cached when a component reads it still redraws the component', async () => {

@@ -1,4 +1,4 @@
-import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies, resetComponentDependencies} from '../state/signal'
+import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies} from '../state/signal'
 import {logHydrationError, resetHydrationErrorCount} from './hydration_debug'
 
 import Vnode from './vnode'
@@ -887,9 +887,6 @@ export default function renderFactory() {
         // We only skip oninit during hydration, not signal tracking
         // Only set currentComponent if vnode.state exists (it might be undefined for some component types)
         if (vnode.state != null) {
-            // The view registers again what it reads now; a signal only the previous render read
-            // shouldn't keep redrawing it.
-            resetComponentDependencies(vnode.state)
             setCurrentComponent(vnode.state)
         }
         try {
@@ -1461,7 +1458,6 @@ export default function renderFactory() {
         currentRedraw = redraw
         currentRender = {}
         try {
-            resetComponentDependencies(state)
             setCurrentComponent(state)
             let instance: RenderVnode | null
             try {
