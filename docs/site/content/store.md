@@ -35,7 +35,7 @@ class App extends MithrilComponent {
 m.mount(document.getElementById('app'), App)
 ```
 
-- **`load(saved, temporary, tab, session?)`** — Merge templates; restore from localStorage/sessionStorage (or SSR payload). `saved` → localStorage, `tab` → sessionStorage, `temporary` → volatile.
+- **`load(saved, temporary, tab, session?)`** — Merge templates; restore from localStorage/sessionStorage (or SSR payload). `saved` → localStorage, `tab` → sessionStorage, `temporary` → volatile. The `tab` template is written flat (`{filter: 'all'}`) and lands under `store.state.tab`; a new tab starts from the saved tier's `tab` key when the `saved` template declares one.
 - **`save()`** — Persist current state to storage. Call after user actions (e.g. login, filter change, cart update).
 - **`blueprint(state, template)`** — Extract a subset of state for persistence; used internally by `save()`.
 - **`ready()`** — Enable computed properties (call after load when computeds depend on app context).

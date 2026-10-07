@@ -5,6 +5,9 @@ import {serializeStore, deserializeStore} from '../ssr/serialize'
 /** A JSON-like object the store copies, merges and persists. */
 type PlainObject = Record<string, unknown>
 
+/** The tab tier's template is the shape of `state.tab`, written flat, because load() mounts it there. */
+export type TabTemplate<T> = T extends {tab?: infer U extends object} ? DeepPartial<U> : object
+
 // Helper function to restore computed properties (same as in ssr/serialize.ts)
 function restoreComputedProperties(state: object, initial: unknown): void {
     if (!initial || typeof initial !== 'object') {
@@ -151,7 +154,7 @@ export class Store<T extends object = PlainObject> {
     private templates = {
         saved: {} as DeepPartial<T>,
         temporary: {} as DeepPartial<T>,
-        tab: {} as DeepPartial<T>,
+        tab: {} as TabTemplate<T>,
         session: {} as DeepPartial<T>,
         cookie: {} as DeepPartial<T>,
     }
@@ -304,7 +307,7 @@ export class Store<T extends object = PlainObject> {
     load(
         saved: DeepPartial<T>,
         temporary: DeepPartial<T>,
-        tab: DeepPartial<T> = {} as DeepPartial<T>,
+        tab: TabTemplate<T> = {} as TabTemplate<T>,
         session: DeepPartial<T> = {} as DeepPartial<T>,
         cookie: DeepPartial<T> = {} as DeepPartial<T>,
     ) {
@@ -334,14 +337,12 @@ export class Store<T extends object = PlainObject> {
         if (restored_state.store && typeof restored_state.store === 'object' && 'identity' in restored_state.store) {
             store_state.identity = (restored_state.store as PlainObject).identity
         }
-        let tab_state: PlainObject
-
-        if (!restored_state.tab) {
-            console.log('[store] loading tab state from local store')
-            tab_state = merge_deep(copy_object(this.templates.tab), store_state.tab)
-        } else {
-            tab_state = merge_deep(copy_object(this.templates.tab), copy_object(restored_state.tab))
-        }
+        // A fresh tab has empty sessionStorage; it then starts from the localStorage copy the saved tier
+        // keeps when its template declares `tab`, so a new tab opens where the last one was saved.
+        const restored_tab = restored_state.tab
+        const tab_source =
+            is_object(restored_tab) && Object.keys(restored_tab).length > 0 ? copy_object(restored_tab) : store_state.tab
+        const tab_state = merge_deep(copy_object(this.templates.tab), tab_source)
 
         // Always merge tab_state into store_state to ensure it's included in final_state
         merge_deep(store_state, {tab: tab_state})
@@ -439,28 +440,10 @@ export class Store<T extends object = PlainObject> {
         if (writeSessionStorage && this.templates.tab) {
             const tabState = (this.stateInstance as PlainObject).tab as object | undefined
             if (tabState) {
-                // Get the tab template - unwrap if it's nested under a 'tab' key
-                // The template might be: { tab: { sessionId, ... } } or { sessionId, ... }
-                // The state is always: { sessionId, ... }
-                const tabTemplate = ((this.templates.tab as PlainObject).tab as object | undefined) || this.templates.tab
-
-                // Check if tab is a State object
-                if (isState(tabState)) {
-                    const tabPlain = serializeStore(tabState)
-                    // blueprint expects both arguments to have the same structure
-                    this.set_tab(this.tabStorageKey, this.blueprint(tabPlain, copy_object(tabTemplate)))
-                } else {
-                    // Plain object tab
-                    this.set_tab(this.tabStorageKey, this.blueprint(tabState, copy_object(tabTemplate)))
-                }
+                const tabPlain = isState(tabState) ? serializeStore(tabState) : tabState
+                this.set_tab(this.tabStorageKey, this.blueprint(tabPlain, copy_object(this.templates.tab)))
             } else {
-                // No tab state - save empty tab based on template structure
-                const tabTemplate = ((this.templates.tab as PlainObject).tab as object | undefined) || this.templates.tab
-                if (tabTemplate && Object.keys(tabTemplate).length > 0) {
-                    this.set_tab(this.tabStorageKey, this.blueprint({}, copy_object(tabTemplate)))
-                } else {
-                    this.set_tab(this.tabStorageKey, {})
-                }
+                this.set_tab(this.tabStorageKey, {})
             }
         }
 

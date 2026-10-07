@@ -1,4 +1,5 @@
 import {Store} from '../../src/index'
+import type {TabTemplate} from '../../src/index'
 import {registerState, getRegisteredStates} from '../../src/state/state'
 
 // Define the application state interface
@@ -68,12 +69,11 @@ export function initStore(sessionData: Partial<AppState> = {}) {
         },
     }
 
-    const tab: Partial<AppState> = {
-        tab: {
-            sessionId: `tab-${Date.now()}`,
-            lastActivity: Date.now(),
-            tabSpecificData: 'Tab-specific data',
-        },
+    // Written flat: load() mounts the tab template under state.tab.
+    const tab: TabTemplate<AppState> = {
+        sessionId: `tab-${Date.now()}`,
+        lastActivity: Date.now(),
+        tabSpecificData: 'Tab-specific data',
     }
 
     // Session template - properties defined here are server-bound
@@ -98,7 +98,7 @@ export function initStore(sessionData: Partial<AppState> = {}) {
     const tempMergedInitial = {
         saved: saved.saved,
         temporary: temporary.temporary,
-        tab: tab.tab,
+        tab,
         session: session.session,
         displayName: temporary.displayName,
         isAuthenticated: temporary.isAuthenticated,

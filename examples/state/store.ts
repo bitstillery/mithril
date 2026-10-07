@@ -1,4 +1,5 @@
 import {Store} from '../../src/index'
+import type {TabTemplate} from '../../src/index'
 
 interface Todo {
     id: number
@@ -20,7 +21,8 @@ interface AppState {
         currentView: string
         tempMessage: string
     }
-    session: {
+    // Tab state (sessionStorage), mounted here by load()
+    tab: {
         sessionId: string
         loginTime: number
         lastActivity: number
@@ -66,12 +68,11 @@ export function initStore() {
         completedTodos: () => store.state.todos.filter((t: Todo) => t.completed).length,
     }
 
-    const tab: Partial<AppState> = {
-        session: {
-            sessionId: `session-${Date.now()}`,
-            loginTime: Date.now(),
-            lastActivity: Date.now(),
-        },
+    // Written flat: load() mounts the tab template under state.tab.
+    const tab: TabTemplate<AppState> = {
+        sessionId: `session-${Date.now()}`,
+        loginTime: Date.now(),
+        lastActivity: Date.now(),
     }
 
     // Load store with templates

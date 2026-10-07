@@ -125,6 +125,7 @@ export type {DeepPartial, State, StateArray, StateOptions, StateSignals, Unwatch
 
 // Export Store class
 export {Store} from './state/store'
+export type {TabTemplate} from './state/store'
 
 // Export SSR utilities
 export {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from './ssr/serialize'

@@ -18,7 +18,12 @@ key named in two templates is written to both.
 
 The sessionStorage tier is called `tab` because `session` was ambiguous with a server session, and
 the name is now taken by the server tier. Unlike the other tiers, its template is written flat and
-`load()` mounts it under `state.tab`.
+`load()` mounts it under `state.tab`; `load()` types it as `TabTemplate<T>`, the shape of `T['tab']`,
+because a template wrapped as `{tab: {...}}` (as both examples once did) lands at `state.tab.tab` and
+`save()` writes an empty object. A tab whose sessionStorage is empty (a new tab) starts from the
+`tab` key the saved tier wrote to localStorage, when the saved template declares one, so a new tab
+opens where the last one was saved. That fallback was dead until 2026-10-07: an empty
+sessionStorage read as `'{}'`, which parses to a truthy object.
 
 Two key names are magic. `blueprint()` copies any `lookup` whole instead of per template key, so
 free-form caches don't need every key declared; the top-level one is also written to localStorage

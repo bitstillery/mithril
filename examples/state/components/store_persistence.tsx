@@ -2,7 +2,7 @@ import {MithrilComponent, Vnode} from '../../../src/index'
 import m from '../../../src/index'
 import {$store, store} from '../store'
 
-// Component demonstrating persistent vs volatile vs session state
+// Component demonstrating persistent vs volatile vs tab state
 export class StorePersistence extends MithrilComponent {
     view(vnode: Vnode) {
         return (
@@ -17,7 +17,7 @@ export class StorePersistence extends MithrilComponent {
                         <strong>Volatile</strong> - Not saved, resets on page reload
                     </li>
                     <li>
-                        <strong>Session</strong> - Saved to sessionStorage, survives reloads but clears when tab closes
+                        <strong>Tab</strong> - Saved to sessionStorage, survives reloads but clears when tab closes
                     </li>
                 </ul>
 
@@ -103,40 +103,27 @@ export class StorePersistence extends MithrilComponent {
                 </div>
 
                 <div style='background: #f3e5f5; padding: 15px; border-radius: 4px; margin-bottom: 15px;'>
-                    <h3 style='margin-top: 0; font-size: 14px; color: #6a1b9a;'>Session State</h3>
+                    <h3 style='margin-top: 0; font-size: 14px; color: #6a1b9a;'>Tab State</h3>
                     <p style='font-size: 11px; color: #666; margin-bottom: 10px;'>
                         Saved to sessionStorage - survives reloads but clears when tab closes
                     </p>
                     <div style='font-size: 12px;'>
                         <p>
-                            Session ID: <code>{$store.session?.sessionId || 'Not set'}</code>
+                            Session ID: <code>{$store.tab.sessionId || 'Not set'}</code>
                         </p>
                         <p>
                             Login Time:{' '}
-                            <code>
-                                {$store.session?.loginTime ? new Date($store.session.loginTime).toLocaleString() : 'Not set'}
-                            </code>
+                            <code>{$store.tab.loginTime ? new Date($store.tab.loginTime).toLocaleString() : 'Not set'}</code>
                         </p>
                         <p>
                             Last Activity:{' '}
                             <code>
-                                {$store.session?.lastActivity
-                                    ? new Date($store.session.lastActivity).toLocaleString()
-                                    : 'Not set'}
+                                {$store.tab.lastActivity ? new Date($store.tab.lastActivity).toLocaleString() : 'Not set'}
                             </code>
                         </p>
                         <button
                             onclick={() => {
-                                if (!$store.session) {
-                                    // Initialize session if it doesn't exist
-                                    $store.session = {
-                                        sessionId: `session-${Date.now()}`,
-                                        loginTime: Date.now(),
-                                        lastActivity: Date.now(),
-                                    }
-                                } else {
-                                    $store.session.lastActivity = Date.now()
-                                }
+                                $store.tab.lastActivity = Date.now()
                                 store.save()
                             }}
                             style='margin-top: 10px; padding: 6px 12px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;'
@@ -150,7 +137,7 @@ export class StorePersistence extends MithrilComponent {
                     <button
                         onclick={() => {
                             store.save()
-                            alert('State saved! Persistent and session data will survive reloads.')
+                            alert('State saved! Persistent and tab data will survive reloads.')
                         }}
                         style='background: #4caf50; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;'
                     >
@@ -173,7 +160,7 @@ export class StorePersistence extends MithrilComponent {
                     <br />
                     Only properties in the <code>persistent</code> template are saved to localStorage.
                     <br />
-                    Properties in the <code>session</code> template are saved to sessionStorage.
+                    Properties in the <code>tab</code> template are saved to sessionStorage.
                     <br />
                     Properties in the <code>volatile</code> template are never saved.
                 </div>
