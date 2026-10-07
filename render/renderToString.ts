@@ -310,13 +310,46 @@ function serializeNodeSync(
     return html
 }
 
+/**
+ * HTML, or a promise of it for a subtree under a component whose oninit returned a promise. Rendering
+ * stays synchronous until something is asynchronous: an async function and a Promise.all per vnode
+ * cost more than rendering the vnode itself.
+ */
+type Html = string | Promise<string>
+
+/**
+ * Serializes each node and joins the results in order. A node that throws becomes a rejected promise
+ * and its siblings still render, as when every node was rendered by an async function.
+ */
+function serializeEach(
+    nodes: readonly (RenderVnode | null | undefined)[],
+    options: Required<RenderToStringOptions>,
+    promiseTracker: PromiseTracker,
+    isServer: boolean,
+): Html {
+    let html = ''
+    let parts: Promise<string>[] | null = null
+    for (let i = 0; i < nodes.length; i++) {
+        let part: Html
+        try {
+            part = serializeNode(nodes[i] ?? null, options, promiseTracker, isServer)
+        } catch (e) {
+            part = Promise.reject(e)
+        }
+        if (parts !== null) parts.push(typeof part === 'string' ? Promise.resolve(part) : part)
+        else if (typeof part === 'string') html += part
+        else parts = [Promise.resolve(html), part]
+    }
+    return parts === null ? html : Promise.all(parts).then((results) => results.join(''))
+}
+
 // Serialize a single vnode to HTML string
-async function serializeNode(
+function serializeNode(
     vnode: RenderVnode | null,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
     isServer: boolean,
-): Promise<string> {
+): Html {
     if (vnode == null) return ''
 
     const tag = vnode.tag
@@ -335,13 +368,12 @@ async function serializeNode(
     if (tag === '[') {
         const children = vnode.children as RenderChildren
         if (!children) return ''
-        const results = await Promise.all(children.map((child) => serializeNode(child, options, promiseTracker, isServer)))
-        return results.join('')
+        return serializeEach(children, options, promiseTracker, isServer)
     }
 
     // Component
     if (typeof tag !== 'string') {
-        return await serializeComponent(vnode, options, promiseTracker, isServer)
+        return serializeComponent(vnode, options, promiseTracker, isServer)
     }
 
     // Element
@@ -359,34 +391,33 @@ async function serializeNode(
     }
 
     html += '>'
+    const close = isVoid ? '' : `</${tag}>`
 
     // Serialize children
     if (children != null) {
+        let inner: Html = ''
         if (Array.isArray(children)) {
-            const results = await Promise.all(children.map((child) => serializeNode(child, options, promiseTracker, isServer)))
-            html += results.join('')
+            inner = serializeEach(children, options, promiseTracker, isServer)
         } else if (typeof children === 'string' || typeof children === 'number') {
-            html += serializeText(children, options)
+            inner = serializeText(children, options)
         } else if (children != null) {
-            html += await serializeNode(children, options, promiseTracker, isServer)
+            inner = serializeEach([children], options, promiseTracker, isServer)
         }
+        if (typeof inner !== 'string') return inner.then((content) => html + content + close)
+        html += inner
     }
 
     // Always close non-void elements
-    if (!isVoid) {
-        html += `</${tag}>`
-    }
-
-    return html
+    return html + close
 }
 
 // Serialize component
-async function serializeComponent(
+function serializeComponent(
     vnode: RenderVnode,
     options: Required<RenderToStringOptions>,
     promiseTracker: PromiseTracker,
     isServer: boolean,
-): Promise<string> {
+): Html {
     const component = vnode.tag as ComponentTag
 
     // Initialize component state
@@ -424,15 +455,33 @@ async function serializeComponent(
         }
         try {
             const result = (state.oninit as Hook)(vnode, context)
-            // If oninit returns a promise, await it
+            // If oninit returns a promise, await it before the view
             if (result && typeof (result as PromiseLike<unknown>).then === 'function') {
-                await (result as PromiseLike<unknown>)
+                return (async () => {
+                    try {
+                        await (result as PromiseLike<unknown>)
+                    } catch (_e) {
+                        // Ignore errors in oninit for now
+                    }
+                    return serializeComponentView(vnode, state, view, options, promiseTracker, isServer)
+                })()
             }
         } catch (_e) {
             // Ignore errors in oninit for now
         }
     }
 
+    return serializeComponentView(vnode, state, view, options, promiseTracker, isServer)
+}
+
+function serializeComponentView(
+    vnode: RenderVnode,
+    state: LifecycleSource,
+    view: Hook,
+    options: Required<RenderToStringOptions>,
+    promiseTracker: PromiseTracker,
+    isServer: boolean,
+): Html {
     // Call view (bind this to state)
     const instance = Vnode.normalize(view.call(state, vnode))
     if (instance === vnode) {
@@ -475,14 +524,7 @@ export function renderToStringFactory() {
         const promiseTracker = new PromiseTracker()
 
         // First pass: render and collect promises
-        let html = ''
-        const htmlParts: Promise<string>[] = []
-        for (const vnode of normalized) {
-            if (vnode != null) {
-                htmlParts.push(serializeNode(vnode, opts, promiseTracker, true))
-            }
-        }
-        html = (await Promise.all(htmlParts)).join('')
+        let html = await serializeEach(normalized, opts, promiseTracker, true)
 
         // Wait for all promises
         if (promiseTracker.hasPromises()) {
@@ -490,14 +532,7 @@ export function renderToStringFactory() {
 
             // Second pass: re-render after promises resolve
             promiseTracker.reset()
-            html = ''
-            const htmlParts2: Promise<string>[] = []
-            for (const vnode of normalized) {
-                if (vnode != null) {
-                    htmlParts2.push(serializeNode(vnode, opts, promiseTracker, true))
-                }
-            }
-            html = (await Promise.all(htmlParts2)).join('')
+            html = await serializeEach(normalized, opts, promiseTracker, true)
         }
 
         // Serialize all registered stores
