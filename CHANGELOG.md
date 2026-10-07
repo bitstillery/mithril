@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.12.2](https://github.com/bitstillery/mithril/compare/v3.12.1...v3.12.2) (2026-10-07)
+
+### Performance Improvements
+
+- **render:** copy a selector's attrs without Object.assign ([ea94048](https://github.com/bitstillery/mithril/commit/ea94048a35e85f748b8073dbf654c94eacb28a19))
+- **state:** track a component's signal reads by position ([b860f19](https://github.com/bitstillery/mithril/commit/b860f1986dcc0472aa7d66e9f88b883858e4a9b2))
+
+### Tests
+
+- **bench:** measure an app-shaped redraw that reads state in its views ([bd431de](https://github.com/bitstillery/mithril/commit/bd431ded7c7a0e192713e5ed5682fad60d93f949))
+
 ### [3.12.1](https://github.com/bitstillery/mithril/compare/v3.12.0...v3.12.1) (2026-10-07)
 
 ### Bug Fixes
