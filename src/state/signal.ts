@@ -182,7 +182,7 @@ function notify(subscribers: Set<Subscriber> | null, label: string): void {
  * Signal class - reactive primitive that tracks subscribers
  */
 export class Signal<T> {
-    private _value: T
+    protected _value: T
     /**
      * Internal: state.ts notifies these directly when an array it holds mutates in place. Created on
      * the first subscription: most signals never get one, and state() makes a signal per key.

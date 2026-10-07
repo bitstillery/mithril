@@ -1,4 +1,4 @@
-import {signal, computed, Signal, ComputedSignal} from './signal'
+import {computed, Signal, ComputedSignal} from './signal'
 import {getSSRContext} from '../ssr/context'
 
 import type {Hook} from '../render/vnode'
@@ -185,18 +185,63 @@ function isGetSetDescriptor(value: unknown): value is GetSetDescriptor {
             typeof (value as GetSetDescriptor).set === 'function')) as boolean
 }
 
+/** Wraps an object or array written to a state property as the set trap does, linking it to `sig`. */
+type Adopt = (value: object, sig: PropertySignal) => unknown
+
 /**
- * Convert a value to a signal if it's not already one
+ * The signal of a state's property. A write through it wraps an object as `state.key = value` does,
+ * with one function its state shares among all its properties rather than a closure per signal.
  */
-function toSignal<T>(value: T): Signal<T> | ComputedSignal<T> {
-    if (isSignal(value)) {
-        return value as Signal<T> | ComputedSignal<T>
+class PropertySignal extends Signal<unknown> {
+    private readonly _adopt: Adopt
+
+    constructor(initial: unknown, adopt: Adopt) {
+        super(undefined)
+        this._adopt = adopt
+        this._value = typeof initial === 'object' && initial !== null ? adopt(initial, this) : initial
     }
-    if (typeof value === 'function') {
-        // Function properties become computed signals
-        return computed(value as () => T)
+
+    override set value(next: unknown) {
+        const value = typeof next === 'object' && next !== null ? this._adopt(next, this) : next
+        if (this._value !== value) {
+            this._value = value
+            this.trigger()
+        }
     }
-    return signal(value)
+}
+
+/** Writes an element of a state array as `array[index] = value` does. */
+type WriteElement = (sig: ElementSignal, value: unknown) => void
+
+/** The signal of a primitive element of a state array, which its array shares one write function among. */
+class ElementSignal extends Signal<unknown> {
+    private readonly _write: WriteElement
+
+    constructor(initial: unknown, write: WriteElement) {
+        super(initial)
+        this._write = write
+    }
+
+    override set value(next: unknown) {
+        this._write(this, next)
+    }
+
+    /** Sets the value as a plain signal does, for the array's write function. */
+    assign(next: unknown): void {
+        if (this._value !== next) {
+            this._value = next
+            this.trigger()
+        }
+    }
+}
+
+// The subclasses read through Signal's own getter: one returning `super.value` made state reads a third
+// slower in the bench, and their setters skip `super.value =`, which doubled the cost of a write.
+// oxlint-disable-next-line typescript/unbound-method -- the accessor calls it with the subclass instance as `this`
+const signalGetter: () => unknown = Object.getOwnPropertyDescriptor(Signal.prototype, 'value')!.get!
+for (const subclass of [PropertySignal, ElementSignal]) {
+    const own = Object.getOwnPropertyDescriptor(subclass.prototype, 'value')!
+    Object.defineProperty(subclass.prototype, 'value', {...own, get: signalGetter})
 }
 
 // State registry for SSR serialization
@@ -341,7 +386,20 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                 if (typeof item === 'object' && item !== null) {
                     return initializeSignals(item, undefined, context)
                 }
-                return toSignal(item)
+                if (typeof item === 'function') return computed(item as () => unknown)
+                return new ElementSignal(item, writeElement)
+            }
+            // A primitive keeps the element's signal, so `arr.$i` subscribers see it; an object replaces it.
+            const writeElement: WriteElement = (sig, value) => {
+                if (typeof value !== 'object' || value === null) {
+                    sig.assign(value)
+                } else {
+                    const index = signals.indexOf(sig)
+                    // A signal spliced out of the array has nothing to replace.
+                    if (index < 0) return sig.assign(value)
+                    signals[index] = toElement(value)
+                }
+                notifyArrayParent(wrapped)
             }
             // Arrays don't get their own signalMap - they use the parent's
             const signals: unknown[] = obj.map(toElement)
@@ -535,12 +593,12 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                         // Assigning past the end (`arr[arr.length] = x`) appends, so it wraps and notifies like push.
                         if ((index >= 0 && index < signals.length) || (Number.isInteger(index) && index >= signals.length)) {
                             const sig = signals[index]
-                            // A primitive over a primitive keeps the element's signal, so `arr.$i` subscribers see it.
+                            // The element signal's own write notifies the array; a computed's throws.
                             if (isSignal(sig) && (typeof value !== 'object' || value === null)) {
                                 sig.value = value
-                            } else {
-                                signals[index] = toElement(value)
+                                return true
                             }
+                            signals[index] = toElement(value)
                             notifyArrayParent(wrapped)
                             return true
                         }
@@ -607,6 +665,15 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         const getChildContext = (): InitContext | undefined =>
             context ? {...context, rootState: stateRootMap.get(wrapped!) ?? wrapped} : undefined
 
+        const adopt: Adopt = (value, sig) => {
+            const nestedState = initializeSignals(value, undefined, getChildContext())
+            if (isState(nestedState)) {
+                stateRootMap.set(nestedState, stateRootMap.get(wrapped!) ?? wrapped!)
+            }
+            linkArrayParentSignal(nestedState, sig)
+            return nestedState
+        }
+
         const createPropertySignal = (originalValue: unknown): AnySignal => {
             if (typeof originalValue === 'function') {
                 return createStateComputed(wrapped, () => (originalValue as Hook).call(wrapped), !!context?.deferComputed)
@@ -615,18 +682,9 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                 if (typeof originalValue.get === 'function') {
                     return createStateComputed(wrapped, () => originalValue.get!.call(wrapped), !!context?.deferComputed)
                 }
-                return signal(undefined)
+                return new PropertySignal(undefined, adopt)
             }
-            if (typeof originalValue === 'object' && originalValue !== null) {
-                const nestedState = initializeSignals(originalValue, undefined, getChildContext())
-                const sig = signal(nestedState)
-                if (nestedState && (nestedState as StateInternals).__isState) {
-                    stateRootMap.set(nestedState, stateRootMap.get(wrapped!) ?? wrapped!)
-                }
-                linkArrayParentSignal(nestedState, sig)
-                return sig
-            }
-            return toSignal(originalValue)
+            return new PropertySignal(originalValue, adopt)
         }
 
         const ensurePropertySignal = (target: object, prop: string | symbol, key: string) => {
@@ -635,8 +693,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
             // old `has()` + `get()` pair doubled the cost of the common case.
             //
             // `get()` returning undefined is an exact substitute for `!has()`: createPropertySignal never
-            // returns undefined (it always yields a Signal, falling back to `signal(undefined)`), and the
-            // early return below stores nothing.
+            // returns undefined, and the early return below stores nothing.
             const existing = nestedSignalMap.get(key)
             if (existing !== undefined) {
                 return existing
@@ -749,8 +806,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                         return true
                     } else {
                         // Only setter, no getter - treat as regular signal with undefined initial value
-                        const sig = signal(undefined)
-                        nestedSignalMap.set(key, sig)
+                        nestedSignalMap.set(key, new PropertySignal(undefined, adopt))
                         Reflect.set(target, prop, value)
                         return true
                     }
@@ -772,16 +828,8 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
                 if (nestedSignalMap.has(key)) {
                     const sig = nestedSignalMap.get(key)
                     if (sig && !(sig instanceof ComputedSignal)) {
-                        if (typeof value === 'object' && value !== null) {
-                            const nestedState = initializeSignals(value, undefined, getChildContext())
-                            if (nestedState && (nestedState as StateInternals).__isState) {
-                                stateRootMap.set(nestedState, stateRootMap.get(wrapped!) ?? wrapped!)
-                            }
-                            linkArrayParentSignal(nestedState, sig)
-                            sig.value = nestedState
-                        } else {
-                            sig.value = value
-                        }
+                        // Every non-computed signal in the map is a PropertySignal, whose write wraps an object.
+                        sig.value = value
                     } else {
                         // Replace computed with regular signal
                         nestedSignalMap.set(key, createPropertySignal(value))
