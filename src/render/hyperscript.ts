@@ -13,8 +13,13 @@ import type {FragmentAttrs} from '../jsx.d.ts'
 export interface Hyperscript {
     (selector: string, ...children: Children[]): VnodeType
     (selector: string, attrs: object, ...children: Children[]): VnodeType
-    <Attrs, State>(component: ComponentType<Attrs, State>, ...children: Children[]): VnodeType<Attrs, State>
-    <Attrs, State>(component: ComponentType<Attrs, State>, attrs: Attrs, ...children: Children[]): VnodeType<Attrs, State>
+    // A component, or a vnode's `tag` that may be either: a RouteResolver's is its matched component, else 'div'.
+    <Attrs, State>(component: string | ComponentType<Attrs, State>, ...children: Children[]): VnodeType<Attrs, State>
+    <Attrs, State>(
+        component: string | ComponentType<Attrs, State>,
+        attrs: Attrs,
+        ...children: Children[]
+    ): VnodeType<Attrs, State>
     trust(html: string): VnodeType
     fragment(attrs: FragmentAttrs | null, ...children: Children[]): VnodeType
     Fragment: string

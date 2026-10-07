@@ -166,7 +166,7 @@ describe('SSR Routing', () => {
                 view: () => mServer('div', 'Home Content'),
             }
 
-            const Layout: ComponentType<{component: ComponentType}> = {
+            const Layout: ComponentType<{component: string | ComponentType}> = {
                 view: (vnode) =>
                     mServer('div', [mServer('header', 'Header'), mServer(vnode.attrs.component), mServer('footer', 'Footer')]),
             }
@@ -174,7 +174,7 @@ describe('SSR Routing', () => {
             const resolver: RouteResolver = {
                 onmatch: () => Home,
                 render: (vnode) => {
-                    return mServer(Layout, {component: vnode.tag as ComponentType})
+                    return mServer(Layout, {component: vnode.tag})
                 },
             }
 
@@ -198,7 +198,7 @@ describe('SSR Routing', () => {
             const resolver: RouteResolver = {
                 render: (vnode) => {
                     // Render the component directly
-                    return mServer(vnode.tag as ComponentType)
+                    return mServer(vnode.tag)
                 },
             }
 
@@ -289,7 +289,7 @@ describe('SSR Routing', () => {
             const loginResolver: RouteResolver = {
                 onmatch: () => Login,
                 render: (vnode) => {
-                    return mServer('div', [mServer('header', 'Auth Header'), mServer(vnode.tag as ComponentType)])
+                    return mServer('div', [mServer('header', 'Auth Header'), mServer(vnode.tag)])
                 },
             }
 
@@ -518,7 +518,7 @@ describe('SSR Routing', () => {
         test('handles RouteResolver with render but invalid component', async () => {
             const resolver: RouteResolver = {
                 onmatch: () => undefined, // Returns undefined
-                render: (vnode) => mServer(vnode.tag as ComponentType), // vnode.tag is undefined → invalid selector
+                render: (vnode) => mServer(vnode.tag), // vnode.tag is undefined → invalid selector
             }
 
             const routes = {
@@ -615,7 +615,7 @@ describe('SSR Routing', () => {
             const layoutResolver: RouteResolver = {
                 onmatch: () => Login,
                 render: (vnode) => {
-                    return mServer('div', [mServer('nav', 'Navigation'), mServer(vnode.tag as ComponentType)])
+                    return mServer('div', [mServer('nav', 'Navigation'), mServer(vnode.tag)])
                 },
             }
 
