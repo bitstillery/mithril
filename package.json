@@ -1,6 +1,6 @@
 {
     "name": "@bitstillery/mithril",
-    "version": "3.11.3",
+    "version": "3.12.0",
     "description": "Mithril + Signals, Store and SSR",
     "license": "MIT",
     "author": "Bitstillery",

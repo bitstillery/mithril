@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.12.0](https://github.com/bitstillery/mithril/compare/v3.11.3...v3.12.0) (2026-10-07)
+
+### Features
+
+- **types:** type a state signal's write side as the plain shape ([9b86e99](https://github.com/bitstillery/mithril/commit/9b86e997a7520f323bd1b8a9babd5e168fa57058))
+
+### Bug Fixes
+
+- **examples:** make the state example type-check and lint it ([2573a5c](https://github.com/bitstillery/mithril/commit/2573a5c34c235690969853368dc1c01a36d9fc9c))
+- **examples:** port the SSR example to the request-context API and fix its types ([6e009ed](https://github.com/bitstillery/mithril/commit/6e009edce692073dad09d4c4408b4820dcfb0740))
+- **router:** declare RouteResolver hooks as methods ([aa7e530](https://github.com/bitstillery/mithril/commit/aa7e530df730c6d774bfec23e940f4ba92fe8f6c))
+- **state:** link objects inside arrays to the root of their state ([e6b6bae](https://github.com/bitstillery/mithril/commit/e6b6bae5d8bb418c56793dfaa23c9ac1e2f0096e))
+- **state:** wrap objects written through a state's property signal ([352588c](https://github.com/bitstillery/mithril/commit/352588cb8d8888a2c73f5d18940154a425b6436b))
+- **store:** parse localStorage and sessionStorage independently in load() ([22dc1f5](https://github.com/bitstillery/mithril/commit/22dc1f58301447d40cc9c6abadeea032c7099162))
+- **types:** accept key in a component's attrs passed to m() ([bb019be](https://github.com/bitstillery/mithril/commit/bb019be1495265d495ba18dadbfa0ac6904c5259))
+- **types:** accept null for route.set options and censor extras ([a9789f0](https://github.com/bitstillery/mithril/commit/a9789f06945fe9ca9b273eea83895814e325cb45))
+- **types:** export SSRResult and SSRState from the package entries ([10685b5](https://github.com/bitstillery/mithril/commit/10685b52911fd47d79b719db9d6fda500f630adb))
+- **types:** let m() take a selector that is a string or a component ([d52e08a](https://github.com/bitstillery/mithril/commit/d52e08a2c0ee357717cdeb2a0c0530d4e31a043b))
+- **types:** make m.route.Link usable as a JSX element ([c4b8684](https://github.com/bitstillery/mithril/commit/c4b868472b0fd11a4ebe09ef6c56f97efd0caf65))
+
 ### [3.11.3](https://github.com/bitstillery/mithril/compare/v3.11.2...v3.11.3) (2026-10-07)
 
 ### Bug Fixes
