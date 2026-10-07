@@ -22,10 +22,8 @@ import type {
 // Module-level maps for component/state-to-DOM tracking (used by mount_redraw for signal redraws)
 const stateToDomMap = new WeakMap<object, Node>()
 const stateToComponentMap = new WeakMap<object, ComponentType>()
-const stateToVnodeMap = new WeakMap<
-    object,
-    {key?: string | number | null | undefined; attrs?: Record<string, unknown> | undefined}
->()
+/** The component vnode that is in the tree now, which a targeted redraw patches in place. */
+const stateToVnodeMap = new WeakMap<object, RenderVnode>()
 
 /** Marks a component's view (or closure) while it is being initialized, so a re-entrant init is skipped. */
 type ReentrancySentinel = {$$reentrantLock$$?: true | null}
@@ -591,7 +589,7 @@ export default function renderFactory() {
             // Store component's DOM element and vnode info for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
                 stateToDomMap.set(vnode.state, vnode.dom)
-                stateToVnodeMap.set(vnode.state, {key: vnode.key, attrs: vnode.attrs})
+                stateToVnodeMap.set(vnode.state, vnode)
             }
         } else {
             vnode.domSize = 0
@@ -779,7 +777,12 @@ export default function renderFactory() {
         if (oldTag === tag && old.is === vnode.is && old.key === vnode.key) {
             vnode.state = old.state
             vnode.events = old.events
-            if (shouldNotUpdate(vnode, old)) return
+            if (shouldNotUpdate(vnode, old)) {
+                // The skipped vnode still replaces `old` in the tree, so a later targeted redraw must patch it.
+                if (typeof oldTag !== 'string' && vnode.state != null && stateToVnodeMap.has(vnode.state))
+                    stateToVnodeMap.set(vnode.state, vnode)
+                return
+            }
             if (typeof oldTag === 'string') {
                 if (vnode.attrs != null) {
                     updateLifecycle(vnode.attrs, vnode, hooks)
@@ -908,7 +911,7 @@ export default function renderFactory() {
             // Store component's DOM element and vnode info for fine-grained redraw (not during hydration)
             if (vnode.state && vnode.dom && !isHydrating) {
                 stateToDomMap.set(vnode.state, vnode.dom)
-                stateToVnodeMap.set(vnode.state, {key: vnode.key, attrs: vnode.attrs})
+                stateToVnodeMap.set(vnode.state, vnode)
             }
         } else {
             if (old.instance != null) removeNode(parent, old.instance)
@@ -1431,7 +1434,61 @@ export default function renderFactory() {
 
     let currentDOM: Element | null = null
 
-    return function (dom: Element, vnodes: Children | VnodeType | null, redraw?: () => void) {
+    /** An element vnode, whose DOM node an update with the same tag, key and `is` keeps. */
+    function isElementVnode(vnode: RenderVnode | null | undefined): vnode is RenderVnode & {tag: string} {
+        if (vnode == null || typeof vnode.tag !== 'string') return false
+        return vnode.tag !== '#' && vnode.tag !== '[' && vnode.tag !== '<'
+    }
+
+    /**
+     * Re-renders one mounted component where it stands, without diffing anything above it. Only a
+     * view that returned and returns again the same element qualifies: its DOM node is then kept, so
+     * the parent and ancestor vnodes that hold that node stay valid. Returns false when the component
+     * does not qualify, after its view may already have run, so the caller falls back to a full redraw.
+     */
+    function renderComponent(vnode: RenderVnode, redraw?: () => void): boolean {
+        const state = vnode.state
+        const old = vnode.instance
+        if (state == null || currentDOM != null || !isElementVnode(old)) return false
+        const element = old.dom as Element | null | undefined
+        const parent = element?.parentNode as Element | DocumentFragment | null | undefined
+        if (element == null || parent == null || !element.isConnected) return false
+
+        const prevRedraw = currentRedraw
+        const hooks: Array<() => void> = []
+        const active = activeElement(element)
+        currentDOM = element
+        currentRedraw = redraw
+        currentRender = {}
+        try {
+            resetComponentDependencies(state)
+            setCurrentComponent(state)
+            let instance: RenderVnode | null
+            try {
+                instance = Vnode.normalize(callHook.call(state.view, vnode))
+            } finally {
+                clearCurrentComponent()
+            }
+            if (instance === vnode) throw Error('A view cannot return the vnode it received as argument')
+            if (!isElementVnode(instance) || instance.tag !== old.tag || instance.key !== old.key || instance.is !== old.is) {
+                return false
+            }
+            vnode.instance = instance
+            updateLifecycle(state, vnode, hooks)
+            if (vnode.attrs != null) updateLifecycle(vnode.attrs, vnode, hooks)
+            const ns = element.namespaceURI === 'http://www.w3.org/1999/xhtml' ? undefined : (element.namespaceURI ?? undefined)
+            updateNode(parent, old, instance, hooks, null, ns)
+        } finally {
+            currentRedraw = prevRedraw
+            currentDOM = null
+        }
+        if (active != null && activeElement(element) !== active && typeof (active as HTMLElement).focus === 'function')
+            (active as HTMLElement).focus()
+        for (let i = 0; i < hooks.length; i++) hooks[i]!()
+        return true
+    }
+
+    function render(dom: Element, vnodes: Children | VnodeType | null, redraw?: () => void) {
         if (!dom) throw new TypeError('DOM element being rendered to does not exist.')
         if (currentDOM != null && dom.contains(currentDOM)) {
             throw new TypeError('Node is currently being rendered to and thus is locked.')
@@ -1479,4 +1536,6 @@ export default function renderFactory() {
             currentDOM = prevDOM
         }
     }
+
+    return Object.assign(render, {component: renderComponent})
 }

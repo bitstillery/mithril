@@ -30,7 +30,9 @@ code never runs unless a `version` attr ending in `-AA` is passed to the layout.
 Two tabs render the same DBMon-style table (rows named `item-N`, `item-N-replica`): one calls
 `m.redraw()` every animation frame, the other writes changed rows into per-row `state()` objects.
 Rows are split into `TableRow`/`TableRowWithSignal` plus `QueryCell` components so the tree is deep
-enough for a full redraw to cost something. The items/depth/update-rate sliders persist through the
+enough for a full redraw to cost something. Before 2026-10-07 the signal tab also redrew every row,
+because the targeted redraw could not reach rows inside a `<tbody>` (see
+[signals-and-state.md](signals-and-state.md)), so numbers taken before then compare two full redraws. The items/depth/update-rate sliders persist through the
 site `Store` (`$s.state.perf`).
 
 Measurement choices, and what lost:

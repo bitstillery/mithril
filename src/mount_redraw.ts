@@ -6,6 +6,8 @@ import type {ComponentType, Children, RenderRoot, RenderVnode, Vnode as VnodeTyp
 
 export interface Render {
     (root: Element, vnodes: Children | VnodeType | null, redraw?: () => void): void
+    /** Re-renders a mounted component vnode in place; false when it can't, so the caller redraws more. */
+    component?: (vnode: RenderVnode, redraw?: () => void) => boolean
 }
 
 /** A component to redraw is given by the component, or by the state of a vnode it rendered. */
@@ -55,6 +57,16 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         offset = -1
     }
 
+    function renderInPlace(vnode: RenderVnode | undefined): boolean {
+        if (vnode == null || render.component == null) return false
+        try {
+            return render.component(vnode, redraw)
+        } catch (e) {
+            console.error(e)
+            return false
+        }
+    }
+
     function redrawComponent(componentOrState: object) {
         // componentOrState might be vnode.state (from signal tracking) or component object
         // Try to find the actual component object if it's vnode.state
@@ -81,6 +93,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         const nestedElement = stateToDomMap.get(componentOrState)
         if (nestedElement !== undefined) {
             const vnodeInfo = stateToVnodeMap.get(componentOrState)
+            if (renderInPlace(vnodeInfo)) return
             if (nestedElement?.isConnected && component != null && vnodeInfo != null) {
                 const parent = nestedElement.parentElement
                 const oldVnodes = parent != null ? (parent as RenderRoot).vnodes : null
@@ -145,7 +158,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
             const component = stateToComponentMap.get(c) ?? c
             if (componentToElement.get(component)) {
                 mountRoots.push(c)
-            } else {
+            } else if (!renderInPlace(stateToVnodeMap.get(c))) {
                 nested.add(c)
             }
         }

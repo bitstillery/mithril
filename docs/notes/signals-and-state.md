@@ -33,9 +33,15 @@ considered and never pursued; per-vnode tracking likewise.
 - Signal-driven redraws are coalesced per microtask (`index.ts`), while `m.redraw()` waits for an
   animation frame. `m.redraw()` with no argument still redraws everything, and is still what a
   change to non-signal data needs.
-- A nested component is redrawn by re-rendering its parent element's vnode list with a fresh
-  vnode in its slot, built from the key and attrs its parent last gave it. When it can't be
-  located that way (detached, or never rendered outside hydration) the redraw falls back to a
+- A nested component whose view returns one element, and returns the same tag and key again, is
+  redrawn in place: its view runs against the vnode that is in the tree now, and only its own
+  subtree is diffed. Its DOM node stays, so the vnodes above it stay valid, and `onbeforeupdate`
+  is not asked, since its attrs did not change. Until 2026-10-07 the only targeted path rebuilt
+  the parent element's vnode list, which exists only on a render root, so a component inside a
+  plain element (rows in a `<tbody>`) redrew every mounted tree; the performance demo's signal
+  tab re-rendered all rows. That list path remains for components whose view returns a fragment,
+  another component or a different root element, and only works when they sit directly in a
+  render root. Anything else (detached, or never rendered outside hydration) falls back to a
   full sync. Hydration doesn't record those locations, so the first signal change after
   hydrating redraws everything once.
 
