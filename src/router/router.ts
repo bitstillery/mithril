@@ -8,7 +8,7 @@ import censor from '../util/censor'
 import {getPathname, getSearch, getHash} from './uri'
 import {logger} from '../log/ssr_logger'
 
-import type {Children, ComponentType, MithrilComponent, Vnode as VnodeType} from '../render/vnode'
+import type {Children, ComponentType, ComponentVnode, MithrilComponent, Vnode as VnodeType} from '../render/vnode'
 import type {RouteParamValue, RouteParams} from './querystring/parse'
 
 // RedirectObject will be defined after REDIRECT symbol is created
@@ -50,7 +50,7 @@ export interface Route {
     set: (path: string, params?: object | null, options?: RouteOptions | null) => Promise<void>
     get: () => string
     prefix: string
-    link: (vnode: VnodeType<LinkAttrs>) => VnodeType
+    link: (vnode: ComponentVnode<LinkAttrs>) => VnodeType
     param: {
         (key: string): RouteParamValue | undefined
         (): RouteParams
@@ -88,7 +88,7 @@ export interface LinkAttrs {
  * takes a tag with a call or construct signature and reads its attrs from what that returns; being abstract,
  * `new Link()` is still a type error.
  */
-export type LinkComponent = {view(vnode: VnodeType<LinkAttrs>): VnodeType} & (abstract new () => MithrilComponent<LinkAttrs>)
+export type LinkComponent = {view(vnode: ComponentVnode<LinkAttrs>): VnodeType} & (abstract new () => MithrilComponent<LinkAttrs>)
 
 /** A click on a Link: `redraw` as Mithril reads it, `originalEvent` when another library wrapped the event. */
 type LinkClick = MouseEvent & {redraw?: boolean; originalEvent?: Event}
@@ -429,7 +429,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
         return currentPath ?? ''
     }
     route.prefix = '#!'
-    route.link = function (vnode: VnodeType<LinkAttrs>) {
+    route.link = function (vnode: ComponentVnode<LinkAttrs>) {
         return route.Link.view(vnode)
     }
     route.Link = {
