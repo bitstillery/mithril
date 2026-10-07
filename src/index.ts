@@ -161,7 +161,17 @@ export type {
 export {MithrilComponent}
 export type {Hyperscript} from './render/hyperscript'
 export type {ElementAttrs, ElementEvent} from './jsx.d.ts'
-export type {LinkAttrs, Route, RouteOptions, RouteParams, RouteParamValue, RouteResolver, RedirectObject} from './router/router'
+export type {
+    LinkAttrs,
+    Route,
+    RouteOptions,
+    RouteParams,
+    RouteParamValue,
+    RouteResolver,
+    RedirectObject,
+    SSRResult,
+    SSRState,
+} from './router/router'
 export type {Render, Redraw, Mount} from './mount_redraw'
 
 // Namespace merge: enables m.Vnode<Attrs> and m.Children when using import m from '@bitstillery/mithril'

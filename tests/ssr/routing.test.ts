@@ -3,7 +3,7 @@ import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 import mServer from '../../src/server'
 
 import type {ComponentType, RouteResolver} from '../../src/index'
-import type {SSRResult} from '../../src/router/router'
+import type {SSRResult} from '../../src/server'
 
 describe('SSR Routing', () => {
     let originalConsoleError: typeof console.error

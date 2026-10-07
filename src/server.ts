@@ -98,6 +98,7 @@ mServer.redraw = Object.assign(
 )
 
 export default mServer
+export type {SSRResult, SSRState} from './router/router'
 
 // Export SSR server utilities
 export * from './ssr/session'
