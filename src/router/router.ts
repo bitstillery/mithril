@@ -8,7 +8,7 @@ import censor from '../util/censor'
 import {getPathname, getSearch, getHash} from './uri'
 import {logger} from '../log/ssr_logger'
 
-import type {Children, ComponentType, Vnode as VnodeType} from '../render/vnode'
+import type {Children, ComponentType, MithrilComponent, Vnode as VnodeType} from '../render/vnode'
 import type {RouteParamValue, RouteParams} from './querystring/parse'
 
 // RedirectObject will be defined after REDIRECT symbol is created
@@ -56,7 +56,7 @@ export interface Route {
         (): RouteParams
     }
     readonly params: RouteParams
-    Link: ComponentType<LinkAttrs>
+    Link: LinkComponent
     SKIP: object
     REDIRECT: symbol
     redirect: (path: string) => RedirectObject
@@ -82,6 +82,13 @@ export interface LinkAttrs {
     onafternavigate?: () => void
     [attr: string]: unknown
 }
+
+/**
+ * `m.route.Link`: a component object. The abstract construct signature is there for JSX alone, which only
+ * takes a tag with a call or construct signature and reads its attrs from what that returns; being abstract,
+ * `new Link()` is still a type error.
+ */
+export type LinkComponent = {view(vnode: VnodeType<LinkAttrs>): VnodeType} & (abstract new () => MithrilComponent<LinkAttrs>)
 
 /** A click on a Link: `redraw` as Mithril reads it, `originalEvent` when another library wrapped the event. */
 type LinkClick = MouseEvent & {redraw?: boolean; originalEvent?: Event}
@@ -512,7 +519,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
             }
             return child
         },
-    }
+    } as LinkComponent
     route.param = function (key?: string) {
         return attrs && key != null ? attrs[key] : attrs
     } as Route['param']

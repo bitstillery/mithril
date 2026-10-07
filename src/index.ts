@@ -163,6 +163,7 @@ export type {Hyperscript} from './render/hyperscript'
 export type {ElementAttrs, ElementEvent} from './jsx.d.ts'
 export type {
     LinkAttrs,
+    LinkComponent,
     Route,
     RouteOptions,
     RouteParams,

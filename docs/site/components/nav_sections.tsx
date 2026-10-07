@@ -14,8 +14,6 @@ interface NavSectionsAttrs {
     basePath?: string
 }
 
-const RouteLink = m.route.Link as any
-
 function normalizePath(p: string): string {
     const path = (p || '/').split('#')[0]!
     return path.replace(/\/$/, '') || '/'
@@ -36,7 +34,7 @@ function renderNavLink(link: {text: string; href: string; external?: boolean}) {
             {link.text}
         </a>
     ) : (
-        <RouteLink href={path}>{link.text}</RouteLink>
+        <m.route.Link href={path}>{link.text}</m.route.Link>
     )
 }
 
