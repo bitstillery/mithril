@@ -11,10 +11,9 @@ describe('browserMock', () => {
         $window = browserMock()
     })
 
-    test('Mocks DOM, pushState and XHR', () => {
+    test('Mocks DOM and pushState', () => {
         expect($window.location).not.toBe(undefined)
         expect($window.document).not.toBe(undefined)
-        expect($window.XMLHttpRequest).not.toBe(undefined)
     })
     test('$window.onhashchange can be reached from the pushStateMock functions', (done) => {
         $window.onhashchange = spy()

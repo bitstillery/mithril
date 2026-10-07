@@ -31,10 +31,6 @@
             "import": "./index.ts",
             "default": "./index.ts"
         },
-        "./browser": {
-            "import": "./browser.ts",
-            "default": "./browser.ts"
-        },
         "./server": {
             "import": "./server.ts",
             "default": "./server.ts"
