@@ -47,12 +47,12 @@ describe('SSR state serialization output', () => {
         return s
     }
 
-    test('serializes keys in order, skipping computeds, $-keys and repeated objects', () => {
+    test('serializes keys in order, skipping computeds and $-keys, breaking only cycles', () => {
         const serialized = serializeStore(storeLike())
         expect(JSON.stringify(serialized)).toBe(
             '{"1":"one","2":"two","b":1,"a":"x","nil":null,"list":[1,null,"x",{"id":1,"deep":{"v":[1,2]}},[3,[4]]],' +
-                '"user":{"name":"A","roles":["r"],"prefs":{}},"lookup":{"/p":{"t":1}},"date":{},"map":{},' +
-                '"added":{"z":[1]},"shared1":{"k":1},"shared2":null,"self":null}',
+                '"user":{"name":"A","roles":["r"],"prefs":{}},"lookup":{"/p":{"t":1}},"date":"1970-01-01T00:00:00.000Z","map":[[1,2]],' +
+                '"added":{"z":[1]},"shared1":{"k":1},"shared2":{"k":1},"self":null}',
         )
         expect(Object.keys(serialized)).toEqual([
             '1',
@@ -146,8 +146,8 @@ describe('SSR state serialization output', () => {
         deserializeStore(target, serialized)
         expect(JSON.stringify(serializeStore(target))).toBe(
             '{"1":"one","2":"two","b":1,"a":"x","user":{"name":"A","roles":["r"],"prefs":{}},"lookup":{"/p":{"t":1}},' +
-                '"nil":null,"list":[1,null,"x",{"id":1,"deep":{"v":[1,2]}},[3,[4]]],"date":{},"map":{},' +
-                '"added":{"z":[1]},"shared1":{"k":1},"shared2":null,"self":null}',
+                '"nil":null,"list":[1,null,"x",{"id":1,"deep":{"v":[1,2]}},[3,[4]]],"date":"1970-01-01T00:00:00.000Z","map":[[1,2]],' +
+                '"added":{"z":[1]},"shared1":{"k":1},"shared2":{"k":1},"self":null}',
         )
         expect(target.total).toBe(10)
         expect(target.user.$name.value).toBe('A')

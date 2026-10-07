@@ -51,6 +51,12 @@ state created in a component constructor during mount does not exist yet, so its
 dropped. First-paint data has to live in module- or app-level named state, restored before
 `m.mount`/`m.route`.
 
+Values come out as JSON.stringify would write them: a Date as its ISO string, an object reachable
+twice in full at each place, and only a real cycle broken with `null`. A Map becomes its entries
+array and a Set its values array. Nothing is tagged, so deserialization restores these as strings
+and arrays; a state that needs a Date or Map back rebuilds it. A type-tagging scheme was not added
+because no restored state needed one.
+
 Names are explicit because the alternatives match unreliably across server and client: names
 derived from component class names collide, a hash of the state's shape breaks when the shape
 changes, and a hash of its content differs as soon as the values do.

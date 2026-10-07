@@ -46,10 +46,9 @@ export function serializeStore(state: object): Record<string, unknown> {
     }
 
     const result: Record<string, unknown> = {}
-    const visited = new WeakSet<object>()
-
-    // Add the root state to visited first to detect circular refs
-    visited.add(state)
+    // Only the objects on the path from the root are tracked, so a value reachable twice without a
+    // cycle serializes in full at each place, as JSON.stringify would.
+    const ancestors = new Set<object>([state])
 
     // Check if signalMap exists and is a Map - if not, this is an error case
     const signalMap = (state as StateInternals).__signalMap
@@ -59,24 +58,33 @@ export function serializeStore(state: object): Record<string, unknown> {
     }
 
     function serializeValue(value: unknown): unknown {
-        // Handle null/undefined
-        if (value === null || value === undefined) {
+        if (value === null || value === undefined || typeof value !== 'object') {
             return value
         }
-
-        // Handle primitives
-        if (typeof value !== 'object') {
-            return value
+        // A Date goes through its toJSON() (an ISO string, null when invalid), as JSON.stringify does.
+        if (value instanceof Date) {
+            return value.toJSON()
         }
-
-        // Handle circular references
-        // Check before adding to visited to avoid false positives
-        if (visited.has(value)) {
-            return null // Circular reference - serialize as null
+        if (ancestors.has(value)) {
+            return null
         }
+        ancestors.add(value)
+        try {
+            return serializeObject(value)
+        } finally {
+            ancestors.delete(value)
+        }
+    }
 
-        // Mark as visited BEFORE processing to detect circular refs
-        visited.add(value)
+    function serializeObject(value: object): unknown {
+        // Maps and Sets have no JSON form and deserialization does not tag types, so they become an
+        // entries array and a values array, which `new Map(…)` and `new Set(…)` take back.
+        if (value instanceof Map) {
+            return Array.from(value, ([key, item]) => [serializeValue(key), serializeValue(item)])
+        }
+        if (value instanceof Set) {
+            return Array.from(value, (item) => serializeValue(item))
+        }
 
         // Handle states (nested states and arrays)
         if (isState(value)) {
@@ -144,7 +152,6 @@ export function serializeStore(state: object): Record<string, unknown> {
                     continue
                 }
             }
-            // Don't delete from visited here - it will be cleaned up when we finish serializing this value
             return nestedResult
         }
 
@@ -163,7 +170,6 @@ export function serializeStore(state: object): Record<string, unknown> {
                 objResult[key] = serialized
             }
         }
-        // Don't delete from visited - let it be cleaned up naturally
         return objResult
     }
 
