@@ -4,22 +4,7 @@ import m, {MithrilComponent, state} from '../../src/index'
 import domMock from '../helpers/dom_mock'
 
 import type {Child, Vnode} from '../../src/index'
-
-interface MockNode {
-    nodeType: number
-    parentNode: MockNode | null
-    childNodes: MockNode[]
-    nodeValue: string | null
-    appendChild(node: MockNode): void
-}
-
-interface MockWindow {
-    document: {
-        createElement(tag: string, is?: unknown): MockNode
-        body: MockNode
-        documentElement: MockNode
-    }
-}
+import type {MockNode, MockWindow} from '../helpers/dom_mock'
 
 interface Row {
     name: string
@@ -47,11 +32,11 @@ interface RowAttrs {
  * gets both, derived from `parentNode` as a browser does.
  */
 function connectedDomMock(): MockWindow {
-    const $window = domMock() as MockWindow
+    const $window = domMock()
     const doc = $window.document
     const createElement = doc.createElement.bind(doc)
-    doc.createElement = (tag: string, is?: unknown) => {
-        const element = createElement(tag, is)
+    doc.createElement = (tag: string) => {
+        const element = createElement(tag)
         Object.defineProperties(element, {
             parentElement: {
                 get(this: MockNode) {

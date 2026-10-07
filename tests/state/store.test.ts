@@ -5,7 +5,7 @@ import {clearStateRegistry, getRegisteredStates} from '../../src/state/state'
 import {deserializeAllStates, serializeAllStates} from '../../src/ssr/serialize'
 import {localStorageMock, sessionStorageMock, setupWindowMock} from '../helpers/storage_mock'
 
-import type {DeepPartial, StateRegistryEntry} from '../../src/state/state'
+import type {StateRegistryEntry} from '../../src/state/state'
 
 // Window with localStorage/sessionStorage/setInterval is set up in test preload (test-helpers.ts).
 // Re-run setup before each test in case other tests (e.g. signal integration) overwrote window with domMock.
@@ -736,17 +736,15 @@ describe('Store', () => {
 
             const saved = {}
             const temporary = {}
-            // Tab template structure: tab data is nested under 'tab' key
-            // This matches how Store.load() merges tab_state into store_state
+            // The tab template is flat; load() mounts it under `state.tab`.
             const tab = {
                 sessionId: 'abc123',
                 isValid: function (this: {sessionId: string}) {
-                    return this.sessionId && this.sessionId.length > 0
+                    return this.sessionId.length > 0
                 },
             }
 
-            // load() types the tab template as the whole shape, but nests it under `tab` at runtime.
-            store.load(saved, temporary, tab as DeepPartial<Shape>)
+            store.load(saved, temporary, tab)
 
             // sessionId should be set (tab template is merged into store_state.tab)
             expect(store.state.tab.sessionId).toBe('abc123')
