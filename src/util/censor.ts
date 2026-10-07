@@ -26,7 +26,7 @@ import hasOwn from './has_own'
 const magic = /^(?:key|oninit|oncreate|onbeforeupdate|onupdate|onbeforeremove|onremove)$/
 
 // The result holds a subset of attrs' own keys: the lifecycle hooks, `key` and `extras` are left out.
-export default function censor<T extends object>(attrs: T, extras?: string[]): Partial<T> {
+export default function censor<T extends object>(attrs: T, extras?: string[] | null): Partial<T> {
     const result: Record<string, unknown> = {}
 
     if (extras != null) {

@@ -61,14 +61,12 @@ describe('censor', () => {
     describe('magic missing, null extras', () => {
         test('returns new object', () => {
             const original = {one: 'two'}
-            // @ts-expect-error - null extras must behave like omitted ones
             const censored = censor(original, null)
             expect(censored).not.toBe(original)
             expect(censored).toEqual({one: 'two'})
         })
         test('does not modify original object', () => {
             const original = {one: 'two'}
-            // @ts-expect-error - null extras must behave like omitted ones
             censor(original, null)
             expect(original).toEqual({one: 'two'})
         })
@@ -86,7 +84,6 @@ describe('censor', () => {
                 onbeforeremove: 'test',
                 onremove: 'test',
             }
-            // @ts-expect-error - null extras must behave like omitted ones
             const censored = censor(original, null)
             expect(censored).not.toBe(original)
             expect(censored).toEqual({one: 'two'})
@@ -102,7 +99,6 @@ describe('censor', () => {
                 onbeforeremove: 'test',
                 onremove: 'test',
             }
-            // @ts-expect-error - null extras must behave like omitted ones
             censor(original, null)
             expect(original).toEqual({
                 one: 'two',

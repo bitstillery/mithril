@@ -42,7 +42,7 @@ export interface MithrilStatic {
     parsePathname: (pathname: string) => {path: string; params: RouteParams}
     buildPathname: (template: string, params: object) => string
     vnode: typeof VnodeFactory
-    censor: <T extends object>(attrs: T, extras?: string[]) => Partial<T>
+    censor: <T extends object>(attrs: T, extras?: string[] | null) => Partial<T>
     nextTick: () => Promise<void>
     domFor: (vnode: Vnode) => Generator<Node, void, unknown>
 }

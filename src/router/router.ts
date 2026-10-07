@@ -47,7 +47,7 @@ export interface RouteOptions {
 
 export interface Route {
     (root: Element, defaultRoute: string, routes: Record<string, ComponentType | RouteResolver>): void
-    set: (path: string, params?: object | null, options?: RouteOptions) => Promise<void>
+    set: (path: string, params?: object | null, options?: RouteOptions | null) => Promise<void>
     get: () => string
     prefix: string
     link: (vnode: VnodeType<LinkAttrs>) => VnodeType
@@ -379,7 +379,7 @@ export default function router($window: Window | null, mountRedraw: MountRedraw)
         // The RouterRoot component is mounted when the route is first resolved.
         resolveRoute()
     }
-    route.set = function (path: string, data?: object | null, options?: RouteOptions): Promise<void> {
+    route.set = function (path: string, data?: object | null, options?: RouteOptions | null): Promise<void> {
         if (lastUpdate != null) {
             options = options || {}
             options.replace = true
