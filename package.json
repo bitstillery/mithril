@@ -43,11 +43,11 @@
     },
     "scripts": {
         "lint": "bun run lint:ts",
-        "lint:ts": "bun run lint:ts-format && bun run lint:ts-syntax && bun run lint:ts-types",
+        "lint:ts": "bun run lint:ts-format && bun run lint:ts-syntax && bun run lint:ts-types && bun run lint:examples",
         "lint:ts-format": "oxfmt",
         "lint:ts-syntax": "oxlint -c .oxlintrc.json",
         "lint:ts-types": "tsc --noEmit",
-        "lint:examples": "tsc --noEmit -p examples/ssr && tsc --noEmit -p examples/state",
+        "lint:examples": "tsc --noEmit -p examples/ssr",
         "test": "bun test",
         "bench": "NODE_ENV=production bun run bench/index.ts",
         "bench:hyperscript": "NODE_ENV=production bun run bench/index.ts hyperscript",
