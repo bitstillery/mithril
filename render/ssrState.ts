@@ -2,13 +2,38 @@ import {ComputedSignal} from '../signal'
 import {getRegisteredStates} from '../state'
 import {logger} from '../server/ssrLogger'
 
-import type {StateInternals} from '../state'
+import type {SignalMap, StateInternals} from '../state'
 
 /**
  * Check if a value is a state (has __isState flag)
  */
 function isState(value: unknown): boolean {
     return (value && typeof value === 'object' && (value as StateInternals).__isState === true) as boolean
+}
+
+/**
+ * The keys `for…in` visits on a state over a plain object, in the same order, without its `$` signal
+ * keys; null for any other state. Walking the proxy with `for…in` costs a descriptor trap for every
+ * key and for its `$` twin. A state with another prototype, whose enumerable keys `for…in` visits
+ * too (and whose `$key` reads create their signals), keeps the original walk.
+ */
+function plainStateKeys(value: object, signalMap: SignalMap | null | undefined): string[] | null {
+    if (!(signalMap instanceof Map)) return null
+    const prototype: unknown = Object.getPrototypeOf(value)
+    if (prototype !== Object.prototype && prototype !== null) return null
+    const keys: string[] = []
+    for (const key of Reflect.ownKeys(value)) {
+        if (typeof key !== 'string' || key.charCodeAt(0) === 36) continue
+        if (signalMap.has(key) || Object.getOwnPropertyDescriptor(value, key)?.enumerable) keys.push(key)
+    }
+    return keys
+}
+
+/** The keys `for…in` visits on a state, without its `$` signal keys. */
+function forInKeys(value: object): string[] {
+    const keys: string[] = []
+    for (const key in value) if (!key.startsWith('$')) keys.push(key)
+    return keys
 }
 
 /**
@@ -88,15 +113,11 @@ export function serializeStore(state: object): Record<string, unknown> {
             // Use originalKeys to filter out parent state keys
             const nestedResult: Record<string, unknown> = {}
             const nestedOriginalKeys = (value as StateInternals).__originalKeys
+            const nestedSignalMap = (value as StateInternals).__signalMap
+            const plainKeys = plainStateKeys(value, nestedSignalMap)
 
-            for (const key in value) {
-                if (
-                    key.startsWith('$') ||
-                    key === '__isState' ||
-                    key === '__signalMap' ||
-                    key === '__signals' ||
-                    key === '__originalKeys'
-                ) {
+            for (const key of plainKeys ?? forInKeys(value)) {
+                if (key === '__isState' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
                     continue
                 }
 
@@ -108,10 +129,9 @@ export function serializeStore(state: object): Record<string, unknown> {
                 }
 
                 try {
-                    // Check if this is a ComputedSignal by accessing $key
-                    const signal = (value as Record<string, unknown>)['$' + key]
+                    // Skip computed signals
+                    const signal = plainKeys ? nestedSignalMap!.get(key) : (value as Record<string, unknown>)['$' + key]
                     if (signal instanceof ComputedSignal) {
-                        // Skip computed signals
                         continue
                     }
 
@@ -150,20 +170,14 @@ export function serializeStore(state: object): Record<string, unknown> {
     // Serialize by iterating over state properties directly
     // For top-level state, serialize all keys (including dynamically added ones)
     // Use $ prefix to check if property is a ComputedSignal
-    for (const key in state) {
-        if (
-            key.startsWith('$') ||
-            key === '__isState' ||
-            key === '__signalMap' ||
-            key === '__signals' ||
-            key === '__originalKeys'
-        ) {
+    const plainKeys = plainStateKeys(state, signalMap)
+    for (const key of plainKeys ?? forInKeys(state)) {
+        if (key === '__isState' || key === '__signalMap' || key === '__signals' || key === '__originalKeys') {
             continue
         }
 
         try {
-            // Check if this is a ComputedSignal by accessing $key
-            const signal = (state as Record<string, unknown>)['$' + key]
+            const signal = plainKeys ? signalMap.get(key) : (state as Record<string, unknown>)['$' + key]
             if (signal instanceof ComputedSignal) {
                 // Skip computed signals (they're functions, recreated on client)
                 continue
