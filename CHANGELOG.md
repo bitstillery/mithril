@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.11.0](https://github.com/bitstillery/mithril/compare/v3.10.0...v3.11.0) (2026-10-07)
+
+### Features
+
+- **router:** type m.route.Link's attrs ([f892cc4](https://github.com/bitstillery/mithril/commit/f892cc499a0687e00b9d83eb21361cf9fc6a263b))
+
+### Bug Fixes
+
+- **render:** stop redrawing a component from signals it no longer reads ([5e8c59e](https://github.com/bitstillery/mithril/commit/5e8c59e0464fc4833ad16bfc038f3675b38788d2))
+- **signal:** let dropped computeds be collected and effects unsubscribe ([7ba3a52](https://github.com/bitstillery/mithril/commit/7ba3a520d03a3d2209b2816407f50e3b3bf32600))
+- **signal:** redraw a component from a computed it read from cache ([97b4a7a](https://github.com/bitstillery/mithril/commit/97b4a7a41ce56f44b26fb8237b29638467529b47))
+- **signal:** report a computed's value from peek() and watch() ([cfde108](https://github.com/bitstillery/mithril/commit/cfde108ca1288bc67c558814b3c9e2df43a98ebe))
+- **ssr:** stop tracking components while rendering on the server ([9245fdd](https://github.com/bitstillery/mithril/commit/9245fdd2faf47d99721d2d34a1223c2e0b170703))
+- **state:** drop collected computeds when a state array mutates ([3626ae4](https://github.com/bitstillery/mithril/commit/3626ae4eba3f3a1db70831a7a6ea3f7b5d20cdab))
+
+### Performance Improvements
+
+- **signal:** allocate a signal's subscriber set on first use ([ebcf1bd](https://github.com/bitstillery/mithril/commit/ebcf1bdb75a78fc0c49d9010e78077cdb9f89bb9))
+- **ssr:** append attributes to one string instead of joining parts ([135caf1](https://github.com/bitstillery/mithril/commit/135caf1e33a7197b107fbcf4e702dbc785fcfe8c))
+- **ssr:** append children in the sync renderer instead of map and join ([4a55a8a](https://github.com/bitstillery/mithril/commit/4a55a8a6cec9192696f588014b9f97e66764150e))
+- **ssr:** escape text and attributes in one scan ([03d077d](https://github.com/bitstillery/mithril/commit/03d077d32d2fe53f3ffcf83c843e2e19c4c5a513))
+- **state:** keep a state's original keys as an array until asked for a Set ([2b2a593](https://github.com/bitstillery/mithril/commit/2b2a59369b3043847e98537560fa36143d111952))
+- **state:** look up an existing property signal first on every read ([0ba3ba4](https://github.com/bitstillery/mithril/commit/0ba3ba47ea63c184b59e9701f6b140aca020e927))
+- **state:** run whole-array methods on a plain copy of a state array ([5a4d926](https://github.com/bitstillery/mithril/commit/5a4d926b8400be5f22a2eb7baed1a27055010ace))
+- **state:** share the mutating-method set and parent link across states ([c0b4c5b](https://github.com/bitstillery/mithril/commit/c0b4c5bb18e416428a6efea5559b2317c5cf7df3))
+- **url:** assign a plain query key without splitting it into levels ([db533cd](https://github.com/bitstillery/mithril/commit/db533cda28ecdad6d24e93a94c0caa2d46a82ad6))
+- **url:** build a query string without encoding plain keys and values ([144eb25](https://github.com/bitstillery/mithril/commit/144eb25b602362a24c741ee0ca2d4dae9aa84e0c))
+- **url:** skip the escape scan for a string without a percent sign ([0d546b3](https://github.com/bitstillery/mithril/commit/0d546b34237f25c8c363c1826ef739a65bc49aa7))
+
+### Tests
+
+- **bench:** measure a redraw whose output didn't change ([a67197a](https://github.com/bitstillery/mithril/commit/a67197ad17c13ccd9ac371321e35d6b14887ab8e))
+- **bench:** measure route matching, URL helpers, Link and component redraws ([8a7bd04](https://github.com/bitstillery/mithril/commit/8a7bd0431f4086f966542bc455e0c91c0d5a6b5a))
+- **bench:** measure server rendering and SSR state serialization ([37ab9e1](https://github.com/bitstillery/mithril/commit/37ab9e15146358b58a2682adb3530004a82f601f))
+- **bench:** measure state trees, array mutators and Store persistence ([014c08f](https://github.com/bitstillery/mithril/commit/014c08f6b03525d736088c6cdd25988b92f88371))
+- **ssr:** pin the exact HTML and serialized state the server produces ([7141f30](https://github.com/bitstillery/mithril/commit/7141f30a9614fe9ceb00dd6d5e88a0620e9385b2))
+- **state:** pin what reflection on a state answers ([68c7311](https://github.com/bitstillery/mithril/commit/68c73110e0234fd4d09c3dc9e392ed3e70e22110))
+- **url:** pin the query string and pathname helpers' output ([e3554e0](https://github.com/bitstillery/mithril/commit/e3554e0e67816a342368a87142f0e0d73673737d))
+
 ## [3.10.0](https://github.com/bitstillery/mithril/compare/v3.9.4...v3.10.0) (2026-10-06)
 
 ### Features
