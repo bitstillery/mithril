@@ -47,7 +47,7 @@
         "typescript/no-base-to-string": "off",
         "eslint/no-underscore-dangle": "off"
     },
-    "ignorePatterns": ["node_modules", "**/.build-*", "**/*.js", "**/index.d.ts", "**/mithril.js", "**/mithril.min.js"],
+    "ignorePatterns": ["node_modules", "**/*.js"],
     "env": {
         "browser": true,
         "node": true,

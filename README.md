@@ -76,7 +76,7 @@ Prefer reading working code? Two small example apps live in this repository:
 - [`examples/state/`](examples/state/) — keeping state, derived values and saved settings
 - [`examples/ssr/`](examples/ssr/) — rendering on the server and continuing in the browser
 
-## Contributing
+## Development
 
 ```bash
 bun install
