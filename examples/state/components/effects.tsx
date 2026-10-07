@@ -55,8 +55,8 @@ export class Effects extends MithrilComponent {
                     <button onclick={() => $s.count++}>Change Count</button>
                     <button
                         onclick={() => {
-                            const newId = Math.max(...$s.todos.map((t: any) => t.id), 0) + 1
-                            $s.todos = [...$s.todos, {id: newId, text: `Todo ${newId}`, completed: false}]
+                            const newId = Math.max(...$s.todos.map((t) => t.id), 0) + 1
+                            $s.todos.push({id: newId, text: `Todo ${newId}`, completed: false})
                         }}
                     >
                         Add Todo (triggers effect)

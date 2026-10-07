@@ -18,9 +18,9 @@ export class DynamicProperties extends MithrilComponent {
                 <div style='margin-bottom: 15px;'>
                     <h3 style='font-size: 14px;'>Current Dynamic Properties:</h3>
                     <div style='background: #f5f5f5; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;'>
-                        {($s as any).dynamicValue !== undefined && <div>dynamicValue: {($s as any).dynamicValue}</div>}
-                        {($s as any).timestamp !== undefined && <div>timestamp: {($s as any).timestamp}</div>}
-                        {($s as any).dynamicValue === undefined && ($s as any).timestamp === undefined && (
+                        {$s.dynamicValue !== undefined && <div>dynamicValue: {$s.dynamicValue}</div>}
+                        {$s.timestamp !== undefined && <div>timestamp: {$s.timestamp}</div>}
+                        {$s.dynamicValue === undefined && $s.timestamp === undefined && (
                             <div style='color: #999;'>No dynamic properties yet</div>
                         )}
                     </div>
@@ -29,22 +29,22 @@ export class DynamicProperties extends MithrilComponent {
                 <div style='display: flex; gap: 10px; flex-wrap: wrap;'>
                     <button
                         onclick={() => {
-                            ;($s as any).dynamicValue = Math.floor(Math.random() * 1000)
+                            $s.dynamicValue = Math.floor(Math.random() * 1000)
                         }}
                     >
                         Set Random Value
                     </button>
                     <button
                         onclick={() => {
-                            ;($s as any).timestamp = new Date().toLocaleTimeString()
+                            $s.timestamp = new Date().toLocaleTimeString()
                         }}
                     >
                         Set Timestamp
                     </button>
                     <button
                         onclick={() => {
-                            delete ($s as any).dynamicValue
-                            delete ($s as any).timestamp
+                            delete $s.dynamicValue
+                            delete $s.timestamp
                             m.redraw(this)
                         }}
                     >
@@ -55,7 +55,7 @@ export class DynamicProperties extends MithrilComponent {
                 <div style='margin-top: 15px; background: #e3f2fd; padding: 15px; border-radius: 4px; font-size: 11px;'>
                     <strong>💡 Note:</strong> Dynamic properties are automatically converted to signals when assigned.
                     <br />
-                    Access them reactively: <code style='background: white; padding: 2px 4px;'>($s as any).dynamicValue</code>
+                    Access them reactively: <code style='background: white; padding: 2px 4px;'>$s.dynamicValue</code>
                 </div>
             </div>
         )

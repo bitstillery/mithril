@@ -56,13 +56,13 @@ export class NestedAccess extends MithrilComponent {
                     </button>
                     <button
                         onclick={() => {
-                            $s.user = {
+                            Object.assign($s.user, {
                                 name: 'Bob Smith',
                                 email: 'bob@example.com',
-                            }
+                            })
                         }}
                     >
-                        Replace Entire User Object
+                        Update Entire User Object
                     </button>
                 </div>
 

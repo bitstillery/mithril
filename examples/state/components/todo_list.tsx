@@ -16,7 +16,7 @@ export class TodoList extends MithrilComponent {
                 <h2>Todo List</h2>
                 <p>Total: {$s.totalTodos}</p>
                 <p>Completed: {$s.completedTodos}</p>
-                <p>Incomplete: {$s._incompleteTodos}</p>
+                <p>Incomplete: {$s.incompleteTodos}</p>
                 <ul>
                     {$s.todos.map((todo: Todo) => (
                         <li key={todo.id} style={{textDecoration: todo.completed ? 'line-through' : 'none'}}>
@@ -35,7 +35,7 @@ export class TodoList extends MithrilComponent {
                 <button
                     onclick={() => {
                         const newId = Math.max(...$s.todos.map((t: Todo) => t.id), 0) + 1
-                        $s.todos = [...$s.todos, {id: newId, text: `Todo ${newId}`, completed: false}]
+                        $s.todos.push({id: newId, text: `Todo ${newId}`, completed: false})
                     }}
                 >
                     Add Todo

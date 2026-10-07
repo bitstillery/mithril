@@ -19,7 +19,7 @@ export class StateDebugger extends MithrilComponent {
         const todos = $s.todos
         const totalTodos = $s.totalTodos
         const completedTodos = $s.completedTodos
-        const incompleteTodos = $s._incompleteTodos
+        const incompleteTodos = $s.incompleteTodos
 
         // Build store state object for JSON display
         const storeState = {
@@ -36,7 +36,7 @@ export class StateDebugger extends MithrilComponent {
             computed: {
                 totalTodos,
                 completedTodos,
-                _incompleteTodos: incompleteTodos,
+                incompleteTodos: incompleteTodos,
             },
         }
 

@@ -67,7 +67,7 @@ export class StoreTodos extends MithrilComponent {
                                     const text = target.value.trim()
                                     if (text) {
                                         const newId = Math.max(...$store.todos.map((t: Todo) => t.id), 0) + 1
-                                        $store.todos = [...$store.todos, {id: newId, text, completed: false}]
+                                        $store.todos.push({id: newId, text, completed: false})
                                         target.value = ''
                                     }
                                 }
@@ -79,7 +79,7 @@ export class StoreTodos extends MithrilComponent {
                                 const text = input.value.trim()
                                 if (text) {
                                     const newId = Math.max(...$store.todos.map((t: Todo) => t.id), 0) + 1
-                                    $store.todos = [...$store.todos, {id: newId, text, completed: false}]
+                                    $store.todos.push({id: newId, text, completed: false})
                                     input.value = ''
                                 }
                             }}

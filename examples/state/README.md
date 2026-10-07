@@ -37,13 +37,12 @@ Then open `index.html` in your browser.
 
 The state (`state.ts`) demonstrates:
 
-- **Required name parameter**: `state(initial, 'state.example')` - name is required for SSR serialization support
+- **Name**: `state(initial, 'state.example')` - a named state is registered for SSR serialization
 - Primitive values (`count`)
 - Nested objects (`user`) - automatically becomes nested state
 - Arrays (`todos`) - array elements become states
 - Computed properties:
     - Function properties: `totalTodos: () => ...` (automatically computed)
-    - `_` prefix: `_incompleteTodos: () => ...` (backward compatibility)
 
 ## Components
 

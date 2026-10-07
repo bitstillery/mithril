@@ -47,7 +47,7 @@
         "lint:ts-format": "oxfmt",
         "lint:ts-syntax": "oxlint -c .oxlintrc.json",
         "lint:ts-types": "tsc --noEmit",
-        "lint:examples": "tsc --noEmit -p examples/ssr",
+        "lint:examples": "tsc --noEmit -p examples/ssr && tsc --noEmit -p examples/state",
         "test": "bun test",
         "bench": "NODE_ENV=production bun run bench/index.ts",
         "bench:hyperscript": "NODE_ENV=production bun run bench/index.ts hyperscript",
