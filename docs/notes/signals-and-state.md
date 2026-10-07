@@ -87,8 +87,8 @@ Computeds are never serialized. Deserializing replaces each nested object with a
 built from plain JSON, which drops the computeds it held, so the registry keeps each state's
 original `initial` (functions included) next to the instance and re-applies its function
 properties after `deserializeAllStates()`. `Store.load()` takes the same path with its merged
-tier templates (`updateStateRegistry`), rather than a loader of its own; the earlier manual
-`setupComputedProperties()` callback survives only for compatibility.
+tier templates (`updateStateRegistry`), which replaced the manual `setupComputedProperties()`
+callback it once needed.
 
 A state's name is optional: an unnamed state is never registered, so it is neither serialized nor
 hydrated. A repeated name replaces the earlier registration, with a warning outside production.

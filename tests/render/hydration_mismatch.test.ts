@@ -192,68 +192,6 @@ describe('SSR Hydration Mismatch Recovery', () => {
         })
     })
 
-    describe('Override Mode', () => {
-        test('activates override mode when mismatch threshold exceeded', () => {
-            // Create server-rendered DOM with many mismatched children
-            for (let i = 0; i < 10; i++) {
-                const child = $window.document.createElement('span')
-                child.textContent = `Server ${i}`
-                root.appendChild(child)
-            }
-
-            // Client VDOM has completely different structure
-            const vnode = m('div', [m('div', 'Client 1'), m('div', 'Client 2')])
-
-            render(root, vnode)
-
-            // Should have logged override mode warning
-            const hasOverrideWarning = consoleWarnings.some((args: any[]) =>
-                args.some((arg: any) => typeof arg === 'string' && arg.includes('Hydration mismatch threshold exceeded')),
-            )
-
-            // Override mode should have cleared and re-rendered
-            // Note: Override mode may or may not trigger depending on mismatch count
-            // The important thing is that it doesn't throw errors
-            const children = getChildren(root)
-            expect(children.length).toBeGreaterThanOrEqual(0)
-            // If override mode triggered, should have client content
-            if (hasOverrideWarning) {
-                expect(children.length).toBe(2)
-                if (children.length >= 1) {
-                    expect(getTextContent(children[0])).toBe('Client 1')
-                }
-            }
-        })
-
-        test('override mode clears parent and re-renders from client VDOM', () => {
-            // Create complex server-rendered DOM with many mismatched children
-            // This should trigger override mode when mismatch threshold is exceeded
-            for (let i = 0; i < 10; i++) {
-                const span = $window.document.createElement('span')
-                span.textContent = `Server ${i}`
-                root.appendChild(span)
-            }
-
-            // Client VDOM is completely different structure
-            const vnode = m('div', [m('p', 'Client Paragraph 1'), m('p', 'Client Paragraph 2')])
-
-            expect(() => {
-                render(root, vnode)
-            }).not.toThrow()
-
-            // Should render client VDOM structure
-            // Override mode may or may not trigger depending on exact mismatch count
-            // The important thing is that it doesn't throw errors and renders something
-            const children = getChildren(root)
-            expect(children.length).toBeGreaterThanOrEqual(0)
-            // If override mode triggered, should have client content
-            // Otherwise, hydration matched what it could
-            const textContent = getTextContent(root)
-            // Should either have client content or be empty (if override cleared but didn't re-render)
-            expect(textContent === '' || textContent.includes('Client Paragraph') || textContent.includes('Server')).toBe(true)
-        })
-    })
-
     describe('Lenient Node Matching', () => {
         test('matches text nodes with whitespace differences', () => {
             // Create server-rendered text node with extra whitespace

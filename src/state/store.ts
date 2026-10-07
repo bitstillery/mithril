@@ -157,7 +157,6 @@ export class Store<T extends object = PlainObject> {
     }
     private lookup_verify_interval: number | null = null
     private lookup_ttl: number
-    private computedPropertiesSetup?: () => void
     private storageKey: string
     private tabStorageKey: string
     private cookieKey: string
@@ -395,22 +394,8 @@ export class Store<T extends object = PlainObject> {
         // Note: mergedInitial contains all templates (saved, temporary, tab, session) with computed properties
         restoreComputedProperties(this.stateInstance, mergedInitial)
 
-        // Note: setupComputedProperties() callback is no longer needed, but kept for backward compatibility
-        if (this.computedPropertiesSetup) {
-            this.computedPropertiesSetup()
-        }
         // Open the deferred-computed gate so computeds can run after load
         this.ready()
-    }
-
-    /**
-     * Register a function to set up computed properties after each load()
-     * This ensures computed properties are always available, even after reloading from storage
-     */
-    setupComputedProperties(setupFn: () => void): void {
-        this.computedPropertiesSetup = setupFn
-        // Call immediately to set up computed properties for current state
-        setupFn()
     }
 
     /**

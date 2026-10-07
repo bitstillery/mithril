@@ -1,11 +1,5 @@
 import {setCurrentComponent, clearCurrentComponent, clearComponentDependencies, resetComponentDependencies} from '../state/signal'
-import {
-    logHydrationError,
-    recordHydrationMismatchSummary,
-    resetHydrationErrorCount,
-    takeHydrationMismatchSummaries,
-} from './hydration_debug'
-import {logger} from '../log/logger'
+import {logHydrationError, resetHydrationErrorCount} from './hydration_debug'
 
 import Vnode from './vnode'
 import delayedRemoval from './delayed_removal'
@@ -61,9 +55,6 @@ export default function renderFactory() {
 
     let currentRedraw: (() => void) | undefined
     let currentRender: object | undefined
-    // Track hydration mismatches for override mode
-    let hydrationMismatchCount = 0
-    const MAX_HYDRATION_MISMATCHES = 5
 
     function getDocument(dom: Node): Document {
         return dom.ownerDocument!
@@ -133,17 +124,6 @@ export default function renderFactory() {
                             ;(cursor as Text).nodeValue = expected
                         }
                         return cursor.nextSibling
-                    }
-                    // SSR may have merged multiple text vnodes into a single text node.
-                    // Check if the current text node *starts* with our expected text.
-                    if (cursor && cursor.nodeType === 3) {
-                        const full = (cursor as Text).nodeValue || ''
-                        if (full.startsWith(expected)) {
-                            // Split: take our portion, leave the rest for the next vnode
-                            ;(cursor as Text).splitText(expected.length)
-                            vnode.dom = cursor
-                            return cursor.nextSibling
-                        }
                     }
                     // No matching text node — create one
                     const textNode = getDocument(parent).createTextNode(expected)
@@ -1463,9 +1443,8 @@ export default function renderFactory() {
         currentDOM = dom
         currentRedraw = typeof redraw === 'function' ? redraw : undefined
         currentRender = {}
-        // Reset hydration error counter and mismatch count at start of each render cycle
+        // Reset hydration error counter at start of each render cycle
         resetHydrationErrorCount()
-        hydrationMismatchCount = 0
         try {
             // Detect hydration: DOM has children but no vnodes tracked
             // Only check children for Element nodes (DocumentFragment doesn't have children property)
@@ -1487,35 +1466,6 @@ export default function renderFactory() {
                 (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined,
                 isHydrating,
             )
-
-            // Check if we've exceeded mismatch threshold after processing nodes
-            // If so, clear and re-render from scratch (client VDOM wins)
-            if (isHydrating && hydrationMismatchCount > MAX_HYDRATION_MISMATCHES) {
-                const mismatchSummaries = takeHydrationMismatchSummaries()
-                logger.warn('hydration mismatch threshold exceeded. clearing parent and re-rendering from client vdom.', {
-                    mismatchCount: hydrationMismatchCount,
-                    mismatches: mismatchSummaries,
-                    summariesTruncated: mismatchSummaries.length < hydrationMismatchCount,
-                    threshold: MAX_HYDRATION_MISMATCHES,
-                })
-                dom.textContent = ''
-                hydrationMismatchCount = 0
-                // Clear old vnodes and re-render without hydration flag
-                ;(dom as RenderRoot).vnodes = null
-                // Re-render with fresh hooks array (hooks from first render are discarded)
-                const overrideHooks: Array<() => void> = []
-                updateNodes(
-                    dom,
-                    null,
-                    normalized,
-                    overrideHooks,
-                    null,
-                    (namespace === 'http://www.w3.org/1999/xhtml' ? undefined : namespace) as string | undefined,
-                    false,
-                )
-                // Execute hooks from override render
-                for (let i = 0; i < overrideHooks.length; i++) overrideHooks[i]!()
-            }
 
             ;(dom as RenderRoot).vnodes = normalized
             // `document.activeElement` can return null: https://html.spec.whatwg.org/multipage/interaction.html#dom-document-activeelement
