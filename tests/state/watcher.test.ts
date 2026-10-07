@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import {state, watch} from '../../src/state/state'
@@ -565,8 +564,8 @@ describe('watch API', () => {
 
             expect(watchCount).toBe(1)
             expect($filters.offertype.options.length).toBe(2)
-            const opt0 = $filters.offertype.options[0]
-            const opt1 = $filters.offertype.options[1]
+            const opt0 = $filters.offertype.options[0]!
+            const opt1 = $filters.offertype.options[1]!
             expect(opt0[0]).toBe('FAVORITES')
             expect(opt0[1]).toBe('My Favorites')
             expect(opt1[0]).toBe('SPECIALS')
@@ -676,9 +675,9 @@ describe('watch API', () => {
 
             // Critical: Check that nested arrays are preserved correctly
             // If option[0] or option[1] is undefined, labels will show as "filters.types.offertype.undefined"
-            const opt0 = $filters.offertype.options[0]
-            const opt1 = $filters.offertype.options[1]
-            const opt2 = $filters.offertype.options[2]
+            const opt0 = $filters.offertype.options[0]!
+            const opt1 = $filters.offertype.options[1]!
+            const opt2 = $filters.offertype.options[2]!
 
             // These assertions should pass - if they fail, we've found the bug
             expect(opt0).toBeDefined()
@@ -737,7 +736,7 @@ describe('watch API', () => {
                 'filters.types.offertype.NEW_ARRIVALS',
                 'filters.types.offertype.FAVORITES',
             ])
-            expect(translatedLabels.every((label) => !label.includes('undefined'))).toBe(true)
+            expect(translatedLabels.every((label) => !label!.includes('undefined'))).toBe(true)
         })
 
         test('splice with empty initial options then populate - simulates filter initialization', () => {
@@ -745,7 +744,7 @@ describe('watch API', () => {
             const $filters = state(
                 {
                     offertype: {
-                        options: [],
+                        options: [] as (string | number)[][],
                         selection: '',
                     },
                 },
@@ -763,10 +762,10 @@ describe('watch API', () => {
             $filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats)
 
             expect($filters.offertype.options.length).toBe(2)
-            expect($filters.offertype.options[0][0]).toBe('SPECIALS')
-            expect($filters.offertype.options[0][1]).toBe('SPECIALS')
-            expect($filters.offertype.options[1][0]).toBe('NEW_ARRIVALS')
-            expect($filters.offertype.options[1][1]).toBe('NEW_ARRIVALS')
+            expect($filters.offertype.options[0]![0]).toBe('SPECIALS')
+            expect($filters.offertype.options[0]![1]).toBe('SPECIALS')
+            expect($filters.offertype.options[1]![0]).toBe('NEW_ARRIVALS')
+            expect($filters.offertype.options[1]![1]).toBe('NEW_ARRIVALS')
         })
 
         test('splice with multiple filter updates - simulates real usage pattern', () => {
@@ -793,16 +792,16 @@ describe('watch API', () => {
             $filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats1)
 
             expect($filters.offertype.options.length).toBe(2)
-            expect($filters.offertype.options[0][0]).toBe('SPECIALS')
-            expect($filters.offertype.options[1][0]).toBe('NEW_ARRIVALS')
+            expect($filters.offertype.options[0]![0]).toBe('SPECIALS')
+            expect($filters.offertype.options[1]![0]).toBe('NEW_ARRIVALS')
 
             // Second update (simulating another API call)
             const offerTypeStats2 = [['FAVORITES', 'FAVORITES', 3]]
             $filters.offertype.options.splice(0, $filters.offertype.options.length, ...offerTypeStats2)
 
             expect($filters.offertype.options.length).toBe(1)
-            expect($filters.offertype.options[0][0]).toBe('FAVORITES')
-            expect($filters.offertype.options[0][1]).toBe('FAVORITES')
+            expect($filters.offertype.options[0]![0]).toBe('FAVORITES')
+            expect($filters.offertype.options[0]![1]).toBe('FAVORITES')
 
             // Update another filter
             const availabilityStats = [
@@ -812,8 +811,8 @@ describe('watch API', () => {
             $filters.availability.options.splice(0, $filters.availability.options.length, ...availabilityStats)
 
             expect($filters.availability.options.length).toBe(2)
-            expect($filters.availability.options[0][0]).toBe('stock')
-            expect($filters.availability.options[1][0]).toBe('tbo')
+            expect($filters.availability.options[0]![0]).toBe('stock')
+            expect($filters.availability.options[1]![0]).toBe('tbo')
         })
     })
 
@@ -826,10 +825,11 @@ describe('watch API', () => {
                 watchCount++
             })
 
+            // @ts-expect-error a plain object is written where the type wants a state element, which state wraps at runtime
             $state.rows[0] = {qty: 5}
 
             expect(watchCount).toBe(1)
-            expect($state.rows[0].qty).toBe(5)
+            expect($state.rows[0]!.qty).toBe(5)
 
             unwatch()
         })
@@ -912,7 +912,7 @@ describe('watch API', () => {
             $state.rows.fill({qty: 0})
 
             expect(watchCount).toBe(1)
-            expect($state.rows).toEqual([{qty: 0}, {qty: 0}])
+            expect($state.rows).toEqual<{qty: number}[]>([{qty: 0}, {qty: 0}])
 
             unwatch()
         })

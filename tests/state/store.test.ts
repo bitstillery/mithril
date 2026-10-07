@@ -1,10 +1,11 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {Store} from '../../src/state/store'
 import {clearStateRegistry, getRegisteredStates} from '../../src/state/state'
 import {deserializeAllStates, serializeAllStates} from '../../src/ssr/serialize'
 import {localStorageMock, sessionStorageMock, setupWindowMock} from '../helpers/storage_mock'
+
+import type {DeepPartial, StateRegistryEntry} from '../../src/state/state'
 
 // Window with localStorage/sessionStorage/setInterval is set up in test preload (test-helpers.ts).
 // Re-run setup before each test in case other tests (e.g. signal integration) overwrote window with domMock.
@@ -187,7 +188,7 @@ describe('Store', () => {
                 }),
             )
 
-            const store = new Store()
+            const store = new Store<{user: {name: string; email: string}}>()
             const saved = {
                 user: {
                     name: '',
@@ -308,7 +309,7 @@ describe('Store', () => {
 
             expect(result.count).toBe(42)
             expect(result.name).toBe('test')
-            expect(result.extra).toBeUndefined()
+            expect((result as Record<string, unknown>).extra).toBeUndefined()
         })
 
         test('handles nested objects recursively', () => {
@@ -329,9 +330,9 @@ describe('Store', () => {
 
             const result = store.blueprint(state as any, blueprint)
 
-            expect(result.user.name).toBe('John')
-            expect(result.user.email).toBe('john@example.com')
-            expect(result.user.extra).toBeUndefined()
+            expect(result.user!.name).toBe('John')
+            expect(result.user!.email).toBe('john@example.com')
+            expect((result.user as Record<string, unknown>).extra).toBeUndefined()
         })
 
         test('handles lookup key specially (one-one copy)', () => {
@@ -344,16 +345,16 @@ describe('Store', () => {
                 },
             }
             const blueprint = {
-                lookup: {},
+                lookup: {} as Record<string, unknown>,
             }
 
             const result = store.blueprint(state as any, blueprint)
 
             // Lookup should be copied entirely, not blueprinted per-key
             expect(result.lookup).toEqual(state.lookup)
-            expect(result.lookup.key1).toBeDefined()
-            expect(result.lookup.key2).toBeDefined()
-            expect(result.lookup.key3).toBeDefined()
+            expect(result.lookup!.key1).toBeDefined()
+            expect(result.lookup!.key2).toBeDefined()
+            expect(result.lookup!.key3).toBeDefined()
         })
 
         test('handles arrays correctly', () => {
@@ -362,7 +363,7 @@ describe('Store', () => {
                 items: [1, 2, 3],
             }
             const blueprint = {
-                items: [],
+                items: [] as number[],
             }
 
             const result = store.blueprint(state as any, blueprint)
@@ -725,12 +726,13 @@ describe('Store', () => {
         })
 
         test('computed properties can be defined in tab template', () => {
-            const store = new Store<{
+            type Shape = {
                 tab: {
                     sessionId: string
                     isValid: () => boolean
                 }
-            }>()
+            }
+            const store = new Store<Shape>()
 
             const saved = {}
             const temporary = {}
@@ -743,12 +745,13 @@ describe('Store', () => {
                 },
             }
 
-            store.load(saved, temporary, tab)
+            // load() types the tab template as the whole shape, but nests it under `tab` at runtime.
+            store.load(saved, temporary, tab as DeepPartial<Shape>)
 
             // sessionId should be set (tab template is merged into store_state.tab)
-            expect((store.state as any).tab.sessionId).toBe('abc123')
+            expect(store.state.tab.sessionId).toBe('abc123')
             // Computed property should work
-            expect((store.state as any).tab.isValid).toBe(true)
+            expect(store.state.tab.isValid).toBe(true)
         })
 
         test('computed properties work with nested state', () => {
@@ -800,8 +803,9 @@ describe('Store', () => {
 
             expect(storeEntry).toBeDefined()
             expect(storeEntry?.initial).toBeDefined()
-            expect(storeEntry?.initial.count).toBe(0)
-            expect(typeof storeEntry?.initial.doubled).toBe('function')
+            const entry = storeEntry as (StateRegistryEntry & {initial: Record<string, unknown>}) | undefined
+            expect(entry?.initial.count).toBe(0)
+            expect(typeof entry?.initial.doubled).toBe('function')
         })
 
         test('computed properties persist across multiple load() calls', () => {

@@ -1,8 +1,12 @@
-// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import {state, watch} from '../../src/state/state'
 import {Signal} from '../../src/state/signal'
+
+import type {State, StateArray, StateInternals} from '../../src/state/state'
+
+/** A state array also answers a `$<index>` signal per element, which `StateArray` doesn't declare. */
+type IndexSignals<T> = StateArray<T> & {[key: `$${number}`]: Signal<T>}
 
 describe('state', () => {
     test('creates state with initial values', () => {
@@ -122,7 +126,7 @@ describe('state', () => {
             },
             'testState.dollarPrefixArray',
         )
-        const firstSignal = s.items.$0
+        const firstSignal = (s.items as IndexSignals<number>).$0!
         expect(firstSignal).toBeInstanceOf(Signal)
         expect(firstSignal.value).toBe(1)
         s.items[0] = 10
@@ -138,10 +142,10 @@ describe('state', () => {
     })
 
     test('handles dynamic property assignment', () => {
-        const s = state({count: 0} as any, 'testState.dynamicProperty')
+        const s = state({count: 0} as Record<string, unknown>, 'testState.dynamicProperty')
         s.newProp = 'test'
         expect(s.newProp).toBe('test')
-        const newSignal = s.$newProp
+        const newSignal = s.$newProp as Signal<unknown>
         expect(newSignal).toBeInstanceOf(Signal)
         expect(newSignal.value).toBe('test')
     })
@@ -208,7 +212,7 @@ describe('state', () => {
         })
 
         test('includes and indexOf work correctly with reactive arrays', () => {
-            const s = state({selection: []}, 'testState.arraySearch')
+            const s = state({selection: [] as string[]}, 'testState.arraySearch')
 
             // Initially empty
             expect(s.selection.includes('option1')).toBe(false)
@@ -319,15 +323,16 @@ describe('state', () => {
         test('a plain object assigned to an index becomes a state element, like push', () => {
             const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.indexAssignObject')
 
+            // @ts-expect-error a plain object is written where the type wants a state element, which state wraps at runtime
             s.rows[0] = {qty: 5}
             s.rows.push({qty: 7})
 
-            for (const row of [s.rows[0], s.rows[2]]) {
-                expect(row.__isState).toBe(true)
+            for (const row of [s.rows[0]!, s.rows[2]!]) {
+                expect((row as StateInternals).__isState).toBe(true)
                 expect(row.$qty).toBeInstanceOf(Signal)
             }
-            expect(s.rows[0].qty).toBe(5)
-            expect(s.rows).toEqual([{qty: 5}, {qty: 2}, {qty: 7}])
+            expect(s.rows[0]!.qty).toBe(5)
+            expect(s.rows).toEqual<{qty: number}[]>([{qty: 5}, {qty: 2}, {qty: 7}])
         })
 
         test("an index-assigned element's fields are reactive", () => {
@@ -340,12 +345,13 @@ describe('state', () => {
             )
             expect(s.total).toBe(1)
 
+            // @ts-expect-error a plain object is written where the type wants a state element, which state wraps at runtime
             s.rows[0] = {qty: 5}
             expect(s.total).toBe(5)
 
             const qtyChanges: number[] = []
-            const unwatch = watch(s.rows[0].$qty, (qty: number) => qtyChanges.push(qty))
-            s.rows[0].qty = 9
+            const unwatch = watch(s.rows[0]!.$qty, (qty: number) => qtyChanges.push(qty))
+            s.rows[0]!.qty = 9
 
             expect(qtyChanges).toEqual([9])
             expect(s.total).toBe(9)
@@ -355,21 +361,22 @@ describe('state', () => {
         test('assigning past the end appends a state element', () => {
             const s = state({rows: [{qty: 1}]}, 'testState.indexAssignAppend')
 
+            // @ts-expect-error a plain object is written where the type wants a state element, which state wraps at runtime
             s.rows[s.rows.length] = {qty: 2}
 
             expect(s.rows.length).toBe(2)
-            expect(s.rows[1].$qty).toBeInstanceOf(Signal)
+            expect(s.rows[1]!.$qty).toBeInstanceOf(Signal)
         })
 
         test('an existing state element is stored as-is, not re-wrapped', () => {
             const s = state({rows: [{qty: 1}, {qty: 2}]}, 'testState.indexAssignState')
-            const second = s.rows[1]
+            const second = s.rows[1]!
 
             s.rows[0] = second
 
             expect(s.rows[0]).toBe(second)
             second.qty = 3
-            expect(s.rows[0].qty).toBe(3)
+            expect(s.rows[0]!.qty).toBe(3)
         })
 
         test('a nested array assigned to an index becomes a state array', () => {
@@ -377,17 +384,17 @@ describe('state', () => {
 
             s.options[0] = ['b', 'B']
 
-            expect(s.options[0].__isState).toBe(true)
+            expect((s.options[0] as StateInternals).__isState).toBe(true)
             expect(s.options[0]).toEqual(['b', 'B'])
         })
 
         test("a primitive keeps the element's signal", () => {
             const s = state({items: [1, 2, 3]}, 'testState.indexAssignPrimitive')
-            const first = s.items.$0
+            const first = (s.items as IndexSignals<number>).$0!
 
             s.items[0] = 10
 
-            expect(s.items.$0).toBe(first)
+            expect((s.items as IndexSignals<number>).$0).toBe(first)
             expect(first.value).toBe(10)
             expect(s.items).toEqual([10, 2, 3])
         })
@@ -398,7 +405,7 @@ describe('state', () => {
             s.rows[0] = 4
 
             expect(s.rows[0]).toBe(4)
-            expect(s.rows.$0).toBeInstanceOf(Signal)
+            expect((s.rows as IndexSignals<unknown>).$0).toBeInstanceOf(Signal)
         })
 
         test('length truncation still works', () => {
@@ -419,7 +426,7 @@ describe('state', () => {
             s.items[1] = 5
 
             expect(s.items).toEqual([0, 5, 0])
-            expect(s.items.$0).not.toBe(s.items.$2)
+            expect((s.items as IndexSignals<number>).$0).not.toBe((s.items as IndexSignals<number>).$2)
         })
 
         test('an object fill value becomes one state element shared by every slot, as native fill shares it', () => {
@@ -429,11 +436,11 @@ describe('state', () => {
             // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
             s.rows.fill({qty: 0}, 1)
 
-            expect(s.rows[1].__isState).toBe(true)
-            expect(s.rows[1].$qty).toBeInstanceOf(Signal)
+            expect((s.rows[1] as StateInternals).__isState).toBe(true)
+            expect(s.rows[1]!.$qty).toBeInstanceOf(Signal)
             expect(s.rows[2]).toBe(s.rows[1])
-            s.rows[1].qty = 4
-            expect(s.rows).toEqual([{qty: 1}, {qty: 4}, {qty: 4}])
+            s.rows[1]!.qty = 4
+            expect(s.rows).toEqual<{qty: number}[]>([{qty: 1}, {qty: 4}, {qty: 4}])
         })
 
         test('replacing one filled object slot leaves the others', () => {
@@ -441,29 +448,30 @@ describe('state', () => {
 
             // oxlint-disable-next-line unicorn/no-array-fill-with-reference-type
             s.rows.fill({qty: 0})
+            // @ts-expect-error a plain object is written where the type wants a state element, which state wraps at runtime
             s.rows[0] = {qty: 9}
 
-            expect(s.rows).toEqual([{qty: 9}, {qty: 0}])
+            expect(s.rows).toEqual<{qty: number}[]>([{qty: 9}, {qty: 0}])
         })
     })
 
     describe('dynamic properties', () => {
         test('accessing non-existent property returns undefined', () => {
-            const s = state({items: {}}, 'testState.dynamicProps')
+            const s = state({items: {} as Record<string, {value: number} | undefined>}, 'testState.dynamicProps')
 
             // Accessing a property that doesn't exist should return undefined
             expect(s.items['key1']).toBeUndefined()
         })
 
         test('setting a new property makes it accessible', () => {
-            const s = state({items: {}}, 'testState.dynamicPropsSet')
+            const s = state({items: {} as Record<string, {value: number} | undefined>}, 'testState.dynamicPropsSet')
 
             // Set a new property
             s.items['key1'] = {value: 42}
 
             // Should now be accessible
             expect(s.items['key1']).toBeDefined()
-            expect(s.items['key1'].value).toBe(42)
+            expect(s.items['key1']!.value).toBe(42)
         })
 
         test('dynamically added keys appear in Object.keys and on the target', () => {
@@ -485,7 +493,7 @@ describe('state', () => {
         test('computed accessing non-existent property returns undefined initially', () => {
             const s = state(
                 {
-                    items: {},
+                    items: {} as Record<string, {value: number} | undefined>,
                     getItem: () => s.items['dynamicKey'],
                 },
                 'testState.computedDynamicProps',
@@ -496,7 +504,7 @@ describe('state', () => {
         })
 
         test('Object.values does not include non-accessed properties', () => {
-            const s = state({items: {}}, 'testState.objectValues')
+            const s = state({items: {} as Record<string, {id: number} | undefined>}, 'testState.objectValues')
 
             // Access a non-existent property (this should NOT pollute the object)
             const _ = s.items['nonexistent']
@@ -507,7 +515,7 @@ describe('state', () => {
         })
 
         test('Object.values returns only set properties', () => {
-            const s = state({items: {}}, 'testState.objectValuesSet')
+            const s = state({items: {} as Record<string, {id: number} | undefined>}, 'testState.objectValuesSet')
 
             // Set some properties
             s.items['a'] = {id: 1}
@@ -523,7 +531,7 @@ describe('state', () => {
         test('deleting a property updates computed that depends on it', () => {
             const s = state(
                 {
-                    items: {} as Record<string, {value: number}>,
+                    items: {} as Record<string, {value: number} | undefined>,
                     getItem: () => s.items['key1'],
                 },
                 'testState.deleteProperty',
@@ -541,7 +549,7 @@ describe('state', () => {
         })
 
         test('deleting a property removes it from Object.values', () => {
-            const s = state({items: {}}, 'testState.deleteFromValues')
+            const s = state({items: {} as Record<string, {id: number} | undefined>}, 'testState.deleteFromValues')
 
             // Add some items
             s.items['a'] = {id: 1}
@@ -564,7 +572,7 @@ describe('state', () => {
         test('computed updates when dynamic property is set after creation', () => {
             const s = state(
                 {
-                    items: {},
+                    items: {} as Record<string, {value: number} | undefined>,
                     getItem: () => s.items['key1'],
                 },
                 'testState.computedDynamicUpdate',
@@ -606,14 +614,15 @@ describe('state', () => {
             {deferComputed: true},
         )
         expect(s.doubled).toBeUndefined()
-        ;(s as any).allowComputed()
+        ;(s as StateInternals).allowComputed!()
         expect(s.doubled).toBe(2)
         s.count = 5
         expect(s.doubled).toBe(10)
     })
 
     test('deferComputed: computeds in array elements are marked dirty when allowComputed() is called', () => {
-        const s = state(
+        type Options = {base: number; options: ({_disabled: boolean} | {_disabled: () => boolean} | {_disabled: () => number})[]}
+        const s: State<Options> = state<Options>(
             {
                 base: 1,
                 options: [{_disabled: false}, {_disabled: () => s.base > 0}, {_disabled: () => s.base * 2}],
@@ -621,16 +630,16 @@ describe('state', () => {
             'testState.deferComputed.array',
             {deferComputed: true},
         )
-        expect(s.options[0]._disabled).toBe(false)
-        expect(s.options[1]._disabled).toBeUndefined()
-        expect(s.options[2]._disabled).toBeUndefined()
-        ;(s as any).allowComputed()
-        expect(s.options[0]._disabled).toBe(false)
-        expect(s.options[1]._disabled).toBe(true)
-        expect(s.options[2]._disabled).toBe(2)
+        expect(s.options[0]!._disabled).toBe(false)
+        expect(s.options[1]!._disabled).toBeUndefined()
+        expect(s.options[2]!._disabled).toBeUndefined()
+        ;(s as StateInternals).allowComputed!()
+        expect(s.options[0]!._disabled).toBe(false)
+        expect(s.options[1]!._disabled).toBe(true)
+        expect(s.options[2]!._disabled).toBe(2)
         s.base = 0
-        expect(s.options[1]._disabled).toBe(false)
-        expect(s.options[2]._disabled).toBe(0)
+        expect(s.options[1]!._disabled).toBe(false)
+        expect(s.options[2]!._disabled).toBe(0)
     })
 })
 

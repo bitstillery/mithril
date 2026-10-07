@@ -1,8 +1,9 @@
-// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import {state, watch} from '../../src/state/state'
 import {serializeStore} from '../../src/ssr/serialize'
+
+import type {StateInternals} from '../../src/state/state'
 
 describe('state reflection', () => {
     test('own keys list the target keys, then a $ key per signal', () => {
@@ -15,7 +16,7 @@ describe('state reflection', () => {
     })
 
     test('an added key is listed after the existing ones, a deleted key no longer', () => {
-        const s = state({a: 1, b: 2})
+        const s = state<{a?: number; b: number; d?: number}>({a: 1, b: 2})
         s.d = 4
         expect(Reflect.ownKeys(s)).toEqual(['a', 'b', 'd', '$a', '$b', '$d'])
         delete s.a
@@ -23,7 +24,7 @@ describe('state reflection', () => {
     })
 
     test('a function added as a key, which the target never gets, is listed after the $ keys', () => {
-        const s = state({a: 1})
+        const s = state<{a: number; f?: () => number}>({a: 1})
         s.f = function () {
             return 1
         }
@@ -32,7 +33,7 @@ describe('state reflection', () => {
 
     test('a key re-added to the signal map moves its $ key to the end', () => {
         const s = state({a: 1, b: 2})
-        s.__signalMap.delete('a')
+        ;(s as StateInternals).__signalMap!.delete('a')
         s.a = 3
         expect(Reflect.ownKeys(s)).toEqual(['a', 'b', '$b', '$a'])
     })
@@ -75,7 +76,7 @@ describe('state reflection', () => {
     })
 
     test("'in' answers for keys, their $ keys and the internals", () => {
-        const s = state({b: 1})
+        const s = state<{b?: number; c?: number}>({b: 1})
         delete s.b
         s.c = 2
         expect(['b' in s, 'c' in s, '$c' in s, '$zz' in s, '__isState' in s, 'toString' in s]).toEqual([
@@ -91,7 +92,7 @@ describe('state reflection', () => {
     test('JSON and spread see the enumerable keys with their values', () => {
         const s = state({a: 1, b: {c: 2}, items: [1, 2], f: () => 3})
         expect(JSON.stringify(s)).toBe('{"a":1,"b":{"c":2},"items":[1,2],"f":3}')
-        expect({...s.b}).toEqual({c: 2})
+        expect({...s.b}).toEqual<{c: number}>({c: 2})
     })
 
     test('an array lists its indices and length', () => {
@@ -102,19 +103,22 @@ describe('state reflection', () => {
 
 describe('state original keys', () => {
     test('are the keys at creation, one Set for the life of the state', () => {
-        const s = state({a: 1, b: {c: 2}})
-        const keys = s.__originalKeys
+        const s = state<{a?: number; b: {c: number}; d?: number}>({a: 1, b: {c: 2}})
+        const keys = (s as StateInternals).__originalKeys!
         expect(keys).toBeInstanceOf(Set)
         expect([...keys]).toEqual(['a', 'b'])
         s.d = 4
         delete s.a
-        expect(s.__originalKeys).toBe(keys)
+        expect((s as StateInternals).__originalKeys).toBe(keys)
         expect([...keys]).toEqual(['a', 'b'])
-        expect([...s.b.__originalKeys]).toEqual(['c'])
+        expect([...(s.b as StateInternals).__originalKeys!]).toEqual(['c'])
     })
 
     test('keep a key added to a nested state out of its serialization, unless it started empty', () => {
-        const s = state({filters: {page: 1}, lookup: {}})
+        const s = state<{filters: {page: number; extra?: boolean}; lookup: Record<string, {sort: string} | undefined>}>({
+            filters: {page: 1},
+            lookup: {},
+        })
         s.filters.extra = true
         s.lookup.path = {sort: 'name'}
         expect(serializeStore(s)).toEqual({filters: {page: 1}, lookup: {path: {sort: 'name'}}})
@@ -129,7 +133,7 @@ describe('state array notifications', () => {
         ['unshift', (items) => items.unshift(0)],
         ['splice', (items) => items.splice(1, 1, 9)],
         // oxlint-disable-next-line unicorn/no-array-sort -- the in-place mutator is what's under test
-        ['sort', (items) => items.sort((a, b) => b - a)],
+        ['sort', (items) => items.sort((a: number, b: number) => b - a)],
         // oxlint-disable-next-line unicorn/no-array-reverse -- the in-place mutator is what's under test
         ['reverse', (items) => items.reverse()],
         ['fill', (items) => items.fill(0)],

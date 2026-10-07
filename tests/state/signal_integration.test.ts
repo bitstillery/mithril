@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import {signal, computed} from '../../src/state/signal'
@@ -38,12 +37,12 @@ describe('Signal Integration - Component Redraws', () => {
         m.mount(root, Component)
         expect(renderCount).toBe(1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('0')
 
         s.value = 10
         await m.nextTick() // Wait for batched redraw microtask
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('10')
     })
 
     test('only affected component redraws (fine-grained)', async () => {
@@ -165,13 +164,13 @@ describe('Signal Integration - Component Redraws', () => {
         m.mount(root, Component)
         expect(renderCount).toBe(1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('3')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('3')
 
         // Change dependency - component should redraw (batched)
         a.value = 10
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('12')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('12')
     })
 
     test('m.redraw.signal redraws each mounted component that read the signal once', () => {
@@ -213,7 +212,7 @@ describe('Signal Integration - Component Redraws', () => {
         showCount.value = true
         await m.nextTick()
         expect(renderCount).toBe(3)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('1')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('1')
     })
 
     test('computed already cached when a component reads it still redraws the component', async () => {
@@ -233,7 +232,7 @@ describe('Signal Integration - Component Redraws', () => {
         a.value = 5
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('10')
     })
 })
 
@@ -267,12 +266,12 @@ describe('Store Integration - Component Redraws', () => {
         m.mount(root, Component)
         expect(renderCount).toBe(1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('0')
 
         $s.count = 10
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('10')
     })
 
     test('component redraws when nested state property changes', async () => {
@@ -296,12 +295,12 @@ describe('Store Integration - Component Redraws', () => {
         m.mount(root, Component)
         expect(renderCount).toBe(1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('John')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('John')
 
         $s.user.name = 'Jane'
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('Jane')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('Jane')
     })
 
     test('component redraws when new key is added to nested object', async () => {
@@ -323,14 +322,14 @@ describe('Store Integration - Component Redraws', () => {
 
         m.mount(root, Component)
         expect(renderCount).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('empty')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('empty')
 
         // Simulate merge_deep adding keys (e.g. API response)
         $s.form['campaign_a'] = true
         $s.form['campaign_b'] = false
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('campaign_a,campaign_b')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('campaign_a,campaign_b')
     })
 
     test('component redraws when key is removed from nested object', async () => {
@@ -352,12 +351,12 @@ describe('Store Integration - Component Redraws', () => {
 
         m.mount(root, Component)
         expect(renderCount).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('a,b,c')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('a,b,c')
 
         delete $s.form['b']
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('a,c')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('a,c')
     })
 
     test('child watcher on raw nested array signal works without priming accessor read', async () => {
@@ -404,15 +403,15 @@ describe('Store Integration - Component Redraws', () => {
         }
 
         m.mount(root, Parent)
-        expect(root.childNodes[0].childNodes[1].childNodes[0].nodeValue).toBe('0-100')
+        expect(root.childNodes[0]!.childNodes[1]!.childNodes[0]!.nodeValue).toBe('0-100')
 
         const clickEvent = $window.document.createEvent('MouseEvents')
         clickEvent.initEvent('click', true, true)
-        ;(root.childNodes[0].childNodes[0] as HTMLButtonElement).dispatchEvent(clickEvent)
+        ;(root.childNodes[0]!.childNodes[0] as HTMLButtonElement).dispatchEvent(clickEvent)
         await m.nextTick()
 
         expect(childWatchCount).toBe(1)
-        expect(root.childNodes[0].childNodes[1].childNodes[0].nodeValue).toBe('10-90')
+        expect(root.childNodes[0]!.childNodes[1]!.childNodes[0]!.nodeValue).toBe('10-90')
     })
 
     test('component redraws when computed property changes', async () => {
@@ -435,12 +434,12 @@ describe('Store Integration - Component Redraws', () => {
         m.mount(root, Component)
         expect(renderCount).toBe(1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('0')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('0')
 
         $s.count = 5
         await m.nextTick()
         expect(renderCount).toBe(2)
-        expect(root.childNodes[0].childNodes[0].nodeValue).toBe('10')
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('10')
     })
 
     test('only component using changed property redraws', async () => {
