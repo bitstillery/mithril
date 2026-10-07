@@ -663,7 +663,7 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         // Assigned the proxy below; the closures here only run once it is.
         let wrapped: object | undefined
         const getChildContext = (): InitContext | undefined =>
-            context ? {...context, rootState: stateRootMap.get(wrapped!) ?? wrapped} : undefined
+            context ? {deferComputed: context.deferComputed, rootState: stateRootMap.get(wrapped!) ?? wrapped} : undefined
 
         const adopt: Adopt = (value, sig) => {
             const nestedState = initializeSignals(value, undefined, getChildContext())
@@ -921,7 +921,8 @@ export function state<T extends object>(initial: T, name?: string, options?: Sta
         return wrapped
     }
 
-    const initContext: InitContext | undefined = deferComputed ? {deferComputed: true} : undefined
+    // Always a context, even without deferComputed: it carries the root down to objects inside arrays.
+    const initContext: InitContext = {deferComputed}
     const wrapped = initializeSignals(initial, undefined, initContext) as State<T>
     stateRootMap.set(wrapped, wrapped)
     if (deferComputed) {
