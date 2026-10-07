@@ -32,4 +32,3 @@
 - [ ] I have added tests to cover my changes.
 - [ ] All new and existing tests passed.
 - [ ] My change requires a documentation update, and I've opened a pull request to update it already:
-- [ ] I have read https://mithril.js.org/contributing.html.

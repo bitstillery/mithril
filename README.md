@@ -1,9 +1,9 @@
-# Mithril Bitstillery
+# Mithril, Bitstillery edition
 
 A small, fast framework for building web apps — [Mithril.js](https://mithril.js.org), with state
 that keeps the page up to date by itself.
 
-Mithril Bitstillery keeps what Mithril already does well — a tiny footprint, plain JavaScript, a
+This edition keeps what Mithril already does well — a tiny footprint, plain JavaScript, a
 built-in router — and adds the pieces most apps end up building on their own: signals and reactive
 state, server rendering and saved settings, written in TypeScript and developed with Bun.
 
