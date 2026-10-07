@@ -26,7 +26,7 @@ type Shape = ReturnType<typeof makeState>
 /** Replaces `user` with a plain object, one way or the other. */
 const writes: Record<string, (s: Shape, user: User) => void> = {
     signal: (s, user) => {
-        Reflect.set(s.$user, 'value', user)
+        s.$user.value = user
     },
     // The plain property write, which doesn't type-check; see the type tests below.
     trap: (s, user) => {
@@ -123,12 +123,12 @@ describe('writing through a state property signal', () => {
     test('computeds in an object written through the signal wait for a deferred root', () => {
         type Person = {name: string; greeting: (this: {name: string}) => string}
         const s = state({person: {name: 'a', greeting: () => ''} as Person}, undefined, {deferComputed: true})
-        Reflect.set(s.$person, 'value', {
+        s.$person.value = {
             name: 'b',
-            greeting(this: {name: string}) {
+            greeting() {
                 return `hi ${this.name}`
             },
-        })
+        }
         expect(s.person.greeting).toBeUndefined()
         allowComputed(s)
         expect(s.person.greeting).toBe('hi b')
@@ -137,7 +137,7 @@ describe('writing through a state property signal', () => {
 
     test('an array written through the signal is a state array with push and element signals', () => {
         const s = makeState()
-        Reflect.set(s.$todos, 'value', [{id: 1, text: 't', completed: false}])
+        s.$todos.value = [{id: 1, text: 't', completed: false}]
         let notified = 0
         watch(s.$todos, () => notified++)
         s.todos.push({id: 2, text: 'u', completed: true})
@@ -226,4 +226,25 @@ describe('writing through an array element signal', () => {
             expect(notified).toBe(1)
         })
     }
+})
+
+describe('state signal types', () => {
+    test('a plain object or array writes through the signal without a cast', () => {
+        const s = makeState()
+        s.$user.value = {name: 'x', email: 'y'}
+        s.$todos.value = [{id: 1, text: 't', completed: false}]
+        const name: Signal<string> = s.$user.value.$name
+        const plain: Signal<State<User>> = s.$user
+        const count: Signal<number> = s.$count
+        watch(s.$user, (next, previous) => {
+            const signals: Signal<string>[] = [next.$name, previous.$email]
+            void signals
+        })
+        expect([name, plain.peek().$name, count]).toHaveLength(3)
+
+        // @ts-expect-error a plain write still has to match the declared shape: email is missing
+        s.$user.value = {name: 'x'}
+        // @ts-expect-error the property reads as a State, whose `$` signals a plain object lacks
+        s.user = {name: 'x', email: 'y'}
+    })
 })

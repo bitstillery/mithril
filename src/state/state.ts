@@ -972,10 +972,14 @@ type StateProp<V> = [V] extends [never]
             ? State<V>
             : V
 
+/** What a property's signal takes: its read type and the declared plain shape, except for a `{get, set}` descriptor. */
+type StateWrite<V> = [V] extends [{get: () => unknown; set: (value: never) => void}] ? StateProp<V> : StateProp<V> | V
+
 /**
  * Mapped type that adds $prop for each key, returning the Signal for that property.
  * - Primitives: $prop => Signal<T[K]>
- * - Nested objects: $prop => Signal<State<T[K]>>
+ * - Nested objects: $prop => Signal<State<T[K]>, State<T[K]> | T[K]>: it reads as the State and takes
+ *   the plain shape too, which `state.prop = plain` can't, since a mapped property has one type.
  * - Functions: $prop => ComputedSignal of the getter's return type
  */
 export type StateSignals<T extends object> = {
@@ -983,7 +987,7 @@ export type StateSignals<T extends object> = {
     // lookup by a `string` key would read as `Value | Signal<Value>`.
     [K in keyof T as K extends string ? (string extends K ? never : `$${K}`) : never]: T[K] extends (...args: never[]) => infer R
         ? ComputedSignal<R>
-        : Signal<StateProp<T[K]>>
+        : Signal<StateProp<T[K]>, StateWrite<T[K]>>
 }
 
 export type StateArray<Elem> = Omit<Array<StateValue<Elem>>, 'fill' | 'push' | 'splice' | 'unshift'> & {
@@ -1027,7 +1031,7 @@ export type Unwatch = () => void
  * @param callback - Callback function called when signal value changes
  * @returns Unsubscribe function
  */
-export function watch<T>(signal: Signal<T> | ComputedSignal<T>, callback: (newValue: T, oldValue: T) => void): Unwatch {
+export function watch<T, W = T>(signal: Signal<T, W>, callback: (newValue: T, oldValue: T) => void): Unwatch {
     const unwatch = signal.watch(callback)
 
     // Register watcher in SSR context for cleanup at end of request

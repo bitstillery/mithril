@@ -43,6 +43,17 @@ m.mount(document.getElementById('app'), Counter)
 - Naming (second argument) is required for SSR serialization
 - Components that read state auto-redraw when dependencies change
 
+## Replacing an object or array
+
+Write the plain value through the property's signal:
+
+```tsx
+$s.$user.value = {name: 'Bob', email: 'bob@example.com'}
+$s.$todos.value = [{id: 1, text: 'Write docs', completed: false}]
+```
+
+The new object becomes a nested state, as with `$s.user = …`, so `$s.user.$name` and nested updates work as before. `$s.user = {…}` itself doesn't type-check: `$s.user` reads as a state with its `$` signals, and a property can't take another type on write than it reads as. A signal's `value` can, so it reads as the state and accepts the plain shape. Components holding the old `$s.user.$name` keep the old signal; `Object.assign($s.user, {…})` updates the fields in place instead.
+
 ## Computed properties
 
 Any **function property** in state becomes a computed signal. Reading the property runs the function and returns its result; the value is cached and re-evaluated only when dependencies change.

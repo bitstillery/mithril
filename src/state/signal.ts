@@ -179,9 +179,10 @@ function notify(subscribers: Set<Subscriber> | null, label: string): void {
 }
 
 /**
- * Signal class - reactive primitive that tracks subscribers
+ * Signal class - reactive primitive that tracks subscribers. `W` is what a write takes, which only
+ * differs from `T` for a state's property signal: it takes the plain shape and reads it back wrapped.
  */
-export class Signal<T> {
+export class Signal<T, W = T> {
     protected _value: T
     /**
      * Internal: state.ts notifies these directly when an array it holds mutates in place. Created on
@@ -206,9 +207,11 @@ export class Signal<T> {
         return this._value
     }
 
-    set value(newValue: T) {
-        if (this._value !== newValue) {
-            this._value = newValue
+    set value(newValue: W) {
+        // Only a subclass that wraps what it is given has a `W` other than `T`.
+        const value = newValue as unknown as T
+        if (this._value !== value) {
+            this._value = value
             this.trigger()
         }
     }

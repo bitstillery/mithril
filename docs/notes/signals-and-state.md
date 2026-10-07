@@ -71,6 +71,11 @@ is called.
 - `state.$key` returns the raw signal rather than its value. It exists because a primitive read
   through the proxy is a copy: a child component that has to write back gets `$key`, replacing
   the earlier `[object, 'key']` tuple that needed an adapter.
+- **A whole object or array is replaced through `$key.value`**, which wraps it as `state.key = …`
+  does. The write goes through the signal because a mapped type gives `state.key` one type for read
+  and write, so a plain object can't be assigned to a property that reads as a State; an accessor can
+  have separate ones (`Signal<T, W>`). Making the `$` members optional was rejected: every nested
+  signal read would need a `!`.
 - Date, Map, Set, RegExp, typed arrays and the like are held as plain values, not proxied, so
   mutating one in place notifies nobody; replace it.
 
