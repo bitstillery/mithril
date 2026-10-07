@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.3](https://github.com/bitstillery/mithril/compare/v3.11.2...v3.11.3) (2026-10-07)
+
+### Bug Fixes
+
+- **render:** keep nodes created while hydrating an unmatched root ([5062ab5](https://github.com/bitstillery/mithril/commit/5062ab56a230aefbafd470f72c15950e447b750d))
+- **render:** redraw a signal component in place when it sits inside a plain element ([eb4e001](https://github.com/bitstillery/mithril/commit/eb4e001c62bf41eca0b33a0531a9f195d68d4b7d))
+- **ssr:** serialize Date, Map, Set and shared objects in state output ([793ef68](https://github.com/bitstillery/mithril/commit/793ef68c1791e1218f6f32ae5b39a7783a402198))
+- **ssr:** skip the session cookie without an id and mark it Secure on https ([39296e1](https://github.com/bitstillery/mithril/commit/39296e103585c3d314b1d3eccbf3240498edd1ed))
+- **store:** seed a new tab from the saved tier and type the tab template flat ([bdf1e52](https://github.com/bitstillery/mithril/commit/bdf1e5243cecdd2e6ccf873838b87193734a98fe))
+
+### Code Refactoring
+
+- remove dead hydration override and setupComputedProperties ([dc7f3d3](https://github.com/bitstillery/mithril/commit/dc7f3d3e86a53f78a62cf433004bd33c0a758355))
+
+### Tests
+
+- align the new redraw and store tests with the typed helpers ([e6ab6ec](https://github.com/bitstillery/mithril/commit/e6ab6ec61cec77c2029789cdf1f6931db9386a5c))
+- **state:** type-check the signal, state and store tests ([4856dad](https://github.com/bitstillery/mithril/commit/4856dada46be7206a88f00c295e3ca73690de5bf))
+- type-check helper, render, router, util and ssr tests ([08909c5](https://github.com/bitstillery/mithril/commit/08909c54072830bade28fc86d9bcad6c3d8440fa))
+
 ### [3.11.2](https://github.com/bitstillery/mithril/compare/v3.11.1...v3.11.2) (2026-10-07)
 
 ### Code Refactoring
