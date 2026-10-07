@@ -10,6 +10,13 @@ import fragment from './fragment'
 import type {ComponentType, Children, RenderChildren, RenderVnode, Vnode as VnodeType} from './vnode'
 import type {FragmentAttrs} from '../jsx.d.ts'
 
+/**
+ * A component's attrs as `m()` takes them: with the `key` Mithril reads off them itself, so a component
+ * needn't declare it. The bare `Attrs` keeps them inferable from the object passed, for a component typed
+ * without attrs.
+ */
+type ComponentAttrs<Attrs> = Attrs | (Attrs & {key?: string | number | null | undefined})
+
 export interface Hyperscript {
     (selector: string, ...children: Children[]): VnodeType
     (selector: string, attrs: object, ...children: Children[]): VnodeType
@@ -17,7 +24,7 @@ export interface Hyperscript {
     <Attrs, State>(component: string | ComponentType<Attrs, State>, ...children: Children[]): VnodeType<Attrs, State>
     <Attrs, State>(
         component: string | ComponentType<Attrs, State>,
-        attrs: Attrs,
+        attrs: ComponentAttrs<Attrs>,
         ...children: Children[]
     ): VnodeType<Attrs, State>
     trust(html: string): VnodeType

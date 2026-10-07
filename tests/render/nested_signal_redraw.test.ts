@@ -16,14 +16,11 @@ interface RowState {
     row: Row
 }
 
-// `m(Component, attrs)` does not type `key` for a component's attrs, so the attrs declare it.
 interface CellAttrs {
-    key?: string
     text?: string
 }
 
 interface RowAttrs {
-    key?: string
     rowState: RowState
 }
 
