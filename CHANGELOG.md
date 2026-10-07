@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.11.1](https://github.com/bitstillery/mithril/compare/v3.11.0...v3.11.1) (2026-10-07)
+
+### Bug Fixes
+
+- **ssr:** escape < in the serialized state script ([175f26e](https://github.com/bitstillery/mithril/commit/175f26e5ae01246fb39037781e805a602836fef6))
+
+### Performance Improvements
+
+- **ssr:** render synchronously until a component's oninit is async ([2c74fe5](https://github.com/bitstillery/mithril/commit/2c74fe58bc319e1830ede8810eabd613bbf25999))
+- **ssr:** walk a plain state's own keys when serializing it ([01f1337](https://github.com/bitstillery/mithril/commit/01f13371ff2e8cba90bcc42f49cdd3876f70769e))
+
 ## [3.11.0](https://github.com/bitstillery/mithril/compare/v3.10.0...v3.11.0) (2026-10-07)
 
 ### Features
