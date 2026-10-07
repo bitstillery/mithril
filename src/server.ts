@@ -1,0 +1,104 @@
+import hyperscript from './render/hyperscript'
+import {logger} from './log/logger'
+import {version} from './version'
+import {renderToStringFactory} from './ssr/render_to_string'
+
+import routerFactory from './router/router'
+import parseQueryString from './router/querystring/parse'
+import buildQueryString from './router/querystring/build'
+import parsePathname from './router/pathname/parse'
+import buildPathname from './router/pathname/build'
+import Vnode from './render/vnode'
+import censor from './util/censor'
+
+import type {MithrilStatic, Hyperscript} from './index'
+import type {Redraw} from './mount_redraw'
+
+// `process.env.MSI_BUILD_COMMIT` is inlined by the SSR bundle's `define` (see frontend/cli/tasks.ts).
+// It is undefined when running unbundled (e.g. mithril's own tests), hence the fallback.
+const buildCommit = process.env.MSI_BUILD_COMMIT || 'dev'
+logger.debug(`mithril ssr v${version} (commit ${buildCommit})`)
+
+// Create server-side renderer
+const {renderToString, renderToStringSync} = renderToStringFactory()
+
+// Create isomorphic router instance (null window for server, mock mountRedraw)
+const router = routerFactory(null, {
+    mount: () => {
+        throw new Error('m.mount is not available on server. Use m.route.resolve instead.')
+    },
+    redraw: () => {
+        throw new Error('m.redraw is not available on server.')
+    },
+})
+
+// Set prefix to empty string for pathname-based routing (not hash-based)
+router.prefix = ''
+
+// Expose resolve method and Link component for server-side routing
+const routerServer = {
+    resolve: router.resolve.bind(router),
+    Link: router.Link,
+    prefix: router.prefix,
+    get: router.get.bind(router),
+    set: router.set.bind(router),
+    param: router.param.bind(router),
+    get params() {
+        return router.params
+    },
+    link: router.link.bind(router),
+    redirect: router.redirect.bind(router),
+    REDIRECT: router.REDIRECT,
+    SKIP: router.SKIP,
+}
+
+// Server-side Mithril instance
+// The server's m.route resolves routes; it has no client routing call signature.
+type MithrilServer = Omit<MithrilStatic, 'route'> &
+    Hyperscript & {
+        renderToString: typeof renderToString
+        renderToStringSync: typeof renderToStringSync
+        route: typeof routerServer
+    }
+
+const mServer: MithrilServer = function m(this: unknown) {
+    return hyperscript.apply(this, arguments as unknown as Parameters<typeof hyperscript>)
+} as unknown as MithrilServer
+
+mServer.m = hyperscript
+mServer.trust = hyperscript.trust
+mServer.fragment = hyperscript.fragment
+mServer.Fragment = '['
+mServer.renderToString = renderToString
+mServer.renderToStringSync = renderToStringSync
+mServer.route = routerServer
+mServer.parseQueryString = parseQueryString
+mServer.buildQueryString = buildQueryString
+mServer.parsePathname = parsePathname
+mServer.buildPathname = buildPathname
+mServer.vnode = Vnode
+mServer.censor = censor
+
+// Placeholder implementations for server (not used but needed for type compatibility)
+mServer.mount = () => {
+    throw new Error('m.mount is not available on server. Use m.renderToString instead.')
+}
+mServer.render = () => {
+    throw new Error('m.render is not available on server. Use m.renderToString instead.')
+}
+mServer.redraw = Object.assign(
+    () => {
+        throw new Error('m.redraw is not available on server.')
+    },
+    {
+        sync: () => {
+            throw new Error('m.redraw.sync is not available on server.')
+        },
+    },
+)
+
+export default mServer
+
+// Export SSR server utilities
+export * from './ssr/session'
+export * from './ssr/response'

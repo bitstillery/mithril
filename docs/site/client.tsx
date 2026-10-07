@@ -1,5 +1,5 @@
-import m from '../../index'
-import {deserializeAllStates, deserializeStore} from '../../render/ssrState'
+import m from '../../src/index'
+import {deserializeAllStates, deserializeStore} from '../../src/ssr/serialize'
 
 import {getRoutes} from './routes'
 

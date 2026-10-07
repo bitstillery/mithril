@@ -1,4 +1,4 @@
-import {Store} from '../../index'
+import {Store} from '../../src/index'
 
 interface Todo {
     id: number

@@ -1,5 +1,5 @@
-import {MithrilComponent, Vnode} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent, Vnode} from '../../../src/index'
+import m from '../../../src/index'
 import {$s} from '../state'
 
 // Component demonstrating dynamic property assignment

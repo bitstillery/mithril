@@ -1,11 +1,11 @@
-import m from '../../index'
+import m from '../../src/index'
 
 interface DocumentAttrs {
     title?: string
     appHtml: string
 }
 
-import type {Vnode, Component} from '../../index'
+import type {Vnode, Component} from '../../src/index'
 
 export const Document: Component<DocumentAttrs> = {
     view: (vnode: Vnode<DocumentAttrs>) => {

@@ -9,9 +9,9 @@
  */
 import {bench, summary} from 'mitata'
 
-import {clearStateRegistry} from '../../index'
-import {Store} from '../../store'
-import {localStorageMock, sessionStorageMock, setupWindowMock} from '../../test-utils/storage-mock'
+import {clearStateRegistry} from '../../src/index'
+import {Store} from '../../src/state/store'
+import {localStorageMock, sessionStorageMock, setupWindowMock} from '../../tests/helpers/storage_mock'
 
 setupWindowMock()
 clearStateRegistry()

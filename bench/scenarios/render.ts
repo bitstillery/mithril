@@ -2,9 +2,9 @@
  * Render / VDOM benchmarks (create, update, full redraw).
  */
 import {bench, summary} from 'mitata'
-import domMock from '../../test-utils/domMock'
-import renderFactory from '../../render/render'
-import m from '../../index'
+import domMock from '../../tests/helpers/dom_mock'
+import renderFactory from '../../src/render/render'
+import m from '../../src/index'
 
 const $window = domMock()
 const root = $window.document.createElement('div')

@@ -1,4 +1,4 @@
-import m from '../../index'
+import m from '../../src/index'
 
 import {App} from './app'
 

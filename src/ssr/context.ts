@@ -1,0 +1,101 @@
+/**
+ * Request-scoped SSR context using AsyncLocalStorage (Node/Bun).
+ * Each SSR request runs inside runWithContext(); code that needs the current
+ * request's store or state registry calls getSSRContext() and gets that
+ * request's context. No globals, safe under concurrent requests.
+ * In the browser, getSSRContext() returns undefined and runWithContext just runs fn.
+ */
+import type {StateRegistryEntry} from '../state/state'
+import type {Store} from '../state/store'
+
+declare global {
+    // Set by the SSR server (ssr/response.ts): SSR mode for the process, the request URL while one renders.
+    var __SSR_MODE__: boolean | undefined
+    var __SSR_URL__: string | undefined
+}
+
+type StorageLike = {
+    getStore(): SSRAccessContext | undefined
+    run<T>(context: SSRAccessContext, fn: () => T): T
+}
+
+let ssrStorage: StorageLike
+
+try {
+    const {AsyncLocalStorage} = require('node:async_hooks') as {AsyncLocalStorage: new () => StorageLike}
+    ssrStorage = new AsyncLocalStorage()
+} catch {
+    // Browser or environment without node:async_hooks; no request context
+    ssrStorage = {
+        getStore: () => undefined,
+        run: (_context, fn) => fn(),
+    }
+}
+
+/**
+ * Data for a single SSR request. Created per request; only visible to code
+ * that runs inside the same runWithContext() call.
+ */
+export interface SSRAccessContext {
+    store?: Store | undefined
+    /** Per-request state registry for serialization; fresh Map per request. */
+    stateRegistry: Map<string, StateRegistryEntry>
+    sessionId?: string | undefined
+    sessionData?: unknown
+    /** Per-request EventEmitter; prevents event listeners from persisting between requests. */
+    events?: unknown
+    /**
+     * Optional metadata merged into `#__SSR_STATE__` as top-level `__meta` when serializing.
+     * Consumers should strip `__meta` before `deserializeAllStates`. Set during SSR app init.
+     */
+    ssrStateMeta?: Record<string, unknown>
+    /** Per-request watcher cleanup functions; prevents watchers from persisting between requests. */
+    watchers?: Array<() => void>
+}
+
+/**
+ * Returns the current SSR request context, or undefined if we're not inside
+ * a runWithContext() call (e.g. on the client or outside SSR).
+ */
+export function getSSRContext(): SSRAccessContext | undefined {
+    return ssrStorage.getStore()
+}
+
+/**
+ * Runs fn with context as the current SSR context. Used by the server so that
+ * getSSRContext() returns this request's context for the duration of fn.
+ */
+export function runWithContext<T>(context: SSRAccessContext, fn: () => T): T {
+    return ssrStorage.run(context, fn)
+}
+
+/**
+ * Clean up all watchers registered in the current SSR context.
+ * Called automatically at the end of runWithContextAsync, but can be called manually if needed.
+ */
+export function cleanupWatchers(context?: SSRAccessContext): void {
+    const ctx = context || getSSRContext()
+    if (ctx && ctx.watchers && ctx.watchers.length > 0) {
+        ctx.watchers.forEach((unwatch) => {
+            try {
+                unwatch()
+            } catch (e) {
+                console.error('Error cleaning up watcher:', e)
+            }
+        })
+        ctx.watchers.length = 0
+    }
+}
+
+/**
+ * Same as runWithContext but for async functions.
+ * Automatically cleans up watchers at the end of the request.
+ */
+export async function runWithContextAsync<T>(context: SSRAccessContext, fn: () => Promise<T>): Promise<T> {
+    try {
+        return await ssrStorage.run(context, fn)
+    } finally {
+        // Clean up watchers at the end of SSR request
+        cleanupWatchers(context)
+    }
+}

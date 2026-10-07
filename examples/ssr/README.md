@@ -28,9 +28,9 @@ Visit http://localhost:3000 to see the SSR in action.
 - `server.ts` - Bun HTTP server with SSR
 - `index.tsx` - Document component that renders the full HTML structure
 - `components/` - Mithril components
-    - `App.tsx` - Main app component (shared between server and client)
-    - `Home.tsx` - Home page component
-    - `AsyncData.tsx` - Async data fetching example component
+    - `app.tsx` - Main app component (shared between server and client)
+    - `home.tsx` - Home page component
+    - `async_data.tsx` - Async data fetching example component
 - `routes.ts` - Route definitions
 
 ## Testing SSR

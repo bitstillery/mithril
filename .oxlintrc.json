@@ -59,7 +59,7 @@
     },
     "overrides": [
         {
-            "files": ["tests/**", "test-utils/**", "bench/**", "docs/**", "examples/**"],
+            "files": ["tests/**", "bench/**", "docs/**", "examples/**"],
             "rules": {
                 "typescript/no-explicit-any": "off",
                 "typescript/no-unsafe-argument": "off",

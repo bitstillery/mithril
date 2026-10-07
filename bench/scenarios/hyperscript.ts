@@ -2,7 +2,7 @@
  * Hyperscript / vnode creation benchmarks.
  */
 import {bench, summary} from 'mitata'
-import m from '../../index'
+import m from '../../src/index'
 
 bench('hyperscript-create (12 cells)', () => {
     const cells = Array.from({length: 12}, (_, i) => m('td', {key: `cell-${i}`}, `cell-${i}`))

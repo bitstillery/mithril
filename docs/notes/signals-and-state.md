@@ -1,7 +1,15 @@
 ---
 topic: signals-and-state
 triggers:
-    [signal.ts, state.ts, ComputedSignal, allowComputed, deferComputed, 'computed reads undefined', 'component-level redraw']
+    [
+        state/signal.ts,
+        state/state.ts,
+        ComputedSignal,
+        allowComputed,
+        deferComputed,
+        'computed reads undefined',
+        'component-level redraw',
+    ]
 updated: 2026-10-07
 ---
 

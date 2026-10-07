@@ -1,4 +1,4 @@
-import {state} from '../../index'
+import {state} from '../../src/index'
 
 interface Todo {
     id: number

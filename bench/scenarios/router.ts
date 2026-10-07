@@ -2,15 +2,15 @@
  * Router, pathname/querystring helpers and component-level redraw benchmarks.
  */
 import {bench, do_not_optimize} from 'mitata'
-import domMock from '../../test-utils/domMock'
-import renderFactory from '../../render/render'
-import mountRedrawFactory from '../../api/mount-redraw'
-import compileTemplate from '../../pathname/compileTemplate'
-import decodeURIComponentSafe from '../../util/decodeURIComponentSafe'
-import censor from '../../util/censor'
-import m from '../../index'
+import domMock from '../../tests/helpers/dom_mock'
+import renderFactory from '../../src/render/render'
+import mountRedrawFactory from '../../src/mount_redraw'
+import compileTemplate from '../../src/router/pathname/compile_template'
+import decodeURIComponentSafe from '../../src/util/decode_uri_component_safe'
+import censor from '../../src/util/censor'
+import m from '../../src/index'
 
-import type {ComponentVnode} from '../../render/vnode'
+import type {ComponentVnode} from '../../src/render/vnode'
 
 // A route table the size of a mid-sized app: static pages, params, a variadic catch-all last.
 const routes = [

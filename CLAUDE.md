@@ -3,6 +3,9 @@
 This is its own line of Mithril, not a fork that tracks upstream Mithril.js. Change it freely; don't
 weigh changes against upstream compatibility or contribution.
 
+- **Layout:** the library is in `src/` (by area: `render/`, `router/`, `state/`, `ssr/`, `log/`,
+  `util/`), and `tests/` mirrors it. Files are snake_case. Anything consumers import goes through an
+  entry in `package.json` `exports`, never a deep path.
 - **Bun, not Node.** Develop, test and benchmark with Bun, and say "Bun" (or "server-side") in docs
   and comments where you'd otherwise write "Node.js".
 - **Nothing is done until it lints and type-checks:** `bun run lint` (oxfmt, oxlint, `tsc`).

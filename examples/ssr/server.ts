@@ -8,7 +8,7 @@ import {
     shouldHandleBunAssets,
     MemorySessionStore,
     extractSessionId,
-} from '../../server'
+} from '../../src/server'
 
 import htmlTemplate from './public/index.html'
 import {routes} from './routes'

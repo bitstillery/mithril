@@ -23,7 +23,7 @@ structure is the frontmatter:
 ```yaml
 ---
 topic: ssr
-triggers: [server/ssr.ts, deserializeAllStates, 'hydration mismatch'] # when to read this
+triggers: [ssr/response.ts, deserializeAllStates, 'hydration mismatch'] # when to read this
 updated: 2026-10-07
 ---
 ```

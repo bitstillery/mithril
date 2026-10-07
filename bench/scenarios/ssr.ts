@@ -3,17 +3,17 @@
  */
 import {bench} from 'mitata'
 
-import {serializeStore, deserializeStore, serializeAllStates} from '../../render/ssrState'
-import {state, clearStateRegistry, registerState} from '../../state'
+import {serializeStore, deserializeStore, serializeAllStates} from '../../src/ssr/serialize'
+import {state, clearStateRegistry, registerState} from '../../src/state/state'
 
-import type {ComponentVnode} from '../../render/vnode'
+import type {ComponentVnode} from '../../src/render/vnode'
 
 const noop = () => {}
 
 // The server entry logs a banner on import; keep it out of the benchmark output.
 const log = console.log
 console.log = noop
-const {default: mServer, createSSRResponse} = await import('../../server')
+const {default: mServer, createSSRResponse} = await import('../../src/server')
 console.log = log
 
 clearStateRegistry()

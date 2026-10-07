@@ -1,6 +1,6 @@
 ---
 topic: docs-site
-triggers: [docs/site, performance-page.tsx, PerformanceMount, VERSION_AA_TOOLTIP, 'perf demo']
+triggers: [docs/site, performance_page.tsx, PerformanceMount, VERSION_AA_TOOLTIP, 'perf demo']
 updated: 2026-10-07
 ---
 

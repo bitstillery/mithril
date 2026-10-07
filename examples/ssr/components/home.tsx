@@ -1,5 +1,5 @@
-import {MithrilComponent, Vnode} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent, Vnode} from '../../../src/index'
+import m from '../../../src/index'
 
 export class Home extends MithrilComponent {
     view(vnode: Vnode) {

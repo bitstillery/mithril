@@ -2,8 +2,8 @@
  * Signal / targeted redraw benchmarks.
  */
 import {bench} from 'mitata'
-import domMock from '../../test-utils/domMock'
-import m, {state} from '../../index'
+import domMock from '../../tests/helpers/dom_mock'
+import m, {state} from '../../src/index'
 
 const $window = domMock()
 const root = $window.document.createElement('div')

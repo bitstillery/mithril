@@ -1,5 +1,5 @@
-import {MithrilComponent, Vnode, effect} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent, Vnode, effect} from '../../../src/index'
+import m from '../../../src/index'
 import {$s} from '../state'
 
 // Component demonstrating effects

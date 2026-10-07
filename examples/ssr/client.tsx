@@ -1,6 +1,6 @@
-import m from '../../index'
-import {deserializeAllStates} from '../../render/ssrState'
-import {logger} from '../../server/logger'
+import m from '../../src/index'
+import {deserializeAllStates} from '../../src/ssr/serialize'
+import {logger} from '../../src/log/logger'
 
 import {routes} from './routes'
 import {initStore, $store} from './store'

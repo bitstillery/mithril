@@ -1,5 +1,5 @@
-import m from '../../index'
-import {state} from '../../index'
+import m from '../../src/index'
+import {state} from '../../src/index'
 import {Counter} from './components/counter'
 import {TodoList} from './components/todo_list'
 import {UserProfile} from './components/user_profile'

@@ -1,4 +1,4 @@
-export {PerformancePage} from './performance-page'
-export {PerformanceWithoutSignals} from './performance-without-signals'
-export {PerformanceWithSignals} from './performance-with-signals'
+export {PerformancePage} from './performance_page'
+export {PerformanceWithoutSignals} from './performance_without_signals'
+export {PerformanceWithSignals} from './performance_with_signals'
 export type {DbRow, Query, LastSample} from './types'

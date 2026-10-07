@@ -1,5 +1,5 @@
-import {MithrilComponent, Vnode, Signal} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent, Vnode, Signal} from '../../../src/index'
+import m from '../../../src/index'
 import {$s} from '../state'
 
 // Component demonstrating Signal methods: subscribe, watch, peek

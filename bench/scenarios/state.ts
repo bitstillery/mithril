@@ -2,7 +2,7 @@
  * State / proxy benchmarks.
  */
 import {bench, summary} from 'mitata'
-import {state, watch, clearStateRegistry} from '../../index'
+import {state, watch, clearStateRegistry} from '../../src/index'
 
 clearStateRegistry()
 

@@ -1,5 +1,5 @@
-import {MithrilComponent, Vnode, state} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent, Vnode, state} from '../../../src/index'
+import m from '../../../src/index'
 
 // Local state for this component
 const componentState = state(

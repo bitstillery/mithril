@@ -1,12 +1,12 @@
-import m from '../../index'
+import m from '../../src/index'
 
 import {Home} from './components/home'
 import {AsyncData} from './components/async_data'
 import {StoreDemo} from './components/store_demo'
 import {Layout} from './components/layout'
 
-import type {ComponentType, Vnode} from '../../index'
-import type {RouteResolver} from '../../api/router'
+import type {ComponentType, Vnode} from '../../src/index'
+import type {RouteResolver} from '../../src/router/router'
 
 function createRoute(component: ComponentType, routePath: string): RouteResolver {
     return {

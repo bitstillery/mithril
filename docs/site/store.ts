@@ -1,5 +1,5 @@
-import {Store} from '../../index'
-import {deserializeStore} from '../../render/ssrState'
+import {Store} from '../../src/index'
+import {deserializeStore} from '../../src/ssr/serialize'
 import type {DocPage} from './markdown'
 
 export interface NavSection {

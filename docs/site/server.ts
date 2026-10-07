@@ -8,15 +8,15 @@ import {
     shouldHandleBunAssets,
     MemorySessionStore,
     extractSessionId,
-} from '../../server'
-import {copyGlobalStatesToContext} from '../../state'
+} from '../../src/server'
+import {copyGlobalStatesToContext} from '../../src/state/state'
 
 import sourceTemplate from './index.html'
 import builtTemplate from './public/index.html'
 import {getRoutes} from './routes'
 import {loadMarkdownFromDocs} from './markdown'
 import {getNavGuides, getNavMethods, getNavGuidesStructure, getNavMethodsStructure} from './nav'
-import type {SSRAccessContext} from '../../ssrContext'
+import type {SSRAccessContext} from '../../src/ssr/context'
 
 // In dev: use source HTML so Bun can serve client.tsx with HMR. In prod: use built output.
 const isDev = process.env.NODE_ENV !== 'production'

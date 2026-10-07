@@ -2,11 +2,11 @@
 topic: ssr
 triggers:
     [
-        server.ts,
-        server/ssr.ts,
-        ssrContext.ts,
-        render/renderToString.ts,
-        render/ssrState.ts,
+        src/server.ts,
+        ssr/response.ts,
+        ssr/context.ts,
+        ssr/render_to_string.ts,
+        ssr/serialize.ts,
         createSSRResponse,
         route.resolve,
         route.redirect,
@@ -20,7 +20,7 @@ updated: 2026-10-07
 
 # Server rendering and hydration
 
-SSR is Bun-only by choice: `server/ssr.ts` uses Bun types and serving helpers, and a
+SSR is Bun-only by choice: `ssr/response.ts` uses Bun types and serving helpers, and a
 runtime-neutral layer was judged not worth it while Bun is required anyway. The helpers stop short
 of a framework (routes, context setup and the template stay with the app), which was rejected as
 taking away too much flexibility. Related: [signals-and-state.md](signals-and-state.md) (computeds
@@ -68,7 +68,7 @@ and any module-level state.
 `render()` treats a root as hydrating when it has element children and no vnodes, so SSR output
 with only text under the root is cleared and re-rendered. The client tree must mirror the server
 tree vnode for vnode: an extra fragment at the route root, for instance, leaves a blank root (see
-`RouterRoot` in `api/router.ts`).
+`RouterRoot` in `router/router.ts`).
 
 Matching is positional below the root: a tag mismatch creates a fresh element at that spot and
 unclaimed leftovers are removed, so the client vdom wins node by node. The earlier content

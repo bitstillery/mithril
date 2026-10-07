@@ -29,7 +29,7 @@ if (!result.success) {
 }
 
 // Build preview bundle for sandbox iframe (m + html exposed to global)
-const previewRunner = join(import.meta.dir, 'preview-runner.ts')
+const previewRunner = join(import.meta.dir, 'preview_runner.ts')
 const previewResult = await build({
     entrypoints: [previewRunner],
     outdir: publicDir,

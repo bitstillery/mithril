@@ -1,6 +1,6 @@
 /// <reference types="bun-types" />
 
-import type {Vnode} from '../../render/vnode'
+import type {Vnode} from '../../src/render/vnode'
 
 declare global {
     namespace JSX {

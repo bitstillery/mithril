@@ -28,16 +28,16 @@ switch (topic) {
         await import('./scenarios/state')
         break
     case 'state-tree':
-        await import('./scenarios/state-tree')
+        await import('./scenarios/state_tree')
         break
     case 'store':
         await import('./scenarios/store')
         break
     case 'store-hot-path':
-        await import('./scenarios/store-hot-path')
+        await import('./scenarios/store_hot_path')
         break
     case 'vnode-alloc':
-        await import('./scenarios/vnode-alloc')
+        await import('./scenarios/vnode_alloc')
         break
     case undefined:
     case '':
@@ -47,10 +47,10 @@ switch (topic) {
         await import('./scenarios/signal')
         await import('./scenarios/ssr')
         await import('./scenarios/state')
-        await import('./scenarios/state-tree')
+        await import('./scenarios/state_tree')
         await import('./scenarios/store')
-        await import('./scenarios/store-hot-path')
-        await import('./scenarios/vnode-alloc')
+        await import('./scenarios/store_hot_path')
+        await import('./scenarios/vnode_alloc')
         break
     default:
         console.error(`Unknown topic: ${topic}`)

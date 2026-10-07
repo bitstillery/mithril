@@ -1,7 +1,7 @@
 import tippy from 'tippy.js'
-import {MithrilComponent} from '../../../index'
-import type {Vnode} from '../../../index'
-import m from '../../../index'
+import {MithrilComponent} from '../../../src/index'
+import type {Vnode} from '../../../src/index'
+import m from '../../../src/index'
 
 import 'tippy.js/dist/tippy.css'
 

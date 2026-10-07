@@ -9,35 +9,33 @@
         "url": "git+https://github.com/bitstillery/mithril.git"
     },
     "files": [
-        "*.ts",
-        "*.d.ts",
-        "ssrContext.ts",
-        "signal.ts",
-        "store.ts",
-        "api/*.ts",
-        "pathname/*.ts",
-        "querystring/*.ts",
-        "render/*.ts",
-        "server/*.ts",
-        "util/*.ts",
+        "src",
         "LICENSE",
         "README.md"
     ],
     "type": "module",
-    "main": "./index.ts",
-    "module": "./index.ts",
+    "main": "./src/index.ts",
+    "module": "./src/index.ts",
     "exports": {
         ".": {
-            "import": "./index.ts",
-            "default": "./index.ts"
+            "import": "./src/index.ts",
+            "default": "./src/index.ts"
         },
         "./server": {
-            "import": "./server.ts",
-            "default": "./server.ts"
+            "import": "./src/server.ts",
+            "default": "./src/server.ts"
         },
         "./htm": {
-            "import": "./htm.ts",
-            "default": "./htm.ts"
+            "import": "./src/htm.ts",
+            "default": "./src/htm.ts"
+        },
+        "./router": {
+            "import": "./src/router/index.ts",
+            "default": "./src/router/index.ts"
+        },
+        "./ssr-context": {
+            "import": "./src/ssr/context.ts",
+            "default": "./src/ssr/context.ts"
         }
     },
     "publishConfig": {

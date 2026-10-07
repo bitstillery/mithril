@@ -1,5 +1,5 @@
-import {Store} from '../../index'
-import {registerState, getRegisteredStates} from '../../state'
+import {Store} from '../../src/index'
+import {registerState, getRegisteredStates} from '../../src/state/state'
 
 // Define the application state interface
 interface AppState {

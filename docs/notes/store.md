@@ -1,6 +1,6 @@
 ---
 topic: store
-triggers: [store.ts, Store, server/session.ts, skipStates, '/api/session', 'cookie tier', 'lookup TTL']
+triggers: [state/store.ts, Store, ssr/session.ts, skipStates, '/api/session', 'cookie tier', 'lookup TTL']
 updated: 2026-10-07
 ---
 
@@ -47,7 +47,7 @@ app parses the request cookie itself and passes the values as the `cookie` templ
 the cookie tier last, so it wins. Browsers cap a cookie at about 4 KB and it ships on every request,
 which is why writes over `MAX_COOKIE_BYTES` are skipped with a warning, not truncated.
 
-`save()` does nothing in an SSR process: `__SSR_MODE__` is set as soon as `server/ssr.ts` is
+`save()` does nothing in an SSR process: `__SSR_MODE__` is set as soon as `ssr/response.ts` is
 imported, not per request.
 
 ## SSR registration

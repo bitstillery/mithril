@@ -1,7 +1,7 @@
-import m from '../../index'
-import {DocLoader} from './components/doc-loader'
-import type {ComponentType, Vnode} from '../../index'
-import type {RouteResolver} from '../../api/router'
+import m from '../../src/index'
+import {DocLoader} from './components/doc_loader'
+import type {ComponentType, Vnode} from '../../src/index'
+import type {RouteResolver} from '../../src/router/router'
 
 // Map of route paths to markdown file names (extensionless for clean client-side routing)
 const routeMap: Record<string, string> = {
