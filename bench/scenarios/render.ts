@@ -7,7 +7,7 @@ import renderFactory from '../../src/render/render'
 import m from '../../src/index'
 
 const $window = domMock()
-const root = $window.document.createElement('div')
+const root = $window.document.createElement('div') as unknown as Element
 const render = renderFactory()
 
 bench('render-create (100 divs)', () => {
@@ -81,7 +81,7 @@ const UnchangedTable = {
             ),
         ),
 }
-const unchangedRoot = $window.document.createElement('div')
+const unchangedRoot = $window.document.createElement('div') as unknown as Element
 render(unchangedRoot, m(UnchangedTable))
 bench('redraw-unchanged (20x10 table with attrs)', () => {
     render(unchangedRoot, m(UnchangedTable))

@@ -1,8 +1,9 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {state, clearStateRegistry, getRegisteredStates} from '../../src/state/state'
 import {serializeStore, deserializeStore, serializeAllStates, deserializeAllStates} from '../../src/ssr/serialize'
+
+import type {StateInternals} from '../../src/state/state'
 
 describe('SSR State Serialization', () => {
     let originalConsoleError: typeof console.error
@@ -189,7 +190,7 @@ describe('SSR State Serialization', () => {
         })
 
         test('serializeStore handles circular references', () => {
-            const myState = state(
+            const myState = state<{name: string; ref?: unknown}>(
                 {
                     name: 'test',
                 },
@@ -229,7 +230,7 @@ describe('SSR State Serialization', () => {
         })
 
         test('deserializeStore creates new signals for properties that did not exist', () => {
-            const myState = state(
+            const myState = state<{count: number; newProp?: string}>(
                 {
                     count: 0,
                 },
@@ -375,7 +376,7 @@ describe('SSR State Serialization', () => {
             // Create a bad state that will cause serialization to fail
             const badState = state({count: 2}, 'badState')
             // Corrupt the state's signalMap
-            badState.__signalMap = null
+            ;(badState as StateInternals).__signalMap = null
 
             const allStates = serializeAllStates()
 
@@ -421,7 +422,7 @@ describe('SSR State Serialization', () => {
             const goodState = state({count: 0}, 'goodState')
             const badState = state({count: 0}, 'badState')
             // Corrupt the bad state's signalMap
-            badState.__signalMap = null
+            ;(badState as StateInternals).__signalMap = null
 
             const serialized = {
                 goodState: {count: 42},
@@ -457,7 +458,7 @@ describe('SSR State Serialization', () => {
 
             // Simulate client-side: create fresh state with same name
             clearStateRegistry()
-            const clientState = state(
+            const clientState = state<{loading: boolean; data: string | undefined}>(
                 {
                     loading: true,
                     data: undefined,

@@ -1,11 +1,12 @@
-// @ts-nocheck
 // Pins parsePathname and compileTemplate, so faster route matching can't drift from them.
 import {describe, test, expect} from 'bun:test'
 
 import parsePathname from '../../../src/router/pathname/parse'
 import compileTemplate from '../../../src/router/pathname/compile_template'
 
-const parseCases: Array<[string, unknown]> = [
+import type {RouteParams} from '../../../src/router/querystring/parse'
+
+const parseCases: Array<[string, {path: string; params: RouteParams}]> = [
     ['', {path: '/', params: {}}],
     ['a', {path: '/a', params: {}}],
     ['/a', {path: '/a', params: {}}],
@@ -23,7 +24,7 @@ const parseCases: Array<[string, unknown]> = [
 ]
 
 // [template, url, matches, params after the check]
-const matchCases: Array<[string, string, boolean, unknown]> = [
+const matchCases: Array<[string, string, boolean, RouteParams]> = [
     ['/', '/', true, {}],
     ['/', '/a', false, {}],
     ['/', '', true, {}],

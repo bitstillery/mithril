@@ -1,12 +1,17 @@
-// @ts-nocheck
 import pushStateMock from './push_state_mock'
 import domMock from './dom_mock'
 
+import type {PushStateWindow} from './push_state_mock'
+import type {MockWindow} from './dom_mock'
+
 interface BrowserMockOptions {
-    window?: any
+    /** Receives the window the mock builds. */
+    window?: object
 }
 
-export default function browserMock(env?: BrowserMockOptions) {
+export type BrowserMockWindow = MockWindow & PushStateWindow
+
+export default function browserMock(env?: BrowserMockOptions): BrowserMockWindow {
     env = env || {}
     const $window: any = (env.window = {})
 
@@ -16,5 +21,5 @@ export default function browserMock(env?: BrowserMockOptions) {
     }
     pushStateMock({window: $window})
 
-    return $window
+    return $window as BrowserMockWindow
 }

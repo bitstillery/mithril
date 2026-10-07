@@ -1,14 +1,23 @@
-// @ts-nocheck
-export interface ParsedURL {
-    protocol?: string
-    hostname?: string
-    port?: string
+/** The location a relative URL is resolved against. */
+export interface URLRoot {
+    protocol: string
+    hostname: string
+    port: string
     pathname: string
+}
+
+export interface ParsedURL {
+    protocol: string
+    hostname: string
+    port: string
+    /** Absent for a URL that is only a query and/or hash, which keeps the current pathname. */
+    pathname?: string
     search: string
     hash: string
 }
 
-export default function parseURL(url: string, root: ParsedURL): ParsedURL {
+/** `root` may be omitted only for a full URL (one with a protocol). */
+export default function parseURL(url: string, root?: URLRoot): ParsedURL {
     const data: ParsedURL = {} as ParsedURL
     const protocolIndex = url.indexOf('://')
     let pathnameIndex = protocolIndex > -1 ? url.indexOf('/', protocolIndex + 3) : url.indexOf('/')
@@ -35,6 +44,7 @@ export default function parseURL(url: string, root: ParsedURL): ParsedURL {
         data.port = url.slice(portIndex + 1, pathnameIndex)
         data.pathname = url.slice(pathnameIndex, pathnameEnd) || '/'
     } else {
+        if (root == null) throw new Error('parseURL needs a root to resolve a relative URL')
         data.protocol = root.protocol
         data.hostname = root.hostname
         data.port = root.port

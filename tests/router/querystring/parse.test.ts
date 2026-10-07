@@ -1,10 +1,11 @@
-// @ts-nocheck
 // Pins parseQueryString's output, quirks included, so a faster parser can't drift from it.
 import {describe, test, expect} from 'bun:test'
 
 import parseQueryString from '../../../src/router/querystring/parse'
 
-const cases: Array<[string, unknown]> = [
+import type {RouteParams} from '../../../src/router/querystring/parse'
+
+const cases: Array<[string, RouteParams]> = [
     ['', {}],
     ['?', {'0': ''}],
     ['?a=1', {a: '1'}],

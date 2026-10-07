@@ -6,7 +6,7 @@ import domMock from '../../tests/helpers/dom_mock'
 import m, {state} from '../../src/index'
 
 const $window = domMock()
-const root = $window.document.createElement('div')
+const root = $window.document.createElement('div') as unknown as Element
 
 const CounterComponent = {
     view(vnode: any) {

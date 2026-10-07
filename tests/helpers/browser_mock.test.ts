@@ -1,12 +1,13 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import browserMock from './browser_mock'
 import callAsync from './call_async'
 import {spy} from './test_helpers'
 
+import type {BrowserMockWindow} from './browser_mock'
+
 describe('browserMock', () => {
-    let $window: any
+    let $window: BrowserMockWindow
     beforeEach(() => {
         $window = browserMock()
     })
@@ -20,7 +21,7 @@ describe('browserMock', () => {
         $window.location.hash = '#a'
 
         callAsync(function () {
-            expect($window.onhashchange.callCount).toBe(1)
+            expect(($window.onhashchange as ReturnType<typeof spy>).callCount).toBe(1)
             done()
         } as any)
     })
@@ -29,12 +30,12 @@ describe('browserMock', () => {
         $window.history.pushState(null, null, '#a')
         $window.history.back()
 
-        expect($window.onpopstate.callCount).toBe(1)
+        expect(($window.onpopstate as ReturnType<typeof spy>).callCount).toBe(1)
     })
     test('$window.onunload can be reached from the pushStateMock functions', () => {
         $window.onunload = spy()
         $window.location.href = '/a'
 
-        expect($window.onunload.callCount).toBe(1)
+        expect(($window.onunload as ReturnType<typeof spy>).callCount).toBe(1)
     })
 })

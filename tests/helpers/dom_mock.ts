@@ -1,4 +1,3 @@
-// @ts-nocheck
 /*
 Known limitations:
 - the innerHTML setter and the DOMParser only support a small subset of the true HTML/XML syntax.
@@ -12,12 +11,120 @@ options:
 - spy:(f: Function) => Function
 */
 
-interface DomMockOptions {
+export interface DomMockOptions {
     spy?: <T extends (...args: any[]) => any>(f: T) => T
 }
 
-export default function domMock(options?: DomMockOptions) {
-    options = options || {}
+export interface MockAttr {
+    namespaceURI: string | null
+    get value(): string
+    set value(value: unknown)
+    get nodeValue(): string
+    set nodeValue(value: unknown)
+}
+
+export type MockListener = ((this: MockNode, e: MockEvent) => unknown) | {handleEvent(e: MockEvent): unknown}
+
+interface MockListeners {
+    handlers: MockListener[]
+    options: Array<{capture: boolean}>
+}
+
+export interface MockEvent {
+    type: string
+    eventPhase: number
+    target?: MockNode
+    currentTarget?: MockNode
+    readonly defaultPrevented?: boolean
+    initEvent(type: string, bubbles?: boolean, cancelable?: boolean): void
+    preventDefault?(): void
+    stopPropagation?(): void
+    stopImmediatePropagation?(): void
+}
+
+/** What every node kind shares; per-tag members (`value`, `checked`, `href`, `on*` handlers, …) go through the index signature. */
+export interface MockNode {
+    nodeType: number
+    nodeName: string
+    parentNode: MockNode | null
+    childNodes: MockNode[]
+    readonly firstChild: MockNode | null
+    [member: string]: any
+}
+
+export interface MockStyle {
+    cssText: string
+    getPropertyValue(key: string): string
+    removeProperty(key: string): void
+    setProperty(key: string, value: unknown): void
+    [property: string]: any
+}
+
+export interface MockElement extends MockNode {
+    namespaceURI: string
+    attributes: Record<string, MockAttr>
+    ownerDocument: MockDocument
+    readonly nextSibling: MockNode | null
+    get style(): MockStyle
+    set style(value: string)
+    className: string
+    textContent: unknown
+    innerHTML: string
+    appendChild(child: MockNode): void
+    removeChild(child: MockNode): void
+    insertBefore(child: MockNode, reference: MockNode | null): void
+    hasAttribute(name: string): boolean
+    getAttribute(name: string): string | null
+    setAttribute(name: string, value: unknown): void
+    setAttributeNS(ns: string, name: string, value: unknown): void
+    removeAttribute(name: string): void
+    contains(child: MockNode | null): boolean
+    focus(): void
+    addEventListener(type: string, handler: MockListener, useCapture?: boolean): void
+    removeEventListener(type: string, handler: MockListener, useCapture?: boolean): void
+    dispatchEvent(e: MockEvent): void
+    _events: Record<string, MockListeners>
+}
+
+export interface MockText extends MockNode {
+    get nodeValue(): string
+    set nodeValue(value: unknown)
+    readonly nextSibling: MockNode | null
+}
+
+export interface MockFragment extends MockNode {
+    ownerDocument: MockDocument
+    appendChild(child: MockNode): void
+    insertBefore(child: MockNode, reference: MockNode | null): void
+    removeChild(child: MockNode): void
+}
+
+export interface MockDocument {
+    createElement(tag: string): MockElement
+    createElementNS(ns: string, tag: string): MockElement
+    createTextNode(text: unknown): MockText
+    createDocumentFragment(): MockFragment
+    createEvent(kind?: string): MockEvent
+    readonly activeElement: MockElement
+    defaultView: MockWindow
+    documentElement: MockElement
+    body: MockElement
+}
+
+export interface MockDOMParser {
+    parseFromString(src: string, mime: string): {documentElement: MockElement}
+}
+
+export interface MockWindow {
+    DOMParser: new () => MockDOMParser
+    requestAnimationFrame(callback: () => void): ReturnType<typeof setTimeout>
+    document: MockDocument
+    /** Only present when `domMock` was given a `spy`. */
+    __getSpies?: (element: MockNode) => Record<string, (...args: any[]) => any> | undefined
+}
+
+export default function domMock(domMockOptions?: DomMockOptions): MockWindow {
+    const options = domMockOptions || {}
     const spy =
         options.spy ||
         function <T extends (...args: any[]) => any>(f: T): T {
@@ -57,7 +164,7 @@ export default function domMock(options?: DomMockOptions) {
     const hasOwn = {}.hasOwnProperty
 
     function registerSpies(element: any, spies: Record<string, any>) {
-        if (options?.spy) {
+        if (options.spy) {
             const i = spymap.indexOf(element)
             if (i === -1) {
                 spymap.push(element, spies)
@@ -259,7 +366,7 @@ export default function domMock(options?: DomMockOptions) {
             if (match[0] === ';') indices.push(match.index)
         }
         for (let i = indices.length; i--; ) {
-            res.unshift(declList.slice(indices[i] + 1))
+            res.unshift(declList.slice(indices[i]! + 1))
             declList = declList.slice(0, indices[i])
         }
         res.unshift(declList)
@@ -304,14 +411,14 @@ export default function domMock(options?: DomMockOptions) {
         if (mime !== 'image/svg+xml') throw new Error('The DOMParser mock only supports the "image/svg+xml" MIME type')
         const match = src.match(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg">(.*)<\/svg>$/)
         if (!match) throw new Error('Please provide a bare SVG tag with the xmlns as only attribute')
-        const value = match[1]
+        const value = match[1]!
         const root = $window.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
         parseMarkup(value, root, [], 'http://www.w3.org/2000/svg')
         return {documentElement: root}
     }
     function camelCase(string: string): string {
         return string.replace(/-\D/g, function (match) {
-            return match[1].toUpperCase()
+            return match[1]!.toUpperCase()
         })
     }
     let activeElement: any
@@ -327,7 +434,7 @@ export default function domMock(options?: DomMockOptions) {
             }, delay - elapsed)
         },
         document: {
-            createElement: function (tag: string) {
+            createElement: function (tag: string): MockElement {
                 let cssText = ''
                 const style: Record<string, any> = {}
                 Object.defineProperties(style, {
@@ -341,7 +448,7 @@ export default function domMock(options?: DomMockOptions) {
                                 for (const key in style) style[key] = ''
                                 const rules = splitDeclList(value)
                                 for (let i = 0; i < rules.length; i++) {
-                                    const rule = rules[i]
+                                    const rule = rules[i]!
                                     const colonIndex = rule.indexOf(':')
                                     if (colonIndex > -1) {
                                         const rawKey = rule.slice(0, colonIndex).trim()
@@ -436,7 +543,7 @@ export default function domMock(options?: DomMockOptions) {
                         let root: any,
                             ns: string | null = null
                         if (match) {
-                            const innerValue = match[1]
+                            const innerValue = match[1]!
                             root = $window.document.createElementNS('http://www.w3.org/2000/svg', 'svg')
                             ns = 'http://www.w3.org/2000/svg'
                             appendChild.call(this, root)
@@ -477,7 +584,7 @@ export default function domMock(options?: DomMockOptions) {
                         else {
                             let found = false
                             for (let i = 0; i < events[type].handlers.length; i++) {
-                                if (events[type].handlers[i] === handler && events[type].options[i].capture === opts.capture) {
+                                if (events[type].handlers[i] === handler && events[type].options[i]!.capture === opts.capture) {
                                     found = true
                                     break
                                 }
@@ -500,7 +607,7 @@ export default function domMock(options?: DomMockOptions) {
                         }
                         if (events[type] != null) {
                             for (let i = 0; i < events[type].handlers.length; i++) {
-                                if (events[type].handlers[i] === handler && events[type].options[i].capture === opts.capture) {
+                                if (events[type].handlers[i] === handler && events[type].options[i]!.capture === opts.capture) {
                                     events[type].handlers.splice(i, 1)
                                     events[type].options.splice(i, 1)
                                     break
@@ -809,13 +916,13 @@ export default function domMock(options?: DomMockOptions) {
                 }
                 return element
             },
-            createElementNS: function (ns: string, tag: string, is?: any) {
-                const element = this.createElement(tag, is)
+            createElementNS: function (ns: string, tag: string): MockElement {
+                const element = this.createElement(tag)
                 element.nodeName = tag
                 element.namespaceURI = ns
                 return element
             },
-            createTextNode: function (text: any) {
+            createTextNode: function (text: unknown): MockText {
                 let nodeValue = '' + text
                 return {
                     nodeType: 3,
@@ -841,7 +948,7 @@ export default function domMock(options?: DomMockOptions) {
                     },
                 }
             },
-            createDocumentFragment: function () {
+            createDocumentFragment: function (): MockFragment {
                 return {
                     ownerDocument: $window.document,
                     nodeType: 11,
@@ -856,13 +963,13 @@ export default function domMock(options?: DomMockOptions) {
                     },
                 }
             },
-            createEvent: function () {
+            createEvent: function (): MockEvent {
                 return {
                     eventPhase: 0,
                     initEvent: function (type: string) {
                         this.type = type
                     },
-                }
+                } as MockEvent
             },
             get activeElement() {
                 return activeElement
@@ -878,5 +985,5 @@ export default function domMock(options?: DomMockOptions) {
 
     if (options.spy) $window.__getSpies = getSpies
 
-    return $window
+    return $window as MockWindow
 }

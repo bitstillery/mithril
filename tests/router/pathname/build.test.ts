@@ -1,10 +1,9 @@
-// @ts-nocheck
 // Pins buildPathname's output, quirks included, so a faster builder can't drift from it.
 import {describe, test, expect} from 'bun:test'
 
 import buildPathname from '../../../src/router/pathname/build'
 
-const cases: Array<[string, string, unknown, string]> = [
+const cases: Array<[string, string, object | null, string]> = [
     ['/a', '{}', {}, '/a'],
     ['/a/:id', '{id: 1}', {id: 1}, '/a/1'],
     ['/a/:id', "{id: 'x y/z'}", {id: 'x y/z'}, '/a/x%20y%2Fz'],
@@ -47,11 +46,13 @@ const cases: Array<[string, string, unknown, string]> = [
 describe('buildPathname', () => {
     for (const [template, name, params, expected] of cases) {
         test(`${JSON.stringify(template)} with ${name}`, () => {
+            // @ts-expect-error - one row passes null params on purpose
             expect(buildPathname(template, params)).toBe(expected)
         })
     }
     test('adjacent parameters throw', () => {
         expect(() => buildPathname('/a:b:c', {})).toThrow(SyntaxError)
+        // @ts-expect-error - null params must not mask the template error
         expect(() => buildPathname('/a:b:c', null)).toThrow(SyntaxError)
     })
     test('leaves params untouched', () => {

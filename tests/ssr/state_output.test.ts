@@ -1,8 +1,9 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import {state, clearStateRegistry, registerState} from '../../src/state/state'
 import {serializeStore, deserializeStore, serializeAllStates} from '../../src/ssr/serialize'
+
+import type {StateInternals} from '../../src/state/state'
 
 // Pins the exact serialized form (keys, order, dropped and nulled values), so optimizations of the
 // serializer can't change the `__SSR_STATE__` payload.
@@ -35,12 +36,14 @@ describe('SSR state serialization output', () => {
             },
             $raw: 'dollar',
         })
-        s.lookup['/p'] = {t: 1}
-        s.added = {z: [1]}
-        s.user.extra = 'dropped: not an original key of a non-empty nested state'
-        s.shared1 = {k: 1}
-        s.shared2 = s.shared1
-        s.self = s
+        // Keys added after creation, which the state's inferred type doesn't know about.
+        const loose: Record<string, any> = s
+        loose.lookup['/p'] = {t: 1}
+        loose.added = {z: [1]}
+        loose.user.extra = 'dropped: not an original key of a non-empty nested state'
+        loose.shared1 = {k: 1}
+        loose.shared2 = loose.shared1
+        loose.self = s
         return s
     }
 
@@ -78,7 +81,7 @@ describe('SSR state serialization output', () => {
     })
 
     test('serializes state arrays after mutation', () => {
-        const s = state({items: [{a: 1}, {a: 2}]})
+        const s = state<{items: unknown[]}>({items: [{a: 1}, {a: 2}]})
         s.items.push({a: 3})
         s.items[0] = {a: 0, b: [1]}
         s.items.splice(1, 0, 'str', 7)
@@ -87,7 +90,9 @@ describe('SSR state serialization output', () => {
 
     test('serializes plain objects held as values without their inherited keys', () => {
         class Point {
-            constructor(x, y) {
+            x: number
+            y: number
+            constructor(x: number, y: number) {
                 this.x = x
                 this.y = y
             }
@@ -97,7 +102,7 @@ describe('SSR state serialization output', () => {
         }
         const plain = Object.create({inherited: 1})
         plain.own = 2
-        const s = state({point: null, plain: null})
+        const s = state<{point: Point | null; plain: object | null}>({point: null, plain: null})
         // Assigned through a raw signal, so they stay plain values instead of becoming nested state.
         s.$point.value = new Point(1, 2)
         s.$plain.value = plain
@@ -113,7 +118,7 @@ describe('SSR state serialization output', () => {
             },
         })
         const broken = state({x: 1})
-        broken.__signalMap = null
+        ;(broken as StateInternals).__signalMap = null
         registerState('one', one, {})
         registerState('broken', broken, {})
         registerState('two', two, {})
@@ -146,6 +151,6 @@ describe('SSR state serialization output', () => {
         )
         expect(target.total).toBe(10)
         expect(target.user.$name.value).toBe('A')
-        expect(target.list[3].$id.value).toBe(1)
+        expect((target as Record<string, any>).list[3].$id.value).toBe(1)
     })
 })

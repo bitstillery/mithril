@@ -113,7 +113,7 @@ bench('censor (Link attrs with extras)', () => {
 // A nav bar redrawn with unchanged output: Link.view, buildPathname and the attr diff every time.
 const $window = domMock()
 const render = renderFactory()
-const navRoot = $window.document.createElement('div')
+const navRoot = $window.document.createElement('div') as unknown as Element
 const Nav = {
     view: () =>
         m(
@@ -135,7 +135,7 @@ const ParamNav = {
             ),
         ),
 }
-const paramNavRoot = $window.document.createElement('div')
+const paramNavRoot = $window.document.createElement('div') as unknown as Element
 render(paramNavRoot, m(ParamNav))
 bench('redraw nav (20 m.route.Link with params, unchanged)', () => {
     render(paramNavRoot, m(ParamNav))
@@ -143,7 +143,7 @@ bench('redraw nav (20 m.route.Link with params, unchanged)', () => {
 
 // Component-level redraws, as signals request them: one mounted component, and a few among siblings.
 const mountRedraw = mountRedrawFactory(renderFactory(), (fn) => setTimeout(fn), console)
-const mountRoot = $window.document.createElement('div')
+const mountRoot = $window.document.createElement('div') as unknown as Element
 let mountedText = 0
 const Mounted = {view: () => m('div.counter', m('span', 'count'), m('b', mountedText))}
 mountRedraw.mount(mountRoot, Mounted)
@@ -152,7 +152,7 @@ bench('redraw(component) of an m.mount component', () => {
     mountRedraw.redraw(Mounted)
 })
 
-const siblingRoot = $window.document.createElement('div')
+const siblingRoot = $window.document.createElement('div') as unknown as Element
 const siblingStates: object[] = []
 let siblingTick = 0
 const Sibling = {

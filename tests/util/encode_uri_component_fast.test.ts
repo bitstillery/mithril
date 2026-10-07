@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import encodeURIComponentFast from '../../src/util/encode_uri_component_fast'
@@ -7,7 +6,7 @@ function outcome(fn: () => string): string {
     try {
         return 'ok:' + fn()
     } catch (e) {
-        return 'throws:' + e.name
+        return 'throws:' + (e as Error).name
     }
 }
 
@@ -46,6 +45,7 @@ describe('encodeURIComponentFast', () => {
             function () {},
         ]
         for (const value of values) {
+            // @ts-expect-error - the built-in gets the same non-strings on purpose, as the reference
             expect(outcome(() => encodeURIComponentFast(value))).toBe(outcome(() => encodeURIComponent(value)))
         }
     })

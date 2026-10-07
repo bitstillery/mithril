@@ -1,4 +1,3 @@
-// @ts-nocheck
 // Helper to provide ospec-like spy functionality for Bun test
 import {mock} from 'bun:test'
 import {setupWindowMock} from './storage_mock'
@@ -10,7 +9,7 @@ setupWindowMock()
 
 export function spy<T extends (...args: any[]) => any>(fn?: T): T & {callCount: number; this: any; args: any[]} {
     const spyFn = mock(fn || ((() => {}) as T))
-    const wrappedSpy = function (this: any, ...args: any[]) {
+    const wrappedSpy = function (this: any, ...args: Parameters<T>) {
         return spyFn.apply(this, args)
     } as T & {callCount: number; this: any; args: any[]}
 

@@ -1,10 +1,9 @@
-// @ts-nocheck
 // Pins buildQueryString's output so a faster builder can't drift from it.
 import {describe, test, expect} from 'bun:test'
 
 import buildQueryString from '../../../src/router/querystring/build'
 
-const cases: Array<[string, unknown, string]> = [
+const cases: Array<[string, object | string | null, string]> = [
     ['{}', {}, ''],
     ['{a: 1}', {a: 1}, 'a=1'],
     ["{a: 'b c', 'd e': 'f'}", {a: 'b c', 'd e': 'f'}, 'a=b%20c&d%20e=f'],
@@ -43,6 +42,7 @@ const cases: Array<[string, unknown, string]> = [
 describe('buildQueryString', () => {
     for (const [name, input, expected] of cases) {
         test(name, () => {
+            // @ts-expect-error - some rows pass a non-object (a string, null) on purpose
             expect(buildQueryString(input)).toBe(expected)
         })
     }

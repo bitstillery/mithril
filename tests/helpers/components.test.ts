@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect, afterAll} from 'bun:test'
 
 import components from './components'

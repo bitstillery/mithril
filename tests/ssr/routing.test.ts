@@ -1,9 +1,9 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import mServer from '../../src/server'
 
-import type {ComponentType, RouteResolver, SSRResult} from '../../src/index'
+import type {ComponentType, RouteResolver} from '../../src/index'
+import type {SSRResult} from '../../src/router/router'
 
 describe('SSR Routing', () => {
     let originalConsoleError: typeof console.error
@@ -150,7 +150,8 @@ describe('SSR Routing', () => {
             }
 
             const routes = {
-                '/user/:id': resolver,
+                // onmatch is a function-typed property, so a resolver typed for its attrs is not a RouteResolver<object>.
+                '/user/:id': resolver as RouteResolver,
             }
 
             const result = await mServer.route.resolve('/user/456', routes, mServer.renderToString)
@@ -174,7 +175,7 @@ describe('SSR Routing', () => {
             const resolver: RouteResolver = {
                 onmatch: () => Home,
                 render: (vnode) => {
-                    return mServer(Layout, {component: vnode.tag})
+                    return mServer(Layout, {component: vnode.tag as ComponentType})
                 },
             }
 
@@ -198,7 +199,7 @@ describe('SSR Routing', () => {
             const resolver: RouteResolver = {
                 render: (vnode) => {
                     // Render the component directly
-                    return mServer(vnode.tag)
+                    return mServer(vnode.tag as ComponentType)
                 },
             }
 
@@ -289,7 +290,7 @@ describe('SSR Routing', () => {
             const loginResolver: RouteResolver = {
                 onmatch: () => Login,
                 render: (vnode) => {
-                    return mServer('div', [mServer('header', 'Auth Header'), mServer(vnode.tag)])
+                    return mServer('div', [mServer('header', 'Auth Header'), mServer(vnode.tag as ComponentType)])
                 },
             }
 
@@ -399,7 +400,8 @@ describe('SSR Routing', () => {
             }
 
             const routes = {
-                '/user/:id': resolver,
+                // onmatch is a function-typed property, so a resolver typed for its attrs is not a RouteResolver<object>.
+                '/user/:id': resolver as RouteResolver,
             }
 
             const result = await mServer.route.resolve('/user/999', routes, mServer.renderToString)
@@ -518,7 +520,7 @@ describe('SSR Routing', () => {
         test('handles RouteResolver with render but invalid component', async () => {
             const resolver: RouteResolver = {
                 onmatch: () => undefined, // Returns undefined
-                render: (vnode) => mServer(vnode.tag), // vnode.tag is undefined → invalid selector
+                render: (vnode) => mServer(vnode.tag as ComponentType), // vnode.tag is undefined → invalid selector
             }
 
             const routes = {
@@ -615,7 +617,7 @@ describe('SSR Routing', () => {
             const layoutResolver: RouteResolver = {
                 onmatch: () => Login,
                 render: (vnode) => {
-                    return mServer('div', [mServer('nav', 'Navigation'), mServer(vnode.tag)])
+                    return mServer('div', [mServer('nav', 'Navigation'), mServer(vnode.tag as ComponentType)])
                 },
             }
 

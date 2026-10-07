@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Hydration test suite: verifies that client-side rendering correctly reuses
  * server-rendered DOM. Covers positional adoption of elements, text nodes,
@@ -10,6 +9,9 @@ import domMock from '../helpers/dom_mock'
 import renderFactory from '../../src/render/render'
 import m from '../../src/render/hyperscript'
 import mServer from '../../src/server'
+
+import type {MockWindow} from '../helpers/dom_mock'
+import type {ComponentVnode, Vnode} from '../../src/render/vnode'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -79,10 +81,10 @@ function findByClass(el: any, cls: string): any {
  * render function. This simulates the browser receiving SSR markup before the
  * client JS hydrates.
  */
-function prepareHydration($window: any, root: any, html: string) {
+function prepareHydration($window: MockWindow, root: any, html: string) {
     root.innerHTML = html
     shimTree(root)
-    return renderFactory($window)
+    return renderFactory()
 }
 
 // ---------------------------------------------------------------------------
@@ -90,7 +92,7 @@ function prepareHydration($window: any, root: any, html: string) {
 // ---------------------------------------------------------------------------
 
 describe('hydration', () => {
-    let $window: any, root: any
+    let $window: MockWindow, root: any
 
     beforeEach(() => {
         $window = domMock()
@@ -368,9 +370,9 @@ describe('hydration', () => {
             const pageEl = layoutEl.childNodes[0]
 
             const Page = {view: () => m('span', {id: 'page'}, 'page text')}
-            const Layout = {view: (vnode) => m('div', {id: 'layout'}, vnode.children)}
+            const Layout = {view: (vnode: ComponentVnode) => m('div', {id: 'layout'}, vnode.children)}
             const resolver = {
-                render: (vnode) => m(Layout, {}, vnode),
+                render: (vnode: Vnode) => m(Layout, {}, vnode),
             }
             const pageVnode = m(Page)
             render(root, resolver.render(pageVnode))
@@ -472,7 +474,8 @@ describe('hydration', () => {
 
         test('component survives SSR → hydration', async () => {
             const Card = {
-                view: (vnode) => m('div.card', [m('h2', vnode.attrs.title), m('p', vnode.attrs.body)]),
+                view: (vnode: ComponentVnode<{title: string; body: string}>) =>
+                    m('div.card', [m('h2', vnode.attrs.title), m('p', vnode.attrs.body)]),
             }
             const ssrVnode = m(Card, {title: 'Title', body: 'Body text'})
             const result = await mServer.renderToString(ssrVnode)
@@ -487,7 +490,7 @@ describe('hydration', () => {
 
         test('adjacent text runs survive SSR → hydration without duplication', async () => {
             const Quote = {
-                view: (vnode) => m('blockquote', ['\u201C', vnode.attrs.text, '\u201D']),
+                view: (vnode: ComponentVnode<{text: string}>) => m('blockquote', ['\u201C', vnode.attrs.text, '\u201D']),
             }
             const ssrVnode = m(Quote, {text: 'Be yourself'})
             const result = await mServer.renderToString(ssrVnode)
@@ -503,7 +506,7 @@ describe('hydration', () => {
         test('layout + page round-trip preserves DOM', async () => {
             const Page = {view: () => m('main', m('p', 'page content'))}
             const Layout = {
-                view: (vnode) => [m('header', 'header'), m('div.content', vnode.children), m('footer', 'footer')],
+                view: (vnode: ComponentVnode) => [m('header', 'header'), m('div.content', vnode.children), m('footer', 'footer')],
             }
             const tree = m(Layout, {}, m(Page))
             const result = await mServer.renderToString(tree)
@@ -597,7 +600,7 @@ describe('hydration', () => {
 
     describe('edge cases', () => {
         test('empty root does not trigger hydration', () => {
-            const render = renderFactory($window)
+            const render = renderFactory()
             shimChildren(root)
 
             render(root, m('div', 'fresh'))

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import parseURL from './parse_url'
 import callAsync from './call_async'
 
@@ -10,9 +9,47 @@ interface HistoryEntry {
 }
 
 interface PushStateMockOptions {
-    window?: any
+    /** An existing window to install `location` and `history` on; a new object otherwise. */
+    window?: object
     protocol?: string
     hostname?: string
+}
+
+export interface MockLocation {
+    protocol: string
+    hostname: string
+    port: string
+    pathname: string
+    search: string
+    hash: string
+    origin: string
+    host: string
+    href: string
+}
+
+export interface MockHistory {
+    pushState(state: unknown, title: string | null, url: string): void
+    replaceState(state: unknown, title: string | null, url: string): void
+    back(): void
+    forward(): void
+    readonly state: unknown
+}
+
+export interface MockLocationEvent {
+    type: string
+    state?: unknown
+}
+
+export type MockLocationHandler = ((e: MockLocationEvent) => unknown) | null
+
+export interface PushStateWindow {
+    location: MockLocation
+    history: MockHistory
+    onpopstate: MockLocationHandler
+    onhashchange: MockLocationHandler
+    onunload: MockLocationHandler
+    addEventListener(name: string, handler: MockLocationHandler): void
+    removeEventListener(name: string, handler: MockLocationHandler): void
 }
 
 function debouncedAsync(f: () => void) {
@@ -26,7 +63,7 @@ function debouncedAsync(f: () => void) {
     }
 }
 
-export default function pushStateMock(options?: PushStateMockOptions) {
+export default function pushStateMock(options?: PushStateMockOptions): PushStateWindow {
     if (options == null) options = {}
 
     const $window: any = options.window || {}
@@ -184,7 +221,7 @@ export default function pushStateMock(options?: PushStateMockOptions) {
             setURL(url)
         },
         replaceState: function (state: any, title: string | null, url: string) {
-            const entry = past[past.length - 1]
+            const entry = past[past.length - 1]!
             entry.state = state
             entry.title = title
             setURL(url)
@@ -208,20 +245,20 @@ export default function pushStateMock(options?: PushStateMockOptions) {
             }
         },
         get state() {
-            return past.length === 0 ? null : past[past.length - 1].state
+            return past.length === 0 ? null : past[past.length - 1]!.state
         },
     }
     $window.onpopstate = null
     $window.onhashchange = null
     $window.onunload = null
 
-    $window.addEventListener = function (name: string, handler: any) {
+    $window.addEventListener = function (name: string, handler: MockLocationHandler) {
         $window['on' + name] = handler
     }
 
-    $window.removeEventListener = function (name: string, handler: any) {
+    $window.removeEventListener = function (name: string, handler: MockLocationHandler) {
         $window['on' + name] = handler
     }
 
-    return $window
+    return $window as PushStateWindow
 }

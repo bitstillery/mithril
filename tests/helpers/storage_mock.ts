@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Shared localStorage and sessionStorage mocks for tests.
  * Used by test preload (ensures window exists before any test) and Store tests.

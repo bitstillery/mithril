@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Client-side router behavior: inner route vnode key, keyed resolver fragment (m-route-*) only
  * after `remount: true`, remount nonce, and history.state merging. Uses browserMock + pathname routing
@@ -30,7 +29,7 @@ describe('router (client)', () => {
         savedWindow = globalThis.window
         mRouteFragmentKeys = []
         origFragment = hyperscript.fragment
-        hyperscript.fragment = function (attrs: Record<string, any> | null, ...rest: any[]) {
+        hyperscript.fragment = function (attrs: any, ...rest: unknown[]) {
             if (attrs && typeof attrs.key === 'string' && attrs.key.startsWith('m-route-')) {
                 mRouteFragmentKeys.push(attrs.key)
             }
@@ -45,10 +44,10 @@ describe('router (client)', () => {
 
     function setup() {
         const $window = browserMock()
-        globalThis.window = $window
-        const root = $window.document.createElement('div')
-        const mountRedraw = mountRedrawFactory(renderFactory($window), setTimeout, console)
-        const route = routerFactory($window, mountRedraw)
+        globalThis.window = $window as unknown as typeof globalThis.window
+        const root = $window.document.createElement('div') as unknown as Element
+        const mountRedraw = mountRedrawFactory(renderFactory(), setTimeout, console)
+        const route = routerFactory($window as unknown as Window, mountRedraw)
         route.prefix = ''
         return {$window, root, route}
     }
@@ -93,7 +92,7 @@ describe('router (client)', () => {
         await flush()
         expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
 
-        await route.set('/a', {q: 1}, null)
+        await route.set('/a', {q: 1})
         await flush()
         expect(lastMRouteKey(mRouteFragmentKeys)).toBeUndefined()
 
@@ -117,7 +116,7 @@ describe('router (client)', () => {
 
         await route.set('/a', null, {state: {fromHistory: 1}})
         await flush()
-        expect(route.param('fromHistory')).toBe(1)
+        expect(route.param('fromHistory') as unknown).toBe(1)
 
         await route.set('/a', null, {state: 'not-merged'})
         await flush()

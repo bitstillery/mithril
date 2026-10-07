@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import domMock from '../helpers/dom_mock'
@@ -7,12 +6,15 @@ import m from '../../src/render/hyperscript'
 import fragment from '../../src/render/fragment'
 import {spy} from '../helpers/test_helpers'
 
+import type {MockElement, MockWindow} from '../helpers/dom_mock'
+import type {RenderChildren} from '../../src/render/vnode'
+
 describe('oninit', () => {
-    let $window: any, root: any, render: any
+    let $window: MockWindow, root: MockElement, render: any
     beforeEach(() => {
         $window = domMock()
         root = $window.document.createElement('div')
-        render = renderFactory($window)
+        render = renderFactory()
     })
 
     test('calls oninit when creating element', () => {
@@ -152,8 +154,8 @@ describe('oninit', () => {
         expect((update as any).this).toBe(vnode.state)
         expect((update as any).args[0]).toBe(updated)
         expect(callback.callCount).toBe(1)
-        expect((callback as any).this).toBe(updated.children[0].state)
-        expect((callback as any).args[0]).toBe(updated.children[0])
+        expect((callback as any).this).toBe((updated.children as RenderChildren)[0]!.state)
+        expect((callback as any).args[0]).toBe((updated.children as RenderChildren)[0])
     })
     test('calls oninit before full DOM creation', () => {
         let called = false
@@ -175,8 +177,9 @@ describe('oninit', () => {
 
         render(root, vnode)
 
-        expect(vnode.dom.oninit).toBe(undefined)
-        expect(vnode.dom.attributes['oninit']).toBe(undefined)
+        const dom = vnode.dom as unknown as MockElement
+        expect(dom.oninit).toBe(undefined)
+        expect(dom.attributes['oninit']).toBe(undefined)
     })
 
     test('No spurious oninit calls in mapped keyed diff when the pool is involved (#1992)', () => {

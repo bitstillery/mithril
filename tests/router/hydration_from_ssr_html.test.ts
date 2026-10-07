@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * End-to-end check: SSR emits HTML via `route.resolve` + `renderToString`, then the **client**
  * router mounts into a root with that markup (hydration). If the client wraps the route in an extra
@@ -12,6 +11,8 @@ import mountRedrawFactory from '../../src/mount_redraw'
 import renderFactory from '../../src/render/render'
 import hyperscript from '../../src/render/hyperscript'
 import mServer from '../../src/server'
+
+import type {ComponentVnode, Vnode} from '../../src/render/vnode'
 
 function flush() {
     return new Promise<void>((r) => setTimeout(r, 0))
@@ -71,14 +72,14 @@ describe('router: hydrate into SSR HTML from route.resolve', () => {
         globalThis.__SSR_MODE__ = false
 
         const layout = {
-            view: (vnode) => hyperscript('div', {id: 'layout'}, vnode.children),
+            view: (vnode: ComponentVnode) => hyperscript('div', {id: 'layout'}, vnode.children),
         }
         const page = {
             view: () => hyperscript('span', {id: 'inner'}, 'page-inner'),
         }
         const resolver = {
             onmatch: () => page,
-            render: (vnode) => hyperscript(layout, {}, vnode),
+            render: (vnode: Vnode) => hyperscript(layout, {}, vnode),
         }
         const routes = {'/': resolver}
 
@@ -88,19 +89,19 @@ describe('router: hydrate into SSR HTML from route.resolve', () => {
         expect(html).toContain('layout')
 
         const $window = browserMock()
-        globalThis.window = $window
+        globalThis.window = $window as unknown as typeof globalThis.window
         const root = $window.document.createElement('div')
         root.innerHTML = html
         shim_element_tree_for_hydration(root)
 
         expect(root.childNodes.length).toBeGreaterThan(0)
 
-        const mountRedraw = mountRedrawFactory(renderFactory($window), setTimeout, console)
-        const route = routerFactory($window, mountRedraw)
+        const mountRedraw = mountRedrawFactory(renderFactory(), setTimeout, console)
+        const route = routerFactory($window as unknown as Window, mountRedraw)
         route.prefix = ''
         $window.location.href = 'http://localhost/'
 
-        route(root, '/', routes)
+        route(root as unknown as Element, '/', routes)
         await flush()
         await flush()
 

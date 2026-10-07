@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import domMock from '../helpers/dom_mock'
@@ -6,8 +5,10 @@ import renderFactory from '../../src/render/render'
 import m from '../../src/render/hyperscript'
 import {resetHydrationErrorCount, getHydrationStats, resetHydrationStats} from '../../src/render/hydration_debug'
 
+import type {MockElement, MockWindow} from '../helpers/dom_mock'
+
 describe('SSR Hydration Mismatch Recovery', () => {
-    let $window: any, root: any, render: any
+    let $window: MockWindow, root: MockElement, render: any
     let originalConsoleError: typeof console.error
     let originalConsoleWarn: typeof console.warn
     let originalConsoleLog: typeof console.log
@@ -25,7 +26,7 @@ describe('SSR Hydration Mismatch Recovery', () => {
             enumerable: true,
             configurable: true,
         })
-        render = renderFactory($window)
+        render = renderFactory()
 
         // Capture console output for testing
         originalConsoleError = console.error
@@ -216,7 +217,7 @@ describe('SSR Hydration Mismatch Recovery', () => {
             render(root, ['Client'])
 
             expect(root.childNodes.length).toBe(1)
-            expect(root.childNodes[0].nodeValue).toBe('Client')
+            expect(root.childNodes[0]!.nodeValue).toBe('Client')
         })
     })
 

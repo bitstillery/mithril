@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach} from 'bun:test'
 
 import domMock from '../helpers/dom_mock'
@@ -6,12 +5,16 @@ import renderFactory from '../../src/render/render'
 import m from '../../src/render/hyperscript'
 import {spy} from '../helpers/test_helpers'
 
+import type {Component, ComponentType} from '../../src/render/vnode'
+
+import type {MockElement, MockWindow} from '../helpers/dom_mock'
+
 describe('render', () => {
-    let $window: any, root: any, render: any
+    let $window: MockWindow, root: MockElement, render: any
     beforeEach(() => {
         $window = domMock()
         root = $window.document.createElement('div')
-        render = renderFactory($window)
+        render = renderFactory()
     })
 
     test('initializes without DOM', () => {
@@ -21,27 +24,27 @@ describe('render', () => {
     test('renders plain text', () => {
         render(root, 'a')
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].nodeValue).toBe('a')
+        expect(root.childNodes[0]!.nodeValue).toBe('a')
     })
 
     test('updates plain text', () => {
         render(root, 'a')
         render(root, 'b')
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].nodeValue).toBe('b')
+        expect(root.childNodes[0]!.nodeValue).toBe('b')
     })
 
     test('renders a number', () => {
         render(root, 1)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].nodeValue).toBe('1')
+        expect(root.childNodes[0]!.nodeValue).toBe('1')
     })
 
     test('updates a number', () => {
         render(root, 1)
         render(root, 2)
         expect(root.childNodes.length).toBe(1)
-        expect(root.childNodes[0].nodeValue).toBe('2')
+        expect(root.childNodes[0]!.nodeValue).toBe('2')
     })
 
     test('overwrites existing content', () => {
@@ -109,7 +112,7 @@ describe('render', () => {
         let throwCount = 0
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -119,7 +122,7 @@ describe('render', () => {
         expect(onbeforeupdate.callCount).toBe(0)
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -140,7 +143,7 @@ describe('render', () => {
         let throwCount = 0
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -150,7 +153,7 @@ describe('render', () => {
         expect(onbeforeupdate.callCount).toBe(0)
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -171,7 +174,7 @@ describe('render', () => {
         let throwCount = 0
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -181,7 +184,7 @@ describe('render', () => {
         expect(onbeforeupdate.callCount).toBe(0)
 
         try {
-            render(root, m(A))
+            render(root, m(A as unknown as ComponentType))
         } catch (_e) {
             throwCount++
         }
@@ -193,7 +196,7 @@ describe('render', () => {
     test('does not try to re-initialize a closure component whose view has thrown', () => {
         const oninit = spy()
         const onbeforeupdate = spy()
-        function A() {
+        function A(): Component {
             return {
                 view: function () {
                     throw new Error('error')
@@ -228,7 +231,7 @@ describe('render', () => {
             throw new Error('error')
         })
         const onbeforeupdate = spy()
-        function A() {
+        function A(): Component {
             return {
                 view: function () {},
                 oninit: oninit,
@@ -257,7 +260,7 @@ describe('render', () => {
         expect(onbeforeupdate.callCount).toBe(0)
     })
     test('does not try to re-initialize a closure component whose closure has thrown', () => {
-        function A() {
+        function A(): Component {
             throw new Error('error')
         }
         let throwCount = 0
@@ -372,26 +375,26 @@ describe('render', () => {
         let svg = m('svg', m('g', {key: 0}), m('g', {key: 1}))
         render(root, svg)
 
-        expect(svg.dom.namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(svg.dom.childNodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(svg.dom.childNodes[1].namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom!.childNodes[0] as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom!.childNodes[1] as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
 
         svg = m('svg', m('g', {key: 1, x: 1}), m('g', {key: 2, x: 2}))
         render(root, svg)
 
-        expect(svg.dom.namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(svg.dom.childNodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
-        expect(svg.dom.childNodes[1].namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom!.childNodes[0] as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect((svg.dom!.childNodes[1] as Element).namespaceURI).toBe('http://www.w3.org/2000/svg')
     })
     test('the namespace of the root is passed to children', () => {
         render(root, m('svg'))
-        expect(root.childNodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect(root.childNodes[0]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
         render(root.childNodes[0], m('g'))
-        expect(root.childNodes[0].childNodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
+        expect(root.childNodes[0]!.childNodes[0]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
     })
     test('does not allow reentrant invocations', () => {
         const thrown: string[] = []
-        function A() {
+        function A(): Component {
             let updated = false
             try {
                 render(root, m(A))

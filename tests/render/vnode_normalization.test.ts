@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Vnode normalization and the keyed-diff reorder path.
  *
@@ -30,6 +29,9 @@ import domMock from '../helpers/dom_mock'
 import renderFactory from '../../src/render/render'
 import m from '../../src/render/hyperscript'
 import Vnode from '../../src/render/vnode'
+
+import type {MockElement, MockWindow} from '../helpers/dom_mock'
+import type {RenderChildren} from '../../src/render/vnode'
 
 const REPO_ROOT = join(import.meta.dir, '..', '..')
 
@@ -63,17 +65,18 @@ describe('normalizeChildren', () => {
 
     test('wraps primitives as text vnodes', () => {
         const children = Vnode.normalizeChildren(['a', 1, 0, ''])
-        expect(children.map((c) => c.tag)).toEqual(['#', '#', '#', '#'])
-        expect(children.map((c) => c.children)).toEqual(['a', '1', '0', ''])
+        expect(children.map((c) => c!.tag)).toEqual(['#', '#', '#', '#'])
+        expect(children.map((c) => c!.children)).toEqual(['a', '1', '0', ''])
     })
 
     test('wraps nested arrays as fragment vnodes and normalizes them recursively', () => {
         const children = Vnode.normalizeChildren([['a', null]])
         expect(children.length).toBe(1)
-        expect(children[0].tag).toBe('[')
-        expect(children[0].children.length).toBe(2)
-        expect(children[0].children[0].tag).toBe('#')
-        expect(children[0].children[1]).toBe(null)
+        expect(children[0]!.tag).toBe('[')
+        const fragmentChildren = children[0]!.children as RenderChildren
+        expect(fragmentChildren.length).toBe(2)
+        expect(fragmentChildren[0]!.tag).toBe('#')
+        expect(fragmentChildren[1]).toBe(null)
     })
 
     test('passes object vnodes through untouched', () => {
@@ -83,7 +86,7 @@ describe('normalizeChildren', () => {
 
     test('accepts an all-keyed list', () => {
         const children = Vnode.normalizeChildren([m('div', {key: 'a'}), m('div', {key: 'b'})])
-        expect(children.map((c) => c.key)).toEqual(['a', 'b'])
+        expect(children.map((c) => c!.key)).toEqual(['a', 'b'])
     })
 
     test('rejects a mix of keyed and unkeyed children', () => {
@@ -98,11 +101,11 @@ describe('normalizeChildren', () => {
 })
 
 describe('keyed reordering (updateNodes oldIndices path)', () => {
-    let $window: any, root: any, render: any
+    let $window: MockWindow, root: MockElement, render: any
     beforeEach(() => {
         $window = domMock()
         root = $window.document.createElement('div')
-        render = renderFactory($window)
+        render = renderFactory()
     })
 
     const keyed = (keys: string[]) => keys.map((k) => m('div', {key: k}, k))

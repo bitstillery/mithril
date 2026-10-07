@@ -1,11 +1,12 @@
-// @ts-nocheck
 import {describe, test, expect, beforeEach, afterEach} from 'bun:test'
 
 import {spy} from './test_helpers'
 import domMock from './dom_mock'
 
+import type {MockDocument, MockElement, MockEvent, MockNode, MockWindow} from './dom_mock'
+
 describe('domMock', () => {
-    let $document: any, $window: any
+    let $document: MockDocument, $window: MockWindow
     beforeEach(() => {
         $window = domMock()
         $document = $window.document
@@ -137,7 +138,7 @@ describe('domMock', () => {
             expect(parent.childNodes[0]).toBe(b)
             expect(parent.childNodes[1]).toBe(a)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(a)
+            expect(parent.firstChild!.nextSibling).toBe(a)
             expect(a.parentNode).toBe(parent)
             expect(b.parentNode).toBe(parent)
         })
@@ -154,7 +155,7 @@ describe('domMock', () => {
         })
         test('transfers from fragment', () => {
             let parent = $document.createElement('div')
-            let a = $document.createDocumentFragment('a')
+            let a = $document.createDocumentFragment()
             let b = $document.createElement('b')
             let c = $document.createElement('c')
             a.appendChild(b)
@@ -165,7 +166,7 @@ describe('domMock', () => {
             expect(parent.childNodes[0]).toBe(b)
             expect(parent.childNodes[1]).toBe(c)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(c)
+            expect(parent.firstChild!.nextSibling).toBe(c)
             expect(a.childNodes.length).toBe(0)
             expect(a.firstChild).toBe(null)
             expect(a.parentNode).toBe(null)
@@ -194,6 +195,7 @@ describe('domMock', () => {
             let parent = $document.createElement('div')
             let child = 1
             try {
+                // @ts-expect-error - a number is not a node
                 parent.appendChild(child)
             } catch (_e) {
                 done()
@@ -235,7 +237,7 @@ describe('domMock', () => {
             expect(parent.childNodes[0]).toBe(b)
             expect(parent.childNodes[1]).toBe(a)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(a)
+            expect(parent.firstChild!.nextSibling).toBe(a)
             expect(a.parentNode).toBe(parent)
             expect(b.parentNode).toBe(parent)
         })
@@ -251,7 +253,7 @@ describe('domMock', () => {
             expect(parent.childNodes[0]).toBe(b)
             expect(parent.childNodes[1]).toBe(a)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(a)
+            expect(parent.firstChild!.nextSibling).toBe(a)
             expect(a.parentNode).toBe(parent)
             expect(b.parentNode).toBe(parent)
         })
@@ -270,8 +272,8 @@ describe('domMock', () => {
             expect(parent.childNodes[1]).toBe(a)
             expect(parent.childNodes[2]).toBe(c)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(a)
-            expect(parent.firstChild.nextSibling.nextSibling).toBe(c)
+            expect(parent.firstChild!.nextSibling).toBe(a)
+            expect(parent.firstChild!.nextSibling!.nextSibling).toBe(c)
             expect(a.parentNode).toBe(parent)
             expect(b.parentNode).toBe(parent)
             expect(c.parentNode).toBe(parent)
@@ -290,7 +292,7 @@ describe('domMock', () => {
         test('transfers from fragment', () => {
             let parent = $document.createElement('div')
             let ref = $document.createElement('span')
-            let a = $document.createDocumentFragment('a')
+            let a = $document.createDocumentFragment()
             let b = $document.createElement('b')
             let c = $document.createElement('c')
             parent.appendChild(ref)
@@ -303,8 +305,8 @@ describe('domMock', () => {
             expect(parent.childNodes[1]).toBe(c)
             expect(parent.childNodes[2]).toBe(ref)
             expect(parent.firstChild).toBe(b)
-            expect(parent.firstChild.nextSibling).toBe(c)
-            expect(parent.firstChild.nextSibling.nextSibling).toBe(ref)
+            expect(parent.firstChild!.nextSibling).toBe(c)
+            expect(parent.firstChild!.nextSibling!.nextSibling).toBe(ref)
             expect(a.childNodes.length).toBe(0)
             expect(a.firstChild).toBe(null)
             expect(a.parentNode).toBe(null)
@@ -322,7 +324,7 @@ describe('domMock', () => {
             expect(parent.childNodes[0]).toBe(a)
             expect(parent.childNodes[1]).toBe(b)
             expect(parent.firstChild).toBe(a)
-            expect(parent.firstChild.nextSibling).toBe(b)
+            expect(parent.firstChild!.nextSibling).toBe(b)
             expect(a.parentNode).toBe(parent)
         })
         test('throws if appended to self', (done) => {
@@ -352,6 +354,7 @@ describe('domMock', () => {
             let a = $document.createElement('a')
             parent.appendChild(a)
             try {
+                // @ts-expect-error - a number is not a node
                 parent.insertBefore(1, a)
             } catch (_e) {
                 done()
@@ -370,6 +373,7 @@ describe('domMock', () => {
             let parent = $document.createElement('div')
             let a = $document.createElement('a')
             try {
+                // @ts-expect-error - the reference argument is required
                 parent.insertBefore(a)
             } catch (_e) {
                 done()
@@ -407,44 +411,44 @@ describe('domMock', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', 'aaa')
 
-            expect(div.attributes['id'].value).toBe('aaa')
-            expect(div.attributes['id'].nodeValue).toBe('aaa')
-            expect(div.attributes['id'].namespaceURI).toBe(null)
+            expect(div.attributes['id']!.value).toBe('aaa')
+            expect(div.attributes['id']!.nodeValue).toBe('aaa')
+            expect(div.attributes['id']!.namespaceURI).toBe(null)
         })
         test('works w/ number', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', 123)
 
-            expect(div.attributes['id'].value).toBe('123')
+            expect(div.attributes['id']!.value).toBe('123')
         })
         test('works w/ null', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', null)
 
-            expect(div.attributes['id'].value).toBe('null')
+            expect(div.attributes['id']!.value).toBe('null')
         })
         test('works w/ undefined', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', undefined)
 
-            expect(div.attributes['id'].value).toBe('undefined')
+            expect(div.attributes['id']!.value).toBe('undefined')
         })
         test('works w/ object', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', {})
 
-            expect(div.attributes['id'].value).toBe('[object Object]')
+            expect(div.attributes['id']!.value).toBe('[object Object]')
         })
         test('setting via attributes map stringifies', () => {
             let div = $document.createElement('div')
             div.setAttribute('id', 'a')
-            div.attributes['id'].value = 123
+            div.attributes['id']!.value = 123
 
-            expect(div.attributes['id'].value).toBe('123')
+            expect(div.attributes['id']!.value).toBe('123')
 
-            div.attributes['id'].nodeValue = 456
+            div.attributes['id']!.nodeValue = 456
 
-            expect(div.attributes['id'].value).toBe('456')
+            expect(div.attributes['id']!.value).toBe('456')
         })
     })
     describe('hasAttribute', () => {
@@ -469,16 +473,16 @@ describe('domMock', () => {
             a.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '/aaa')
 
             expect(a.href).toEqual({baseVal: '/aaa', animVal: '/aaa'})
-            expect(a.attributes['href'].value).toBe('/aaa')
-            expect(a.attributes['href'].namespaceURI).toBe('http://www.w3.org/1999/xlink')
+            expect(a.attributes['href']!.value).toBe('/aaa')
+            expect(a.attributes['href']!.namespaceURI).toBe('http://www.w3.org/1999/xlink')
         })
         test('works w/ number', () => {
             let a = $document.createElementNS('http://www.w3.org/2000/svg', 'a')
             a.setAttributeNS('http://www.w3.org/1999/xlink', 'href', 123)
 
             expect(a.href).toEqual({baseVal: '123', animVal: '123'})
-            expect(a.attributes['href'].value).toBe('123')
-            expect(a.attributes['href'].namespaceURI).toBe('http://www.w3.org/1999/xlink')
+            expect(a.attributes['href']!.value).toBe('123')
+            expect(a.attributes['href']!.namespaceURI).toBe('http://www.w3.org/1999/xlink')
         })
         test('attributes with a namespace can be querried, updated and removed with non-NS functions', () => {
             let a = $document.createElementNS('http://www.w3.org/2000/svg', 'a')
@@ -491,8 +495,8 @@ describe('domMock', () => {
 
             expect(a.href).toEqual({baseVal: '/bbb', animVal: '/bbb'})
             expect(a.getAttribute('href')).toBe('/bbb')
-            expect(a.attributes['href'].value).toBe('/bbb')
-            expect(a.attributes['href'].namespaceURI).toBe('http://www.w3.org/1999/xlink')
+            expect(a.attributes['href']!.value).toBe('/bbb')
+            expect(a.attributes['href']!.namespaceURI).toBe('http://www.w3.org/1999/xlink')
 
             a.removeAttribute('href')
 
@@ -518,8 +522,8 @@ describe('domMock', () => {
             div.textContent = 'aaa'
 
             expect(div.childNodes.length).toBe(1)
-            expect(div.firstChild.nodeType).toBe(3)
-            expect(div.firstChild.nodeValue).toBe('aaa')
+            expect(div.firstChild!.nodeType).toBe(3)
+            expect(div.firstChild!.nodeValue).toBe('aaa')
         })
         test('works with empty string', () => {
             let div = $document.createElement('div')
@@ -534,41 +538,41 @@ describe('domMock', () => {
             let div = $document.createElement('div')
             div.innerHTML = "<br /><a class='aaa' id='xyz'>123<b class=\"bbb\"></b>234<br class=ccc>345</a>"
             expect(div.childNodes.length).toBe(2)
-            expect(div.childNodes[0].nodeType).toBe(1)
-            expect(div.childNodes[0].nodeName).toBe('BR')
-            expect(div.childNodes[1].nodeType).toBe(1)
-            expect(div.childNodes[1].nodeName).toBe('A')
-            expect(div.childNodes[1].attributes['class'].value).toBe('aaa')
-            expect(div.childNodes[1].attributes['id'].value).toBe('xyz')
-            expect(div.childNodes[1].childNodes[0].nodeType).toBe(3)
-            expect(div.childNodes[1].childNodes[0].nodeValue).toBe('123')
-            expect(div.childNodes[1].childNodes[1].nodeType).toBe(1)
-            expect(div.childNodes[1].childNodes[1].nodeName).toBe('B')
-            expect(div.childNodes[1].childNodes[1].attributes['class'].value).toBe('bbb')
-            expect(div.childNodes[1].childNodes[2].nodeType).toBe(3)
-            expect(div.childNodes[1].childNodes[2].nodeValue).toBe('234')
-            expect(div.childNodes[1].childNodes[3].nodeType).toBe(1)
-            expect(div.childNodes[1].childNodes[3].nodeName).toBe('BR')
-            expect(div.childNodes[1].childNodes[3].attributes['class'].value).toBe('ccc')
-            expect(div.childNodes[1].childNodes[4].nodeType).toBe(3)
-            expect(div.childNodes[1].childNodes[4].nodeValue).toBe('345')
+            expect(div.childNodes[0]!.nodeType).toBe(1)
+            expect(div.childNodes[0]!.nodeName).toBe('BR')
+            expect(div.childNodes[1]!.nodeType).toBe(1)
+            expect(div.childNodes[1]!.nodeName).toBe('A')
+            expect(div.childNodes[1]!.attributes['class']!.value).toBe('aaa')
+            expect(div.childNodes[1]!.attributes['id']!.value).toBe('xyz')
+            expect(div.childNodes[1]!.childNodes[0]!.nodeType).toBe(3)
+            expect(div.childNodes[1]!.childNodes[0]!.nodeValue).toBe('123')
+            expect(div.childNodes[1]!.childNodes[1]!.nodeType).toBe(1)
+            expect(div.childNodes[1]!.childNodes[1]!.nodeName).toBe('B')
+            expect(div.childNodes[1]!.childNodes[1]!.attributes['class']!.value).toBe('bbb')
+            expect(div.childNodes[1]!.childNodes[2]!.nodeType).toBe(3)
+            expect(div.childNodes[1]!.childNodes[2]!.nodeValue).toBe('234')
+            expect(div.childNodes[1]!.childNodes[3]!.nodeType).toBe(1)
+            expect(div.childNodes[1]!.childNodes[3]!.nodeName).toBe('BR')
+            expect(div.childNodes[1]!.childNodes[3]!.attributes['class']!.value).toBe('ccc')
+            expect(div.childNodes[1]!.childNodes[4]!.nodeType).toBe(3)
+            expect(div.childNodes[1]!.childNodes[4]!.nodeValue).toBe('345')
         })
         test('headers work', () => {
             let div = $document.createElement('div')
             div.innerHTML = '<h1></h1><h2></h2><h3></h3><h4></h4><h5></h5><h6></h6>'
             expect(div.childNodes.length).toBe(6)
-            expect(div.childNodes[0].nodeType).toBe(1)
-            expect(div.childNodes[0].nodeName).toBe('H1')
-            expect(div.childNodes[1].nodeType).toBe(1)
-            expect(div.childNodes[1].nodeName).toBe('H2')
-            expect(div.childNodes[2].nodeType).toBe(1)
-            expect(div.childNodes[2].nodeName).toBe('H3')
-            expect(div.childNodes[3].nodeType).toBe(1)
-            expect(div.childNodes[3].nodeName).toBe('H4')
-            expect(div.childNodes[4].nodeType).toBe(1)
-            expect(div.childNodes[4].nodeName).toBe('H5')
-            expect(div.childNodes[5].nodeType).toBe(1)
-            expect(div.childNodes[5].nodeName).toBe('H6')
+            expect(div.childNodes[0]!.nodeType).toBe(1)
+            expect(div.childNodes[0]!.nodeName).toBe('H1')
+            expect(div.childNodes[1]!.nodeType).toBe(1)
+            expect(div.childNodes[1]!.nodeName).toBe('H2')
+            expect(div.childNodes[2]!.nodeType).toBe(1)
+            expect(div.childNodes[2]!.nodeName).toBe('H3')
+            expect(div.childNodes[3]!.nodeType).toBe(1)
+            expect(div.childNodes[3]!.nodeName).toBe('H4')
+            expect(div.childNodes[4]!.nodeType).toBe(1)
+            expect(div.childNodes[4]!.nodeName).toBe('H5')
+            expect(div.childNodes[5]!.nodeType).toBe(1)
+            expect(div.childNodes[5]!.nodeName).toBe('H6')
         })
         test('detaches old elements', () => {
             let div = $document.createElement('div')
@@ -583,9 +587,9 @@ describe('domMock', () => {
             div.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg"></svg>'
 
             expect(typeof div.firstChild).not.toBe(undefined)
-            expect(div.firstChild.nodeName).toBe('svg')
-            expect(div.firstChild.namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(div.firstChild.childNodes.length).toBe(0)
+            expect(div.firstChild!.nodeName).toBe('svg')
+            expect(div.firstChild!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(div.firstChild!.childNodes.length).toBe(0)
         })
         test('text elements', () => {
             let div = $document.createElement('div')
@@ -596,34 +600,34 @@ describe('domMock', () => {
                 '<text>world</text>' +
                 '</svg>'
 
-            expect(div.firstChild.nodeName).toBe('svg')
-            expect(div.firstChild.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(div.firstChild!.nodeName).toBe('svg')
+            expect(div.firstChild!.namespaceURI).toBe('http://www.w3.org/2000/svg')
 
-            let nodes = div.firstChild.childNodes
+            let nodes = div.firstChild!.childNodes
             expect(nodes.length).toBe(3)
-            expect(nodes[0].nodeName).toBe('text')
-            expect(nodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[0].childNodes.length).toBe(1)
-            expect(nodes[0].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[0].childNodes[0].nodeValue).toBe('hello')
-            expect(nodes[1].nodeName).toBe('text')
-            expect(nodes[1].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[1].childNodes.length).toBe(1)
-            expect(nodes[1].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[1].childNodes[0].nodeValue).toBe(' ')
-            expect(nodes[2].nodeName).toBe('text')
-            expect(nodes[2].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[2].childNodes.length).toBe(1)
-            expect(nodes[2].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[2].childNodes[0].nodeValue).toBe('world')
+            expect(nodes[0]!.nodeName).toBe('text')
+            expect(nodes[0]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[0]!.childNodes.length).toBe(1)
+            expect(nodes[0]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[0]!.childNodes[0]!.nodeValue).toBe('hello')
+            expect(nodes[1]!.nodeName).toBe('text')
+            expect(nodes[1]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[1]!.childNodes.length).toBe(1)
+            expect(nodes[1]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[1]!.childNodes[0]!.nodeValue).toBe(' ')
+            expect(nodes[2]!.nodeName).toBe('text')
+            expect(nodes[2]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[2]!.childNodes.length).toBe(1)
+            expect(nodes[2]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[2]!.childNodes[0]!.nodeValue).toBe('world')
         })
     })
     describe('focus', () => {
         test('body is active by default', () => {
             expect($document.documentElement.nodeName).toBe('HTML')
             expect($document.body.nodeName).toBe('BODY')
-            expect($document.documentElement.firstChild.nodeName).toBe('HEAD')
-            expect($document.documentElement).toBe($document.body.parentNode)
+            expect($document.documentElement.firstChild!.nodeName).toBe('HEAD')
+            expect<MockNode | null>($document.documentElement).toBe($document.body.parentNode)
             expect($document.activeElement).toBe($document.body)
         })
         test('focus changes activeElement', () => {
@@ -648,7 +652,7 @@ describe('domMock', () => {
 
             expect(div.style.backgroundColor).toBe('red')
             expect(div.style.borderBottom).toBe('1px solid red')
-            expect(div.attributes.style.value).toBe('background-color: red; border-bottom: 1px solid red;')
+            expect(div.attributes.style!.value).toBe('background-color: red; border-bottom: 1px solid red;')
         })
         test('removing via setting style.cssText string works', () => {
             let div = $document.createElement('div')
@@ -656,7 +660,7 @@ describe('domMock', () => {
             div.style.cssText = ''
 
             expect(div.style.background).toBe('')
-            expect(div.attributes.style.value).toBe('')
+            expect(div.attributes.style!.value).toBe('')
         })
         test('the final semicolon is optional when setting style.cssText', () => {
             let div = $document.createElement('div')
@@ -664,7 +668,7 @@ describe('domMock', () => {
 
             expect(div.style.background).toBe('red')
             expect(div.style.cssText).toBe('background: red;')
-            expect(div.attributes.style.value).toBe('background: red;')
+            expect(div.attributes.style!.value).toBe('background: red;')
         })
         test("'cssText' as a property name is ignored when setting style.cssText", () => {
             let div = $document.createElement('div')
@@ -703,7 +707,7 @@ describe('domMock', () => {
     })
     describe('events', () => {
         describe('click', () => {
-            let clickSpy, div, e
+            let clickSpy: ReturnType<typeof spy>, div: MockElement, e: MockEvent
             beforeEach(() => {
                 clickSpy = spy()
                 div = $document.createElement('div')
@@ -799,7 +803,7 @@ describe('domMock', () => {
             })
         })
         describe('transitionend', () => {
-            let transitionSpy, div, e
+            let transitionSpy: ReturnType<typeof spy>, div: MockElement, e: MockEvent
             beforeEach(() => {
                 transitionSpy = spy()
                 div = $document.createElement('div')
@@ -821,7 +825,7 @@ describe('domMock', () => {
             })
         })
         describe('capture and bubbling phases', () => {
-            let div, e
+            let div: MockElement, e: MockEvent
             beforeEach(() => {
                 div = $document.createElement('div')
                 e = $document.createEvent('MouseEvents')
@@ -833,7 +837,7 @@ describe('domMock', () => {
                 $document.body.removeChild(div)
             })
             test('capture and bubbling events both fire on the target in the order they were defined, regardless of the phase', () => {
-                let sequence = []
+                let sequence: string[] = []
                 let capture = spy((ev: any) => {
                     sequence.push('capture')
 
@@ -860,7 +864,7 @@ describe('domMock', () => {
                 expect(sequence).toEqual(['bubble', 'capture'])
             })
             test('capture and bubbling events both fire on the parent', () => {
-                let sequence = []
+                let sequence: string[] = []
                 let capture = spy((ev: any) => {
                     sequence.push('capture')
 
@@ -887,7 +891,7 @@ describe('domMock', () => {
                 expect(sequence).toEqual(['capture', 'bubble'])
             })
             test('useCapture defaults to false', () => {
-                let sequence = []
+                let sequence: string[] = []
                 let parent = spy((ev: any) => {
                     sequence.push('parent')
 
@@ -914,7 +918,7 @@ describe('domMock', () => {
                 expect(sequence).toEqual(['target', 'parent'])
             })
             test('legacy handlers fire on the bubbling phase', () => {
-                let sequence = []
+                let sequence: string[] = []
                 let parent = spy((ev: any) => {
                     sequence.push('parent')
 
@@ -1318,14 +1322,14 @@ describe('domMock', () => {
                 a.setAttribute('href', '')
 
                 expect(a.href).not.toBe('')
-                expect(a.attributes['href'].value).toBe('')
+                expect(a.attributes['href']!.value).toBe('')
             })
             test('is path if property is set', () => {
                 let a = $document.createElement('a')
                 a.href = ''
 
                 expect(a.href).not.toBe('')
-                expect(a.attributes['href'].value).toBe('')
+                expect(a.attributes['href']!.value).toBe('')
             })
             test('property is read-only for SVG elements', () => {
                 let a = $document.createElementNS('http://www.w3.org/2000/svg', 'a')
@@ -1353,7 +1357,7 @@ describe('domMock', () => {
                 input.setAttribute('checked', '')
 
                 expect(input.checked).toBe(true)
-                expect(input.attributes['checked'].value).toBe('')
+                expect(input.attributes['checked']!.value).toBe('')
 
                 input.removeAttribute('checked')
 
@@ -1540,9 +1544,9 @@ describe('domMock', () => {
 
                 expect(select.value).toBe('a')
                 expect(select.selectedIndex).toBe(0)
-                expect(select.childNodes[0].selected).toBe(true)
-                expect(select.childNodes[0].value).toBe('a')
-                expect(select.childNodes[1].value).toBe('b')
+                expect(select.childNodes[0]!.selected).toBe(true)
+                expect(select.childNodes[0]!.value).toBe('a')
+                expect(select.childNodes[1]!.value).toBe('b')
             })
             test('value defaults to invalid if no options', () => {
                 let select = $document.createElement('select')
@@ -1682,7 +1686,7 @@ describe('domMock', () => {
                 option2.setAttribute('value', 'b')
                 select.appendChild(option2)
 
-                select.childNodes[1].selected = true
+                select.childNodes[1]!.selected = true
 
                 expect(select.value).toBe('b')
                 expect(select.selectedIndex).toBe(1)
@@ -1698,8 +1702,8 @@ describe('domMock', () => {
                 option2.setAttribute('value', 'b')
                 select.appendChild(option2)
 
-                select.childNodes[1].selected = true
-                select.childNodes[1].selected = false
+                select.childNodes[1]!.selected = true
+                select.childNodes[1]!.selected = false
 
                 expect(select.value).toBe('a')
                 expect(select.selectedIndex).toBe(0)
@@ -1774,55 +1778,55 @@ describe('domMock', () => {
                 let canvas = $document.createElement('canvas')
 
                 canvas.width = 100
-                expect(canvas.attributes['width'].value).toBe('100')
+                expect(canvas.attributes['width']!.value).toBe('100')
                 expect(canvas.width).toBe(100)
 
                 canvas.height = 100
-                expect(canvas.attributes['height'].value).toBe('100')
+                expect(canvas.attributes['height']!.value).toBe('100')
                 expect(canvas.height).toBe(100)
             })
             test('setting string casts to number', () => {
                 let canvas = $document.createElement('canvas')
 
                 canvas.width = '100'
-                expect(canvas.attributes['width'].value).toBe('100')
+                expect(canvas.attributes['width']!.value).toBe('100')
                 expect(canvas.width).toBe(100)
 
                 canvas.height = '100'
-                expect(canvas.attributes['height'].value).toBe('100')
+                expect(canvas.attributes['height']!.value).toBe('100')
                 expect(canvas.height).toBe(100)
             })
             test('setting float casts to int', () => {
                 let canvas = $document.createElement('canvas')
 
                 canvas.width = 1.2
-                expect(canvas.attributes['width'].value).toBe('1')
+                expect(canvas.attributes['width']!.value).toBe('1')
                 expect(canvas.width).toBe(1)
 
                 canvas.height = 1.2
-                expect(canvas.attributes['height'].value).toBe('1')
+                expect(canvas.attributes['height']!.value).toBe('1')
                 expect(canvas.height).toBe(1)
             })
             test('setting percentage fails', () => {
                 let canvas = $document.createElement('canvas')
 
                 canvas.width = '100%'
-                expect(canvas.attributes['width'].value).toBe('0')
+                expect(canvas.attributes['width']!.value).toBe('0')
                 expect(canvas.width).toBe(0)
 
                 canvas.height = '100%'
-                expect(canvas.attributes['height'].value).toBe('0')
+                expect(canvas.attributes['height']!.value).toBe('0')
                 expect(canvas.height).toBe(0)
             })
             test('setting attribute works', () => {
                 let canvas = $document.createElement('canvas')
 
                 canvas.setAttribute('width', '100%')
-                expect(canvas.attributes['width'].value).toBe('100%')
+                expect(canvas.attributes['width']!.value).toBe('100%')
                 expect(canvas.width).toBe(100)
 
                 canvas.setAttribute('height', '100%')
-                expect(canvas.attributes['height'].value).toBe('100%')
+                expect(canvas.attributes['height']!.value).toBe('100%')
                 expect(canvas.height).toBe(100)
             })
         })
@@ -1833,7 +1837,7 @@ describe('domMock', () => {
             el.className = 'a'
 
             expect(el.className).toBe('a')
-            expect(el.attributes['class'].value).toBe('a')
+            expect(el.attributes['class']!.value).toBe('a')
         })
         test('setter throws in svg', (done) => {
             let el = $document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -1845,7 +1849,7 @@ describe('domMock', () => {
         })
     })
     describe('spies', () => {
-        let $window: any
+        let $window: MockWindow
         beforeEach(() => {
             $window = domMock({spy: spy})
         })
@@ -1856,7 +1860,7 @@ describe('domMock', () => {
         test('input elements have spies on value and type setters', () => {
             let input = $window.document.createElement('input')
 
-            let spies = $window.__getSpies(input)
+            let spies = $window.__getSpies!(input)!
 
             expect(typeof spies).toBe('object')
             expect(spies).not.toBe(null)
@@ -1879,7 +1883,7 @@ describe('domMock', () => {
         test('select elements have spies on value setters', () => {
             let select = $window.document.createElement('select')
 
-            let spies = $window.__getSpies(select)
+            let spies = $window.__getSpies!(select)!
 
             expect(typeof spies).toBe('object')
             expect(spies).not.toBe(null)
@@ -1895,7 +1899,7 @@ describe('domMock', () => {
         test('option elements have spies on value setters', () => {
             let option = $window.document.createElement('option')
 
-            let spies = $window.__getSpies(option)
+            let spies = $window.__getSpies!(option)!
 
             expect(typeof spies).toBe('object')
             expect(spies).not.toBe(null)
@@ -1911,7 +1915,7 @@ describe('domMock', () => {
         test('textarea elements have spies on value setters', () => {
             let textarea = $window.document.createElement('textarea')
 
-            let spies = $window.__getSpies(textarea)
+            let spies = $window.__getSpies!(textarea)!
 
             expect(typeof spies).toBe('object')
             expect(spies).not.toBe(null)
@@ -1926,7 +1930,7 @@ describe('domMock', () => {
         })
     })
     describe('DOMParser for SVG', () => {
-        let $DOMParser: any
+        let $DOMParser: MockWindow['DOMParser']
         beforeEach(() => {
             $DOMParser = $window.DOMParser
         })
@@ -1963,21 +1967,21 @@ describe('domMock', () => {
 
             let nodes = doc.documentElement.childNodes
             expect(nodes.length).toBe(3)
-            expect(nodes[0].nodeName).toBe('text')
-            expect(nodes[0].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[0].childNodes.length).toBe(1)
-            expect(nodes[0].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[0].childNodes[0].nodeValue).toBe('hello')
-            expect(nodes[1].nodeName).toBe('text')
-            expect(nodes[1].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[1].childNodes.length).toBe(1)
-            expect(nodes[1].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[1].childNodes[0].nodeValue).toBe(' ')
-            expect(nodes[2].nodeName).toBe('text')
-            expect(nodes[2].namespaceURI).toBe('http://www.w3.org/2000/svg')
-            expect(nodes[2].childNodes.length).toBe(1)
-            expect(nodes[2].childNodes[0].nodeName).toBe('#text')
-            expect(nodes[2].childNodes[0].nodeValue).toBe('world')
+            expect(nodes[0]!.nodeName).toBe('text')
+            expect(nodes[0]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[0]!.childNodes.length).toBe(1)
+            expect(nodes[0]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[0]!.childNodes[0]!.nodeValue).toBe('hello')
+            expect(nodes[1]!.nodeName).toBe('text')
+            expect(nodes[1]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[1]!.childNodes.length).toBe(1)
+            expect(nodes[1]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[1]!.childNodes[0]!.nodeValue).toBe(' ')
+            expect(nodes[2]!.nodeName).toBe('text')
+            expect(nodes[2]!.namespaceURI).toBe('http://www.w3.org/2000/svg')
+            expect(nodes[2]!.childNodes.length).toBe(1)
+            expect(nodes[2]!.childNodes[0]!.nodeName).toBe('#text')
+            expect(nodes[2]!.childNodes[0]!.nodeValue).toBe('world')
         })
     })
 })

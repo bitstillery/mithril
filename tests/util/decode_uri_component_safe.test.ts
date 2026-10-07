@@ -1,10 +1,10 @@
-// @ts-nocheck
 import {describe, test, expect} from 'bun:test'
 
 import decodeURIComponentSafe from '../../src/util/decode_uri_component_safe'
 
 describe('decodeURIComponentSafe', () => {
     test('non-string type (compared to decodeURIComponent)', () => {
+        // @ts-expect-error - both are called without an argument on purpose
         expect(decodeURIComponentSafe()).toBe(decodeURIComponent())
         expect(decodeURIComponentSafe(null!)).toBe(decodeURIComponent(null!))
         expect(decodeURIComponentSafe(0 as any)).toBe(decodeURIComponent(0 as any))
