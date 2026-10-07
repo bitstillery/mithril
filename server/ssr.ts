@@ -137,7 +137,8 @@ export async function createSSRResponse(pathname: string, req: Request, options:
             })
 
             const stateScriptId = options.stateScriptId || '__SSR_STATE__'
-            const stateJson = JSON.stringify(serializedState)
+            // An unescaped `</script>` inside a state string would end the script element and run what follows.
+            const stateJson = JSON.stringify(serializedState).replace(/</g, '\\u003c')
             const stateScript = `<script id="${stateScriptId}" type="application/json">${stateJson}</script>`
             html = html.replace('</head>', `${stateScript}</head>`)
 
