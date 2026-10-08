@@ -11,7 +11,16 @@ import VnodeFactory, {MithrilComponent} from './render/vnode'
 import censor from './util/censor'
 import nextTick from './util/next_tick'
 import domFor from './render/dom_for'
-import {signal, computed, effect, Signal, ComputedSignal, setSignalRedrawCallback, getSignalComponents} from './state/signal'
+import {
+    signal,
+    computed,
+    effect,
+    Signal,
+    ComputedSignal,
+    setSignalRedrawCallback,
+    getSignalComponents,
+    isRedrawnBy,
+} from './state/signal'
 import {
     state,
     watch,
@@ -99,8 +108,10 @@ function flushPendingRedraws() {
 setSignalRedrawCallback((sig: Signal<unknown>) => {
     const components = getSignalComponents(sig)
     if (components && components.size > 0) {
-        components.forEach((c) => pendingRedrawComponents.add(c))
-        if (!redrawScheduled) {
+        components.forEach((c) => {
+            if (isRedrawnBy(c, sig)) pendingRedrawComponents.add(c)
+        })
+        if (!redrawScheduled && pendingRedrawComponents.size > 0) {
             redrawScheduled = true
             queueMicrotask(flushPendingRedraws)
         }

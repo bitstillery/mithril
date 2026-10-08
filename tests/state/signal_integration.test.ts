@@ -245,6 +245,29 @@ describe('Signal Integration - Component Redraws', () => {
         expect(renderCount).toBe(3)
     })
 
+    test('a view that writes state before reading it does not redraw itself', async () => {
+        const s = state({items: [1, 2, 3] as number[], other: 0})
+        let renderCount = 0
+        m.mount(root, {
+            view() {
+                renderCount++
+                if (renderCount > 20) return m('div', 'runaway')
+                s.$items.value = [1, 2, 3]
+                return m('div', `${s.items.length}-${s.other}`)
+            },
+        })
+
+        s.other = 1
+        for (let i = 0; i < 5; i++) await m.nextTick()
+        expect(renderCount).toBe(2)
+        expect(root.childNodes[0]!.childNodes[0]!.nodeValue).toBe('3-1')
+
+        // Written outside a render, the same signal still redraws the component that read it.
+        s.$items.value = [1, 2]
+        for (let i = 0; i < 5; i++) await m.nextTick()
+        expect(renderCount).toBe(3)
+    })
+
     test('a view that renders another tree keeps tracking what it reads afterwards', async () => {
         const before = signal(0)
         const after = signal(0)

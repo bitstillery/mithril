@@ -54,6 +54,12 @@ class Sources<Owner = Subscriber> {
         return changed
     }
 
+    /** Whether the run in progress has read `source`, as opposed to only an earlier run. */
+    readThisRun(source: Signal<unknown>): boolean {
+        const i = this.items.indexOf(source)
+        return i !== -1 && i < this.cursor
+    }
+
     toSet(): Set<Signal<unknown>> {
         return new Set(this.items)
     }
@@ -159,6 +165,17 @@ function trackComponentRead(signal: Signal<unknown>) {
         }
         components.add(currentComponent!)
     }
+}
+
+/**
+ * Whether a change to `signal` redraws `component`. A component whose view is running is still linked
+ * to what its last render read, but only counts once this render has read the signal: a view that
+ * writes state before reading it would otherwise redraw itself on every render.
+ */
+export function isRedrawnBy(component: object, signal: Signal<unknown>): boolean {
+    if (currentComponent === null) return true
+    if (component !== currentComponent && !componentStack.includes(component)) return true
+    return componentSourcesMap.get(component)!.readThisRun(signal)
 }
 
 export function getComponentSignals(component: object): Set<Signal<unknown>> | undefined {

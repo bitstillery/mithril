@@ -1,5 +1,5 @@
 import Vnode from './render/vnode'
-import {getSignalComponents, type Signal} from './state/signal'
+import {getSignalComponents, isRedrawnBy, type Signal} from './state/signal'
 import {getStateMaps} from './render/render'
 
 import type {ComponentType, Children, RenderRoot, RenderVnode, Vnode as VnodeType} from './render/vnode'
@@ -276,7 +276,7 @@ export default function mountRedrawFactory(render: Render, schedule: Schedule, c
         if (components) {
             // A copy: each redraw re-registers its component with the signals it reads, which would
             // otherwise add it back to the set being walked.
-            for (const component of Array.from(components)) redrawComponent(component)
+            for (const component of Array.from(components)) if (isRedrawnBy(component, signal)) redrawComponent(component)
         }
     }
 
