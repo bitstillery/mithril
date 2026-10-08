@@ -506,6 +506,11 @@ export default function domMock(domMockOptions?: DomMockOptions): MockWindow {
                         }
                         return false
                     },
+                    get isConnected() {
+                        let node = this
+                        while (node.parentNode != null) node = node.parentNode
+                        return node === $window.document.documentElement
+                    },
                     get firstChild() {
                         return this.childNodes[0] || null
                     },

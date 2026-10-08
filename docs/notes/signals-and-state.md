@@ -39,6 +39,12 @@ considered and never pursued; per-vnode tracking likewise.
 - Signal-driven redraws are coalesced per microtask (`index.ts`), while `m.redraw()` waits for an
   animation frame. `m.redraw()` with no argument still redraws everything, and is still what a
   change to non-signal data needs.
+- Microtask redraws never let the browser paint, so a view (or hook) writing state it reads froze
+  the tab once in-place redraws arrived; before, the fallback full redraw waited for a frame and
+  the same bug only burned CPU. A component redrawn more than 10 times in one task is now redrawn
+  at most once per frame, with a warning naming it, until a frame passes without it asking. In
+  development a view whose write redraws a component also warns. Making views read-only by
+  throwing was rejected: apps write in views on purpose, guarded so it settles.
 - A nested component whose view returns one element, and returns the same tag and key again, is
   redrawn in place: its view runs against the vnode that is in the tree now, and only its own
   subtree is diffed. Its DOM node stays, so the vnodes above it stay valid, and `onbeforeupdate`

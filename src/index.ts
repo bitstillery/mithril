@@ -11,6 +11,8 @@ import VnodeFactory, {MithrilComponent} from './render/vnode'
 import censor from './util/censor'
 import nextTick from './util/next_tick'
 import domFor from './render/dom_for'
+import {getStateMaps} from './render/render'
+import {logger} from './log/logger'
 import {
     signal,
     computed,
@@ -19,6 +21,7 @@ import {
     ComputedSignal,
     setSignalRedrawCallback,
     getSignalComponents,
+    getCurrentComponent,
     isRedrawnBy,
 } from './state/signal'
 import {
@@ -89,13 +92,47 @@ m.domFor = domFor
 // Set up signal-to-component redraw integration with batching.
 // Collects all components needing redraw in the current tick, then flushes once via queueMicrotask.
 // Avoids N synchronous redraws when many signals fire (e.g. 50% of 800 rows).
-let pendingRedrawComponents = new Set<object>()
+const pendingRedrawComponents = new Set<object>()
 let redrawScheduled = false
 
-function flushPendingRedraws() {
-    const components = new Set(pendingRedrawComponents)
-    pendingRedrawComponents.clear()
-    redrawScheduled = false
+// The browser can't paint between microtasks, so a component whose redraw queues another of itself
+// (its view or a hook writing state it reads) would freeze the page. One redrawn more often than this
+// within a single task is redrawn at most once per frame instead, until a frame passes without it.
+const REDRAWS_PER_TASK = 10
+let redrawsThisTask: Map<object, number> | null = null
+const throttledComponents = new Set<object>()
+let frameRedrawComponents = new Set<object>()
+let frameRedrawScheduled = false
+const scheduleFrame: (fn: () => void) => void =
+    typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame.bind(window) : (fn) => setTimeout(fn, 16)
+
+const DEV = typeof process !== 'undefined' && process.env?.NODE_ENV !== 'production'
+// Each warning is given once per component.
+const warnedLoop = new WeakSet<object>()
+const warnedViewWrite = new WeakSet<object>()
+
+/** A component's name for a warning, and the element it renders, which the console links to. */
+function describeComponent(component: object): {name: string; element: Node | null} {
+    const vnode = getStateMaps().stateToVnodeMap.get(component)
+    const tag = vnode?.tag
+    const constructor = (component as {constructor?: {name?: string}}).constructor
+    const name =
+        typeof tag === 'function' && tag.name
+            ? tag.name
+            : constructor && constructor !== Object && constructor.name
+              ? constructor.name
+              : 'A component'
+    return {name, element: vnode?.dom ?? null}
+}
+
+function warnOnce(warned: WeakSet<object>, component: object, message: (name: string) => string): void {
+    if (warned.has(component)) return
+    warned.add(component)
+    const {name, element} = describeComponent(component)
+    logger.warn(message(name), {element})
+}
+
+function redrawNow(components: Set<object>): void {
     if (components.size === 1) {
         m.redraw(components.values().next().value)
     } else if (components.size > 1) {
@@ -105,12 +142,81 @@ function flushPendingRedraws() {
     }
 }
 
+function deferToFrame(component: object): void {
+    frameRedrawComponents.add(component)
+    if (!frameRedrawScheduled) {
+        frameRedrawScheduled = true
+        scheduleFrame(flushFrameRedraws)
+    }
+}
+
+function flushFrameRedraws(): void {
+    const components = frameRedrawComponents
+    frameRedrawComponents = new Set()
+    frameRedrawScheduled = false
+    for (const component of throttledComponents) if (!components.has(component)) throttledComponents.delete(component)
+    redrawNow(components)
+    // One more frame releases what stopped looping, even if it asks for no further redraw.
+    if (throttledComponents.size > 0 && !frameRedrawScheduled) {
+        frameRedrawScheduled = true
+        scheduleFrame(flushFrameRedraws)
+    }
+}
+
+/** False when the component's redraw has to wait for the next frame. */
+function mayRedrawNow(component: object): boolean {
+    if (throttledComponents.has(component)) {
+        deferToFrame(component)
+        return false
+    }
+    if (redrawsThisTask === null) {
+        const counts = (redrawsThisTask = new Map())
+        setTimeout(() => {
+            if (redrawsThisTask === counts) redrawsThisTask = null
+        }, 0)
+    }
+    const count = (redrawsThisTask.get(component) ?? 0) + 1
+    redrawsThisTask.set(component, count)
+    if (count <= REDRAWS_PER_TASK) return true
+    throttledComponents.add(component)
+    warnOnce(
+        warnedLoop,
+        component,
+        (name) =>
+            `${name} redrew ${REDRAWS_PER_TASK} times without the browser painting, so its redraws now wait for the next frame. Its view or a lifecycle hook probably writes state it reads; move that write to oninit, an event handler or the code that loads the data.`,
+    )
+    deferToFrame(component)
+    return false
+}
+
+function flushPendingRedraws() {
+    const components = new Set<object>()
+    for (const component of pendingRedrawComponents) if (mayRedrawNow(component)) components.add(component)
+    pendingRedrawComponents.clear()
+    redrawScheduled = false
+    redrawNow(components)
+}
+
 setSignalRedrawCallback((sig: Signal<unknown>) => {
     const components = getSignalComponents(sig)
     if (components && components.size > 0) {
+        let redraws = 0
         components.forEach((c) => {
-            if (isRedrawnBy(c, sig)) pendingRedrawComponents.add(c)
+            if (isRedrawnBy(c, sig)) {
+                pendingRedrawComponents.add(c)
+                redraws++
+            }
         })
+        const view = getCurrentComponent()
+        if (DEV && view !== null && redraws > 0) {
+            const self = components.has(view) && isRedrawnBy(view, sig)
+            warnOnce(
+                warnedViewWrite,
+                view,
+                (name) =>
+                    `${name}'s view wrote state ${self ? 'it read, so it redraws itself after every render' : 'other components read, so they redraw after every render of it'}. A view should only read state; write it in oninit, an event handler or the code that loads the data.`,
+            )
+        }
         if (!redrawScheduled && pendingRedrawComponents.size > 0) {
             redrawScheduled = true
             queueMicrotask(flushPendingRedraws)
