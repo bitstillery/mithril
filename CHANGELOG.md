@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.12.3](https://github.com/bitstillery/mithril/compare/v3.12.2...v3.12.3) (2026-10-08)
+
+### Bug Fixes
+
+- **redraw:** hold a component that keeps redrawing itself to one redraw per frame ([91d5431](https://github.com/bitstillery/mithril/commit/91d543189b4a7b3aabf568cb05772c5448714946))
+- **state:** don't redraw a component for a write its running view made first ([64070d8](https://github.com/bitstillery/mithril/commit/64070d8c5e7d8ce517d03afb3aabf7f7be50af52))
+
+### Performance Improvements
+
+- **redraw:** skip a signal redraw the component's next render already covered ([1bf21ac](https://github.com/bitstillery/mithril/commit/1bf21acc3809b369c2498785f4142c2b2c263ff6))
+
 ### [3.12.2](https://github.com/bitstillery/mithril/compare/v3.12.1...v3.12.2) (2026-10-07)
 
 ### Performance Improvements
