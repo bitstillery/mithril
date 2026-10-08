@@ -178,6 +178,16 @@ export function isRedrawnBy(component: object, signal: Signal<unknown>): boolean
     return componentSourcesMap.get(component)!.readThisRun(signal)
 }
 
+/** The number of the latest component render begun: a render numbered higher began after this point. */
+export function getRenderCount(): number {
+    return lastEpoch
+}
+
+/** The number of the component's latest render, 0 before its first. */
+export function getComponentRender(component: object): number {
+    return componentSourcesMap.get(component)?.epoch ?? 0
+}
+
 export function getComponentSignals(component: object): Set<Signal<unknown>> | undefined {
     return componentSourcesMap.get(component)?.toSet()
 }

@@ -45,6 +45,9 @@ considered and never pursued; per-vnode tracking likewise.
   at most once per frame, with a warning naming it, until a frame passes without it asking. In
   development a view whose write redraws a component also warns. Making views read-only by
   throwing was rejected: apps write in views on purpose, guarded so it settles.
+- A queued signal redraw is dropped for a component whose view has run since the write, as a
+  child's does after its parent's view wrote what it reads, or anything written just before
+  `m.redraw.sync()`: that render already saw the change.
 - A nested component whose view returns one element, and returns the same tag and key again, is
   redrawn in place: its view runs against the vnode that is in the tree now, and only its own
   subtree is diffed. Its DOM node stays, so the vnodes above it stay valid, and `onbeforeupdate`

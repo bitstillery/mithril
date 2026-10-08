@@ -130,3 +130,70 @@ describe('signal redraws that never settle', () => {
         expect(messages.some((message) => message.startsWith("Writer's view wrote state other components read"))).toBe(true)
     })
 })
+
+describe('signal redraws a render already covered', () => {
+    let $window: any
+    let root: Element
+
+    beforeEach(() => {
+        $window = domMock()
+        globalThis.window = $window
+        root = $window.document.createElement('div')
+        $window.document.body.appendChild(root)
+    })
+
+    afterEach(() => {
+        m.mount(root, null)
+    })
+
+    test("a child reading what its parent's view wrote renders once per parent render", async () => {
+        const s = state({rows: [] as number[], tick: 0})
+        let childRenders = 0
+        class Rows extends MithrilComponent {
+            view() {
+                childRenders++
+                return m(
+                    'ul',
+                    s.rows.map((row) => m('li', row)),
+                )
+            }
+        }
+        class Page extends MithrilComponent {
+            view() {
+                s.$rows.value = [s.tick]
+                return m('div', m(Rows))
+            }
+        }
+        const warn = spyOn(logger, 'warn').mockImplementation(() => {})
+        m.mount(root, {view: () => m('main', m(Page))})
+        expect(childRenders).toBe(1)
+
+        s.tick = 1
+        await task()
+        expect(childRenders).toBe(2)
+        warn.mockRestore()
+    })
+
+    test('state written right before a synchronous redraw renders once', async () => {
+        const s = state({count: 0})
+        let renders = 0
+        class Counter extends MithrilComponent {
+            view() {
+                renders++
+                return m('span', s.count)
+            }
+        }
+        m.mount(root, {view: () => m('main', m('section', m(Counter)))})
+        expect(renders).toBe(1)
+
+        s.count = 1
+        m.redraw.sync()
+        await task()
+        expect(renders).toBe(2)
+        expect(root.childNodes[0]!.childNodes[0]!.childNodes[0]!.childNodes[0]!.nodeValue).toBe('1')
+
+        s.count = 2
+        await task()
+        expect(renders).toBe(3)
+    })
+})

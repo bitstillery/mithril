@@ -22,6 +22,8 @@ import {
     setSignalRedrawCallback,
     getSignalComponents,
     getCurrentComponent,
+    getComponentRender,
+    getRenderCount,
     isRedrawnBy,
 } from './state/signal'
 import {
@@ -92,7 +94,9 @@ m.domFor = domFor
 // Set up signal-to-component redraw integration with batching.
 // Collects all components needing redraw in the current tick, then flushes once via queueMicrotask.
 // Avoids N synchronous redraws when many signals fire (e.g. 50% of 800 rows).
-const pendingRedrawComponents = new Set<object>()
+// By the render count when each was queued: one whose view has run since saw the change already, as a
+// child does that renders after its parent's view wrote what it reads, so it isn't redrawn again.
+const pendingRedrawComponents = new Map<object, number>()
 let redrawScheduled = false
 
 // The browser can't paint between microtasks, so a component whose redraw queues another of itself
@@ -191,7 +195,10 @@ function mayRedrawNow(component: object): boolean {
 
 function flushPendingRedraws() {
     const components = new Set<object>()
-    for (const component of pendingRedrawComponents) if (mayRedrawNow(component)) components.add(component)
+    for (const [component, queuedAt] of pendingRedrawComponents) {
+        if (getComponentRender(component) > queuedAt) continue
+        if (mayRedrawNow(component)) components.add(component)
+    }
     pendingRedrawComponents.clear()
     redrawScheduled = false
     redrawNow(components)
@@ -203,7 +210,7 @@ setSignalRedrawCallback((sig: Signal<unknown>) => {
         let redraws = 0
         components.forEach((c) => {
             if (isRedrawnBy(c, sig)) {
-                pendingRedrawComponents.add(c)
+                pendingRedrawComponents.set(c, getRenderCount())
                 redraws++
             }
         })
